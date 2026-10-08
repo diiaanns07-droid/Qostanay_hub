@@ -20,6 +20,7 @@ import type {
   SessionInfo,
   StreamEnvelope,
 } from "@contracts/qorgau-v1.generated";
+import { parseClassState, type ClassState } from "./classState";
 
 type Channel = "main" | "obs";
 
@@ -44,6 +45,8 @@ export class LiveStore {
   private phoneRing: PhoneObservation[] = [];
   envEvents: EnvironmentObservation[] = [];
   streamError: ApiErrorBody | null = null;
+  /** Class-mode state from the C2 uplink (not session-scoped; survives reset()). */
+  classState: ClassState | null = null;
   helloAt: number | null = null;
   lastMessageAt: number | null = null;
   seqGaps = 0;
@@ -193,6 +196,14 @@ export class LiveStore {
     this.lastMessageAt = Date.now();
     this.sampleWall(env.sent_at);
     const m = env.message;
+    if ((m as { type: string }).type === "class_state") {
+      const cs = parseClassState(m);
+      if (cs) {
+        this.classState = cs;
+        this.bump("main");
+      }
+      return;
+    }
     if (m.type === "hello") {
       this.lastSeq = env.seq;
       const reconnect = this.helloAt !== null;

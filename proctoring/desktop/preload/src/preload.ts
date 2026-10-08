@@ -1,4 +1,5 @@
-// Preload (owner: A06): exposes window.qorgau: QorgauBridge (contracts/ts/bridge.ts) and nothing else.
+// Preload (owner: A06): exposes window.qorgau: QorgauBridge (contracts/ts/bridge.ts) and, for the A07-student
+// full-screen calibration, window.qorgauWindow.setFullscreen(boolean) (one fixed one-way channel).
 // Runs with contextIsolation + sandbox. Every method is one fixed IPC channel; no generic invoke,
 // no ipcRenderer, no Node API and no IPC event objects ever reach the page.
 import { contextBridge, ipcRenderer } from "electron";
@@ -87,3 +88,6 @@ const bridge: QorgauBridge = {
 };
 
 contextBridge.exposeInMainWorld("qorgau", bridge);
+contextBridge.exposeInMainWorld("qorgauWindow", {
+  setFullscreen: (on: boolean): void => ipcRenderer.send(SEND.windowFullscreen, on === true),
+});

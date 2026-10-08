@@ -279,6 +279,29 @@ export class FixtureBridge implements QorgauBridge {
     this.eventListeners.forEach((l) => l(env));
   }
 
+  /** FIXTURE: class_state as the C2 uplink would publish it (handoffs/C2/STATUS.md). Not a class server. */
+  classState: Record<string, unknown> = {
+    type: "class_state",
+    connection: "connected",
+    server: "fixture-class:8765",
+    student_id: "st-fixture",
+    locked: false,
+    lock_reason_ru: null,
+    mic_active: false,
+    audio_direction: null,
+    exam: { title: "FIXTURE-экзамен" },
+    last_command: null,
+    message_ru: null,
+  };
+
+  emitClassState(patch: Record<string, unknown>): void {
+    this.classState = { ...this.classState, ...patch, type: "class_state" };
+    if (this.faults.backendDown) return;
+    this.seq += 1;
+    const env = { contract: "qorgau.v1", seq: this.seq, sent_at: nowIso(), session_id: null, message: clone(this.classState) } as unknown as StreamEnvelope;
+    this.eventListeners.forEach((l) => l(env));
+  }
+
   private find(sessionId: string): SessionInfo | ApiErrorBody {
     if (this.active?.session_id === sessionId) return this.active;
     const s = this.sessions.find((x) => x.session_id === sessionId);

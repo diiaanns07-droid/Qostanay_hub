@@ -102,11 +102,33 @@ async function flow(page, tag, shot, consoleErrors) {
   await shot("03-preflight-ready");
   await page.getByRole("button", { name: "К калибровке" }).click();
   await page.getByText("Калибровка взгляда").waitFor();
+  // A07-student: full-screen layer, big dots at the screen edges, hint, panel never covers a dot
+  const geo = await page.evaluate(() => {
+    const r = (el) => { const b = el.getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height, cx: b.x + b.width / 2, cy: b.y + b.height / 2 }; };
+    const layer = document.querySelector(".calfs");
+    const dots = Object.fromEntries([...document.querySelectorAll(".calfs-dot")].map((d) => [d.dataset.target, r(d)]));
+    const panel = document.querySelector(".calfs-panel");
+    return { vw: innerWidth, vh: innerHeight, layer: layer && r(layer), dots, panel: panel && r(panel) };
+  });
+  check(`[${tag}] calibration layer covers the window`, !!geo.layer && geo.layer.w >= geo.vw - 1 && geo.layer.h >= geo.vh - 1, JSON.stringify(geo.layer));
+  const d = geo.dots;
+  const edgesOk = d.left.cx <= 60 && d.right.cx >= geo.vw - 60 && d.up.cy <= 60 && d.down.cy >= geo.vh - 60 && Math.abs(d.center.cx - geo.vw / 2) < 2 && Math.abs(d.center.cy - geo.vh / 2) < 2;
+  check(`[${tag}] calibration dots at the screen edges (centre, left, right, up, down)`, edgesOk, JSON.stringify(Object.fromEntries(Object.entries(d).map(([k, v]) => [k, [Math.round(v.cx), Math.round(v.cy)]]))));
+  const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  const bar = await page.evaluate(() => { const b = document.querySelector(".calfs-bar").getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height }; });
+  check(`[${tag}] status panel and buttons cover no calibration dot`, ![geo.panel, bar].some((box) => Object.values(d).some((dot) => hit(box, { x: dot.cx - 40, y: dot.cy - 40, w: 80, h: 80 }))));
+  check(`[${tag}] calibration hint shown`, await page.getByText("Смотрите на точку глазами, голову держите прямо.").isVisible());
+  check(`[${tag}] no target requested before the student starts`, (await page.locator(".calfs-dot-active").count()) === 0);
+  await shot("04a-calibration-intro");
+  await page.getByRole("button", { name: "Начать калибровку" }).click();
+  await page.locator(".calfs-dot-active").first().waitFor({ timeout: 10000 });
   await shot("04-calibration-collecting");
-  await page.getByRole("button", { name: "Повторить точку" }).waitFor({ timeout: 20000 });
+  const retry = page.getByRole("button", { name: /^Повторить «/ });
+  await retry.first().waitFor({ timeout: 20000 });
   check(`[${tag}] calibration failure surfaced`, await page.getByText("Качество кадров недостаточно").isVisible());
+  check(`[${tag}] failed dot shown with text`, (await page.locator('.calfs-dot[data-state="failed"]').count()) === 1 && (await page.getByText("не собрано").count()) >= 1);
   await shot("05-calibration-failed-target");
-  await page.getByRole("button", { name: "Повторить точку" }).click();
+  await retry.first().click();
   await page.waitForFunction(() => {
     const b = [...document.querySelectorAll("button")].find((x) => x.textContent?.includes("Завершить калибровку"));
     return b && !b.disabled;
