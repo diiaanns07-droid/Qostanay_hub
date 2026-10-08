@@ -302,7 +302,7 @@ export function policyFromView(p) {
  * @param {{canEditStaff?: boolean}} [o]
  */
 export function examEditPayloads(f, exam, o = {}) {
-  const policy = (exam.policies || []).find((p) => p.policy_id === exam.default_policy_id);
+  const policy = (exam.policies || []).find((/** @type {any} */ p) => p.policy_id === exam.default_policy_id);
   /** @type {{revision: number, title?: string, staff?: Record<string, string>} | null} */
   let examPatch = null;
   const title = str(f.title).trim();
@@ -362,7 +362,7 @@ export function normalizeError(status, body) {
   }
   if (body && typeof body === "object" && Array.isArray(body.detail) && body.detail.length) {
     const d = body.detail[0] || {};
-    const loc = Array.isArray(d.loc) ? d.loc.filter((x) => typeof x === "string" && x !== "body" && x !== "policy" && x !== "query" && x !== "path") : [];
+    const loc = Array.isArray(d.loc) ? d.loc.filter((/** @type {unknown} */ x) => typeof x === "string" && x !== "body" && x !== "policy" && x !== "query" && x !== "path") : [];
     const field = loc.length ? loc[loc.length - 1] : null;
     const what = PYDANTIC_RU[/** @type {keyof typeof PYDANTIC_RU} */ (d.type)] ?? "неверный формат";
     const limit = d.ctx && (d.ctx.max_length ?? d.ctx.min_length);
@@ -438,7 +438,7 @@ export class OneShotRequest {
 export function commandResultLines(resp, labelOf, o = {}) {
   const where = o.where ?? "в колонке «Последняя команда»";
   const results = resp && Array.isArray(resp.results) ? resp.results : [];
-  return results.map((r) => {
+  return results.map((/** @type {any} */ r) => {
     const label = labelOf(r.student_id) || str(r.student_id);
     if (r.unavailable_ru) return { student_id: r.student_id, label, outcome: "unavailable", text: `недоступно — ${r.unavailable_ru}`, command: null };
     const st = commandStatus(r.command);
@@ -453,7 +453,7 @@ export function commandResultLines(resp, labelOf, o = {}) {
 /** POST /assignments response -> per-student lines. @param {any} resp @param {(id: string) => string} labelOf */
 export function assignmentResultLines(resp, labelOf) {
   const results = resp && Array.isArray(resp.results) ? resp.results : [];
-  return results.map((r) => {
+  return results.map((/** @type {any} */ r) => {
     const label = labelOf(r.student_id) || str(r.student_id);
     if (!r.assigned) return { student_id: r.student_id, label, outcome: "unavailable", text: `не назначена — ${str(r.unavailable_ru) || "недоступно"}`, command: null };
     const st = commandStatus(r.command);

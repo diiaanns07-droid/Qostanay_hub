@@ -12,7 +12,7 @@ Windows/LIVE protocols. A09 does not patch other modules: findings go to owners 
 | `qorgau_qa/netguard.py` | portable offline guard: CPython audit hook in the backend process blocks + records non-loopback connects / DNS |
 | `qorgau_qa/netns.py` | Linux: loopback-only network namespace for the whole test process tree (`unshare -rn`) |
 | `qorgau_qa/offline_check.py` | full flow under the guard (and optionally inside the namespace), JSON verdict |
-| `qorgau_qa/fakes.py` | QA-only fault-injection doubles for the five module factories, injected into a real `serve` process via `sys.modules` (`QA_FAKES` env); labelled `qa.fake_*`, never module/CV results |
+| `qorgau_qa/fakes.py` | QA-only fault-injection doubles for the five module factories plus an always-isolated audio monitor, injected into a real `serve` process via `sys.modules` (`QA_FAKES` env); labelled `qa.fake_*`, never module/CV results |
 | `tests/` | pytest suites (below) |
 | `run_qa.py` | runs everything and writes `results/<date>_<label>_<sha12>/summary.{json,md}` bound to the tested SHA |
 | `../packaging/` | Windows preparation/launch scripts and read-only file/import/model-checksum gate |
@@ -31,6 +31,21 @@ Windows/LIVE protocols. A09 does not patch other modules: findings go to owners 
 ```
 `qa/tests` is deliberately not in the default `testpaths` (A01's `pytest -q` stays fast); ~3 min, needs no camera,
 no network, no admin. On Windows everything runs except the Linux network-namespace layer (skipped with a reason).
+
+The READY check compares the runtime version with both canonical Python constants and checked-in schema metadata.
+Session summaries are validated by both independent validators, including the typed contract 1.1 review-zone
+fields; extra fields, unknown zones and more than three review reasons remain invalid.
+
+Fault tests exercise LIVE protocol messages with synthetic module doubles. Their audio monitor always emits a
+labelled `qa_audio_isolated` health event and never imports a microphone driver or audio model. Camera failure
+checks select the capture component, so unrelated health messages cannot hide or impersonate camera loss.
+
+The offline source gate reviews exact function scopes and operation counts in explicit model preparation CLIs
+and optional classroom transport. It does not skip these files wholesale. Preparation remains an operator action
+before the exam; C2 transport is the configured LAN feature, not a model download. The offline scenario scrubs
+classroom settings and keeps its loopback-only audit guard unchanged. A separate check proves an attempted public
+upload from C2 is still blocked, even though its static transport calls are reviewed. This guard is QA-local and
+does not disable production LAN operation.
 
 Result directory names now include a UTC timestamp so later runs do not overwrite earlier evidence.
 The runner records SHA256 for each harness source file and forces UTF-8 in child processes on Windows.

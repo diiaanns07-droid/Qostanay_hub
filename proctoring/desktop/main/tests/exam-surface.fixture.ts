@@ -1,22 +1,43 @@
 // Actual Electron/Chromium, local HTTP fixtures only. No backend, camera, microphone, or OS guard.
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { app, BrowserWindow, WebContentsView, type WebContents } from "electron";
+import { app, BrowserWindow, WebContentsView, protocol, session, type WebContents } from "electron";
 import { ExamSurface, isExamWebContents } from "../src/exam/surface";
 import type { ShellState } from "@contracts/bridge";
+import { ShellStateMachine } from "../src/shell/state";
+import { FakeGuard, sessionInfo } from "../src/__tests__/helpers";
+import { WebSocketServer } from "ws";
+import { CONTENT_CHECKS, KEY_CHECKS, runSelfTest } from "../src/environment/probe";
+import { contentProbeScript, createElectronProbeDriver } from "../src/environment/probe-electron";
+import { classifyExamKey } from "../src/environment/keyboard";
+import { APP_SCHEME, CSP, PROBE_HTML, PROBE_JS } from "../src/security/web";
+import type { ContentAction } from "../src/environment/content-policy";
 
 app.enableSandbox();
+app.on("window-all-closed", () => {}); // the hidden startup probe closes before the exam fixture is created
+protocol.registerSchemesAsPrivileged([{ scheme: APP_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 const hits: string[] = [];
+let streams = 0;
 let origin = "";
 const server = createServer((req, res) => {
   hits.push(req.url ?? "");
+  if (req.url === "/exam/stream") {
+    streams++;
+    res.writeHead(200, { "Content-Type": "text/event-stream" });
+    res.write("data: fixture\n\n");
+    res.on("close", () => streams--);
+    return;
+  }
   if (req.url === "/exam/auth") { res.writeHead(302, { location: "/auth/login" }); res.end(); return; }
   if (req.url === "/exam/escape") { res.writeHead(302, { location: "/outside/secret" }); res.end(); return; }
   if (req.url === "/exam/download") { res.writeHead(200, { "Content-Disposition": 'attachment; filename="forbidden.txt"' }); res.end("fixture"); return; }
   if (req.url === "/exam/script.js") { res.writeHead(200, { "Content-Type": "text/javascript" }); res.end("window.allowedScriptRan=true;"); return; }
   res.writeHead(200, { "Content-Type": "text/html", "Set-Cookie": "fixture=active; Path=/; SameSite=Lax" });
-  res.end(`<html><body><h1>${req.url}</h1><script src="/exam/script.js"></script><img src="/outside/pixel"><script src="/outside/script.js"></script><iframe src="/outside/frame"></iframe><a id="bad" href="/outside/nav">bad</a><a id="popup" target="_blank" href="/auth/login">popup</a><script>window.allowedInlineRan=true;</script></body></html>`);
+  res.end(`<html><body><h1>${req.url}</h1><textarea id="answer"></textarea><script src="/exam/script.js"></script><img src="/outside/pixel"><script src="/outside/script.js"></script><iframe src="/outside/frame"></iframe><a id="bad" href="/outside/nav">bad</a><a id="popup" target="_blank" href="/auth/login">popup</a><script>window.allowedInlineRan=true;</script></body></html>`);
 });
+const sockets = new WebSocketServer({ server });
+let socketMessages = 0;
+sockets.on("connection", (socket) => { socket.on("message", () => socketMessages++); });
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 async function until(fn: () => boolean, message: string): Promise<void> {
   const end = Date.now() + 10000;
@@ -30,13 +51,29 @@ const checked: string[] = [];
 const record = (name: string) => { checked.push(name); console.log(`PASS ${name}`); };
 const run = async () => {
   await app.whenReady();
+  const probeSession = session.fromPartition("content-probe");
+  probeSession.protocol.handle(APP_SCHEME, req => new Response(req.url.endsWith('.js') ? PROBE_JS : PROBE_HTML,
+    { headers: { 'content-security-policy': CSP, 'content-type': req.url.endsWith('.js') ? 'text/javascript' : 'text/html' } }));
+  app.on('web-contents-created', (_e, contents) => {
+    if (contents.session !== probeSession) return;
+    contents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    contents.on('will-navigate', event => event.preventDefault());
+  });
+  const driver = createElectronProbeDriver(probeSession, false);
+  const results = await runSelfTest(driver);
+  driver.dispose();
+  console.log('SELF_TEST ' + JSON.stringify(results));
+  for (const id of CONTENT_CHECKS) assert.equal(results[`page_${id}`]?.status, 'pass', `self-test ${id}`);
+  for (const {check} of KEY_CHECKS) assert.equal(results[check]?.status, 'pass', `self-test ${check}`);
+  record('built-in Chromium self-test covers print/save/source/context/selection/drag/zoom/reload');
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   let isolatedDetected = 0;
   app.on("web-contents-created", (_event, wc) => { if (isExamWebContents(wc)) isolatedDetected++; });
   window = new BrowserWindow({ show: false, width: 1200, height: 800, webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false } });
   await window.loadURL("data:text/html,<h1>trusted-shell-fixture</h1>");
-  surface = new ExamSurface(() => window, () => {});
+  const contentEvents: ContentAction[] = [];
+  surface = new ExamSurface(() => window, () => {}, input => !!classifyExamKey(input)?.prevent, id => contentEvents.push(id));
   const shell: ShellState = { mode: "exam", backend: "ready", exam_mode_active: true, operator_unlocked: false, session_id: "fixture-session", last_error: null, shell_version: "fixture", platform: "fixture" };
   const policy = { exam_id: "fixture", title: "Fixture website", mode: "url", allowed_urls: [`${origin}/exam/*`, `${origin}/auth/*`] };
   const classState = (extra: object = {}) => surface!.consumeClassState({ type: "class_state", connection: "connected", locked: false, exam: policy, ...extra });
@@ -54,6 +91,33 @@ const run = async () => {
   assert.equal(wc.getLastWebPreferences().preload, undefined);
   assert.deepEqual(await wc.executeJavaScript("[typeof require,typeof process,typeof window.qorgau,typeof window.qorgauExam,typeof window.qorgauLock,window.allowedScriptRan,window.allowedInlineRan]"), ["undefined", "undefined", "undefined", "undefined", "undefined", true, true]);
   record("approved site/scripts load in isolated sandbox with zero app bridges");
+  for (const id of CONTENT_CHECKS) {
+    assert.equal(await wc.executeJavaScript(contentProbeScript(id)), true, `website ${id}`);
+    assert.ok(contentEvents.includes(id), `website event ${id}`);
+  }
+  record('website print/context/selection/drag/wheel prevented and reported');
+  await wc.executeJavaScript(`new Promise(resolve => {const f=document.createElement('iframe');f.src='/auth/frame';f.onload=resolve;document.body.append(f);})`);
+  const frame = wc.mainFrame.frames.find(f => f.url.endsWith('/auth/frame'));
+  assert.ok(frame);
+  assert.equal(await frame.executeJavaScript('typeof window.__adalContentPolicy'), 'undefined');
+  await wait(550);
+  const beforeFramePrint = contentEvents.filter(id => id === 'print').length;
+  assert.equal(await frame.executeJavaScript(`(() => {let fired=false;addEventListener('beforeprint',()=>{fired=true});print();return fired;})()`), false);
+  await until(() => contentEvents.filter(id => id === 'print').length > beforeFramePrint, 'CSP iframe print reported');
+  let nativeDrag = false, nativeContext = false;
+  wc.on('before-mouse-event', (event, input) => {
+    if (input.type === 'mouseMove' && input.button === 'left') nativeDrag = event.defaultPrevented;
+    if (input.type === 'mouseDown' && input.button === 'right') nativeContext = event.defaultPrevented;
+  });
+  const rect = await wc.executeJavaScript(`(() => {const r=document.querySelector('iframe[src="/auth/frame"]').getBoundingClientRect();return {x:Math.ceil(r.x+20),y:Math.ceil(r.y+20)}})()`);
+  wc.focus();
+  wc.sendInputEvent({type:'mouseDown',button:'right',clickCount:1,...rect});
+  wc.sendInputEvent({type:'mouseUp',button:'right',clickCount:1,...rect});
+  wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...rect});
+  wc.sendInputEvent({type:'mouseMove',modifiers:['leftbuttondown'],x:rect.x+40,y:rect.y});
+  wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:rect.x+40,y:rect.y});
+  await until(() => nativeDrag && nativeContext, 'mouse guard applies before iframe receives drag/context input');
+  record('subframe CSP blocks and reports print; native drag/right-click intercepted before iframe');
   await wait(200);
   assert.equal(hits.some((s) => s.startsWith("/outside")), false, JSON.stringify(hits));
   assert.equal(await wc.executeJavaScript(`fetch('${origin}/outside/api').then(()=>false,()=>true)`), true);
@@ -65,6 +129,7 @@ const run = async () => {
   await wc.executeJavaScript("document.getElementById('popup').click(); window.open('/auth/login')"); await wait(100);
   assert.equal(BrowserWindow.getAllWindows().length, windowsBefore);
   record("new windows denied even for approved authentication URLs");
+  assert.ok(contentEvents.includes('new_window'), 'popup prevention is also reported when CSP cancels it first');
   for (const target of ["file:///C:/Windows/win.ini", "data:text/html,escape", "qorgau://app/", "ms-settings:"]) {
     await wc.executeJavaScript(`{const a=document.createElement('a');a.href=${JSON.stringify(target)};document.body.append(a);a.click();}`); await wait(50);
     assert.equal(wc.getURL(), `${origin}/exam/`, target);
@@ -92,35 +157,139 @@ const run = async () => {
   assert.equal(wc.getURL(), `${origin}/exam/`);
   record("history API cannot leave an unapproved path visible; reload restores approved page");
   assert.ok((await wc.session.cookies.get({ name: "fixture" })).length > 0);
+  const preservedWc = wc;
+  await wc.executeJavaScript("document.getElementById('answer').focus()");
+  await wc.insertText("Unsubmitted fixture answer");
+  await wc.executeJavaScript("window.ticks=0; window.timer=setInterval(()=>{window.ticks++;fetch('/exam/tick?'+window.ticks).catch(()=>{});},25);fetch('/exam/stream').then(r=>r.text()).catch(()=>{});void 0");
+  await until(() => streams > 0 && hits.some((s) => s.startsWith("/exam/tick")), "fixture timer and HTTP stream active before lock");
   surface.setBlocked("class-lock", true);
   assert.equal(window.contentView.children.length, 0);
-  await until(() => wc.isDestroyed(), "locked contents destroyed");
+  assert.equal(wc.isDestroyed(), false);
+  assert.equal(wc.isAudioMuted(), true);
+  // CDP inspection intentionally bypasses frozen page scheduling; the website has no such bridge.
+  const inspect = async (expression: string) => (await wc.debugger.sendCommand("Runtime.evaluate", { expression, returnByValue: true })).result.value;
+  await wait(150);
+  const frozenTicks = await inspect("window.ticks");
+  const lockHits = hits.length;
+  await inspect(`fetch('/exam/blocked-fetch').catch(()=>{});navigator.sendBeacon('/exam/blocked-beacon','fixture');new Image().src='/exam/blocked-pixel';new WebSocket(${JSON.stringify(origin.replace("http:", "ws:") + "/exam/blocked-socket")});void 0`);
+  await wait(200);
+  assert.equal(await inspect("window.ticks"), frozenTicks, "page timer stays frozen while locked");
+  assert.equal(hits.length, lockHits, "frozen hidden page cannot reach even allowlisted endpoints");
+  assert.equal(sockets.clients.size, 0, "hidden view cannot open a WebSocket");
+  await until(() => streams === 0, "already-open HTTP stream closed during suspension");
+  record("temporary lock hides/mutes/freezes timers, gates fetch/beacon/images/socket and closes HTTP stream");
   surface.setBlocked("class-lock", false); await ready();
   wc = view().webContents;
+  assert.equal(wc, preservedWc);
+  assert.equal(await wc.executeJavaScript("document.getElementById('answer').value"), "Unsubmitted fixture answer");
+  await wc.executeJavaScript("clearInterval(window.timer)");
+  assert.equal(wc.isAudioMuted(), false);
   assert.ok((await wc.session.cookies.get({ name: "fixture" })).length > 0);
-  record("lock synchronously hides then destroys exam; unlock restores isolated authenticated session");
+  record("unlock preserves the same document, unsubmitted typed answer and authenticated session");
   surface.setViewport(null);
   assert.equal(window.contentView.children.length, 0);
+  assert.equal(wc.isAudioMuted(), true);
   surface.setViewport({ x: 0, y: 0, width: 12000, height: 12000 });
+  await ready();
   const bounds = view().getBounds(); const [, contentHeight = 0] = window.getContentSize();
   assert.ok(bounds.y >= 112 && bounds.y + bounds.height <= contentHeight - 64);
   record("shell dialogs remove native view; malicious bounds cannot cover header/footer");
-  surface.setBlocked("backend-stream", true); await until(() => wc.isDestroyed(), "stream loss destroys exam contents");
+  surface.setBlocked("backend-stream", true);
+  assert.equal(wc.isDestroyed(), false);
   surface.setShell(shell); assert.equal(window.contentView.children.length, 0);
   classState(); await ready(); wc = view().webContents;
-  record("backend stream loss stays hidden until fresh class-state replay");
-  classState({ connection: "reconnecting" }); await until(() => wc.isDestroyed(), "disconnected contents destroyed");
+  assert.equal(wc, preservedWc);
+  assert.equal(await wc.executeJavaScript("document.getElementById('answer').value"), "Unsubmitted fixture answer");
+  record("backend stream loss preserves answer and stays hidden until fresh class-state replay");
+  classState({ connection: "reconnecting" });
+  assert.equal(window.contentView.children.length, 0);
   classState(); await ready(); wc = view().webContents;
-  surface.setShell({ ...shell, mode: "preflight", exam_mode_active: false }); await until(() => wc.isDestroyed(), "paused contents destroyed");
-  surface.setShell(shell); await ready(); wc = view().webContents;
+  assert.equal(wc, preservedWc);
+  // Real machine transitions, FakeGuard only: pause -> releasing/preflight, backend loss -> error.
+  const machine = new ShellStateMachine(new FakeGuard(), { shell_version: "fixture", platform: "fixture" });
+  machine.setBackend("ready");
+  await machine.bind(sessionInfo(shell.session_id!, "running"));
+  machine.onChange((state) => surface!.setShell(state));
+  await machine.observe(sessionInfo(shell.session_id!, "paused"));
+  assert.equal(window.contentView.children.length, 0);
+  assert.equal(wc.isDestroyed(), false);
+  await machine.observe(sessionInfo(shell.session_id!, "running")); await ready();
+  await machine.backendLost("fixture transient disconnect");
+  assert.equal(window.contentView.children.length, 0);
+  assert.equal(wc.isDestroyed(), false);
+  await machine.observe(sessionInfo(shell.session_id!, "running")); await ready();
+  assert.equal(view().webContents, preservedWc);
+  assert.equal(await wc.executeJavaScript("document.getElementById('answer').value"), "Unsubmitted fixture answer");
+  record("reconnect, actual machine pause/resume and recoverable error preserve typed answer");
+  surface.setBlocked("class-lock", true);
+  surface.setBlocked("class-lock", false);
+  surface.setBlocked("class-lock", true);
+  await wait(200);
+  assert.equal(window.contentView.children.length, 0);
+  assert.equal(wc.isAudioMuted(), true);
+  surface.setBlocked("class-lock", false); await ready();
+  assert.equal(view().webContents, preservedWc);
+  record("rapid lock/unlock/lock never reattaches a stale asynchronous resume");
   const lastSession = wc.session;
-  surface.setShell({ ...shell, mode: "normal", exam_mode_active: false });
+  await machine.observe(sessionInfo(shell.session_id!, "finished"));
   await until(() => wc.isDestroyed(), "finished contents destroyed");
   await wait(100); assert.equal((await lastSession.cookies.get({ name: "fixture" })).length, 0);
-  record("disconnect/pause/finish close exam, finish clears website session cookies");
+  record("actual machine finish destroys old document and clears website session cookies");
+  await machine.bind(sessionInfo("fixture-next-session", "running")); await ready(); wc = view().webContents;
+  assert.notEqual(wc.session, lastSession);
+  assert.equal(await wc.executeJavaScript("document.getElementById('answer').value"), "");
+  await wc.executeJavaScript("document.getElementById('answer').value='old-policy-answer'; localStorage.setItem('old-policy','present');");
+  const oldPolicyWc = wc; const oldPolicySession = wc.session;
+  classState({ exam: { ...policy, exam_id: "replacement", allowed_urls: [`${origin}/auth/*`] } });
+  await until(() => oldPolicyWc.isDestroyed(), "policy replacement destroys old document");
+  await ready(); wc = view().webContents;
+  assert.notEqual(wc.session, oldPolicySession);
+  assert.equal(wc.getURL(), `${origin}/auth/`);
+  assert.equal(await wc.executeJavaScript("localStorage.getItem('old-policy')"), null);
+  assert.equal(await wc.executeJavaScript("document.getElementById('answer').value"), "");
+  await wait(100); assert.equal((await oldPolicySession.cookies.get({ name: "fixture" })).length, 0);
+  record("new session and policy replacement use fresh isolated data without old answers");
+  const replacedWc = wc; const replacedSession = wc.session;
+  await machine.bind(sessionInfo("fixture-third-session", "running")); await ready();
+  await until(() => replacedWc.isDestroyed(), "new bound session destroys previous running document");
+  wc = view().webContents;
+  assert.notEqual(wc.session, replacedSession);
+  record("rebinding a running session destroys previous document and replaces storage partition");
+  await wc.executeJavaScript(`window.socket=new WebSocket(${JSON.stringify(origin.replace("http:", "ws:") + "/auth/socket")});window.socket.onopen=()=>window.socket.send('before-lock');void 0`);
+  await until(() => socketMessages > 0, "approved WebSocket active before suspension");
+  surface.setBlocked("class-lock", true);
+  assert.equal(window.contentView.children.length, 0);
+  await until(() => wc.isDestroyed() && sockets.clients.size === 0, "persistent transport fallback destroys document and closes existing socket");
+  assert.match(surface.status.message, /Несохранённые ответы/);
+  surface.setBlocked("class-lock", false); await ready(); wc = view().webContents;
+  record("WebSocket document explicitly falls back to destruction; no persistent socket remains hidden");
+  const freezeCommands = wc.debugger.sendCommand.bind(wc.debugger);
+  wc.debugger.sendCommand = (method, params, sessionId) => method === "Page.setWebLifecycleState"
+    ? new Promise(() => {}) : freezeCommands(method, params, sessionId);
+  surface.setBlocked("class-lock", true);
+  assert.equal(window.contentView.children.length, 0);
+  await until(() => wc.isDestroyed(), "unacknowledged freeze destroys document within bounded deadline");
+  assert.equal(surface.status.phase, "error");
+  surface.setBlocked("class-lock", false); await ready(); wc = view().webContents;
+  const thawCommands = wc.debugger.sendCommand.bind(wc.debugger);
+  wc.debugger.sendCommand = (method, params, sessionId) => method === "Page.setWebLifecycleState" && params?.state === "active"
+    ? new Promise(() => {}) : thawCommands(method, params, sessionId);
+  surface.setBlocked("class-lock", true);
+  surface.setBlocked("class-lock", false);
+  assert.equal(window.contentView.children.length, 0);
+  await until(() => wc.isDestroyed(), "unacknowledged thaw destroys document without attachment");
+  assert.equal(surface.status.phase, "error");
+  assert.equal(window.contentView.children.length, 0);
+  surface.reload(); await ready(); wc = view().webContents;
+  record("stalled freeze and thaw acknowledgements fail closed within deadline; explicit reload recovers");
+  wc.debugger.detach();
+  await until(() => wc.isDestroyed(), "lost lifecycle controller closes view");
+  assert.equal(surface.status.phase, "error");
+  assert.equal(window.contentView.children.length, 0);
+  record("unavailable freeze controller fails closed with explicit answer-loss message");
   console.log(JSON.stringify({ test: "actual-electron-exam-surface", passed: checked.length, device_capture: false, native_guard: false, checks: checked }));
 };
 void run().then(() => cleanup(0), (error) => { console.error(error); cleanup(1); });
 function cleanup(code: number): void {
-  surface?.dispose(); window?.destroy(); server.close(); app.exit(code);
+  surface?.dispose(); window?.destroy(); sockets.close(); server.close(); app.exit(code);
 }

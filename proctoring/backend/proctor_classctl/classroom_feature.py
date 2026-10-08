@@ -12,8 +12,10 @@ Acks of T04's own command_ids reach it through on_student_message (the core igno
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse
 
 from .access import Principal
 from .api import create_teacher_router
@@ -37,6 +39,21 @@ class ClassControlFeature:
         self.control = ClassControl(transport=_Transport(ctx.send_raw_to_student), journal_path=ctx.feature_dir("exams") / "journal.jsonl")
         self.router = APIRouter(prefix="/api/teacher")
         self.router.include_router(create_teacher_router(self.control, self._principal))
+        # The production drawer controls the one current C1 class through C1's command API.
+        # Its assets are deliberately fixed, authenticated and independent of the T04 demo exam store.
+        assets = {
+            "classroom-module.js": "text/javascript", "classroom-model.js": "text/javascript",
+            "t02-module.css": "text/css", "src/api.js": "text/javascript",
+            "src/model.js": "text/javascript", "src/dom.js": "text/javascript",
+        }
+        root = Path(__file__).resolve().parents[2] / "class-control-ui"
+
+        @self.router.get("/control/assets/{name:path}")
+        def asset(name: str, request: Request):
+            self.ctx.teacher(request)
+            if name not in assets:
+                raise HTTPException(404)
+            return FileResponse(root / name, media_type=assets[name], headers={"Cache-Control": "no-store"})
 
     def _principal(self, request: Request) -> Principal | None:
         teacher = self.ctx.teacher(request)  # raises 401 for a request without the teacher cookie

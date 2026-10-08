@@ -381,7 +381,7 @@ function SourcesCard() {
               .reverse()
               .map((e) => (
                 <li key={e.observation_id} className="small">
-                  <span className="mono">{sessionT(e.t_session_ms)}</span> {ENV_ACTION[e.action]} — {ENFORCEMENT[e.enforcement]}
+                  <span className="mono">{sessionT(e.t_session_ms)}</span> {e.detail.shortcut ?? ENV_ACTION[e.action]} — {ENFORCEMENT[e.enforcement]}
                 </li>
               ))}
           </ul>

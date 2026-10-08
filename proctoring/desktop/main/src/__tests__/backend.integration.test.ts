@@ -148,6 +148,7 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
         const r = (await api.getDeskScan(sid)) as { ok: boolean; data: DeskScanResult };
         return r.ok && r.data.state !== "recording" ? r.data : null;
       }, 30_000, 250);
+      assert.ok(dsDone, "desk scan did not finish");
       assert.ok(["clear", "objects_found", "failed"].includes(dsDone.state), JSON.stringify(dsDone));
       assert.ok(dsDone.message_ru?.startsWith("Вариант: USB-камера."), JSON.stringify(dsDone));
       const dsSkipLocked = (await api.skipDeskScan(sid, { reason: "fixed_camera_teacher_check" })) as { ok: boolean; error?: { details: Record<string, unknown> } };

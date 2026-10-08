@@ -3,6 +3,7 @@
 const MODULES = /** @type {Record<string, {url: string, label: string}>} */ ({
   history: { url: "/api/teacher/history/assets/register.js", label: "историю и клипы" },
   audio: { url: "/api/teacher/audio/assets/teacher/class-panel-module.js", label: "аудиосвязь" },
+  exams: { url: "/api/teacher/control/assets/classroom-module.js", label: "управление студентом" },
 });
 
 /** @param {string[]} names @param {HTMLElement} root */

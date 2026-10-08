@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { runInNewContext } from "node:vm";
 import type { BrowserWindow } from "electron";
 import type { BackendClient } from "../backend/client";
 import { ClassLockController } from "../class-lock";
@@ -8,11 +9,11 @@ import { receiptFor, type LockRequest } from "../../../shared/class-lock";
 const request = (locked = true): LockRequest => ({ command_id: locked ? "cmd-lock" : "cmd-unlock", student_id: "student-1",
   class_session_id: "class-1", source_session_id: "local-1", backend_instance_id: "backend-1", request_token: locked ? "token-1" : "token-2",
   locked, reason_ru: locked ? "Проверка телефона" : null, expires_at: new Date(Date.now() + 5000).toISOString(), recovery: false });
-function setup(visible = true, rendered = true) {
+function setup(visible = true, rendered: boolean | ((source: string) => boolean) = true) {
   const calls: unknown[] = [], blocked: boolean[] = [];
   const client = { json: async (...args: unknown[]) => { calls.push(args); return { ok: true, data: { accepted: true } }; } } as unknown as BackendClient;
   const window = { isDestroyed: () => false, isVisible: () => visible,
-    webContents: { isDestroyed: () => false, executeJavaScript: async () => rendered } } as unknown as BrowserWindow;
+    webContents: { isDestroyed: () => false, executeJavaScript: async (source: string) => typeof rendered === "function" ? rendered(source) : rendered } } as unknown as BrowserWindow;
   const controller = new ClassLockController({ client, window: () => window, setExamBlocked: value => blocked.push(value) });
   return { controller, calls, blocked };
 }
@@ -64,4 +65,29 @@ test("renderer loss blocks immediately and invalidates only the current backend"
   assert.deepEqual(calls[0], ["POST", "/v1/class/lock/lost", { backend_instance_id: "backend-1" }, 2500]);
   controller.consumeClassState({ type: "class_state", locked: false, lock_requested: true, lock_confirmed: false, lock_request: null });
   assert.equal(blocked.at(-1), true);
+});
+
+test("paint verification accepts the content viewport with classic scrollbars but rejects uncovered content", async () => {
+  const r = request();
+  for (const [right, expected] of [[1251.2, true], [1236, false]] as const) {
+    const app = { inert: true, getAttribute: () => "true" };
+    const overlay = {
+      getAttribute: () => r.request_token,
+      getBoundingClientRect: () => ({ left: 0, top: 0, right, bottom: 763.2 }),
+      contains: (element: unknown) => element === overlay,
+    };
+    const { controller, calls } = setup(true, source => runInNewContext(source, {
+      innerWidth: 1266, innerHeight: 763,
+      document: {
+        visibilityState: "visible", documentElement: { clientWidth: 1251, clientHeight: 763 },
+        querySelector: (selector: string) => selector === "[data-adal-app]" ? app
+          : selector === "[data-adal-lock]" ? overlay : { textContent: r.reason_ru },
+        elementFromPoint: (x: number, y: number) => x === 1251 / 2 && y === 763 / 2 ? overlay : null,
+      },
+      getComputedStyle: () => ({ visibility: "visible", display: "flex", opacity: "1" }),
+    }) === true);
+    controller.consumeClassState({ type: "class_state", locked: false, lock_request: r });
+    await controller.confirmApplied(receiptFor(r, true));
+    assert.equal(((calls[0] as unknown[])[2] as { applied: boolean }).applied, expected);
+  }
 });

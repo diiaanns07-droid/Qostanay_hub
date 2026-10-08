@@ -21,7 +21,7 @@ export interface KeyInput {
 
 export interface KeyDecision {
   prevent: boolean;
-  /** null = prevented silently (no observation), e.g. print/save/zoom. */
+  /** null = no observation; all blocked exam shortcuts currently have an action. */
   action: EnvironmentAction | null;
   enforcement: EnforcementResult;
   shortcut: string;
@@ -86,21 +86,21 @@ export function classifyExamKey(input: KeyInput): KeyDecision | null {
   if (ctrl && !alt && isKey(input, "w", "KeyW")) return blocked("shortcut_alt_f4", "Ctrl+W");
 
   // reload / history navigation
-  if (isKey(input, "F5") || (ctrl && isKey(input, "r", "KeyR"))) return blocked("navigation_blocked", "Reload");
+  if (isKey(input, "F5") || (ctrl && isKey(input, "r", "KeyR"))) return blocked("navigation_blocked", "Перезагрузка страницы");
   if (alt && isKey(input, "ArrowLeft", "ArrowRight")) return blocked("navigation_blocked", "Alt+Arrow");
   if (isKey(input, "BrowserBack", "BrowserForward", "BrowserRefresh", "BrowserHome")) return blocked("navigation_blocked", "BrowserKey");
 
   // new window / tab
   if (ctrl && !alt && isKey(input, "n", "KeyN", "t", "KeyT")) return blocked("new_window_blocked", "Ctrl+N/T");
 
-  // silently prevented: print, save, open, find, view-source, zoom, context-menu key
-  if (ctrl && !alt && isKey(input, "p", "KeyP", "s", "KeyS", "o", "KeyO", "u", "KeyU", "f", "KeyF", "g", "KeyG")) {
-    return blocked(null, "Ctrl+letter");
-  }
+  if (ctrl && !alt && isKey(input, "p")) return blocked("clipboard_blocked", "Печать (Ctrl+P)");
+  if (ctrl && !alt && isKey(input, "s")) return blocked("clipboard_blocked", "Сохранение (Ctrl+S)");
+  if (ctrl && !alt && isKey(input, "u")) return blocked("devtools_blocked", "Исходный код (Ctrl+U)");
+  if (ctrl && !alt && isKey(input, "o", "f", "g")) return blocked("navigation_blocked", "Открытие/поиск страницы");
   if (ctrl && isKey(input, "Equal", "Minus", "Digit0", "NumpadAdd", "NumpadSubtract", "Numpad0", "+", "-", "=", "0")) {
-    return blocked(null, "Zoom");
+    return blocked("navigation_blocked", "Масштаб страницы");
   }
-  if (isKey(input, "ContextMenu")) return blocked(null, "ContextMenu");
+  if (isKey(input, "ContextMenu") || (shift && isKey(input, "F10"))) return blocked("clipboard_blocked", "Контекстное меню");
   if (meta && !ctrl) return detectedOnly("shortcut_win", "Win+key");
   return null;
 }

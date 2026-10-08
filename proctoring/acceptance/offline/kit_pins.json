@@ -1,0 +1,27 @@
+{
+  "schema": "adal.offline-kit.pins/1",
+  "about": "Pins for artifacts that the repository does not pin elsewhere. Every value records where it came from. Model, wheel and npm pins are read from their owners' files at run time and are NOT duplicated here.",
+  "electron": {
+    "43.7.5": {
+      "artifact": "electron-v43.7.5-win32-x64.zip",
+      "sha256": "7acfa0646793f912ff983c8db8c3a145dc18ee40fe3d11a01840fd59cb76e5a2",
+      "size_bytes_observed": 151231099,
+      "source_url": "https://github.com/electron/electron/releases/download/v43.7.5/electron-v43.7.5-win32-x64.zip",
+      "pin_evidence": "checksums.json of the npm package electron@43.7.5, whose tarball integrity sha512-AR+OLH/8QAwx6Lz6mhaDQhesbjC/Xh2WOiFSI/CDFU6FKX/qJdBg65bEUn+MLvbvIi/LlaRQeLljnUcKb1KS0A== is pinned in proctoring/desktop/package-lock.json; the release file was downloaded and matched on 2026-10-08 (ADAL-OFFLINE-KIT, cloud container)",
+      "license": "MIT",
+      "license_evidence": "proctoring/desktop/package-lock.json (node_modules/electron license); LICENSE inside the zip",
+      "distribution": "MIT for Electron itself; LICENSES.chromium.html inside the zip lists bundled Chromium/third-party notices and must stay with the binary"
+    }
+  },
+  "audio": {
+    "LICENSE.silero.txt": {
+      "sha256": "2e63e9a38b6e8fc0c7bc37ce174caca1862870856c6daf5697cfb785e925520b",
+      "size_bytes": 1075,
+      "pin_evidence": "LICENSE at the pinned silero-vad revision be95df9152c0d7618fa1edfeb296fc3dae32376f (URL from proctoring/backend/proctor/audio/assets.py LICENSE_URL); downloaded and hashed on 2026-10-08 (ADAL-OFFLINE-KIT)"
+    },
+    "silero_vad.onnx": {
+      "size_bytes_observed": 2327524,
+      "pin_evidence": "size observed for the file whose SHA-256 is pinned by proctoring/backend/proctor/audio/assets.py MODEL_SHA256 (2026-10-08, ADAL-OFFLINE-KIT); SHA-256 stays the authority"
+    }
+  }
+}

@@ -310,7 +310,6 @@ def test_answers_rejected_outside_running(backend, api):
     contract.api_error(backend.http.put("/sessions/nope/answers/q1", json={"value": ["a"], "client_seq": 1}), 404, "SESSION_NOT_FOUND")
 
 
-@pytest.mark.xfail(strict=False, reason="QA-OBS-003 (A08/A01, contract-silent): answers are not checked against the exam (unknown question_id / option_id accepted)")
 def test_answers_are_checked_against_exam_definition(backend, api):
     sid = api.running_session()
     r = backend.http.put(f"/sessions/{sid}/answers/not-a-question", json={"value": "x", "client_seq": 1})
@@ -346,7 +345,6 @@ def test_delete_active_session_refused_and_history_kept(backend, api):
     contract.api_error(backend.http.delete("/sessions/never-existed"), 404, "SESSION_NOT_FOUND")
 
 
-@pytest.mark.xfail(strict=False, reason="QA-OBS-004 (A01/A08): after DELETE the session is still readable via GET /sessions/{sid} and its sub-routes (runtime kept in memory)")
 def test_deleted_session_is_not_readable(backend, api):
     sid = api.create()["session_id"]
     backend.http.post(f"/sessions/{sid}/abort", json={"reason": "qa"})

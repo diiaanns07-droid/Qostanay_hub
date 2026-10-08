@@ -548,7 +548,7 @@ def create_app(
         async def panel_config() -> JSONResponse:
             # T02 HANDOFF "Точка подключения к C1" §1: served by C1 with the REAL adapter (the file in the repo says demo)
             owners = {f.owner for f in features.infos() if f.status == "mounted"}
-            modules = [name for owner, name in (("T03", "history"), ("T05", "audio")) if owner in owners]
+            modules = [name for owner, name in (("T03", "history"), ("T04", "exams"), ("T05", "audio")) if owner in owners]
             return JSONResponse({"adapter": "real", "features": modules}, headers={"Cache-Control": "no-store"})
 
     if ui_dir is not None:

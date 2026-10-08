@@ -7,6 +7,7 @@
 // reaches the page) the key checks are "inconclusive" and the matrix stays "unverified".
 // OS-level keys (Alt+Tab, Win, PrintScreen) cannot be tested this way and are not attempted.
 import type { ProbeCheck, ProbeOutcome, ProbeResults } from "./capabilities";
+import type { ContentAction } from "./content-policy";
 
 export interface KeySpec {
   /** Electron accelerator-style keyCode for sendInputEvent */
@@ -27,6 +28,7 @@ export interface ProbeDriver {
   tryNavigate(): Promise<{ urlBefore: string; urlAfter: string }>;
   tryDevTools(): Promise<{ openAfter: boolean }>;
   tryClose(): Promise<{ stillOpen: boolean }>;
+  tryContent(id: ContentAction): Promise<{ prevented: boolean; reported: boolean }>;
   dispose(): void;
 }
 
@@ -45,7 +47,14 @@ export const KEY_CHECKS: Array<{ check: ProbeCheck; specs: KeySpec[] }> = [
   { check: "key_alt_f4", specs: [key("F4", ["alt"], "F4")] },
   { check: "key_devtools", specs: [key("F12", [], "F12"), key("I", ["control", "shift"], "KeyI")] },
   { check: "key_reload", specs: [key("F5", [], "F5"), key("R", ["control"], "KeyR")] },
+  { check: "key_print", specs: [key("P", ["control"], "KeyP")] },
+  { check: "key_save", specs: [key("S", ["control"], "KeyS")] },
+  { check: "key_source", specs: [key("U", ["control"], "KeyU")] },
+  { check: "key_zoom", specs: [key("=", ["control"], "Equal"), key("-", ["control"], "Minus"), key("0", ["control"], "Digit0")] },
+  { check: "key_context_menu", specs: [key("F10", ["shift"], "F10")] },
 ];
+
+export const CONTENT_CHECKS = ["print", "context_menu", "selection", "drag", "zoom"] as const;
 
 const outcome = (status: ProbeOutcome["status"], detail: string): ProbeOutcome => ({ status, detail: detail.slice(0, 200) });
 
@@ -92,6 +101,12 @@ export async function runSelfTest(driver: ProbeDriver): Promise<ProbeResults> {
     if (r.returnedNull && r.windowsAfter === r.windowsBefore) return outcome("pass", "window.open returned null, no new window");
     return outcome("fail", `returnedNull=${r.returnedNull} windows ${r.windowsBefore}->${r.windowsAfter}`);
   });
+  for (const id of CONTENT_CHECKS) {
+    results[`page_${id}`] = await guarded(async () => {
+      const r = await driver.tryContent(id);
+      return outcome(r.prevented && r.reported ? "pass" : "fail", `${id}: prevented=${r.prevented}, reported=${r.reported}`);
+    });
+  }
   results.navigation = await guarded(async () => {
     const r = await driver.tryNavigate();
     return r.urlAfter === r.urlBefore ? outcome("pass", "location change to a remote URL was cancelled") : outcome("fail", "page navigated away");

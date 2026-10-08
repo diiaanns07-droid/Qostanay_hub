@@ -488,6 +488,8 @@ class ClassroomCore:
             return DeviceStatus(student_id=st.student_id, zone=zone, zone_source=source, stale=True)
         received = datetime.fromisoformat(s["received_at"])
         stale = (now - received).total_seconds() > self.config.status_stale_s
+        # Persisted/old-connection receipts describe history, never the current screen.
+        lock_fresh = online and not stale and st.connected_since is not None and received >= st.connected_since
         camera = CameraState(s["camera"])
         reported = Zone(s["zone"]) if s.get("zone") else None
         if not online:
@@ -505,6 +507,9 @@ class ClassroomCore:
             camera=camera, monitoring=s.get("monitoring"), zone_reported=reported, zone=zone, zone_source=source,
             zone_reasons_ru=list(s.get("zone_reasons_ru") or [])[:3], incidents_total=s.get("incidents_total", 0),
             incidents_by_priority=s.get("incidents_by_priority") or {}, locked=s.get("locked"), mic_active=s.get("mic_active"), stale=stale,
+            lock_state=s.get("lock_state") if lock_fresh else "unconfirmed",
+            lock_confirmed=lock_fresh and s.get("lock_confirmed") is True and s.get("lock_scope") == "app_overlay",
+            lock_requested=s.get("lock_requested"), lock_scope=s.get("lock_scope"),
         )
 
     def student_model(self, st: StudentRec) -> Student:
@@ -525,7 +530,8 @@ class ClassroomCore:
             **student.model_dump(include={"student_id", "session_id", "student_label", "computer_name", "app_version", "origin", "capabilities",
                                           "connection", "connected_since", "last_seen_at", "reconnects"}),
             **status.model_dump(include={"exam_state", "camera", "monitoring", "zone", "zone_reported", "zone_source", "zone_reasons_ru",
-                                         "incidents_total", "incidents_by_priority", "locked", "mic_active", "stale"}),
+                                         "incidents_total", "incidents_by_priority", "locked", "mic_active", "stale",
+                                         "lock_state", "lock_confirmed", "lock_requested", "lock_scope"}),
             connected=st.conn is not None and not st.conn.closed,
             last_status_at=status.received_at, last_event_at=st.last_event_at, incidents_open=open_n, incidents_unreviewed=unreviewed,
             preview_url=(f"/api/teacher/students/{st.student_id}/preview.jpg?seq={st.preview_seq}" if st.preview else None),

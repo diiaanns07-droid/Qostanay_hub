@@ -1,7 +1,7 @@
 // @ts-check
 // One student card. Built once, then updated field by field (no re-render, fixed height → no layout jumps).
 // Every status is TEXT + ICON SHAPE + colour. Nothing is shown that the data did not say: an unknown camera
-// is "нет данных", never "работает"; "заблокирован" appears only when the data says locked=true.
+// is "нет данных", never "работает"; an Adal screen lock needs a fresh scoped UI receipt.
 import { ago, CAMERA_LABEL, displayName, EXAM_STATE_LABEL, ORIGIN_LABEL, ZONE_LABEL } from "../model.js";
 import { h, setAttr, setText, svg, toggleClass } from "./dom.js";
 import { ICON } from "./icons.js";
@@ -155,7 +155,7 @@ export function updateCard(c, x, now, o) {
   setAttr(c.episodes, "data-unreviewed", unrev !== null && unrev > 0 ? "1" : null);
   setAttr(c.episodes, "title", total === null ? "Число эпизодов не получено" : `Эпизодов: ${total}. Без решения: ${unrev ?? "неизвестно"}`);
   const flags = [];
-  if (v.locked === true) flags.push("экран заблокирован");
+  if (d.locked === true) flags.push("экран Adal закрыт");
   if (v.micActive === true) flags.push("микрофон включён");
   setText(c.flags, flags.join(" · "));
   setText(c.last, (d.zone === "red" || d.zone === "yellow") && d.reasons[0] ? d.reasons[0] : v.lastEventAt === null ? "" : `Событие ${ago(v.lastEventAt, now)}`);

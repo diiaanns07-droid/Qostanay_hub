@@ -5,6 +5,7 @@
 | Что | Где |
 |---|---|
 | Хранилище эпизодов/клипов/решений (SQLite + файлы вне исходников) | `store.py`, `db.py`, `media.py` |
+| Production-адаптер C1, backfill принятых событий и lifecycle команд | `classroom_feature.py` → `create_classroom_feature(...)` |
 | HTTP-маршруты протокола §5 (клипы с перемоткой, эпизоды, решения) | `router.py` → `create_review_router(...)` |
 | Зона после проверки через общий A05 `assess_session_zone` | `zones.py` |
 | UI-модуль (слот `history` панели T02) и DEV-страница | `ui/` |
@@ -12,17 +13,28 @@
 | Пример загрузки клипа студентом + синтетический студент | `examples/`, `CLIENT_CLIP_UPLOAD.md` |
 | Синтетические тестовые клипы с надписью «TEST CLIP» | `testclips.py` |
 
-Данные: `QORGAU_CLASS_DATA_DIR` (по умолчанию `%LOCALAPPDATA%\QorgauClass` / `~/.local/share/qorgau-class`).
+В production данные T03 находятся в `features/history` внутри каталога данных C1 (`QORGAU_CLASS_DATA_DIR`).
+DEV-стенд использует отдельный каталог; по умолчанию `%LOCALAPPDATA%\QorgauClass` / `~/.local/share/qorgau-class`.
 
 ```bash
 cd proctoring
-python -m pytest -q classreview/tests                       # 73 теста, e2e в Chromium если есть Node+Playwright
+python -m pytest -q classreview/tests --ignore=classreview/tests/test_review_e2e.py
+python -m classroom.server --host 127.0.0.1 --port 8765    # production C1 + панель, PIN печатается при запуске
 python -m classreview.devserver --pin 123456 --data-dir /tmp/qc   # DEV-стенд: http://127.0.0.1:8765/
 python -m classreview.examples.fake_student --code <код>          # синтетический студент
 ```
 
 Правила: эпизод = одна запись на `(student_id, incident_id)` (кадры — не эпизоды); повторная доставка
-`(student_id, seq)` и повторная загрузка тех же байтов не создают дубликатов; клип принимается только по
+канонического события C1 (в DEV — `(student_id, seq)`) и повторная загрузка тех же байтов не создают дубликатов;
+новый backend run может повторно использовать wire `seq`, не теряя историю. Готовность клипа и первый принятый
+снимок сохраняются при закрытии и запоздалом событии; закрытый эпизод не открывается заново. Клип принимается только по
 запросу преподавателя, только от владельца эпизода, ≤ 8 МБ, формат проверяется по содержимому; доказательство
 не заменяется; решения преподавателя — журнал только на добавление; отклонённые эпизоды не входят в зону
 «с учётом решений», зона студента показывается рядом без изменений.
+
+`test_classroom_feature.py` запускает настоящий процесс C1 и проверяет HTTP/WS, авторизацию, provenance,
+перезапуск, сроки запросов и историю решений. `test_classroom_browser.py` дополнительно входит через production
+форму PIN, запрашивает клип из панели, проверяет декодирование кадров, перемотку, HTTP 206 и решения после
+перезапуска. Нужны Node + Playwright (`NODE_PATH`, если пакет установлен отдельно) и Chromium; путь к Chrome
+можно задать через `ADAL_REVIEW_CHROME`. Эти тесты используют явно помеченные синтетические данные и не включают
+камеру, микрофон или системные ограничения. Старый `test_review_e2e.py` относится только к DEV-стенду.

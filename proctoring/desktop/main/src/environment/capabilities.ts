@@ -22,6 +22,8 @@ export type ProbeCheck =
   | "key_alt_f4"
   | "key_devtools"
   | "key_reload"
+  | "key_print" | "key_save" | "key_source" | "key_zoom" | "key_context_menu"
+  | "page_print" | "page_context_menu" | "page_selection" | "page_drag" | "page_zoom"
   | "window_close"
   | "window_open"
   | "navigation"
@@ -140,20 +142,20 @@ const RULES: Record<string, InAppRule | OsRule | DetectRule> = {
   navigation_blocked: {
     kind: "in_app",
     mechanism: "electron.will_navigate",
-    checks: ["navigation", "key_reload"],
+    checks: ["navigation", "key_reload", "key_zoom", "page_zoom"],
     note_ru: "Переход на любые адреса вне приложения запрещён всегда.",
   },
   devtools_blocked: {
     kind: "in_app",
     mechanism: "electron.devtools_disabled",
-    checks: ["devtools", "key_devtools"],
+    checks: ["devtools", "key_devtools", "key_source"],
     note_ru: "Инструменты разработчика отключены в окне экзамена.",
   },
   clipboard_blocked: {
     kind: "in_app",
     mechanism: "electron.clipboard_policy",
-    checks: ["key_ctrl_c", "key_ctrl_v", "key_ctrl_x", "key_shift_insert"],
-    note_ru: "Копирование/вставка внутри окна блокируются; другие приложения буфер не теряют до входа в экзамен.",
+    checks: ["key_ctrl_c", "key_ctrl_v", "key_ctrl_x", "key_shift_insert", "key_print", "key_save", "key_context_menu", "page_print", "page_context_menu", "page_selection", "page_drag"],
+    note_ru: "В экзамене запрещены копирование/вставка, печать, сохранение, контекстное меню, выделение и перетаскивание текста.",
   },
   shortcut_alt_tab: {
     kind: "os",

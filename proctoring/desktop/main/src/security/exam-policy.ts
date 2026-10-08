@@ -35,7 +35,13 @@ export function compileExamPolicy(value: unknown): ExamPolicyResult {
     if (!entry) entry = u.href;
   }
   const title = typeof o.title === "string" ? o.title.slice(0, 200) : "Сайт экзамена";
-  return { kind: "url", policy: { examId: o.exam_id, title, entry, rules, key: JSON.stringify([o.exam_id, rules]) } };
+  const policy: ExamPolicy = { examId: o.exam_id, title, entry, rules, key: "" };
+  if (o.start_url != null) {
+    if (typeof o.start_url !== "string" || o.start_url.includes("*") || !examUrlAllowed(policy, o.start_url)) return bad();
+    policy.entry = new URL(o.start_url).href;
+  }
+  policy.key = JSON.stringify([o.exam_id, rules, policy.entry]);
+  return { kind: "url", policy };
 }
 
 /** No implicit host/subdomain/port expansion; resources and redirects use the SAME path rules. */

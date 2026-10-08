@@ -3,6 +3,8 @@ import { session, WebContentsView, type BrowserWindow, type Session, type WebCon
 import type { ShellState } from "@contracts/bridge";
 import { compileExamPolicy, examBounds, examUrlAllowed, type ExamPolicy, type ExamPolicyResult } from "../security/exam-policy";
 import type { ExamSurfaceStatus } from "./channels";
+import { prepareContentSession, protectContent } from "../environment/content";
+import type { ContentAction } from "../environment/content-policy";
 
 // Registered before constructing the view (web-contents-created fires inside the constructor).
 // The ordinary app/probe contents keep their original all-external-navigation prohibition.
@@ -15,6 +17,13 @@ export class ExamSurface {
   private ses: Session | null = null;
   private view: WebContentsView | null = null;
   private attached = false;
+  private networkOpen = false;
+  private suspended = false;
+  private resuming = false;
+  private persistentTransport = false;
+  private transitionId = 0;
+  private transition: Promise<void> = Promise.resolve();
+  private pagePhase: ExamSurfaceStatus["phase"] = "loading";
   private rect: unknown = null;
   private shell: ShellState | null = null;
   private connected = false;
@@ -22,7 +31,8 @@ export class ExamSurface {
   private currentUrl: string | null = null;
   private state: ExamSurfaceStatus = { kind: "none", phase: "idle", title: "", origin: null, message: "" };
   constructor(private readonly window: () => BrowserWindow | null, private readonly publish: (s: ExamSurfaceStatus) => void,
-    private readonly beforeInput?: (input: Electron.Input) => boolean) {}
+    private readonly beforeInput?: (input: Electron.Input) => boolean,
+    private readonly reportBlocked?: (id: ContentAction) => void) {}
 
   get status(): ExamSurfaceStatus { return { ...this.state }; }
   private emit(patch: Partial<ExamSurfaceStatus>): void {
@@ -56,7 +66,9 @@ export class ExamSurface {
   setShell(state: ShellState): void {
     const previousId = this.shell?.session_id;
     this.shell = state;
-    if (previousId !== state.session_id || state.mode === "normal" || state.mode === "error") {
+    // ShellStateMachine uses preflight for pause and error for recoverable backend/renderer loss.
+    // normal is terminal/emergency exit (or unbound); neither pause nor recovery clears this DOM.
+    if (previousId !== state.session_id || state.mode === "normal") {
       this.destroyView();
       this.clearSession();
       this.currentUrl = null;
@@ -64,7 +76,7 @@ export class ExamSurface {
     this.refresh();
   }
 
-  /** Synchronous hiding and network gate closure; Chromium destruction completes asynchronously. */
+  /** Synchronous hiding/muting/request gate closure; Chromium freeze/connection closure is asynchronous. */
   setBlocked(reason: string, blocked: boolean): void {
     if (blocked) this.blockers.add(reason); else this.blockers.delete(reason);
     this.refresh();
@@ -75,7 +87,7 @@ export class ExamSurface {
   reload(): void {
     if (!this.canRun()) return;
     if (!this.view) this.refresh();
-    else if (this.currentUrl) this.navigate(this.currentUrl);
+    else if (!this.suspended && this.networkOpen && this.currentUrl) this.navigate(this.currentUrl);
   }
   dispose(): void { this.connected = false; this.destroyView(); this.clearSession(); this.rect = null; }
   private canRun(): boolean {
@@ -87,18 +99,23 @@ export class ExamSurface {
     const w = this.window();
     if (!w || w.isDestroyed()) { this.destroyView(); return; }
     if (!this.canRun()) {
-      this.destroyView();
+      this.suspendView();
       this.emit({ phase: this.config.kind === "none" ? "idle" : "hidden" });
       return;
     }
     const [width = 0, height = 0] = w.getContentSize();
     const bounds = examBounds(this.rect, width, height, w.webContents.getZoomFactor());
-    if (!bounds) { this.detach(); return; }
+    if (!bounds) { this.suspendView(); this.emit({ phase: "hidden" }); return; }
     if (!this.view) this.createView();
     const view = this.view;
     if (!view) return;
+    if (this.suspended) { this.resumeView(); return; }
     view.setBounds(bounds);
+    view.setVisible(true);
+    view.webContents.setAudioMuted(false);
     if (!this.attached) { w.contentView.addChildView(view); this.attached = true; }
+    this.networkOpen = true;
+    this.emit({ phase: this.pagePhase });
   }
 
   private createView(): void {
@@ -108,16 +125,20 @@ export class ExamSurface {
     if (!this.ses) {
       this.ses = ses;
       examSessions.add(ses);
+      prepareContentSession(ses);
       ses.setPermissionRequestHandler((_wc, _permission, cb) => cb(false));
       ses.setPermissionCheckHandler(() => false);
       ses.setDevicePermissionHandler(() => false);
       ses.setDisplayMediaRequestHandler((_req, cb) => cb({}));
       ses.setSpellCheckerEnabled(false);
-      ses.on("will-download", (event) => { event.preventDefault(); this.blocked("Загрузка файлов запрещена"); });
+      ses.on("will-download", (event) => { event.preventDefault(); this.blocked("Загрузка файлов запрещена"); this.reportBlocked?.("download"); });
       // No filter: every interceptable protocol is denied unless the strict HTTP(S) policy approves it.
       ses.webRequest.onBeforeRequest((details, cb) => {
-        const allowed = this.canRun() && this.ses === ses && !!this.view && !!this.policy &&
+        const allowed = this.networkOpen && this.canRun() && this.ses === ses && !!this.view && !!this.policy &&
           examUrlAllowed(this.policy, details.url, details.resourceType);
+        // Chromium's closeAllConnections does not close an upgraded WebSocket (runtime-tested).
+        // Such a document must be destroyed on pause; never silently retain a live hidden socket.
+        if (allowed && details.resourceType === "webSocket") this.persistentTransport = true;
         cb({ cancel: !allowed });
       });
       ses.webRequest.onHeadersReceived((details, cb) => {
@@ -133,15 +154,21 @@ export class ExamSurface {
       session: ses, contextIsolation: true, sandbox: true, nodeIntegration: false, nodeIntegrationInWorker: false,
       nodeIntegrationInSubFrames: false, webviewTag: false, webSecurity: true, allowRunningInsecureContent: false,
       experimentalFeatures: false, navigateOnDragDrop: false, spellcheck: false, safeDialogs: true, devTools: false,
-      // Deliberately no preload. This remote content receives no qorgau/lock/audio bridge.
+      // Only the session content-policy gate; no qorgau/lock/audio/auth bridge.
     } });
     this.view = view;
     const wc = view.webContents;
+    // Main-process CDP only: no remote debugging port, preload, or site-accessible bridge.
+    // If this runtime cannot freeze/thaw reliably, close the view instead of running it hidden.
+    try { wc.debugger.attach("1.3"); } catch { this.lifecycleFailed(view); return; }
+    wc.debugger.on("detach", () => { if (this.view === view) this.lifecycleFailed(view); });
+    this.networkOpen = true;
+    protectContent(wc, () => this.canRun(), id => this.reportBlocked?.(id));
     wc.setWebRTCIPHandlingPolicy("disable_non_proxied_udp");
-    wc.setWindowOpenHandler(() => { this.blocked("Новое окно запрещено; откройте вход в текущем окне"); return { action: "deny" }; });
+    wc.setWindowOpenHandler(() => { this.blocked("Новое окно запрещено; откройте вход в текущем окне"); this.reportBlocked?.("new_window"); return { action: "deny" }; });
     const nav = (event: { preventDefault(): void }, url: string) => {
-      if (!this.canRun() || !this.policy || !examUrlAllowed(this.policy, url)) {
-        event.preventDefault(); this.blocked("Переход за пределы разрешённых адресов запрещён");
+      if (!this.networkOpen || !this.canRun() || !this.policy || !examUrlAllowed(this.policy, url)) {
+        event.preventDefault(); this.blocked("Переход за пределы разрешённых адресов запрещён"); this.reportBlocked?.("navigation");
       }
     };
     wc.on("will-navigate", nav);
@@ -166,9 +193,16 @@ export class ExamSurface {
         this.emit({ phase: "error", message: "Сайт изменил адрес за пределы разрешённого пути. Повторите загрузку." });
       }
     });
-    wc.on("did-finish-load", () => { if (this.view === view) this.emit({ phase: "ready" }); });
+    wc.on("did-finish-load", () => {
+      if (this.view !== view) return;
+      this.pagePhase = "ready";
+      if (!this.suspended) this.emit({ phase: "ready" });
+    });
     wc.on("did-fail-load", (_event, code, _description, _url, isMainFrame) => {
-      if (isMainFrame && code !== -3 && this.view === view) this.emit({ phase: "error", message: "Сайт не загрузился. Проверьте связь и разрешённые адреса, затем повторите." });
+      if (isMainFrame && code !== -3 && this.view === view) {
+        this.pagePhase = "error";
+        if (!this.suspended) this.emit({ phase: "error", message: "Сайт не загрузился. Проверьте связь и разрешённые адреса, затем повторите." });
+      }
     });
     wc.on("render-process-gone", () => { if (this.view === view) { this.destroyView(); this.emit({ phase: "error", message: "Окно сайта остановлено. Повторите загрузку." }); } });
     this.navigate(this.currentUrl ?? policy.entry);
@@ -178,9 +212,13 @@ export class ExamSurface {
     const view = this.view;
     if (!view || !this.policy || !examUrlAllowed(this.policy, url)) return;
     this.currentUrl = url;
+    this.pagePhase = "loading";
     this.emit({ phase: "loading", message: "Доступны только адреса, разрешённые преподавателем" });
     void view.webContents.loadURL(url).catch(() => {
-      if (this.view === view) this.emit({ phase: "error", message: "Сайт недоступен или переход запрещён. Проверьте список адресов." });
+      if (this.view === view && !this.suspended) {
+        this.pagePhase = "error";
+        this.emit({ phase: "error", message: "Сайт недоступен или переход запрещён. Проверьте список адресов." });
+      }
     });
   }
   private blocked(message: string): void { this.emit({ message }); }
@@ -189,12 +227,76 @@ export class ExamSurface {
     if (this.attached && this.view && w && !w.isDestroyed()) w.contentView.removeChildView(this.view);
     this.attached = false;
   }
+  private async completeLifecycle(operation: Promise<unknown>): Promise<void> {
+    let timer: NodeJS.Timeout | undefined;
+    try {
+      await Promise.race([operation, new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("exam lifecycle acknowledgement timed out")), 1500);
+        timer.unref();
+      })]);
+    } finally { if (timer) clearTimeout(timer); }
+  }
+  private suspendView(): void {
+    this.networkOpen = false;
+    this.detach();
+    const view = this.view;
+    if (!view || view.webContents.isDestroyed()) return;
+    view.setVisible(false);
+    view.webContents.setAudioMuted(true);
+    if (this.persistentTransport) {
+      this.destroyView();
+      this.emit({ message: "Сайт использует постоянное соединение: при остановке окно закрыто. Несохранённые ответы могли быть потеряны." });
+      return;
+    }
+    if (this.suspended && !this.resuming) return;
+    this.suspended = true;
+    this.resuming = false;
+    ++this.transitionId;
+    view.webContents.stop();
+    // stop() during a partial load preserves whatever DOM exists; explicit Reload can retry it.
+    if (this.pagePhase === "loading") this.pagePhase = "error";
+    const ses = view.webContents.session;
+    this.transition = this.transition.then(async () => {
+      if (this.view !== view) return;
+      await this.completeLifecycle(Promise.all([
+        ses.closeAllConnections(),
+        view.webContents.debugger.sendCommand("Page.setWebLifecycleState", { state: "frozen" }),
+      ]));
+    }).catch(() => this.lifecycleFailed(view));
+  }
+  private resumeView(): void {
+    const view = this.view;
+    if (!view || this.resuming) return;
+    this.resuming = true;
+    const id = ++this.transitionId;
+    this.transition = this.transition.then(async () => {
+      if (this.view !== view || id !== this.transitionId) return;
+      await this.completeLifecycle(view.webContents.debugger.sendCommand("Page.setWebLifecycleState", { state: "active" }));
+      // A second lock or policy/session replacement can arrive while thawing.
+      if (this.view !== view || id !== this.transitionId) return;
+      this.suspended = false;
+      this.resuming = false;
+      this.refresh();
+    }).catch(() => this.lifecycleFailed(view));
+  }
+  private lifecycleFailed(view: WebContentsView): void {
+    if (this.view !== view) return;
+    this.destroyView();
+    this.emit({ phase: "error", message: "Не удалось безопасно приостановить сайт. Окно закрыто; несохранённые ответы могли быть потеряны. Повторите загрузку." });
+  }
   private destroyView(): void {
+    this.networkOpen = false;
+    ++this.transitionId;
     this.detach();
     const view = this.view;
     this.view = null;
+    this.suspended = false;
+    this.resuming = false;
+    this.persistentTransport = false;
+    this.transition = Promise.resolve();
     if (view && !view.webContents.isDestroyed()) {
       view.setVisible(false);
+      view.webContents.setAudioMuted(true);
       view.webContents.stop();
       view.webContents.close({ waitForBeforeUnload: false });
     }

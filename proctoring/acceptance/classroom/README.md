@@ -1,4 +1,7 @@
-# Запуск класса Qorgau на Windows
+# Запуск класса Adal на Windows
+
+Основной вход — `proctoring/Start-Adal.ps1 -Role Teacher|Student|Standalone`.
+Актуальные команды трёх ПК и явный `-Enforce` описаны в [общем README](../../README.md); скрипты ниже остаются совместимыми входами.
 
 `Start-Teacher.ps1` запускает **настоящий C1/T01** (`classroom.server`) и текущую панель T02 в режиме REAL.
 `Start-Student.ps1` запускает **текущую Electron-сборку** и backend/C2; `-BackendOnly` — отдельная диагностика backend без окна.

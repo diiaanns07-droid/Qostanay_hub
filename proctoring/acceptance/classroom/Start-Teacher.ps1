@@ -19,6 +19,8 @@ param(
     [switch]$Library
 )
 
+[Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
+
 # Shared private launcher functions; Start-Student dot-sources this file with -Library.
 function Get-QorgauRoot {
     [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
@@ -118,9 +120,18 @@ if cfg['kind'] == 'probe':
             importlib.import_module(name)
         except Exception:
             print('Missing or broken dependency: ' + name); sys.exit(2)
+    if cfg.get('desktop_assets'):
+        spec = importlib.util.spec_from_file_location('adal_readiness', root / 'packaging' / 'preflight.py')
+        readiness = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(readiness)
+        result = readiness.inspect(root, 'desktop', Path(os.environ.get('QORGAU_MODELS_DIR', root / 'models')))
+        if not result['ready_for_launch']:
+            print(json.dumps(result, ensure_ascii=False)); sys.exit(2)
     print('QORGAU_CHECK_OK ' + str(root))
 elif cfg['kind'] == 'desktop':
-    sys.exit(subprocess.call([cfg['electron'], cfg['desktop']], cwd=cfg['desktop']))
+    child = subprocess.Popen([cfg['electron'], cfg['desktop']], cwd=cfg['desktop'])
+    print('ADAL_DESKTOP_PID ' + str(child.pid), flush=True)
+    sys.exit(child.wait())
 else:
     sys.argv = [cfg['module']] + cfg['args']
     runpy.run_module(cfg['module'], run_name='__main__')
@@ -172,7 +183,7 @@ function Stop-QorgauProcess($Child) {
     }
 }
 
-function Test-QorgauPython([string]$PythonExe, [string]$Root, [hashtable]$Environment, [switch]$Student) {
+function Test-QorgauPython([string]$PythonExe, [string]$Root, [hashtable]$Environment, [switch]$Student, [switch]$DesktopAssets) {
     $sources = @{ classroom = 'classroom/__init__.py' }
     $imports = @('fastapi', 'uvicorn', 'websockets', 'pydantic')
     if ($Student) {
@@ -182,7 +193,7 @@ function Test-QorgauPython([string]$PythonExe, [string]$Root, [hashtable]$Enviro
     }
     $child = $null
     try {
-        $child = Start-QorgauProcess $PythonExe $Root $Environment @{kind='probe'; root=$Root; sources=$sources; imports=$imports}
+        $child = Start-QorgauProcess $PythonExe $Root $Environment @{kind='probe'; root=$Root; sources=$sources; imports=$imports; desktop_assets=[bool]$DesktopAssets}
         $out = $child.Process.StandardOutput.ReadToEndAsync()
         $err = $child.Process.StandardError.ReadToEndAsync()
         if (-not $child.Process.WaitForExit(30000)) { throw 'Проверка Python не завершилась за 30 секунд.' }

@@ -186,6 +186,10 @@ export interface DeviceStatus {
   incidents_total?: number;
   incidents_by_priority?: IncidentsByPriority;
   locked?: boolean | null;
+  lock_state?: "unconfirmed" | "requested" | "applied" | "failed" | null;
+  lock_confirmed?: boolean;
+  lock_requested?: boolean | null;
+  lock_scope?: "app_overlay" | null;
   mic_active?: boolean | null;
   stale?: boolean;
 }
@@ -411,6 +415,10 @@ export interface Status {
   incidents_total?: number;
   incidents_by_priority?: IncidentsByPriority;
   locked?: boolean;
+  lock_state?: "unconfirmed" | "requested" | "applied" | "failed" | null;
+  lock_confirmed?: boolean | null;
+  lock_requested?: boolean | null;
+  lock_scope?: "app_overlay" | null;
   mic_active?: boolean;
   source_mode?: SourceMode | null;
   source_session_id?: string | null;
@@ -455,6 +463,10 @@ export interface StudentCard {
   incidents_total?: number;
   incidents_by_priority?: IncidentsByPriority;
   locked?: boolean | null;
+  lock_state?: "unconfirmed" | "requested" | "applied" | "failed" | null;
+  lock_confirmed?: boolean;
+  lock_requested?: boolean | null;
+  lock_scope?: "app_overlay" | null;
   mic_active?: boolean | null;
   stale?: boolean;
   last_status_at?: string | null;
