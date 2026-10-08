@@ -1,0 +1,69 @@
+{
+  "checked_on": "2026-10-08",
+  "scope": "Prompt package structure only; not application implementation or runtime validation",
+  "checks": {
+    "exactly_ten_prompts": true,
+    "unique_role_headers": true,
+    "exact_repository_in_every_prompt": true,
+    "self_contained_common_and_role": true,
+    "role_matches_filename": true,
+    "no_bootstrap_placeholders_in_role_files": true,
+    "case_has_two_pages": true,
+    "source_has_case_subject": true,
+    "integration_followup_present": true,
+    "all_prompts_bundle_contains_each_role": true
+  },
+  "passed": true,
+  "files": [
+    {
+      "name": "01_COORDINATOR.txt",
+      "sha256": "118dd585b0bdbd6968f13d1cb13dbae0c1078b0c6673e4a7a5c03990615d8bf6",
+      "bytes": 18685
+    },
+    {
+      "name": "02_CAMERA_RUNTIME.txt",
+      "sha256": "57094a2611798ed51cffd449ed6e1a5fe7f07955231bf9136b9cd9c1d9befee0",
+      "bytes": 16185
+    },
+    {
+      "name": "03_PHONE_DETECTION.txt",
+      "sha256": "e3e042934b13fff8be7f695531ea0edc98fdc640c0a1d8cae1e4a4a28eb5e864",
+      "bytes": 16741
+    },
+    {
+      "name": "04_ATTENTION_FACES.txt",
+      "sha256": "d2949317d4b8729f48fbd23400330b8077fb0b1ffb86f769aab8e0db3daad97d",
+      "bytes": 16666
+    },
+    {
+      "name": "05_INCIDENT_ENGINE.txt",
+      "sha256": "59ec5cdbfa3b521c7f3ae09f172c93223af8de31684ce2dd1721723f2e96917f",
+      "bytes": 16364
+    },
+    {
+      "name": "06_EXAM_SECURITY.txt",
+      "sha256": "63328d41dd806e6caeff8fdaccb55a3662b7d07ad14d4fd263f84e0aca794daa",
+      "bytes": 16984
+    },
+    {
+      "name": "07_PRODUCT_UI.txt",
+      "sha256": "dcd6b468d95696bea3f2bec8cc95bd2b1355d00451de549f988fcd30f4c22e9e",
+      "bytes": 17362
+    },
+    {
+      "name": "08_EVIDENCE_REPORTS.txt",
+      "sha256": "cbff5c5b61a8f997d1efcdb998a52a7536c73bbc91e574584853dd7757e7e6ad",
+      "bytes": 16668
+    },
+    {
+      "name": "09_QA_RELEASE.txt",
+      "sha256": "7ef307b2a6c6856794cb59799a1dfe4fc5adea92b3342101dedf837b2d1ce535",
+      "bytes": 16675
+    },
+    {
+      "name": "10_DEMO_PITCH.txt",
+      "sha256": "d831efd0d3007672563a403becfb69f7c8a29a5875b448506074d4e4136a6691",
+      "bytes": 17813
+    }
+  ]
+}
