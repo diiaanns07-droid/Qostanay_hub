@@ -6,7 +6,7 @@
 .DESCRIPTION
 1. Сервер класса T01 на 127.0.0.1:<Port> (по умолчанию 8765) в окне «Adal · Сервер класса»; PIN задаётся скриптом.
 2. Сессия класса через API T01 (python -m proctor.uplink.demo_teacher session) -> печатает шестизначный код.
-3. Проверка T03: GET /api/teacher/clips/... ; 501 feature_not_installed => сцену клипа НЕ снимать.
+3. Проверка T03: /api/teacher/info (history mounted), модуль панели 200, клипы не 501; иначе сцену клипа НЕ снимать.
 4. Панель T02 в браузере по умолчанию (PIN копируется в буфер обмена).
 5. Окно «Adal · Преподаватель» с функцией demo_teacher (start / lock "причина" / unlock / finish / students).
 6. Adal-студент (acceptance\classroom\Start-Student.ps1) с QORGAU_CLASS_SERVER/QORGAU_CLASS_CODE и
@@ -154,10 +154,12 @@ try {
     $code = $Matches[1]
 
     # ------------------------------------------------------------------ 3. T03 (clips) installed?
-    $probe = Invoke-Py @('-c', "import os,re,sys`nfrom proctor.uplink.demo_teacher import Teacher`nt=Teacher(sys.argv[1], os.environ['QORGAU_CLASS_TEACHER_PIN'])`ntry:`n    t.call('GET','/api/teacher/clips/t03-probe'); print('T03_STATUS 200')`nexcept SystemExit as e:`n    m=re.search(r'HTTP (\d+)', str(e)); print('T03_STATUS', m.group(1) if m else 'error')", "127.0.0.1:$Port")
-    $t03 = (($probe | Where-Object { $_ -match '^T03_STATUS' } | Select-Object -First 1) -replace 'T03_STATUS\s*', '').Trim()
-    $clipScene = $t03 -eq '404' -or $t03 -eq '200'
-    $t03Text = if ($clipScene) { "подключён (HTTP $t03 на пробный id) — сцену клипа можно снимать" } elseif ($t03 -eq '501') { 'НЕ подключён (HTTP 501 feature_not_installed) — сцену клипа НЕ снимать' } else { "неизвестно (HTTP $t03) — сцену клипа НЕ снимать" }
+    $probe = Invoke-Py @('-c', "import os,sys,urllib.error`nfrom proctor.uplink.demo_teacher import Teacher`nt=Teacher(sys.argv[1], os.environ['QORGAU_CLASS_TEACHER_PIN'])`ndef code(path):`n    try:`n        with t.http.open(t.base+path, timeout=10) as r: return r.status`n    except urllib.error.HTTPError as e: return e.code`nst={f['name']:f['status'] for f in (t.call('GET','/api/teacher/info') or {}).get('features',[])}`nprint('T03_HISTORY', st.get('history','absent'))`nprint('T03_UI', code('/api/teacher/history/assets/register.js'))`nprint('T03_CLIPS', code('/api/teacher/clips/t03-probe'))", "127.0.0.1:$Port")
+    $val = { param($k) (($probe | Where-Object { $_ -like "$k *" } | Select-Object -First 1) -replace "^$k\s*", '').Trim() }
+    $t03History = & $val 'T03_HISTORY'; $t03Ui = & $val 'T03_UI'; $t03 = & $val 'T03_CLIPS'
+    # T03 mounted: history feature "mounted", its panel module 200, clip path 404 for an unknown id (501 = not installed)
+    $clipScene = $t03History -eq 'mounted' -and $t03Ui -eq '200' -and $t03 -ne '501'
+    $t03Text = if ($clipScene) { "подключён (история: mounted, модуль панели: HTTP $t03Ui, клипы: HTTP $t03 на пробный id вместо 501) — сцену клипа можно снимать; клип AVI скачивается и открывается в плеере" } elseif ($t03 -eq '501') { 'НЕ подключён (HTTP 501 feature_not_installed) — сцену клипа НЕ снимать' } else { "неполный (история: $t03History, модуль панели: HTTP $t03Ui, клипы: HTTP $t03) — сцену клипа НЕ снимать" }
     Write-Host "3/6 Клипы (T03): $t03Text"
 
     # ------------------------------------------------------------------ 4..6 windows (or a headless check)
@@ -187,7 +189,7 @@ try {
         # Electron build present and not older than its sources (the same check Start-Student.ps1 does before a window)
         $buildCheck = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $studentScript -Server "127.0.0.1:$Port" -JoinCode $code -Label $StudentLabel -Python $py -CheckOnly 2>&1 | ForEach-Object { "$_" }
         if ($LASTEXITCODE -ne 0) { throw "Сборка Adal не готова: $(($buildCheck | Select-Object -Last 1))" }
-        Write-Host "6/6 Проверка без окон пройдена: сервер, код $code, T03 $t03, студент подключился, сборка Adal готова. Всё останавливается." -ForegroundColor Green
+        Write-Host "6/6 Проверка без окон пройдена: сервер, код $code, T03 history=$t03History UI=$t03Ui clips=$t03, студент подключился, сборка Adal готова. Всё останавливается." -ForegroundColor Green
         exit 0
     }
 
@@ -196,7 +198,7 @@ try {
     Start-Process "http://127.0.0.1:$Port/login" | Out-Null
 
     Write-Host '5/6 Окно «Преподаватель» (команды demo_teacher) ...'
-    $clipHint = if ($clipScene) { "Write-Host '  demo_teacher clip                     — запросить клип последнего эпизода (T03 подключён)'" } else { "Write-Host '  (clip — не использовать: модуль клипов T03 на сервере не подключён, HTTP 501)' -ForegroundColor DarkGray" }
+    $clipHint = if ($clipScene) { "Write-Host '  demo_teacher clip                     — запросить клип последнего эпизода; AVI: скачать и открыть в плеере'" } else { "Write-Host '  (clip — не использовать: модуль клипов T03 на сервере не подключён, HTTP 501)' -ForegroundColor DarkGray" }
     $teacherBody = @"
 function global:demo_teacher { & $(Q $py) -m proctor.uplink.demo_teacher --server '127.0.0.1:$Port' @args }
 Write-Host 'Adal · Преподаватель. Класс «$($ClassTitle.Replace("'", "''"))», код $code, PIN панели $pin' -ForegroundColor Cyan
