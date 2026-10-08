@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _V1 = """
 CREATE TABLE class_sessions (
@@ -109,7 +109,28 @@ BEGIN
 END;
 """
 
-MIGRATIONS = {1: _V1}
+_V2 = """
+CREATE TABLE canonical_events (
+    student_id TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    incident_id TEXT NOT NULL,
+    review_seq INTEGER NOT NULL,
+    event_json TEXT NOT NULL,
+    PRIMARY KEY (student_id, event_id),
+    UNIQUE (student_id, review_seq)
+);
+CREATE INDEX canonical_incident ON canonical_events(student_id, incident_id, review_seq);
+CREATE TRIGGER canonical_events_no_update BEFORE UPDATE ON canonical_events
+BEGIN
+    SELECT RAISE(ABORT, 'canonical event provenance is immutable');
+END;
+CREATE TRIGGER canonical_events_no_delete BEFORE DELETE ON canonical_events
+BEGIN
+    SELECT RAISE(ABORT, 'canonical event provenance is immutable');
+END;
+"""
+
+MIGRATIONS = {1: _V1, 2: _V2}
 
 
 class SchemaTooNew(Exception):

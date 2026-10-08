@@ -101,7 +101,10 @@ Teacher panel now has a single class heading, compact priority filters with an A
 tiles, shorter status labels, and a row-based review queue. The previous layered main-workspace CSS
 was replaced. Source labels and unknown/stale states remain explicit. Panel strict check and 25 unit
 tests passed; Chrome e2e 61/61 passed after layout changes (100 synthetic cards p95 2.8ms, not 100 cameras).
-The later dark synthetic SVG preview change is visual only; final screenshot inspection remains due.
+The later dark synthetic SVG preview was visually inspected in Chrome at 1366x900; source marking stays
+visible. The real C1 session form passed 39/39 at 390/1366 widths after the redesign. Contract generation
+check and 48 Python contract tests passed. Latest A07 renderer unit tests: 7/7; fixture class UI: 46/46.
+Teacher login now displays Adal with a masked PIN input; existing panel-serving/auth checks: 3/3.
 HTML presentation prompt: coordination/launch-prompts/ADAL_HTML_PRESENTATION.txt.
 
 Verified gaps before the next wave: C1 sends exam policy as metadata but the student does not yet

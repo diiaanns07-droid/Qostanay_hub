@@ -183,7 +183,7 @@ def create_app(
             features.close()
             db.close()
 
-    app = FastAPI(title="Qorgau Classroom server", version=SERVER_VERSION, lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url="/api/teacher/openapi.json")
+    app = FastAPI(title="Adal Classroom server", version=SERVER_VERSION, lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url="/api/teacher/openapi.json")
     app.state.core = core
     app.state.hub = hub
     app.state.features = features
@@ -579,20 +579,22 @@ def _login_page(error_ru: str) -> str:
 
     message = f'<p class="err" role="alert">{escape(error_ru)}</p>' if error_ru else ""
     return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Qorgau · вход преподавателя</title><style>
-body{{font-family:system-ui,sans-serif;background:#f4f5f7;color:#16181d;margin:0;display:grid;place-items:center;min-height:100vh}}
-form{{background:#fff;padding:2rem;border-radius:12px;box-shadow:0 2px 12px #0002;width:min(22rem,90vw)}}
-h1{{font-size:1.25rem;margin:0 0 .75rem}} label{{display:block;margin:.75rem 0 .25rem}}
-input{{font-size:1.5rem;letter-spacing:.3em;width:100%;box-sizing:border-box;padding:.4rem .6rem}}
-button{{margin-top:1rem;font-size:1rem;padding:.6rem 1.2rem}} .err{{color:#a1131b;font-weight:600}} .hint{{color:#555;font-size:.9rem}}
-</style></head><body><form method="post" action="/login"><h1>Вход преподавателя</h1>{message}
-<label for="pin">PIN-код</label><input id="pin" name="pin" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required autofocus>
+<title>Adal · вход преподавателя</title><style>
+*{{box-sizing:border-box}}body{{font-family:"Segoe UI",system-ui,sans-serif;background:#f5f6f8;color:#1b2430;margin:0;display:grid;place-items:center;min-height:100vh;padding:24px}}
+form{{background:#fff;padding:36px;border:1px solid #e0e4e9;border-radius:10px;width:min(420px,100%)}}
+.brand{{font-size:30px;font-weight:700;letter-spacing:-1px;margin:0 0 32px;color:#315bc8}}
+h1{{font-size:22px;font-weight:600;letter-spacing:-.5px;margin:0 0 22px}}label{{display:block;margin:12px 0 8px;font-size:13px}}
+input{{font-size:24px;letter-spacing:.3em;width:100%;padding:10px 12px;border:1px solid #c6cdd6;border-radius:6px}}
+input:focus{{outline:2px solid #315bc8;outline-offset:2px}}
+button{{margin-top:18px;font:600 14px "Segoe UI",sans-serif;padding:12px;width:100%;background:#315bc8;color:white;border:0;border-radius:6px;cursor:pointer}}.err{{color:#b1333c;font-size:13px}}.hint{{color:#66717e;font-size:12px;line-height:1.6;margin-top:16px}}
+</style></head><body><form method="post" action="/login"><p class="brand">Adal</p><h1>Вход преподавателя</h1>{message}
+<label for="pin">PIN-код</label><input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required autofocus>
 <p class="hint">PIN напечатан в окне сервера класса при запуске. Панель открывается только на этом компьютере.</p>
 <button type="submit">Войти</button></form></body></html>"""
 
 
-_NO_UI_PAGE = """<!doctype html><html lang="ru"><meta charset="utf-8"><title>Qorgau Classroom</title>
+_NO_UI_PAGE = """<!doctype html><html lang="ru"><meta charset="utf-8"><title>Adal Classroom</title>
 <body style="font-family:sans-serif;max-width:40rem;margin:2rem auto">
-<h1>Сервер класса Qorgau работает</h1>
+<h1>Сервер класса Adal работает</h1>
 <p>Панель преподавателя ещё не собрана. Соберите её: <code>cd proctoring/classroom/teacher-ui && npm ci && npm run build</code>,
 затем перезапустите сервер. API: <code>/api/teacher/info</code> (после входа по PIN).</p></body></html>"""
