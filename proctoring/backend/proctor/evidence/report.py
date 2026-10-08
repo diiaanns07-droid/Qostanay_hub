@@ -505,7 +505,7 @@ def _incident_card(w, snap: ExportSnapshot, n: int, d: IncidentDetail) -> None:
             ("Время (UTC)", f"{fmt_dt(inc.wall_start)} — {fmt_dt(inc.wall_end)}"),
             ("Длительность", fmt_dur(inc.duration_ms)),
             ("Завершение", END_RU.get(inc.end_reason.value, inc.end_reason.value) if inc.end_reason else "—"),
-            ("Макс. оценка модели (не вероятность)", "—" if inc.max_confidence is None else f"{inc.max_confidence:.2f}"),
+            ("Макс. оценка модели (оценка для проверки преподавателем, не вывод о нарушении)", "—" if inc.max_confidence is None else f"{inc.max_confidence:.2f}"),
             ("Среднее качество входа", "—" if inc.mean_quality is None else f"{inc.mean_quality:.2f}"),
             ("Наблюдений", inc.observation_count),
             ("Правило / конфигурация", f"{inc.rule_version} / {inc.config_version}"),

@@ -349,7 +349,7 @@ def build(
     if rule not in (R.ENVIRONMENT_BLOCKED_ACTION, R.ENVIRONMENT_ESCAPE, R.MONITORING_DEGRADED):
         f.add("observations", ep.count, "count", "Наблюдений с признаком")
     if ep.conf_max is not None:
-        f.add("max_confidence", ep.conf_max, "ratio", "Макс. оценка модели (уверенность детектора, не вывод о человеке)")
+        f.add("max_confidence", ep.conf_max, "ratio", "Макс. оценка модели (оценка для проверки преподавателем, не вывод о нарушении)")
     if ep.mean_quality is not None:
         f.add("mean_quality", ep.mean_quality, "ratio", "Среднее качество входных данных")
     if ep.unknown_n:

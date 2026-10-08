@@ -116,6 +116,8 @@ def test_report_content_is_honest(evil_snapshot):
     ):
         assert needle in page, needle
     assert "вероятность списывания" not in page
+    assert not any(w in page.lower() for w in ("вероятност", "списыва", "нарушител"))
+    assert "оценка для проверки преподавателем, не вывод о нарушении" in page
     assert page.count("data:image/jpeg;base64,") == 1
 
 
