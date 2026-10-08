@@ -1720,7 +1720,7 @@ code,
   position: fixed;
   left: 12px;
   bottom: 12px;
-  z-index: 60; /* dev tool: stays usable above dialogs */
+  z-index: 1200; /* dev tool: stays usable above dialogs, the lock screen and the mic banner (FIXTURE only) */
   max-width: 300px;
 }
 .fx-toggle {
@@ -1921,3 +1921,51 @@ code,
   text-align: center;
 }
 .calfs .btn-ghost { color: #d5dee1; }
+
+/* ---------------------------------------------------------------- A07-student: class mode */
+.lockscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000; /* above the exam and the calibration layer; the mic banner stays visible above it */
+  background: #0d1418; /* opaque: exam questions are not readable while locked */
+  display: grid;
+  place-items: center;
+  color: #f1f5f6;
+  outline: none;
+}
+.lockscreen-card {
+  max-width: 640px;
+  margin: 0 24px;
+  text-align: center;
+  border: 2px solid #f59e0b;
+  border-radius: var(--radius);
+  padding: 32px 36px;
+  background: #172126;
+}
+.lockscreen-icon { font-size: 44px; color: #fbbf24; line-height: 1; margin-bottom: 8px; }
+.lockscreen h1 { font-size: 26px; margin: 0 0 14px; color: #fff; }
+.lockscreen-reason { font-size: 18px; margin: 0 0 14px; }
+.lockscreen-note { font-size: 14.5px; color: #c9d3d6; margin: 0; }
+.micbanner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 16px;
+  background: #b42318;
+  color: #fff;
+  font-size: 15.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.micbanner-icon { font-size: 18px; }
+.micbanner-dir { font-size: 13.5px; opacity: 0.9; }
+.app-mic { padding-top: 40px; }
+.classblock-list { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
+.classblock-list dt { color: var(--muted); }
+.classblock-list dd { margin: 0; }
