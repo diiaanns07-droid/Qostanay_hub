@@ -2478,16 +2478,170 @@
     },
     "StudentCard": {
       "additionalProperties": false,
-      "description": "One card of the class panel = identity + device status + counters (answers T02 request 1).",
+      "description": "One card of the class panel. FLAT, with the qorgau.class.v1 names (hello identity + status §3.1) that the T02\nREAL adapter reads, plus the server's view (answers T02 request 1). `zone` is the effective zone: the server forces\ngrey for offline / stale status / camera != ok (v1 §4); the student's own value stays in `zone_reported`.",
       "properties": {
-        "student": {
-          "$ref": "#/$defs/Student"
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
         },
-        "status": {
-          "$ref": "#/$defs/DeviceStatus"
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "student_label": {
+          "maxLength": 64,
+          "title": "Student Label",
+          "type": "string"
+        },
+        "computer_name": {
+          "maxLength": 64,
+          "title": "Computer Name",
+          "type": "string"
+        },
+        "app_version": {
+          "maxLength": 64,
+          "title": "App Version",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/DataOrigin"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "connection": {
+          "$ref": "#/$defs/ConnectionState"
         },
         "connected": {
           "title": "Connected",
+          "type": "boolean"
+        },
+        "connected_since": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connected Since"
+        },
+        "last_seen_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Seen At"
+        },
+        "reconnects": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Reconnects",
+          "type": "integer"
+        },
+        "exam_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExamState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraState",
+          "default": "unknown"
+        },
+        "monitoring": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonitoringState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zone": {
+          "$ref": "#/$defs/Zone",
+          "default": "grey"
+        },
+        "zone_reported": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Zone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zone_source": {
+          "$ref": "#/$defs/ZoneSource",
+          "default": "none"
+        },
+        "zone_reasons_ru": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Zone Reasons Ru",
+          "type": "array"
+        },
+        "incidents_total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Incidents Total",
+          "type": "integer"
+        },
+        "incidents_by_priority": {
+          "$ref": "#/$defs/IncidentsByPriority"
+        },
+        "locked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Locked"
+        },
+        "mic_active": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mic Active"
+        },
+        "stale": {
+          "default": true,
+          "title": "Stale",
           "type": "boolean"
         },
         "last_status_at": {
@@ -2562,8 +2716,13 @@
         }
       },
       "required": [
-        "student",
-        "status",
+        "student_id",
+        "session_id",
+        "student_label",
+        "computer_name",
+        "app_version",
+        "origin",
+        "connection",
         "connected"
       ],
       "title": "StudentCard",

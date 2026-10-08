@@ -421,11 +421,32 @@ export interface Student {
   capabilities?: Array<string>;
 }
 
-/** One card of the class panel = identity + device status + counters (answers T02 request 1). */
+/** One card of the class panel. FLAT, with the qorgau.class.v1 names (hello identity + status §3.1) that the T02 REAL adapter reads, plus the server's view (answers T02 request 1). `zone` is the effective zone: the server forces grey for offline / stale status / camera != ok (v1 §4); the student's own value stays in `zone_reported`. */
 export interface StudentCard {
-  student: Student;
-  status: DeviceStatus;
+  student_id: string;
+  session_id: string;
+  student_label: string;
+  computer_name: string;
+  app_version: string;
+  origin: DataOrigin;
+  capabilities?: Array<string>;
+  connection: ConnectionState;
   connected: boolean;
+  connected_since?: string | null;
+  last_seen_at?: string | null;
+  reconnects?: number;
+  exam_state?: ExamState | null;
+  camera?: CameraState;
+  monitoring?: MonitoringState | null;
+  zone?: Zone;
+  zone_reported?: Zone | null;
+  zone_source?: ZoneSource;
+  zone_reasons_ru?: Array<string>;
+  incidents_total?: number;
+  incidents_by_priority?: IncidentsByPriority;
+  locked?: boolean | null;
+  mic_active?: boolean | null;
+  stale?: boolean;
   last_status_at?: string | null;
   last_event_at?: string | null;
   incidents_open?: number;

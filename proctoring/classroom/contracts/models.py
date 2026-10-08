@@ -434,11 +434,38 @@ class DeviceStatus(_Out):
 
 
 class StudentCard(_Out):
-    """One card of the class panel = identity + device status + counters (answers T02 request 1)."""
+    """One card of the class panel. FLAT, with the qorgau.class.v1 names (hello identity + status §3.1) that the T02
+    REAL adapter reads, plus the server's view (answers T02 request 1). `zone` is the effective zone: the server forces
+    grey for offline / stale status / camera != ok (v1 §4); the student's own value stays in `zone_reported`."""
 
-    student: Student
-    status: DeviceStatus
+    # identity (hello)
+    student_id: Id
+    session_id: Id
+    student_label: ShortText
+    computer_name: ShortText
+    app_version: ShortText
+    origin: DataOrigin
+    capabilities: list[str] = Field(default_factory=list)
+    # connection (server)
+    connection: ConnectionState
     connected: bool
+    connected_since: AwareDatetime | None = None
+    last_seen_at: AwareDatetime | None = None
+    reconnects: Annotated[int, Field(ge=0)] = 0
+    # last status §3.1 + the server's verdict
+    exam_state: ExamState | None = None
+    camera: CameraState = CameraState.UNKNOWN
+    monitoring: MonitoringState | None = None
+    zone: Zone = Zone.GREY
+    zone_reported: Zone | None = None
+    zone_source: ZoneSource = ZoneSource.NONE
+    zone_reasons_ru: list[str] = Field(default_factory=list)
+    incidents_total: Annotated[int, Field(ge=0)] = 0
+    incidents_by_priority: IncidentsByPriority = Field(default_factory=IncidentsByPriority)
+    locked: bool | None = None
+    mic_active: bool | None = None
+    stale: bool = True
+    # times and counters
     last_status_at: AwareDatetime | None = None
     last_event_at: AwareDatetime | None = None
     incidents_open: Annotated[int, Field(ge=0)] = 0

@@ -56,9 +56,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--port", type=int, default=None)
     ap.add_argument("--data-dir", type=Path, default=None)
     ap.add_argument("--features", default=None, help='comma list "module:factory" (default QORGAU_CLASS_FEATURES)')
+    ap.add_argument("--ui", default=None, help="auto (default) | teacher-ui | class-panel | none | <directory with index.html>")
     ap.add_argument("--exit-on-stdin-eof", action="store_true", help="stop when stdin closes (test harnesses)")
     args = ap.parse_args(argv)
-    overrides = {k: v for k, v in (("host", args.host), ("port", args.port), ("data_dir", args.data_dir), ("features", args.features)) if v is not None}
+    overrides = {k: v for k, v in (("host", args.host), ("port", args.port), ("data_dir", args.data_dir), ("features", args.features), ("ui", args.ui)) if v is not None}
     config = ServerConfig.from_env(**overrides)
     logging.basicConfig(level=config.log_level, stream=sys.stderr, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -89,7 +90,7 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write(f"QORGAU_CLASS_PIN {pin}\n")
         sys.stdout.flush()
         lan = ", ".join(f"{a}:{port}" for a in _lan_addresses()) or "(адрес в сети не определён)"
-        print(f"Панель преподавателя: http://127.0.0.1:{port}/   PIN преподавателя: {pin}", file=sys.stderr)
+        print(f"Панель преподавателя ({app.state.ui_kind}): http://127.0.0.1:{port}/   PIN преподавателя: {pin}", file=sys.stderr)
         print(f"Адрес для студентов: {lan}", file=sys.stderr)
 
     original_startup = server.startup

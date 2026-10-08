@@ -32,6 +32,7 @@ FAST_ENV = {
     "QORGAU_CLASS_TICK_S": "0.1",
     "QORGAU_CLASS_PREVIEW_MIN_INTERVAL_S": "0",
     "QORGAU_CLASS_LOG_LEVEL": "INFO",
+    "QORGAU_CLASS_UI": "none",  # UI-serving tests opt in explicitly (test_panel_c2.py)
 }
 # smallest valid JPEG-like payload (SOI ... EOI); the server only checks markers and size
 TINY_JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64 + b"\xff\xd9"

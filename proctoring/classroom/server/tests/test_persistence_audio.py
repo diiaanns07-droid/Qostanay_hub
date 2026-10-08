@@ -36,8 +36,8 @@ def _check_after_restart(srv: ServerProcess, before: dict) -> None:
         session = t.get("/api/teacher/session").json()
         assert session["session_id"] == before["session"]["session_id"] and session["join_code"] == before["session"]["join_code"]
         card = t.get(f"/api/teacher/students/{sid}").json()
-        assert card["connected"] is False and card["student"]["student_label"] == "Данияр"
-        assert card["status"]["zone_reported"] == "yellow" and card["status"]["zone"] == "grey"  # offline -> grey, report kept
+        assert card["connected"] is False and card["student_label"] == "Данияр"
+        assert card["zone_reported"] == "yellow" and card["zone"] == "grey"  # offline -> grey, report kept
         assert len(t.get(f"/api/teacher/students/{sid}/events").json()) == 3
         incs = {i["incident_id"]: i["state"] for i in t.get(f"/api/teacher/students/{sid}/incidents").json()}
         assert incs == {"inc-1": "closed", "inc-2": "open"}

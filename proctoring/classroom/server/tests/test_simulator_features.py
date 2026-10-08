@@ -28,10 +28,10 @@ def test_simulator_students_are_labelled_simulated(tmp_path):
         assert summary["simulated_students"] == 6 and summary["connected_once"] == 6
         cards = t.get("/api/teacher/students").json()
         assert len(cards) == 6
-        assert all(c["student"]["origin"] == "simulated" and c["student"]["student_label"].startswith("SIM-") for c in cards)
+        assert all(c["origin"] == "simulated" and c["student_label"].startswith("SIM-") for c in cards)
         info = t.get("/api/teacher/info").json()
         assert info["simulated_students"] == 6
-        events = [e for c in cards for e in t.get(f"/api/teacher/students/{c['student']['student_id']}/events").json()]
+        events = [e for c in cards for e in t.get(f"/api/teacher/students/{c['student_id']}/events").json()]
         assert events and all(e["origin"] == "simulated" and e["payload"]["explanation_ru"].startswith("СИМУЛЯЦИЯ") for e in events)
         ids = [(e["student_id"], e["event_id"]) for e in events]
         assert len(ids) == len(set(ids)), "re-sent offline queue must not create duplicate events"

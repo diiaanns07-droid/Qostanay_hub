@@ -9,6 +9,7 @@ from pathlib import Path
 
 SERVER_VERSION = "0.1.0"
 CLASSROOM_ROOT = Path(__file__).resolve().parents[1]  # proctoring/classroom
+CLASS_PANEL_DIR = CLASSROOM_ROOT.parent / "class-panel"  # T02 (vanilla panel), served as-is with the REAL adapter
 
 
 def _default_data_dir() -> Path:
@@ -25,6 +26,7 @@ class ServerConfig:
     port: int = 8765  # protocol v1 §1; 0 = ephemeral (tests)
     data_dir: Path = field(default_factory=_default_data_dir)
     ui_dir: Path = CLASSROOM_ROOT / "teacher-ui" / "dist"
+    ui: str = "auto"  # auto = teacher-ui/dist if built, else the T02 class panel; "teacher-ui" | "class-panel" | "none" | <dir>
     teacher_pin: str = ""  # empty = random 6-digit PIN printed to the console at start (v1 §2.6)
     dev_origin: str = ""  # extra allowed Origin for the teacher UI dev server, e.g. http://127.0.0.1:5173
     features: str = ""  # comma list "module:factory" of feature plug-ins (see features.py)
@@ -70,3 +72,16 @@ def _coerce(raw: str, default: object) -> object:
     if isinstance(default, Path):
         return Path(raw).expanduser()
     return raw
+
+
+def resolve_ui(config: ServerConfig) -> tuple[str, Path | None]:
+    """-> (kind, directory). kind: "teacher-ui" (T01 React shell), "class-panel" (T02 panel), "custom", "none"."""
+    named = {"teacher-ui": config.ui_dir, "class-panel": CLASS_PANEL_DIR}
+    order = ["teacher-ui", "class-panel"] if config.ui == "auto" else [config.ui] if config.ui in named else []
+    for kind in order:
+        if (named[kind] / "index.html").is_file():
+            return kind, named[kind]
+    if config.ui not in ("auto", "none", *named) and (Path(config.ui) / "index.html").is_file():
+        directory = Path(config.ui).resolve()
+        return ("class-panel" if (directory / "src" / "adapters" / "real.js").is_file() else "custom"), directory
+    return "none", None

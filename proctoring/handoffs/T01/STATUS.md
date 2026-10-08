@@ -11,8 +11,37 @@ is role **C1**, path `proctoring/classroom/`.
   * There is no `main` on the remote, and the integration branch is the captain's.
   * Not in the base yet: T03 37d7078, T05 574136f, C2 d6752e6.
 * The SHA of this checkpoint is reported in the final message, because a commit cannot contain its own SHA.
+* Checkpoints: 1 = `668219b` (server, contracts, ownership). 2 = this commit (minimal C1 chain).
 
-## Checkpoint 1 — what runs
+## Checkpoint 2 — minimal C1 chain: C2 → student in the T02 REAL panel → event
+* The server hosts the T02 class panel as-is.
+  * `--ui auto`: the React shell when built, otherwise `proctoring/class-panel`.
+  * `/config.json` answers `{"adapter":"real"}`.
+  * `/login` is a server-rendered PIN form; `/` redirects there without the cookie.
+  * Previews are inline for this panel (v1 adapter; DEPENDENCIES D5).
+* `StudentCard` is now **flat**, with the v1 field names that T02 `normalizeStudent` reads. The nested shape of
+  checkpoint 1 was replaced before anyone consumed it, and the contract is frozen from here on (additive changes only).
+* v1 dedup follows §3.1 `(student_id, seq)`. C2 re-sends an open episode with `clip_available:true` under a new `seq`;
+  that is now stored as an update instead of being swallowed as a duplicate (test added).
+* `Ack.seq` was added (C2 D4). `ctx.student_by_token` was added for the T03 `StudentResolver`.
+* `Referrer-Policy: same-origin`, because with `no-referrer` Chromium sends `Origin: null` on the login form POST.
+* Browser chain check `classroom/server/tests/chain/chain.e2e.mjs`. It runs the **real C2 uplink code** (codex/class-C2
+  @ d6752e6, `proctor.uplink.client.Uplink`) with a synthetic, labelled data source instead of the camera/CV backend.
+  It goes through the T01 server and the T02 panel in headless Chromium 141, and gets **12/12 PASS**:
+  * login redirect;
+  * wrong PIN refused;
+  * REAL mode;
+  * join code;
+  * the C2 student appears;
+  * online;
+  * episode counter = 1;
+  * C2 preview on the card;
+  * episode text in the drawer;
+  * the event is stored once with `event_id`, `event_time`, `received_at`;
+  * C2 exit 0;
+  * no browser errors.
+
+## Checkpoint 1 — what runs (still true)
 * `python -m classroom.server` (RUN.md):
   * pairing by a 6-digit code, with resume tokens and supersede (4409);
   * a teacher PIN → HttpOnly/SameSite=Strict cookie, teacher API on loopback only, Host/Origin checks, brute-force limits
@@ -33,7 +62,7 @@ is role **C1**, path `proctoring/classroom/`.
 
 ## Checks (Linux container, Python 3.12, .venv from requirements)
 * `python -m classroom.contracts.generate --check` → up to date.
-* `pytest classroom/` → **108 passed**:
+* `pytest classroom/` → **111 passed** at checkpoint 2 (108 at checkpoint 1 + 3 panel-serving tests). The checkpoint 1 breakdown:
   * 63 contract tests;
   * 45 real-process server tests: registration, client isolation, reconnect/resume, dedup, persistence after a graceful
     restart and after `kill -9`, commands, heartbeat, audio, simulator, feature isolation, migrations.
@@ -42,11 +71,13 @@ is role **C1**, path `proctoring/classroom/`.
 ## Limits (honest)
 * Not run on Windows, not over a real LAN or Wi-Fi, not with real cameras.
 * **The simulator proves protocol handling, not 100 cameras.**
-* Not yet run end-to-end with the real C2 uplink or the T02 REAL panel. That is the next checkpoint.
+* The C2 chain uses C2's real network client, but the student data is synthetic. It is not the full student app
+  (Electron, camera, CV), and it was not run on Windows or over a LAN.
+* No session UI yet: create the session with `POST /api/teacher/session` (curl in RUN.md) until the T04 exams module is
+  mounted.
 * T03/T04/T05 modules are not mounted yet (adapters are next). The React teacher-ui shell is not built yet.
 
 ## Next (in this order)
-1. Minimal C1 chain: C2 connects → student in the T02 REAL panel served by the server (login page, `config.json` real)
-   → incident in the panel.
-2. Mount T03 (history, clips), T04 (exams, commands), T05 (audio) through thin feature adapters.
-3. React/TS teacher-ui shell with FeatureModule slots (INTERFACES.md §4).
+1. Mount T03 (history, clips, decisions), T04 (exams/session UI, commands), T05 (audio) through thin feature adapters,
+   plus their T02 panel modules (`window.QorgauClassPanelModules`).
+2. React/TS teacher-ui shell with FeatureModule slots (INTERFACES.md §4).

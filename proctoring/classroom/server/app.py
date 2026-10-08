@@ -17,10 +17,11 @@ import time
 from contextlib import asynccontextmanager
 from itertools import count
 from typing import Any, Callable
+from urllib.parse import parse_qs
 
 from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.routing import APIRoute
 from pydantic import TypeAdapter, ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -28,7 +29,7 @@ from starlette.staticfiles import StaticFiles
 
 from ..contracts import models as m
 from .auth import TEACHER_COOKIE, RateLimiter, TeacherAuth, TeacherPrincipal, host_header_ok, is_loopback_ip, origin_ok
-from .config import SERVER_VERSION, ServerConfig
+from .config import SERVER_VERSION, ServerConfig, resolve_ui
 from .core import ClassroomCore, ClassroomError, StudentConnection, StudentRec, envelope
 from .db import CORE_MIGRATIONS, Database
 from .features import FeatureContext, FeatureManager, ROUTE_RESERVATIONS, V1_DELEGATED, under
@@ -38,7 +39,7 @@ log = logging.getLogger("classroom.server")
 STUDENT_MESSAGE = TypeAdapter(m.StudentMessage)
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
-    "Referrer-Policy": "no-referrer",
+    "Referrer-Policy": "same-origin",  # no-referrer makes Chromium send "Origin: null" on form POSTs (login)
     "Content-Security-Policy": (
         "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
         "connect-src 'self' ws: wss:; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
@@ -188,6 +189,8 @@ def create_app(
     app.state.features = features
     app.state.teacher_auth = teacher_auth
     app.state.gate = state
+    ui_kind, ui_dir = resolve_ui(config)
+    app.state.ui_kind = ui_kind
 
     @app.exception_handler(ClassroomError)
     async def _classroom_error(_: Request, exc: ClassroomError) -> JSONResponse:
@@ -449,7 +452,8 @@ def create_app(
         if teacher_auth.check(ws.cookies.get(TEACHER_COOKIE)) is None:
             await _close(ws, 4401, "unauthorized")
             return
-        inline = ws.query_params.get("inline_previews") == "1"
+        # The T02 class panel (v1 adapter) renders only inline jpeg_b64 previews; everything else gets metadata + URL.
+        inline = ws.query_params.get("inline_previews", "1" if ui_kind == "class-panel" else "0") == "1"
         client = hub.add(inline)
         try:
             info_msg = m.ServerInfo(server_version=SERVER_VERSION, server_time=m.utc_now(), session=core.session_model(core.current_session()), features=features.status(), **core.info_counts())
@@ -493,12 +497,53 @@ def create_app(
             response.headers.setdefault(k, v)
         return response
 
-    if (config.ui_dir / "index.html").is_file():
-        app.mount("/", StaticFiles(directory=str(config.ui_dir), html=True), name="teacher-ui")
-    else:
-        @app.get("/", include_in_schema=False)
-        async def no_ui() -> HTMLResponse:
+    # ------------------------------------------------------------------------------- teacher UI + login
+    # The UI files are public on this computer only (gate); the data behind them needs the PIN cookie.
+    def logged_in(request: Request) -> bool:
+        return teacher_auth.check(request.cookies.get(TEACHER_COOKIE)) is not None
+
+    @app.get("/login", include_in_schema=False)
+    async def login_page(request: Request) -> Response:
+        if logged_in(request):
+            return RedirectResponse("/", status_code=303)
+        return HTMLResponse(_login_page(""))
+
+    @app.post("/login", include_in_schema=False)
+    async def login_form(request: Request) -> Response:
+        pin = (parse_qs((await request.body())[:1024].decode("utf-8", "replace")).get("pin") or [""])[0].strip()
+        left = teacher_auth.limiter.blocked("loopback")
+        if left:
+            return HTMLResponse(_login_page(f"Слишком много попыток. Повторите через {int(left) + 1} с."), status_code=429)
+        cookie, _ = teacher_auth.login(pin) if pin else (None, 0.0)
+        if cookie is None:
+            return HTMLResponse(_login_page("Неверный PIN. Он напечатан в окне сервера класса при запуске."), status_code=401)
+        resp = RedirectResponse("/", status_code=303)
+        resp.set_cookie(TEACHER_COOKIE, cookie, httponly=True, samesite="strict", secure=False, path="/")
+        return resp
+
+    @app.post("/logout", include_in_schema=False)
+    async def logout_form(request: Request) -> Response:
+        teacher_auth.logout(request.cookies.get(TEACHER_COOKIE))
+        resp = RedirectResponse("/login", status_code=303)
+        resp.delete_cookie(TEACHER_COOKIE, path="/")
+        return resp
+
+    @app.get("/", include_in_schema=False)
+    async def index(request: Request) -> Response:
+        if not logged_in(request):
+            return RedirectResponse("/login", status_code=303)
+        if ui_dir is None:
             return HTMLResponse(_NO_UI_PAGE)
+        return FileResponse(ui_dir / "index.html", headers={"Cache-Control": "no-store"})
+
+    if ui_kind == "class-panel":
+        @app.get("/config.json", include_in_schema=False)
+        async def panel_config() -> JSONResponse:
+            # T02 HANDOFF "Точка подключения к C1" §1: served by C1 with the REAL adapter (the file in the repo says demo)
+            return JSONResponse({"adapter": "real"}, headers={"Cache-Control": "no-store"})
+
+    if ui_dir is not None:
+        app.mount("/", StaticFiles(directory=str(ui_dir), html=True), name="teacher-ui")
 
     app.add_middleware(Gate, state=state)
     return app
@@ -527,6 +572,23 @@ async def _close(ws: WebSocket, code: int, reason: str) -> None:
         await asyncio.wait_for(ws.close(code=code, reason=reason[:120]), timeout=2.0)
     except Exception:
         pass
+
+
+def _login_page(error_ru: str) -> str:
+    from html import escape
+
+    message = f'<p class="err" role="alert">{escape(error_ru)}</p>' if error_ru else ""
+    return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Qorgau · вход преподавателя</title><style>
+body{{font-family:system-ui,sans-serif;background:#f4f5f7;color:#16181d;margin:0;display:grid;place-items:center;min-height:100vh}}
+form{{background:#fff;padding:2rem;border-radius:12px;box-shadow:0 2px 12px #0002;width:min(22rem,90vw)}}
+h1{{font-size:1.25rem;margin:0 0 .75rem}} label{{display:block;margin:.75rem 0 .25rem}}
+input{{font-size:1.5rem;letter-spacing:.3em;width:100%;box-sizing:border-box;padding:.4rem .6rem}}
+button{{margin-top:1rem;font-size:1rem;padding:.6rem 1.2rem}} .err{{color:#a1131b;font-weight:600}} .hint{{color:#555;font-size:.9rem}}
+</style></head><body><form method="post" action="/login"><h1>Вход преподавателя</h1>{message}
+<label for="pin">PIN-код</label><input id="pin" name="pin" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required autofocus>
+<p class="hint">PIN напечатан в окне сервера класса при запуске. Панель открывается только на этом компьютере.</p>
+<button type="submit">Войти</button></form></body></html>"""
 
 
 _NO_UI_PAGE = """<!doctype html><html lang="ru"><meta charset="utf-8"><title>Qorgau Classroom</title>

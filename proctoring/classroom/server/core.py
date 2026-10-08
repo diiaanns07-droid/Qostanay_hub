@@ -507,8 +507,13 @@ class ClassroomCore:
         status = self.device_status(st)
         open_n = sum(1 for (sid, _), inc in self.incidents.items() if sid == st.student_id and inc.state == IncidentState.OPEN)
         unreviewed = self.features.incidents_unreviewed(st.student_id) if self.features is not None else None
+        student = self.student_model(st)
         return StudentCard(
-            student=self.student_model(st), status=status, connected=st.conn is not None and not st.conn.closed,
+            **student.model_dump(include={"student_id", "session_id", "student_label", "computer_name", "app_version", "origin", "capabilities",
+                                          "connection", "connected_since", "last_seen_at", "reconnects"}),
+            **status.model_dump(include={"exam_state", "camera", "monitoring", "zone", "zone_reported", "zone_source", "zone_reasons_ru",
+                                         "incidents_total", "incidents_by_priority", "locked", "mic_active", "stale"}),
+            connected=st.conn is not None and not st.conn.closed,
             last_status_at=status.received_at, last_event_at=st.last_event_at, incidents_open=open_n, incidents_unreviewed=unreviewed,
             preview_url=(f"/api/teacher/students/{st.student_id}/preview.jpg?seq={st.preview_seq}" if st.preview else None),
             preview_at=_dt(st.preview_meta["received_at"]) if st.preview_meta else None,
@@ -520,7 +525,7 @@ class ClassroomCore:
 
     def _publish_card(self, st: StudentRec, force: bool = False) -> None:
         card = self.card(st)
-        key = (card.status.zone.value, card.status.zone_source.value, card.status.stale, card.connected)
+        key = (card.zone.value, card.zone_source.value, card.stale, card.connected)
         if not force and key == st.published_zone:
             return
         st.published_zone = key

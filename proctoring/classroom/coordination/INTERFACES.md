@@ -37,14 +37,20 @@ Contract sources of truth:
     `attempt + 1`. A late ack is recorded with `late: true`.
 * **Video never travels as JSON.**
   * A preview is ≤ 30 KB JPEG and is rate-limited to one per second per student.
-  * The teacher stream carries only metadata plus `url` (`/api/teacher/students/{id}/preview.jpg?seq=N`). Inline
-    `jpeg_b64` is sent only to a socket opened with `?inline_previews=1` (legacy T02 v1 adapter).
+  * The teacher stream carries metadata plus `url` (`/api/teacher/students/{id}/preview.jpg?seq=N`). Inline
+    `jpeg_b64` is added for a socket opened with `?inline_previews=1`, and by default while the server hosts the T02
+    class panel, because its v1 adapter renders only inline previews (DEPENDENCIES D5). This is loopback traffic, and
+    `?inline_previews=0` turns it off.
   * A clip is an HTTP upload (`POST /api/student/clips/{incident_id}`, ≤ 8 MB, `video/mp4` or `video/x-msvideo`).
     `ClipMetadata` carries a URL, never bytes.
 * **Simulated data is labelled.** `hello.simulated=true` makes `origin: "simulated"` on the student, card, event,
   incident, preview header `X-Qorgau-Origin`, and the simulator names students `SIM-NN (симуляция)`. A UI must show it.
 
 ## 2. Teacher API (served by `python -m classroom.server`)
+
+Teacher UI: `GET /` serves the panel (`--ui auto|teacher-ui|class-panel|none|<dir>`; `auto` = the React shell when built,
+otherwise the T02 class panel with `/config.json` = `{"adapter":"real"}`). Without the cookie `/` redirects to
+`GET /login`, a server-rendered PIN form (`POST /login`, `POST /logout`), so the panel itself never handles the PIN.
 
 Teacher endpoints answer only to a loopback client with a loopback `Host` and a same-origin (or absent) `Origin`. All of
 them except `login` need the cookie `qorgau_teacher` (HttpOnly, SameSite=Strict). Students can never call them: a student
@@ -57,7 +63,7 @@ token is not a teacher cookie. Errors are always `{"error": {"code", "message_ru
 | `GET /api/teacher/info` | `ServerInfo` (version, session, counts, mounted features with status) | T01 |
 | `POST /api/teacher/session` | `SessionCreate{title}` → 201 `SessionCreated{session, join_code}` (closes the previous session) | T01 |
 | `GET /api/teacher/session` · `POST /api/teacher/session/close` | `Session` or `null` | T01 |
-| `GET /api/teacher/students` | `StudentCard[]` (identity + `DeviceStatus` + `connected`, `last_status_at`, `last_event_at`, `incidents_open`, `incidents_unreviewed`, `preview_url`, `preview_at`) | T01 |
+| `GET /api/teacher/students` | `StudentCard[]`, **flat** with the v1 names the T02 REAL adapter reads: `student_id, computer_name, student_label` + status §3.1 (`exam_state, camera, monitoring, zone, zone_reasons_ru, incidents_total, incidents_by_priority, locked, mic_active`) + `connected, last_status_at, last_event_at, incidents_open, incidents_unreviewed, preview_url, preview_at, zone_reported, zone_source, stale, origin` | T01 |
 | `GET /api/teacher/students/{id}` | `StudentCard` | T01 |
 | `GET /api/teacher/students/{id}/events?limit=` | `ObservationEvent[]`, newest first | T01 |
 | `GET /api/teacher/students/{id}/preview.jpg` | JPEG, 204 if none, `Cache-Control: no-store` | T01 |

@@ -226,13 +226,13 @@ def test_silent_client_goes_offline_and_grey(server, teacher, session, students)
     s = students()
     sid = s.hello(join_code=session["join_code"])["student_id"]
     s.status(zone="red")
-    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["status"]["zone"] == "red")
+    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["zone"] == "red")
     s.silent = True  # stops answering pings and sending anything; TCP stays open
     t0 = time.monotonic()
     assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["connected"] is False, 5)
     assert time.monotonic() - t0 < 3.5  # pong timeout 1.2 s + ping 0.3 s in tests (15 s / 5 s in v1)
     card = teacher.get(f"/api/teacher/students/{sid}").json()
-    assert card["status"]["zone"] == "grey" and card["status"]["zone_source"] == "server_offline"
+    assert card["zone"] == "grey" and card["zone_source"] == "server_offline"
     assert s.wait_closed(3).rcvd.code == 4408
 
 
@@ -240,10 +240,10 @@ def test_stale_status_and_bad_camera_force_grey(server, teacher, session, studen
     s = students()
     sid = s.hello(join_code=session["join_code"])["student_id"]
     s.status(zone="green")
-    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["status"]["zone"] == "green")
-    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["status"]["zone_source"] == "server_stale", 3)
+    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["zone"] == "green")
+    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["zone_source"] == "server_stale", 3)
     s.status(zone="green", camera="off")
-    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["status"]["zone_source"] == "server_camera")
+    assert wait_until(lambda: teacher.get(f"/api/teacher/students/{sid}").json()["zone_source"] == "server_camera")
 
 
 def test_preview_is_metadata_plus_url_unless_inline_requested(server, teacher, session, students):

@@ -21,9 +21,9 @@ def test_join_with_code_gives_stable_identity_and_card(server, teacher, session,
     assert re.fullmatch(r"[0-9a-f]{64}", welcome.resume_token) and welcome.resumed is False
     assert welcome.exam.mode == m.ExamMode.URL and welcome.exam.allowed_urls == ["https://exam.example/*"]
     cards = [m.StudentCard.model_validate(c) for c in teacher.get("/api/teacher/students").json()]
-    card = next(c for c in cards if c.student.student_id == welcome.student_id)
-    assert card.connected and card.student.student_label == "Әлия" and card.student.origin == m.DataOrigin.REAL
-    assert card.status.zone == m.Zone.GREY and card.status.stale  # no status yet = not enough data, not "all clear"
+    card = next(c for c in cards if c.student_id == welcome.student_id)
+    assert card.connected and card.student_label == "Әлия" and card.origin == m.DataOrigin.REAL
+    assert card.zone == m.Zone.GREY and card.stale  # no status yet = not enough data, not "all clear"
 
 
 def test_wrong_code_rejected_then_rate_limited_per_ip(server, session, students):
@@ -74,7 +74,7 @@ def test_resume_keeps_student_and_supersedes_old_socket(server, teacher, session
     closed = a.wait_closed()
     assert closed.rcvd.code == 4409  # the older socket of the same student is closed, not left dangling
     card = teacher.get(f"/api/teacher/students/{w['student_id']}").json()
-    assert card["connected"] is True and card["student"]["reconnects"] == 1
+    assert card["connected"] is True and card["reconnects"] == 1
 
 
 def test_bad_resume_token_rejected(server, session, students):

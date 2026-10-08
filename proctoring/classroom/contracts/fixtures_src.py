@@ -59,7 +59,7 @@ def build() -> dict[str, Any]:
         # ------------------------------------------------------------------ teacher API records
         "Student.simulated_online": CARD_STUDENT,
         "DeviceStatus.yellow": STATUS,
-        "StudentCard.simulated": {"student": CARD_STUDENT, "status": STATUS, "connected": True, "last_status_at": T1, "last_event_at": T1, "incidents_open": 0, "incidents_unreviewed": None, "preview_url": "/api/teacher/students/st-0001/preview.jpg?seq=3", "preview_at": T1},
+        "StudentCard.simulated": {**{k: v for k, v in CARD_STUDENT.items() if k not in ("paired_at",)}, **{k: v for k, v in STATUS.items() if k not in ("student_id", "received_at", "sent_at")}, "connected": True, "last_status_at": T1, "last_event_at": T1, "incidents_open": 0, "incidents_unreviewed": None, "preview_url": "/api/teacher/students/st-0001/preview.jpg?seq=3", "preview_at": T1},
         "Session.open": {"session_id": "cs-0001", "title": "Математика, вариант 1 (пример)", "state": "open", "created_at": T0, "closed_at": None, "exam": EXAM, "join_code": "482915", "students_total": 2},
         "ObservationEvent.incident_closed": {"event_id": "inc-0001:closed", "student_id": "st-0001", "session_id": "cs-0001", "kind": "incident", "seq": 2, "client_run_id": "run-a1b2c3", "event_time": T1, "sent_at": T1, "received_at": "2026-10-09T09:00:04.250000Z", "origin": "simulated", "seq_conflict": False, "payload": {"incident_id": "inc-0001", "state": "closed"}},
         "Incident.closed": INCIDENT,
@@ -74,7 +74,7 @@ def build() -> dict[str, Any]:
         "SessionCreate.url": {"title": "Математика, вариант 1 (пример)", "mode": "url", "allowed_urls": ["https://exam.example.kz/*"], "allowed_apps": [], "instructions_ru": ""},
         "CommandCreate.lock": {"kind": "lock", "payload": {"reason_ru": "Уберите телефон со стола"}, "ttl_ms": 60000},
         # ------------------------------------------------------------------ teacher stream
-        "TStudentUpdate.simulated": {"type": "student_update", "seq": 3, "sent_at": T1, "student": {"student": CARD_STUDENT, "status": STATUS, "connected": True, "last_status_at": T1, "last_event_at": None, "incidents_open": 0, "incidents_unreviewed": None, "preview_url": None, "preview_at": None}},
+        "TStudentUpdate.simulated": {"type": "student_update", "seq": 3, "sent_at": T1, "student": {**{k: v for k, v in CARD_STUDENT.items() if k not in ("paired_at",)}, **{k: v for k, v in STATUS.items() if k not in ("student_id", "received_at", "sent_at")}, "connected": True, "last_status_at": T1, "last_event_at": None, "incidents_open": 0, "incidents_unreviewed": None, "preview_url": None, "preview_at": None}},
         "TIncident.closed": {"type": "incident", "seq": 4, "sent_at": T1, "student_id": "st-0001", "incident": INCIDENT, "duplicate": False},
         "TPreview.metadata_only": {"type": "preview", "seq": 5, "sent_at": T1, "student_id": "st-0001", "preview_seq": 3, "frame_wall": T1, "received_at": T1, "byte_length": 9300, "url": "/api/teacher/students/st-0001/preview.jpg?seq=3", "origin": "simulated", "jpeg_b64": None},
         "TCommandUpdate.succeeded": {"type": "command_update", "seq": 6, "sent_at": T1, "command": COMMAND},
