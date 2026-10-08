@@ -81,6 +81,24 @@
 | `node renderer/tests/e2e-fixture.mjs` | 54/56 (2 базовых 404, как до правок) |
 | `npm run typecheck`, `npm run build` | PASS |
 
+## 5. Аудио (WebRTC) — НЕ сделано, план и блокеры
+По `class-audio/STUDENT_INTEGRATION.md` (T05) аудио требует изменений вне путей A07-student:
+* **C2** (`proctor/uplink`): пересылать в backend `command` `audio_start|audio_update|audio_stop` (payload T05:
+  `audio_session_id, listen, talk, direction`) и `audio_signal`; отправлять на сервер `ack` (+`error_code`),
+  `audio_signal`, `audio_media` от renderer; `status.mic_active` брать из renderer.
+* **A01**: тип потока `class_audio {payload}` и маршрут `POST /v1/class/audio` (renderer → сервер, ≤ 256 КБ).
+* **A06**: метод моста `classAudioSend(msg)` + разрешение `media` **только audio и только окну экзамена**
+  (сейчас все разрешения запрещены).
+* **A07** (после этого): `StudentAudioEndpoint` из `class-audio/web/shared/student-endpoint.js`, `<audio autoplay>`,
+  индикаторы «● Микрофон включён преподавателем» / «🔊 Говорит преподаватель» / «Аудиосвязь с преподавателем» —
+  плашка `MicBanner` уже стоит поверх всего, включая экран блокировки.
+
+**⚠ Важно сейчас (C2, высокий приоритет):** C2 отвечает на `audio_start` `ack ok:true` и выставляет
+`mic_active=true`, хотя микрофон никто не включает. По T05 `ok:true` = «индикатор показан и микрофон получен» →
+пульт преподавателя покажет «Слушаю студента», а у студента — плашку «Микрофон включён», при этом звука нет.
+Пока WebRTC не подключён, C2 должен отвечать на `audio_start`/`audio_update` `ok:false`, `error_code:
+"not_supported"`, `error_ru: "Аудиосвязь в приложении студента ещё не подключена"` и не поднимать `mic_active`.
+
 ## LIVE на этом ноутбуке (08.10, ~16:05; ASUS TUF A15, Windows 11, встроенная камера)
 Настоящее приложение: `npm run build` → Electron (оболочка A06 + backend + камера), управление через Playwright
 `_electron` (скрипт во временной папке; переменная окружения `ELECTRON_RUN_AS_NODE` из среды VS Code снята для
