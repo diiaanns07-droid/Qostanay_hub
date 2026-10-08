@@ -1,0 +1,4 @@
+{
+  "adapter": "demo",
+  "demo": { "students": 30, "seed": 7, "rate": "normal" }
+}
