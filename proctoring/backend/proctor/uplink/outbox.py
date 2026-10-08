@@ -72,6 +72,13 @@ class Outbox:
         with self._lock:
             self._db.execute("DELETE FROM outbox WHERE seq=?", (seq,))
 
+    def clear(self) -> int:
+        """Drop every pending message (seq numbering continues). Returns how many were dropped."""
+        with self._lock:
+            n = int(self._db.execute("SELECT COUNT(*) FROM outbox").fetchone()[0])
+            self._db.execute("DELETE FROM outbox")
+            return n
+
     def __len__(self) -> int:
         with self._lock:
             return int(self._db.execute("SELECT COUNT(*) FROM outbox").fetchone()[0])

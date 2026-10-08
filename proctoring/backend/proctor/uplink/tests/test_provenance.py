@@ -47,7 +47,7 @@ def test_snapshot_uses_session_source_and_incident_queue_keeps_its_own(tmp_path)
 
 
 def test_preview_uses_frame_metadata_instead_of_current_runtime_source(monkeypatch):
-    monkeypatch.setattr("proctor.uplink.backend_view.shrink_jpeg", lambda data: data)
+    monkeypatch.setattr("proctor.uplink.backend_view.shrink_jpeg", lambda data, *a, **k: data)
     frame = NS(session_id="previous-synthetic", source_mode="synthetic", wall_time=datetime.now(timezone.utc))
     runtime = NS(info=NS(session_id="current-live", source=NS(mode="live")), preview=lambda: (frame, b"jpeg-test-data"))
     manager = NS(active_session_id=lambda: "current-live", runtime=lambda _: runtime)

@@ -341,3 +341,63 @@ def test_class_state_is_republished_while_offline(run, tmp_path, monkeypatch):
     up, _ = run(make_cfg(tmp_path, f"127.0.0.1:{free_port()}"), events=events)
     assert wait_for(lambda: len(events) >= 4, timeout=5)
     assert events[-1].connection in ("connecting", "reconnecting") and events[-1].computer_name == "pc-1"
+
+
+def test_stale_resume_token_is_dropped_and_join_code_used(server, run, tmp_path):
+    """Found on the real T01 server: a token from an older server run answered "resume_rejected"; the uplink used
+    to retry the same token forever (only "join_rejected" fell back to the code)."""
+    cfg = make_cfg(tmp_path, server.address)
+    ob = Outbox(cfg.state_dir / "outbox.sqlite")
+    import hashlib
+
+    ob.set_meta("server", cfg.server)
+    ob.set_meta("code_key", hashlib.sha256(f"{cfg.server}|{cfg.join_code}".encode()).hexdigest()[:16])
+    ob.set_meta("resume_token", "ab" * 32)  # unknown to this server
+    ob.close()
+    up, _ = run(cfg)
+    assert wait_for(lambda: up.connection == "connected", timeout=10)
+    assert "resume_token" in server.hellos[0] and server.hellos[-1].get("join_code") == "123456"
+    assert len(server.hellos) == 2  # one refused resume, one join: no waiting, no loop
+
+
+def test_new_join_code_never_resumes_the_previous_session(server, tmp_path):
+    cfg = make_cfg(tmp_path, server.address)
+    up = Uplink(cfg, FakeView(tmp_path))
+    up.start()
+    assert wait_for(lambda: up.connection == "connected")
+    up.stop()
+    up2 = Uplink(replace(cfg, join_code="654321"), FakeView(tmp_path))  # teacher started a new session
+    assert up2.outbox.get_meta("resume_token") is None
+    up2.outbox.close()
+
+
+def test_queue_of_a_previous_class_session_is_dropped(tmp_path):
+    cfg = make_cfg(tmp_path, "127.0.0.1:9")
+    up = Uplink(cfg, FakeView(tmp_path))
+    up.outbox.put({"type": "incident", "incident_id": "old"})
+    up.outbox.close()
+    up2 = Uplink(replace(cfg, join_code="654321"), FakeView(tmp_path))
+    assert len(up2.outbox) == 0  # never delivered into the new session
+    up2.outbox.close()
+
+
+def test_replay_and_synthetic_are_marked_for_the_teacher():
+    from types import SimpleNamespace
+
+    import cv2
+    import numpy as np
+
+    from proctor.uplink.backend_view import _incident, shrink_jpeg
+
+    inc = SimpleNamespace(incident_id="i1", rule_id="phone_visible", category="phone", priority="medium", state="open",
+                          t_start_ms=1.0, t_end_ms=None, wall_start=__import__("datetime").datetime(2026, 10, 8, tzinfo=__import__("datetime").timezone.utc),
+                          duration_ms=1000.0, explanation=SimpleNamespace(summary_ru="Телефон виден 1,0 с."), source_mode="replay",
+                          session_id="s-test")
+    assert _incident(inc)["explanation_ru"].startswith("[REPLAY · запись] Телефон виден")
+    inc.source_mode = "live"
+    assert _incident(inc)["explanation_ru"] == "Телефон виден 1,0 с."
+    ok, buf = cv2.imencode(".jpg", np.full((480, 640, 3), 128, np.uint8))
+    out = shrink_jpeg(buf.tobytes(), "REPLAY · запись")
+    img = cv2.imdecode(np.frombuffer(out, np.uint8), cv2.IMREAD_COLOR)
+    assert img.shape[:2] == (240, 320) and len(out) <= 30_000
+    assert img[2, 300, 2] > 120 and img[2, 300, 0] < 80  # red band on top (BGR)

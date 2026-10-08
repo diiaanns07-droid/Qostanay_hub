@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import json
 import logging
 import threading
@@ -97,10 +98,17 @@ class Uplink:
         self._publish = publish
         self._http_post = http_post
         self.outbox = Outbox(cfg.state_dir / "outbox.sqlite", cfg.outbox_max)
-        if self.outbox.get_meta("server") != cfg.server:  # a token is only valid for its server
+        # A token is only valid for its server AND its class session: a new join code (new session) must never
+        # resume the previous one. Only a hash of the code is stored.
+        code_key = hashlib.sha256(f"{cfg.server}|{cfg.join_code}".encode()).hexdigest()[:16]
+        if self.outbox.get_meta("server") != cfg.server or self.outbox.get_meta("code_key") != code_key:
             self.outbox.set_meta("resume_token", None)
             self.outbox.set_meta("student_id", None)
             self.outbox.set_meta("server", cfg.server)
+            self.outbox.set_meta("code_key", code_key)
+            dropped = self.outbox.clear()  # messages queued for another class session must not leak into this one
+            if dropped:
+                log.info("uplink: %d queued message(s) of a previous class session dropped", dropped)
         self.connection = "connecting"
         self.locked = False
         self.lock_reason_ru: str | None = None
