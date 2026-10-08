@@ -1,0 +1,51 @@
+{
+  "type": "student_update",
+  "seq": 3,
+  "sent_at": "2026-10-09T09:00:04.200000Z",
+  "student": {
+    "student_id": "st-0001",
+    "session_id": "cs-0001",
+    "student_label": "SIM-01 (симуляция)",
+    "computer_name": "SIM-PC-01",
+    "app_version": "qorgau-class-simulator/0.1",
+    "origin": "simulated",
+    "connection": "online",
+    "last_seen_at": "2026-10-09T09:00:04.200000Z",
+    "connected_since": "2026-10-09T09:00:00Z",
+    "reconnects": 1,
+    "capabilities": [
+      "audio_start",
+      "audio_stop",
+      "finish_exam",
+      "lock",
+      "request_clip",
+      "start_exam",
+      "unlock"
+    ],
+    "exam_state": "running",
+    "camera": "ok",
+    "monitoring": "ok",
+    "zone_reported": "yellow",
+    "zone": "yellow",
+    "zone_source": "student",
+    "zone_reasons_ru": [
+      "СИМУЛЯЦИЯ: телефон виден"
+    ],
+    "incidents_total": 1,
+    "incidents_by_priority": {
+      "low": 0,
+      "medium": 1,
+      "high": 0
+    },
+    "locked": false,
+    "mic_active": false,
+    "stale": false,
+    "connected": true,
+    "last_status_at": "2026-10-09T09:00:04.200000Z",
+    "last_event_at": null,
+    "incidents_open": 0,
+    "incidents_unreviewed": null,
+    "preview_url": null,
+    "preview_at": null
+  }
+}

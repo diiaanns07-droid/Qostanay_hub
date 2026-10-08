@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "hello",
+  "protocol": "qorgau.class.v1",
+  "resume_token": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+  "computer_name": "SIM-PC-01",
+  "student_label": "SIM-01 (симуляция)",
+  "app_version": "qorgau-class-simulator/0.1",
+  "client_run_id": "run-a1b2c3",
+  "simulated": true,
+  "capabilities": {
+    "commands": [
+      "apply_policy"
+    ],
+    "modes": [
+      "url",
+      "app"
+    ],
+    "command_progress": true,
+    "command_expiry": true,
+    "site_timer_pause": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "command",
+  "command_id": "cmd-0001",
+  "kind": "lock",
+  "payload": {
+    "reason_ru": "Уберите телефон со стола"
+  },
+  "issued_at": "2026-10-09T09:00:00Z",
+  "expires_at": "2026-10-09T09:02:00Z",
+  "ttl_ms": 120000,
+  "attempt": 1
+}

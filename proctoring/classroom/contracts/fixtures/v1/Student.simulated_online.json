@@ -1,0 +1,22 @@
+{
+  "student_id": "st-0001",
+  "session_id": "cs-0001",
+  "student_label": "SIM-01 (симуляция)",
+  "computer_name": "SIM-PC-01",
+  "app_version": "qorgau-class-simulator/0.1",
+  "origin": "simulated",
+  "connection": "online",
+  "paired_at": "2026-10-09T09:00:00Z",
+  "last_seen_at": "2026-10-09T09:00:04.200000Z",
+  "connected_since": "2026-10-09T09:00:00Z",
+  "reconnects": 1,
+  "capabilities": [
+    "audio_start",
+    "audio_stop",
+    "finish_exam",
+    "lock",
+    "request_clip",
+    "start_exam",
+    "unlock"
+  ]
+}

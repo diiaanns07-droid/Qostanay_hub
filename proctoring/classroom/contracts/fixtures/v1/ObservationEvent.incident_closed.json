@@ -1,0 +1,17 @@
+{
+  "event_id": "inc-0001:closed",
+  "student_id": "st-0001",
+  "session_id": "cs-0001",
+  "kind": "incident",
+  "seq": 2,
+  "client_run_id": "run-a1b2c3",
+  "event_time": "2026-10-09T09:00:04.200000Z",
+  "sent_at": "2026-10-09T09:00:04.200000Z",
+  "received_at": "2026-10-09T09:00:04.250000Z",
+  "origin": "simulated",
+  "seq_conflict": false,
+  "payload": {
+    "incident_id": "inc-0001",
+    "state": "closed"
+  }
+}

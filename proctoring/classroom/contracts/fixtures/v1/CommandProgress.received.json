@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "command_progress",
+  "command_id": "cmd-0001",
+  "state": "received"
+}
