@@ -1,14 +1,72 @@
-# A05 — STATUS (fusion: observations → explainable incidents)
+# A05 — STATUS (fusion: observations → explainable incidents → review zones)
 
-Role: A05, rules/episode engineer. Branch: `claude/zen-mayer-e0tivt` (platform-assigned, fast-forwarded to the
-BOOTSTRAP commit, no other history). Contract/baseline: BOOTSTRAP `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`
-(A01, `claude/nifty-ride-ux8e4j`, contracts `qorgau.v1` 1.0.0). Previous A05 checkpoint: none (this is the first).
-Stage: **checkpoint 1 — engine + replay + golden tests done; no CV data yet** (SYNTHETIC/fixture only).
+Role: A05. Branch: `claude/zen-mayer-e0tivt`. Contract/baseline: BOOTSTRAP `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`
+(contracts `qorgau.v1` 1.0.0; contracts 1.1 with ReviewZone NOT received yet — candidate `de72905` has no ReviewZone).
+Previous A05 checkpoint: `8f763a1` (in A01 candidate `de72905`).
+Stage (2026-10-08): **checkpoint 2 — zones (zone-rule-1), priorities per the zones spec (`a05-rules-1.1.0`),
+audio/headphones rules on plain values, head-pose fix from real A04 output.**
+
+## Zones — interface for A08 (exact)
+```python
+from proctor.fusion.zones import assess_session_zone, ZoneConfig, ZoneAssessment, ZONES, ZONE_LABELS_RU
+
+def assess_session_zone(
+    incidents: Iterable[Incident | dict | AuxEpisode],   # contract Incident objects or dicts with the same names
+    summary: SessionSummary | dict | None = None,        # coverage = observed_ms / (finished_at - started_at - paused_ms)
+    config: ZoneConfig | None = None,                    # thresholds (hypotheses), versioned
+    *,
+    coverage: float | None = None,                       # 0..1, overrides the value from summary (if A08 has its own)
+    extra_uncovered_ms: float = 0.0,                     # e.g. audio device missing/degraded time
+) -> ZoneAssessment
+# ZoneAssessment(zone: "green"|"yellow"|"red"|"grey", reasons_ru: list[str] (<= 3), rule_version="zone-rule-1",
+#                config_version="zone-rule-1+<sha12>", label_ru, incidents_by_priority: dict, coverage: float | None)
+
+za = assess_session_zone(store.list_incidents(sid), store.summary(sid))
+summary.review_zone, summary.review_zone_reasons_ru, summary.review_zone_rule_version = za.zone, za.reasons_ru, za.rule_version
+# overview sort order: ZONES == ("red", "yellow", "grey", "green")
+```
+Rule: red ≥1 high or ≥3 medium; else yellow ≥1 medium or ≥3 low; else grey coverage < 0.8 **or unknown**; else green.
+Exactly 80 % is not grey. `monitoring_degraded` incidents are coverage, not behaviour (not counted; fixes R7/R11
+end-of-session lows). Reviews are not an input: the teacher's decision never changes the zone. reasons_ru: sorted
+high → low then by time, «Телефон направлен на экран — 00:41, 7 с» (mm:ss from exam start; no duration for point
+events / < 1 s); grey: «Наблюдение неполное: 72% …» / «Покрытие наблюдения не измерено»; green: «Эпизодов нет,
+наблюдение полное». When contracts 1.1 arrive: return values stay the same strings as ReviewZone.
+
+## Priorities (a05-rules-1.1.0, zones spec)
+| Rule | Priority |
+|---|---|
+| possible_screen_capture, **phone_raised** (was medium), multiple_faces | high |
+| phone_visible | medium; > 10 s or with gaze «down» ≥ 1 s → high; ≥ 3 appearances → +1 |
+| gaze_prolonged_down / side | **3–8 s low, > 8 s medium** (was ≥ 10 s); no repeat escalation (duration only) |
+| face_missing | medium (≥ 2 s); **no escalation** (was ≥ 15 s → high) |
+| environment_blocked_action | low if everything was blocked; **any action not blocked (bypass) → high**; ≥ 5 actions +1 |
+| environment_escape | medium; without focus ≥ 5 s or ≥ 3 losses → +1 |
+| monitoring_degraded | low (coverage; not counted by zones) |
+| background_speech (`audio_rules`) | voice ≥ 4 s in 6 s → low; 3rd+ within 5 min → medium |
+| headphones_visible (`audio_rules`) | visible ≥ 3 s → medium |
+Normal behaviour without episodes (tests): blink/detector miss 200 ms, 2 s glance aside, 1.5 s look down, phone out
+of frame ≤ 0.5 s (pending gap) / back within 2 s (same episode).
+Remote access (spec: high): there is no remote-access observation in contracts v1 → not implemented (needs A06+A01).
+
+## Checks run (checkpoint 2; Windows 11 demo laptop, Ryzen 5 7535HS, Python 3.12.14, env from A01 uv.lock)
+| Command (from `proctoring/`) | Result |
+|---|---|
+| `pytest -q backend/proctor/fusion` | **121 passed** (88 earlier + zones/audio 26 + priorities 7; golden g05/g09 expectations updated for the new priorities) |
+| `pytest -q` (whole repo) | 183 passed, 2 failed = A01 tests [A01-1] (fusion present ≠ "module_not_integrated") |
+| `contracts/tools/generate.py --check` / `verify_ownership.py --agent A05 --base 35bea4c` | PASS / PASS |
+
+## Fix from real A04 output (A02 camera clip zone_b_yellow_01, scratch run)
+Head yaw −50° while A04's gaze flips `left`↔`up` every 0.5 s → no continuous 3 s run → no episode. Now: if the head
+direction is left/right/down and the eye estimate is centre/up, the head pose is used (disclosed in the fact
+`head_direction_fallback`). Test `test_head_turned_wins_over_eye_estimate_up`.
+
+## Earlier (checkpoint 1) — still valid unless changed above
 
 ## Changed paths (A05 only)
 * `proctoring/backend/proctor/fusion/` — `__init__.py` (factory), `engine.py`, `config.py`, `explain.py`,
   `episode.py`, `replay.py` (+ CLI), `scenario.py` (observation builder from contract fixtures),
   `tests/` (`test_engine.py`, `test_golden.py`, `test_replay_cli.py`, `checks.py`, `golden/g01…g10.json`).
+* checkpoint 2 adds `zones.py`, `audio_rules.py`, `tests/test_zones.py`, `tests/test_priorities_spec.py`.
 * `proctoring/handoffs/A05/` — this file, `DEPENDENCIES.txt`, `EXPLANATION_TABLE.md` (for A10).
 
 ## Interface

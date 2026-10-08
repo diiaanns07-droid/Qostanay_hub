@@ -269,8 +269,8 @@ def build(
             summary.append(", ".join(outcome))
         caveats.append(CAVEAT_ENV)
         not_blocked = ep.count - int(c.get(f"enforcement.{EnforcementResult.BLOCKED.value}", 0))
-        if not_blocked > 0:
-            escalate("not_blocked")
+        if not_blocked > 0:  # the protection was bypassed, not just tried: zones spec = high
+            escalate("not_blocked", to=ReviewPriority.HIGH)
         if ep.count >= cfg.env_repeat_count:
             escalate("repeated")
     elif rule == R.ENVIRONMENT_ESCAPE:
@@ -319,9 +319,9 @@ def build(
         if any(total >= cfg.monitoring_long_ms for total in totals):
             escalate("long_gap")
 
-    if long_ms is not None and duration_ms >= long_ms:
+    if long_ms is not None and duration_ms > long_ms:
         escalate("long_episode")
-    if rule not in (R.ENVIRONMENT_ESCAPE, R.ENVIRONMENT_BLOCKED_ACTION, R.MONITORING_DEGRADED) and ep.appearances >= cfg.repeat_segments:
+    if rule.value in cfg.repeat_escalation_rules and ep.appearances >= cfg.repeat_segments:
         escalate("repeated")
 
     # --- common facts: confidence, quality and priority stay separate ---

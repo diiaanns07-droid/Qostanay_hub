@@ -81,3 +81,19 @@ Base: BOOTSTRAP 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49 (A01, branch claude/nif
 === To A09 (QA) ===
   * Golden scenarios: backend/proctor/fusion/tests/golden/*.json (hand-derived expectations);
     replay CLI: python -m proctor.fusion.replay <observations.jsonl> [--tick-ms] [--config].
+
+=== 2026-10-08 checkpoint 2 (zones) ===
+[A01-7] contracts 1.1: ReviewZone values "green"|"yellow"|"red"|"grey" — proctor.fusion.zones already returns these
+  strings; send the 1.1 SHA, A05 merges it and switches the type. Nothing else needed from A05's side.
+[A01-8] R7 (A02, session.py): set_health_listener(None) before capture.close() — zones no longer count
+  monitoring_degraded, but the report still lists a spurious gap at every finish.
+[A01-9] Remote access = high (spec): no observation/rule exists in contracts v1; needs an EnvironmentAction
+  (e.g. remote_session_detected) from A06 + A01 contract. Not implemented today.
+[A01-10] Audio/headphones: rules exist on plain values (proctor.fusion.audio_rules: background_speech,
+  headphones_visible, uncovered_ms); need observation kinds + IncidentRule values in a contract to wire them
+  into the engine. Audio missing/degraded time -> assess_session_zone(..., extra_uncovered_ms=...).
+[A08] zones: call assess_session_zone(incidents, summary) at summary/report time (interface in STATUS.md);
+  overview sort = proctor.fusion.zones.ZONES order. Coverage: observed_ms must be "both analyzers determined"
+  (A08 coverage.py) and session.started_at/finished_at set, otherwise the zone is grey ("не измерено").
+[A04] FYI (real camera clip, R14 of A02): uncalibrated neutral pose = head "up" (pitch +11..+19), look down
+  25-30 deg = "center"; gaze flips left/up at yaw -50 deg (fusion now prefers the head pose in that case).
