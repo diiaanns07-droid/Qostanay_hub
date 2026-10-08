@@ -129,9 +129,12 @@ if cfg['kind'] == 'probe':
             print(json.dumps(result, ensure_ascii=False)); sys.exit(2)
     print('QORGAU_CHECK_OK ' + str(root))
 elif cfg['kind'] == 'desktop':
-    child = subprocess.Popen([cfg['electron'], cfg['desktop']], cwd=cfg['desktop'])
-    print('ADAL_DESKTOP_PID ' + str(child.pid), flush=True)
-    sys.exit(child.wait())
+    try:
+        from acceptance.classroom.emergency_watchdog import run_desktop
+        sys.exit(run_desktop(cfg))
+    except Exception:
+        # No post-launch writes: blocked output must not delay closing the owned job.
+        sys.exit(2)
 else:
     sys.argv = [cfg['module']] + cfg['args']
     runpy.run_module(cfg['module'], run_name='__main__')
@@ -210,10 +213,17 @@ function Wait-QorgauProcess($Child, [string]$Mode, [int]$Timeout, [int]$StopAfte
     $stderr = $process.StandardError.ReadLineAsync()
     $deadline = [DateTime]::UtcNow.AddSeconds($Timeout)
     $readyAt = $null
+    $drainDeadline = $null
     $readyPort = $null
     $isDesktop = $Mode -eq 'desktop'
     if ($isDesktop) { $readyAt = [DateTime]::UtcNow }
     while ($true) {
+        if ($process.HasExited -and $null -eq $drainDeadline) {
+            # Descendants can inherit stdout and keep ReadLineAsync alive after the wrapper exits.
+            # Close OUR job immediately; waiting for EOF first can strand the backend/helper.
+            $Child.Job.Dispose()
+            $drainDeadline = [DateTime]::UtcNow.AddSeconds(2)
+        }
         foreach ($stream in @('stdout', 'stderr')) {
             $task = if ($stream -eq 'stdout') { $stdout } else { $stderr }
             if ($null -eq $task -or -not $task.IsCompleted) { continue }
@@ -251,6 +261,7 @@ function Wait-QorgauProcess($Child, [string]$Mode, [int]$Timeout, [int]$StopAfte
             } elseif ($line) { Write-Host $line }
         }
         if ($process.HasExited -and $null -eq $stdout -and $null -eq $stderr) { break }
+        if ($null -ne $drainDeadline -and [DateTime]::UtcNow -ge $drainDeadline) { break }
         if ($null -eq $readyAt -and [DateTime]::UtcNow -gt $deadline) {
             throw "Нет ответа о готовности за $Timeout секунд. Проверьте занятость порта и доступ к каталогу данных."
         }
