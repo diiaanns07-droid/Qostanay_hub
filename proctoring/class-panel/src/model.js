@@ -37,6 +37,10 @@ export function normalizeOrigin(value) {
  * @property {{low:number, medium:number, high:number}|null} byPriority
  * @property {number|null} unreviewed    [C1-request] episodes without a teacher decision
  * @property {boolean|null} locked       only from data, never assumed
+ * @property {string|null} lockState
+ * @property {boolean} lockConfirmed
+ * @property {boolean|null} lockRequested
+ * @property {string|null} lockScope
  * @property {boolean|null} micActive
  * @property {boolean|null} connected    [C1-request] server-side connection state
  * @property {number|null} lastStatusAt  ms epoch of the last status (server field [C1-request] or local receipt)
@@ -111,6 +115,7 @@ export function normalizeStudent(raw, receivedAt) {
     "student_id", "id", "computer_name", "student_label", "exam_state", "camera", "monitoring", "zone", "zone_reasons_ru",
     "incidents_total", "incidents_by_priority", "locked", "mic_active", "connected", "last_status_at", "last_event_at",
     "incidents_unreviewed", "app_version", "type", "v", "msg_id", "sent_at", "origin",
+    "lock_state", "lock_confirmed", "lock_requested", "lock_scope",
   ]);
   const unknownKeys = Object.keys(r).filter((k) => !known.has(k));
   const reasons = Array.isArray(r.zone_reasons_ru) ? r.zone_reasons_ru.filter((x) => typeof x === "string").slice(0, 3).map((x) => x.slice(0, 200)) : [];
@@ -137,6 +142,10 @@ export function normalizeStudent(raw, receivedAt) {
     byPriority,
     unreviewed: count(r.incidents_unreviewed),
     locked: bool(r.locked),
+    lockState: oneOf(r.lock_state, ["unconfirmed", "requested", "applied", "failed"]),
+    lockConfirmed: r.lock_confirmed === true,
+    lockRequested: bool(r.lock_requested),
+    lockScope: oneOf(r.lock_scope, ["app_overlay"]),
     micActive: bool(r.mic_active),
     connected: serverConnected,
     connectedSource: serverConnected === null ? null : "server",
@@ -169,7 +178,14 @@ export function mergeStudent(prev, next, raw) {
   if (has("incidents_total")) out.incidentsTotal = next.incidentsTotal;
   if (has("incidents_by_priority")) out.byPriority = next.byPriority;
   if (has("incidents_unreviewed")) out.unreviewed = next.unreviewed;
-  if (has("locked")) out.locked = next.locked;
+  if (["locked", "lock_state", "lock_confirmed", "lock_requested", "lock_scope"].some(has)) {
+    // Each status supplies a complete receipt snapshot. A later legacy status invalidates it.
+    out.locked = next.locked;
+    out.lockState = next.lockState;
+    out.lockConfirmed = next.lockConfirmed;
+    out.lockRequested = next.lockRequested;
+    out.lockScope = next.lockScope;
+  }
   if (has("mic_active")) out.micActive = next.micActive;
   if (has("connected")) {
     out.connected = next.connected;
@@ -213,7 +229,14 @@ export function displayState(s, now, feedLive) {
   if (s.camera === null && s.zone !== null && !stale) greyWhy.push("Состояние камеры не получено");
   if (stale || (s.camera !== null && s.camera !== "ok")) zone = "grey";
   const reasons = zone === "grey" ? [...greyWhy, ...(s.zone === "grey" ? s.zoneReasons : [])].slice(0, 3) : s.zoneReasons;
-  return { zone, reasons, link, ageMs, stale };
+  const lockKnown = !stale && link === "online" && s.lockConfirmed === true && s.lockScope === "app_overlay" && s.lockState === "applied";
+  const locked = lockKnown ? s.locked : null;
+  const lockLabel = stale ? "состояние неизвестно — нет свежего статуса"
+    : s.lockScope === "app_overlay" && s.lockState === "requested" ? "ожидаем подтверждения экрана Adal"
+    : s.lockScope === "app_overlay" && s.lockState === "failed" ? "последняя команда экрана не подтверждена"
+    : locked === null ? "состояние экрана не подтверждено"
+    : locked ? "экран Adal закрыт — подтверждено приложением" : "экран Adal открыт — подтверждено приложением";
+  return { zone, reasons, link, ageMs, stale, locked, lockLabel };
 }
 
 /**

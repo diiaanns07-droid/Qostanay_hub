@@ -828,6 +828,15 @@ class DeskScanRequest(Wire):
     duration_s: Annotated[float, Field(ge=5, le=30)] = 12.0
 
 
+class ReviewZone(StrEnum):
+    """Review queue priority; grey is insufficient coverage, never clearance or guilt."""
+
+    GREEN = "green"
+    YELLOW = "yellow"
+    RED = "red"
+    GREY = "grey"
+
+
 class SessionSummary(Wire):
     session: SessionInfo
     desk_scan: DeskScanResult | None = None  # 1.2
@@ -838,6 +847,10 @@ class SessionSummary(Wire):
     incidents_by_rule: dict[str, int] = Field(default_factory=dict)
     reviews_by_decision: dict[str, int] = Field(default_factory=dict)
     limitations_ru: list[str] = Field(default_factory=list)
+    # Contract 1.1: A05 assessment as served by A08; null means not calculated.
+    review_zone: ReviewZone | None = None
+    review_zone_reasons_ru: list[str] = Field(default_factory=list, max_length=3)
+    review_zone_rule_version: str | None = None
 
 
 class HealthReport(Wire):

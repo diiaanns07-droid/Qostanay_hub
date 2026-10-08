@@ -45,9 +45,9 @@ export function createSessionBar(mode) {
     h("h2", { id: "session-form-title" }, ["Новый класс"]),
     h("p", { class: "muted" }, ["Получите код и введите его в приложениях студентов вместе с адресом компьютера преподавателя."]),
     h("label", { class: "session-field", for: name.id }, ["Название", name]),
-    h("label", { class: "session-field", for: site.id }, ["Сайт экзамена", h("span", { class: "muted" }, ["Можно указать позже" ]), site]),
+    h("label", { class: "session-field", for: site.id }, ["Сайт экзамена", h("span", { class: "muted" }, ["Оставьте пустым, если нужен только прокторинг" ]), site]),
     h("details", {}, [h("summary", {}, ["Дополнительные адреса входа и заданий"]), h("label", { class: "session-field", for: extra.id }, ["По одному адресу на строку", extra])]),
-    h("p", { class: "session-policy-note" }, ["Адреса передаются клиенту как настройки. Их указание ещё не подтверждает, что переходы на другие сайты заблокированы."]),
+    h("p", { class: "session-policy-note" }, ["Укажите также адреса входа и загрузки заданий. Шаблон https://example.kz/exam/* разрешает раздел /exam/. Эти правила действуют в окне сайта внутри Adal."]),
     warning, error,
     h("div", { class: "session-actions" }, [cancel, submit]),
   );

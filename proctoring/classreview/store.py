@@ -1,7 +1,7 @@
 """ReviewStore: episodes, clips and teacher decisions of a class session (T03).
 
 Thread-safe (one SQLite connection behind an RLock). Used by the class server (C1):
-  * ingest_incident(student_id, msg)     — every `incident` message from /ws/student (dedup by (student_id, seq));
+  * ingest_incident(student_id, msg)     — accepted C1 event identity; legacy/dev dedup by (student_id, seq);
   * note_clip_requested / note_command_ack — when the teacher sends `request_clip` and the student acks it;
   * store_clip(...)                       — POST /api/student/clips/{incident_id} (router);
   * list_incidents / record_decision / clip_file — teacher routes (router);
@@ -157,8 +157,8 @@ class ReviewStore:
     # ------------------------------------------------------------------ ingestion (from /ws/student)
     def ingest_incident(self, student_id: str, msg: dict[str, Any], *, class_session_id: str,
                         canonical_event: dict[str, Any] | None = None) -> IngestResult:
-        """Validate and store one `incident` message. Re-delivery of the same (student_id, seq) is a
-        no-op; an older seq for an episode never overwrites a newer one (closed stays closed)."""
+        """Store a legacy message by wire seq, or an accepted C1 event by canonical identity.
+        A closed episode never reopens; late C1 events can still add clip/snapshot evidence."""
         if not ID_RE.fullmatch(student_id or ""):
             raise ReviewError(422, "invalid_student", "Некорректный student_id")
         f = self._validate_incident(msg)
@@ -200,6 +200,17 @@ class ReviewStore:
                         status = "stale"
                     elif row is not None and row["state"] == "closed" and f["state"] == "open":
                         status = "stale"  # a closed episode is never reopened by a late message
+                        if canonical_event is not None:
+                            # C1 retains evidence from accepted out-of-order events while keeping
+                            # the closed episode's state, explanation and timing. Mirror that merge.
+                            conn.execute(
+                                "UPDATE incidents SET last_seq=?,clip_available=MAX(clip_available,?),"
+                                " snapshot_file=COALESCE(snapshot_file,?),updated_at=?"
+                                " WHERE student_id=? AND incident_id=?",
+                                (f["seq"], int(f["clip_available"]), snapshot_name, now.isoformat(),
+                                 student_id, f["incident_id"]),
+                            )
+                            status = "updated"
                     else:
                         status = "new" if row is None else "updated"
                         conn.execute(
@@ -210,7 +221,7 @@ class ReviewStore:
                             " rule_id=excluded.rule_id, category=excluded.category, priority=excluded.priority,"
                             " state=excluded.state, t_start_wall=excluded.t_start_wall, t_start_us=excluded.t_start_us,"
                             " duration_ms=excluded.duration_ms, explanation_ru=excluded.explanation_ru,"
-                            " clip_available=excluded.clip_available,"
+                            " clip_available=MAX(incidents.clip_available,excluded.clip_available),"
                             " snapshot_file=COALESCE(incidents.snapshot_file, excluded.snapshot_file),"
                             " updated_at=excluded.updated_at",
                             (student_id, f["incident_id"], row["class_session_id"] if row is not None else class_session_id,

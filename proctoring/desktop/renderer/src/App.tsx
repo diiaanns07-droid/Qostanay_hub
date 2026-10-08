@@ -187,6 +187,9 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
       void bridge.operatorLock().then(setShell);
     },
     newSession: () => {
+      setWantTeacher(false);
+      setPinOpen(false);
+      void bridge.operatorLock().then(setShell);
       setLostSession(null);
       sessionRef.current = null;
       setSessionState(null);

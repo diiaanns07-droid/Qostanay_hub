@@ -1,36 +1,20 @@
-# Windows preparation and launch
+# Подготовка и единый запуск Adal
 
-These scripts are for the integrated candidate supplied by A01. They do not merge branches,
-change registry/firewall settings, capture the camera, or enable the native keyboard hook.
-This is a source checkout launch flow, not a standalone installer or portable executable.
-
-From `proctoring/` in PowerShell, with uv and Node >=22.12 available:
+Основной вход — `..\Start-Adal.ps1`; роли и сценарий трёх ПК описаны в [README](../README.md).
 
 ```powershell
+# Из proctoring/, заранее с интернетом:
 .\packaging\prepare-windows.ps1 -FetchModels
-.\packaging\launch-windows.ps1 -CheckOnly
-.\packaging\launch-windows.ps1
+# Без открытия устройств, приложения, сети и hooks:
+.\Start-Adal.ps1 -Role Standalone -CheckOnly -Enforce
+# Явно запрошенное подавление клавиш во время экзамена:
+.\Start-Adal.ps1 -Role Standalone -Enforce -DemoOperator
 ```
 
-Preparation uses the unchanged A01 lockfiles, explicitly downloads models only with `-FetchModels`,
-builds A06/A07, then checks model size and SHA256 against their manifests. Launch does no installation
-or download. It refuses incomplete assets. The operator PIN must be configured with A06's
-`desktop/main/tools/hash-pin.mjs` instructions before the rehearsal; no shared/default PIN is provided.
-Native enforcement is disabled by this convenience launcher. A06's controlled Windows verification
-procedure is the authority for enabling/testing it, including emergency exit.
+Подготовка использует закреплённые зависимости, скачивает модели только при `-FetchModels`, строит текущий Electron и проверяет файлы/импорты/модельные SHA256. Запуск ничего не скачивает. `-Python` и `-ModelsDir` явно выбирают подготовленные ресурсы; Python всегда импортирует текущую копию проекта. Это запуск из исходников, не готовый офлайн-установщик.
 
-For a bootstrap-only API check:
+`launch-windows.ps1` остаётся совместимым входом для Standalone и делегирует процессное управление общему Start-Student. `launch-live-tonight.py` делегирует `Start-Adal.ps1` и принимает `--check-only`, `--enforce`, `--python`, `--models-dir`, `--data-dir`, `--demo-operator`, `--expected-sha`. Историческая привязка к de729 удалена; необязательный ожидаемый SHA проверяется против действительного чистого checkout. Проверка свежести dist остаётся обязательной. Старый `--diagnostic-no-selftest` отклоняется, а не обходит проверку готовности.
 
-```powershell
-.\packaging\prepare-windows.ps1 -BackendOnly
-.\.venv\Scripts\python.exe packaging\preflight.py --profile backend
-.\.venv\Scripts\python.exe qa\run_qa.py --with-baseline --label windows_candidate --expected-sha FULL_SHA_FROM_A01
-```
+Без Enforce нативное подавление выключено. Enforce — запрос, не доказательство `blocked`; физическая проверка CV и ограничений проводится совместно по [LIVE-чеклисту](../qa/scenarios/LIVE_TONIGHT.md). CheckOnly не включает никакие ограничения. Самопроверка готовности не доказывает качество CV, звук, камеру, LAN или системную блокировку.
 
-`ready_for_launch` checks files/imports/checksums only. It never asserts CV accuracy, camera readiness,
-protection of Windows shortcuts, or successful Electron rendering. Those are measured separately in
-`qa/scenarios/WINDOWS.md`. Do not describe the source checkout as an offline installer: uv/npm and model
-preparation need a network; runtime offline behaviour is tested after this preparation.
-
-PowerShell scripts do not alter the machine execution policy. If the host blocks scripts, use the
-organization's approved invocation policy or run the listed commands manually.
+**Выход: Ctrl+Alt+Shift+F12.** При зависании Ctrl+Alt+Del и завершение только напечатанного `ADAL_DESKTOP_PID`. Windows Job закрывает принадлежащие запускателю процессы. PIN/токены не записываются в файлы запуска; отдельного старого `latest.json` больше нет. Постоянная ExecutionPolicy, службы, автозагрузка и Windows Firewall скриптами не меняются.

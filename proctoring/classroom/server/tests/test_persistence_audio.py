@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import time
+import json
+
+from websockets.sync.client import connect
 
 from classroom.server.tests.harness import ServerProcess, TeacherStream, wait_until
 
@@ -84,74 +87,43 @@ def test_state_survives_crash(tmp_path):
 
 
 # ------------------------------------------------------------------------------------------------ audio
-# Live audio goes ONLY through the negotiated T05 extension (classroom/server/audio_feature.py, qorgau.class.audio.v1):
-# the legacy REST audio_start is refused so an ACK can never claim live audio (test_audio_extension.py). These two tests
-# keep their original guarantees on that path: signaling is bound to an acked audio session; offline ends the audio.
-AUDIO = "qorgau.class.audio.v1"
-
-
-class AudioTeacher(TeacherStream):
-    """The teacher's audio socket /api/teacher/audio/ws (same reader thread as TeacherStream)."""
-
-    def __init__(self, server: ServerProcess, cookie: str | None):
-        import threading
-
-        from websockets.sync.client import connect
-
-        self._cm = connect(f"ws://127.0.0.1:{server.port}/api/teacher/audio/ws",
-                           additional_headers={"Cookie": f"qorgau_teacher={cookie}"}, open_timeout=10)
-        self.ws = self._cm.__enter__()
-        self.messages, self.closed = [], None
-        self._lock, self._stop = threading.Lock(), threading.Event()
-        self._thread = threading.Thread(target=self._run, daemon=True)
-        self._thread.start()
-
-
-def _accepted_audio(teacher, server, session, students, listen=True):
-    s = students()
-    sid = s.hello(join_code=session["join_code"], audio_protocol=AUDIO)["student_id"]
-    at = AudioTeacher(server, teacher.cookies.get("qorgau_teacher"))
-    at.send({"type": "audio_request", "student_id": sid, "listen": listen, "talk": not listen})
-    assert at.wait_for(lambda x: x["type"] == "audio_state")["state"] == "requested"
-    start = s.wait_for(lambda x: x["type"] == "command" and x.get("kind") == "audio_start")
-    assert start["audio_protocol"] == AUDIO
-    asid = start["payload"]["audio_session_id"]
-    s.send("ack", audio_protocol=AUDIO, command_id=start["command_id"], ok=True)
-    assert at.wait_for(lambda x: x["type"] == "audio_state" and x["state"] == "accepted")["audio_session_id"] == asid  # ACK is not media
-    return s, sid, at, asid
-
-
-def test_audio_signaling_is_bound_to_an_acked_audio_session(server, teacher, session, students):
-    s, sid, at, asid = _accepted_audio(teacher, server, session, students)
+def test_legacy_audio_command_cannot_create_a_session_or_relay(server, teacher, session, students):
+    ts = TeacherStream(server, teacher.cookies.get("qorgau_teacher"))
     try:
-        legacy = teacher.post(f"/api/teacher/students/{sid}/commands", json={"kind": "audio_start", "payload": {"direction": "listen"}})
-        assert legacy.status_code == 422 and legacy.json()["error"]["code"] == "audio_extension_required"
-        at.send({"type": "audio_signal", "audio_session_id": "as-0000000000000000", "kind": "offer", "sdp": "v=0"})
-        assert at.wait_for(lambda x: x["type"] == "audio_error")["code"] == "session_mismatch"
-        at.send({"type": "audio_signal", "audio_session_id": asid, "kind": "offer", "sdp": "v=0 offer"})
-        got = s.wait_for(lambda x: x["type"] == "audio_signal")
-        assert got["kind"] == "offer" and got["audio_session_id"] == asid and got["sdp"].startswith("v=0 offer")
-        s.send("audio_signal", audio_protocol=AUDIO, audio_session_id=asid, kind="answer", sdp="v=0 answer")
-        back = at.wait_for(lambda x: x["type"] == "audio_signal" and x.get("kind") == "answer")
-        assert back["audio_session_id"] == asid and back["sdp"].startswith("v=0 answer")
-        at.send({"type": "audio_stop", "audio_session_id": asid})
-        stop = s.wait_for(lambda x: x["type"] == "command" and x.get("kind") == "audio_stop")
-        assert stop["payload"]["audio_session_id"] == asid
-        ended = at.wait_for(lambda x: x["type"] == "audio_state" and x["state"] == "ended")
-        assert ended["reason"] == "teacher_stop"
-        before = len([m for m in s.snapshot() if m["type"] == "audio_signal"])
-        at.send({"type": "audio_signal", "audio_session_id": asid, "kind": "offer", "sdp": "v=0 late"})
-        assert at.wait_for(lambda x: x["type"] == "audio_error" and x.get("audio_session_id") == asid)["code"] == "session_mismatch"
-        assert len([m for m in s.snapshot() if m["type"] == "audio_signal"]) == before  # nothing relayed after the end
+        ts.wait_for(lambda x: x["type"] == "snapshot")
+        s = students()
+        sid = s.hello(join_code=session["join_code"])["student_id"]
+        ts.send({"type": "audio_signal", "student_id": sid, "command_id": "cmd-none", "sdp": "v=0"})
+        assert ts.wait_for(lambda x: x["type"] == "error")["code"] == "no_audio_session"
+        for kind, payload in (("audio_start", {"direction": "listen"}), ("audio_stop", {})):
+            response = teacher.post(f"/api/teacher/students/{sid}/commands", json={"kind": kind, "payload": payload})
+            assert response.status_code == 422
+            assert "audio_extension_required" in response.text
+        assert teacher.get(f"/api/teacher/students/{sid}/audio").json() == []
+        assert not s.of_type("command"), "Legacy requests must never reach the student's capture path"
     finally:
-        at.close()
+        ts.close()
 
 
 def test_audio_ends_when_student_goes_offline(server, teacher, session, students):
-    s, sid, at, asid = _accepted_audio(teacher, server, session, students, listen=False)
-    try:
+    s = students()
+    sid = s.hello(join_code=session["join_code"], audio_protocol="qorgau.class.audio.v1")["student_id"]
+    with connect(f"ws://127.0.0.1:{server.port}/api/teacher/audio/ws",
+                 additional_headers={"Cookie": f"qorgau_teacher={teacher.cookies.get('qorgau_teacher')}"}) as audio:
+        def receive_state(state):
+            for _ in range(10):
+                msg = json.loads(audio.recv(timeout=5))
+                if msg.get("type") == "audio_state" and msg.get("state") == state:
+                    return msg
+            raise AssertionError(f"audio state not received: {state}")
+
+        audio.send(json.dumps({"type": "audio_request", "student_id": sid, "listen": False, "talk": True}))
+        requested = receive_state("requested")
+        start = s.wait_for(lambda x: x["type"] == "command" and x.get("kind") == "audio_start")
+        s.send("ack", audio_protocol="qorgau.class.audio.v1", command_id=start["command_id"], ok=True)
+        accepted = receive_state("accepted")
+        assert accepted["audio_session_id"] == requested["audio_session_id"]  # accepted is not actual media
         s.close()
-        ended = at.wait_for(lambda x: x["type"] == "audio_state" and x["state"] == "ended", timeout=8)
-        assert ended["audio_session_id"] == asid and ended["reason"] == "student_disconnected"
-    finally:
-        at.close()
+        ended = receive_state("ended")
+        assert ended["audio_session_id"] == requested["audio_session_id"]
+        assert ended["reason"] == "student_disconnected"

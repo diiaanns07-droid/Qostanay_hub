@@ -1329,6 +1329,9 @@ export class FixtureBridge implements QorgauBridge, DeskScanBridge {
         incidents_total: incs.length,
         incidents_by_rule: byRule,
         reviews_by_decision: byDecision,
+        review_zone: null,
+        review_zone_reasons_ru: ["FIXTURE: приоритет проверки не рассчитывается настоящим движком."],
+        review_zone_rule_version: null,
         limitations_ru: [
           "FIXTURE: данные FixtureBridge в памяти браузера — не настоящий backend и не CV.",
           "Синтетический источник кадров; точность распознавания не измерялась.",

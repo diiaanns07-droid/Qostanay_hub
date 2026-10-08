@@ -955,7 +955,10 @@ export const fixtures = {
     },
     "limitations_ru": [
       "Синтетические данные"
-    ]
+    ],
+    "review_zone": null,
+    "review_zone_reasons_ru": [],
+    "review_zone_rule_version": null
   } satisfies SessionSummary,
   "SourceConfig.synthetic": {
     "mode": "synthetic",

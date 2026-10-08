@@ -1,5 +1,15 @@
 # Reproducible findings for module owners (A09 does not patch other modules)
 
+## Adal alignment verification at 361e2445153de5c3035234331a616ee6e5887fa4
+
+Full QA: **380 PASS, 1 SKIP, 4 XFAIL, no failures or XPASS**; evidence in
+`results/20261008T140835Z_adal_alignment_361e2445153d/`.
+QA-OBS-003's existing unknown-question rejection assertion and QA-OBS-004's deleted-session
+inaccessibility assertion both pass, including a separate `--runxfail` check; those two obsolete
+markers are removed. This does not independently verify every historical option/free-text claim
+in QA-OBS-003. QA-OBS-005 (three coercion cases) and QA-OBS-006 still reproduce and remain marked.
+Historical Windows/device/release findings below were not retested by this scoped automated run.
+
 ## Актуально: кандидат de7290509bf558d6488be84d2e0730b2b9ab104a, Windows 11
 
 Исходный прогон: `results/20261008T070227Z_candidate_de7290509bf5/`.

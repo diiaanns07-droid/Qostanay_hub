@@ -38,3 +38,16 @@ test("bounds cannot cover trusted header/footer and reject invalid geometry", ()
   for (const value of [null, {}, { x: 0, y: 0, width: NaN, height: 800 }, { x: 0, y: 1000, width: 1280, height: 800 }, { x: 0, y: 200, width: -1, height: 300 }])
     assert.equal(examBounds(value, 1280, 800), null);
 });
+
+test("the explicit start page is honored only inside the teacher's allowed URLs", () => {
+  const base = { exam_id: "exam", mode: "url", allowed_urls: ["https://exam.example/assets/*", "https://exam.example/test/*"] };
+  const selected = compileExamPolicy({ ...base, start_url: "https://exam.example/test/attempt?id=7" });
+  assert.equal(selected.kind, "url");
+  if (selected.kind !== "url") throw new Error("invalid test policy");
+  assert.equal(selected.policy.entry, "https://exam.example/test/attempt?id=7");
+  for (const start_url of ["https://other.example/test/", "https://exam.example/admin/", "javascript:alert(1)", "https://exam.example/test/*", 7])
+    assert.equal(compileExamPolicy({ ...base, start_url }).kind, "invalid");
+  const changed = compileExamPolicy({ ...base, start_url: "https://exam.example/test/attempt?id=8" });
+  if (changed.kind !== "url") throw new Error("invalid test policy");
+  assert.notEqual(selected.policy.key, changed.policy.key, "a new assignment replaces the old page");
+});

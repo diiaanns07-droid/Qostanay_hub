@@ -12,9 +12,11 @@ integration candidate.
 from __future__ import annotations
 
 import json
+import ast
 import re
 import subprocess
 import sys
+from collections import Counter
 
 import pytest
 
@@ -101,9 +103,71 @@ DOWNLOAD_PATTERNS = re.compile(
     r"YOLO\(|ultralytics|download_url|wget|curl|pip install|attempt_download)\b"
 )
 
+# Explicitly reviewed network operations; not whole-file or whole-directory exemptions.
+# Each scope/name/count must still match. Any additional call (even in these files) needs review.
+# Preparation downloads are operator-invoked before the exam, with manifest/hash verification.
+# Classroom calls implement the user's optional LAN transport; they are not model downloads.
+# Neither category bypasses netguard: public network attempts are still blocked during QA.
+REVIEWED_NETWORK_USES = {
+    "phone/prepare.py": {("", "import urllib.request"): 1, ("_iter_url", "urllib.request.urlopen"): 1},
+    "attention/model_tool.py": {("", "import urllib.request"): 1, ("fetch", "urllib.request.urlopen"): 1},
+    "audio/prepare.py": {("", "import urllib.request"): 1, ("download", "urllib.request.urlopen"): 2},
+    "identity/prepare.py": {("", "import urllib.request"): 1, ("_iter_url", "urllib.request.urlopen"): 1},
+    "uplink/client.py": {("", "import urllib.request"): 1, ("http_post_file", "urllib.request.Request"): 1,
+                         ("http_post_file", "urllib.request.urlopen"): 1},
+    "uplink/demo_teacher.py": {("", "import urllib.request"): 1,
+        ("Teacher.__init__", "urllib.request.build_opener"): 1,
+        ("Teacher.__init__", "urllib.request.HTTPCookieProcessor"): 1,
+        ("Teacher.call", "urllib.request.Request"): 1},
+}
+
+
+def _unreviewed_network_uses(source: str, rel: str) -> list[str]:
+    reviewed = REVIEWED_NETWORK_USES.get(rel, {})
+    counts = Counter()
+    reviewed_lines = set()
+
+    class Uses(ast.NodeVisitor):
+        def __init__(self):
+            self.scope = []
+
+        def scoped(self, node):
+            self.scope.append(node.name)
+            self.generic_visit(node)
+            self.scope.pop()
+
+        visit_FunctionDef = scoped
+        visit_AsyncFunctionDef = scoped
+        visit_ClassDef = scoped
+
+        def note(self, node, name):
+            key = (".".join(self.scope), name)
+            if DOWNLOAD_PATTERNS.search(name):
+                counts[key] += 1
+                if key in reviewed:
+                    reviewed_lines.update(range(node.lineno, node.end_lineno + 1))
+
+        def visit_Import(self, node):
+            for alias in node.names:
+                self.note(node, f"import {alias.name}")
+
+        def visit_Call(self, node):
+            self.note(node, ast.unparse(node.func))
+            self.generic_visit(node)
+
+    Uses().visit(ast.parse(source))
+    hits = [f"{rel}: network operation {scope or '<module>'}:{name} expected {reviewed.get((scope, name), 0)}, got {count}"
+            for (scope, name), count in counts.items() if count != reviewed.get((scope, name), 0)]
+    hits.extend(f"{rel}: reviewed operation removed/moved: {scope}:{name}"
+                for (scope, name), count in reviewed.items() if counts[(scope, name)] < count)
+    for n, line in enumerate(source.splitlines(), 1):
+        if n not in reviewed_lines and not line.lstrip().startswith("#") and DOWNLOAD_PATTERNS.search(line):
+            hits.append(f"{rel}:{n}: {line.strip()[:120]}")
+    return hits
+
 
 def test_no_download_calls_in_backend_runtime_source():
-    """Heuristic gate: product runtime code must not contain download/HTTP-client calls.
+    """Heuristic gate: only explicitly reviewed preparation/classroom calls are allowed.
 
     Scans proctoring/backend/proctor (excluding tests and the A01 smoke client, which talks to
     127.0.0.1 only). A hit is not automatically a bug; it must be justified or removed.
@@ -114,17 +178,35 @@ def test_no_download_calls_in_backend_runtime_source():
         rel = path.relative_to(root).as_posix()
         if "/tests/" in f"/{rel}" or rel.endswith("bootstrap/smoke.py"):
             continue
-        # These reviewed preparation CLIs download weights explicitly before
-        # runtime; their presence does not imply a runtime network dependency.
-        # The runtime audit guard remains active and catches attempted connections.
-        if rel in {"phone/model_tool.py", "phone/prepare.py", "attention/model_tool.py"}:
-            continue
-        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            if line.lstrip().startswith("#"):
-                continue
-            if DOWNLOAD_PATTERNS.search(line):
-                hits.append(f"{rel}:{n}: {line.strip()[:120]}")
+        hits.extend(_unreviewed_network_uses(path.read_text(encoding="utf-8"), rel))
     assert not hits, "\n".join(hits)
+
+
+def test_reviewed_network_scopes_cannot_hide_new_runtime_calls():
+    root = PROCTORING_ROOT / "backend" / "proctor"
+    for rel in REVIEWED_NETWORK_USES:
+        source = (root / rel).read_text(encoding="utf-8")
+        assert not _unreviewed_network_uses(source, rel)
+        changed = source + "\ndef unintended_runtime_download():\n    urllib.request.urlopen('https://example.invalid')\n"
+        assert _unreviewed_network_uses(changed, rel), rel
+    source = "import urllib.request\ndef runtime():\n    urllib.request.urlopen('https://example.invalid')\n"
+    assert _unreviewed_network_uses(source, "unreviewed_module.py")
+    # A second download in an already reviewed function is also a change, not an exemption.
+    source = "import urllib.request\ndef _iter_url(url):\n    urllib.request.urlopen(url)\n    urllib.request.urlopen(url)\n"
+    assert _unreviewed_network_uses(source, "phone/prepare.py")
+
+
+def test_reviewed_classroom_uploader_still_cannot_access_public_network(tmp_path):
+    clip = tmp_path / "test-payload.bin"
+    clip.write_bytes(b"SYNTHETIC QA NETWORK GUARD CHECK")
+    log = tmp_path / "uplink-guard.jsonl"
+    code = ("from pathlib import Path; from proctor.uplink.client import http_post_file; "
+            f"ok, reason = http_post_file('http://203.0.113.7:8765/api/student/clips/test', Path({str(clip)!r}), "
+            "'qa-fixture-token', 'video/mp4', timeout_s=1); assert not ok; print('public upload blocked')")
+    result = _guard(code, log)
+    assert result.returncode == 0 and result.stdout.strip() == "public upload blocked", result.stderr
+    entries = [json.loads(line) for line in log.read_text().splitlines()]
+    assert entries and all(entry["host"] == "203.0.113.7" for entry in entries)
 
 
 def test_qa_harness_itself_is_offline():
