@@ -290,9 +290,9 @@ try {
   await until(() => shell.shellState().exam_mode_active);
   const wp1 = Date.now();
 
-  // Back to student, finish with flush.
-  await page.getByRole("button", { name: /Преподаватель ✕/ }).click();
+  // Resume clears the operator unlock in A06: the UI must return to the student automatically.
   await page.locator(".question").waitFor();
+  check("resume automatically returns to student and clears operator access", !shell.shellState().operator_unlocked && (await page.getByRole("button", { name: /Преподаватель ✕/ }).count()) === 0);
   await page.waitForTimeout(1200);
   const t2 = await readTimer();
   const w2 = Date.now();

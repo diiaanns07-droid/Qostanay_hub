@@ -1,4 +1,18 @@
-# A07 — STATUS (round 2: connect the UI to the real bridge/backend)
+# A07 — STATUS
+
+## Текущая поставка A07-student, 2026-10-08
+
+Ветка `codex/proctor-A07-student`, база `5c6a8e4e18bf29eedee4181cb6dd0c6d79eb72dc`.
+Описание экранов, минимального IPC и блокеров аудио: [STUDENT.md](STUDENT.md).
+Последующие исправления и актуальные результаты тестов: [RECHECK.md](RECHECK.md).
+Оставшаяся проверка с человеком перед камерой: [LIVE_STUDENT.md](LIVE_STUDENT.md).
+LIVE: все пять точек собраны, backend зарегистрировал `gaze_prolonged_down` на **4593 ms**.
+Подтверждение человеком намеренного взгляда вниз в этот момент пока не получено; приёмка — **PARTIAL**.
+Доказательства и точный SHA запуска — в конце [RECHECK.md](RECHECK.md).
+
+Ниже сохранён исторический handoff предыдущего этапа.
+
+## Historical STATUS (round 2: connect the UI to the real bridge/backend)
 
 Role: product UI / renderer. Branch: `claude/upbeat-gauss-798nt9` (platform-assigned).
 Continuation SHA (previous A07 checkpoint): `3fef6fb80d4106b5faad1609e42f31981401da13`; original BOOTSTRAP

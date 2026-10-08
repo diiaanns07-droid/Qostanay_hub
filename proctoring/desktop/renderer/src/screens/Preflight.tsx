@@ -305,7 +305,7 @@ export function PreflightScreen() {
         </div>
 
         <div className="stack">
-          <ClassBlock state={live.classState} />
+          <ClassBlock state={live.classState} health={health} />
           <Card title="Компоненты" aside={health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}>
             {!health && !loadErr && <Spinner label="Запрашиваем состояние…" />}
             {!health && loadErr && <p className="muted">Нет данных о компонентах.</p>}

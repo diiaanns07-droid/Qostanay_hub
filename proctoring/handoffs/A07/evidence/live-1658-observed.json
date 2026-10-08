@@ -1,0 +1,226 @@
+{
+  "session_id": "s-20261008-165819-b080a733",
+  "source_mode": "live",
+  "state": "finished",
+  "calibration": {
+    "calibration_id": "cal-a0f0cc0eb0ac4326",
+    "phase": "completed",
+    "targets": [
+      {
+        "target": "center",
+        "state": "ok",
+        "samples": 20,
+        "required_samples": 20,
+        "quality": 0.877,
+        "message_code": null
+      },
+      {
+        "target": "left",
+        "state": "ok",
+        "samples": 20,
+        "required_samples": 20,
+        "quality": 0.887,
+        "message_code": null
+      },
+      {
+        "target": "right",
+        "state": "ok",
+        "samples": 20,
+        "required_samples": 20,
+        "quality": 0.932,
+        "message_code": null
+      },
+      {
+        "target": "up",
+        "state": "ok",
+        "samples": 20,
+        "required_samples": 20,
+        "quality": 0.845,
+        "message_code": null
+      },
+      {
+        "target": "down",
+        "state": "ok",
+        "samples": 20,
+        "required_samples": 20,
+        "quality": 0.841,
+        "message_code": null
+      }
+    ],
+    "current_target": null,
+    "message_code": "calibration_ok",
+    "updated_at": "2026-10-08T11:59:03.189046Z"
+  },
+  "incidents": [
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_blocked_action.1",
+      "rule_id": "environment_blocked_action",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 48547,
+      "t_end_ms": null,
+      "duration_ms": 0
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.gaze_prolonged_down.1",
+      "rule_id": "gaze_prolonged_down",
+      "category": "attention",
+      "state": "open",
+      "t_start_ms": 50625,
+      "t_end_ms": null,
+      "duration_ms": 3047
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_blocked_action.1",
+      "rule_id": "environment_blocked_action",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 48547,
+      "t_end_ms": null,
+      "duration_ms": 5812
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.1",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 54359,
+      "t_end_ms": null,
+      "duration_ms": 0
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.1",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 54359,
+      "t_end_ms": null,
+      "duration_ms": 266
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.gaze_prolonged_down.1",
+      "rule_id": "gaze_prolonged_down",
+      "category": "attention",
+      "state": "closed",
+      "t_start_ms": 50625,
+      "t_end_ms": 55218,
+      "duration_ms": 4593
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.1",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "closed",
+      "t_start_ms": 54359,
+      "t_end_ms": 54625,
+      "duration_ms": 266
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_blocked_action.1",
+      "rule_id": "environment_blocked_action",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 48547,
+      "t_end_ms": null,
+      "duration_ms": 9531
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_blocked_action.1",
+      "rule_id": "environment_blocked_action",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 48547,
+      "t_end_ms": null,
+      "duration_ms": 9531
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.2",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 61375,
+      "t_end_ms": null,
+      "duration_ms": 0
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.2",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 61375,
+      "t_end_ms": null,
+      "duration_ms": 0
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.2",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "closed",
+      "t_start_ms": 61375,
+      "t_end_ms": 61375,
+      "duration_ms": 0
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_blocked_action.1",
+      "rule_id": "environment_blocked_action",
+      "category": "environment",
+      "state": "closed",
+      "t_start_ms": 48547,
+      "t_end_ms": 58078,
+      "duration_ms": 9531
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_blocked_action.2",
+      "rule_id": "environment_blocked_action",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 68578,
+      "t_end_ms": null,
+      "duration_ms": 0
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.3",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 68578,
+      "t_end_ms": null,
+      "duration_ms": 0
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.3",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "open",
+      "t_start_ms": 68578,
+      "t_end_ms": null,
+      "duration_ms": 265
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_escape.3",
+      "rule_id": "environment_escape",
+      "category": "environment",
+      "state": "closed",
+      "t_start_ms": 68578,
+      "t_end_ms": 68843,
+      "duration_ms": 265
+    },
+    {
+      "incident_id": "inc.s-20261008-165819-b080a733.environment_blocked_action.2",
+      "rule_id": "environment_blocked_action",
+      "category": "environment",
+      "state": "closed",
+      "t_start_ms": 68578,
+      "t_end_ms": 68578,
+      "duration_ms": 0
+    }
+  ],
+  "calibration_visible": false,
+  "locked": false,
+  "at": "2026-10-08T12:01:14.545Z",
+  "platform": "win32",
+  "os_release": "10.0.26200",
+  "fullscreen": false,
+  "native_helper": false,
+  "acceptance": "NOT_RECORDED: requires the participant's confirmation of the gaze gesture"
+}

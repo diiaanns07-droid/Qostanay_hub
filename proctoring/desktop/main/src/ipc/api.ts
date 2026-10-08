@@ -44,6 +44,8 @@ export interface ApiDeps {
   /** Operator unlock lifetime. Defaults: 180 s idle, 30 min total. */
   operatorTimeouts?: { idleMs: number; maxMs: number };
   now?: () => number;
+  /** Additive local display metadata; never includes the class join code/token. */
+  healthMetadata?(): { computer_name: string; class_configured: boolean };
 }
 
 type Handler = (...args: unknown[]) => Promise<unknown>;
@@ -164,7 +166,10 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       return ok<ShellState>(machine.state);
     },
 
-    health: async () => client.json<HealthReport>("GET", P("health")),
+    health: async () => {
+      const r = await client.json<HealthReport>("GET", P("health"));
+      return r.ok && d.healthMetadata ? ok({ ...r.data, ...d.healthMetadata() }) : r;
+    },
     listSessions: async () => client.json<SessionInfo[]>("GET", P("sessions")),
     createSession: async (bodyRaw) => {
       const body = v.sessionCreate(bodyRaw);
