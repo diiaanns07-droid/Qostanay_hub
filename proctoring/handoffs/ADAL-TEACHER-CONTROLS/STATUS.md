@@ -15,7 +15,7 @@ Isolated worktree `Adal-teacher-controls`; root integrates and pushes.
   Historical ACK remains an execution report; the UI requires its scoped app receipt to label it confirmed.
 - Small card/drawer label corrections say Adal screen, never Windows lockdown.
 
-Validation so far: 66 Node unit tests PASS; 75 classroom contract checks PASS; 3 new real C1 tests PASS
+Validation so far: 66 Node unit tests PASS; 74 classroom contract tests + 1 strict receipt check PASS; 3 new C1 tests PASS
 (strict receipt contract, wire/storage/card/stream lifecycle, authenticated assets + canonical failed command).
 Sandboxed subprocess startup timed out before READY; scoped unsandboxed localhost-only rerun passed in 3.16 s.
 No camera, microphone or OS guard used. Strict JS check and browser acceptance are next.
