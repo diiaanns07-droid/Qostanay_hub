@@ -34,7 +34,7 @@ from .store import ExportSnapshot
 from .review_zones import ZONE_LABEL
 
 REPORT_FORMAT = "qorgau.report.v1"
-CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
+CSP = "default-src 'none'; img-src data:; media-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
 
 RULE_RU = {
     "phone_visible": "Телефон в кадре",
@@ -200,7 +200,7 @@ def build_manifest(snap: ExportSnapshot, html_bytes: bytes) -> ExportManifest:
             continue
         files.append(
             ExportFile(
-                name=f"{ev.item.evidence_id}.jpg",
+                name=f"{ev.item.evidence_id}.{'webm' if ev.item.media_type == 'video/webm' else 'jpg'}",
                 media_type=ev.item.media_type,
                 sha256=ev.item.sha256,
                 size_bytes=ev.item.size_bytes,
@@ -243,6 +243,7 @@ def build_json(snap: ExportSnapshot, html_bytes: bytes | None = None) -> dict[st
             {"evidence_id": ev.item.evidence_id, "status": ev.status, "sha256": ev.item.sha256, "size_bytes": ev.item.size_bytes}
             for ev in snap.evidence.values()
         ],
+        "desk_scan": snap.summary.desk_scan.model_dump(mode="json") if snap.summary.desk_scan is not None else None,  # A15
         "evidence_expired": snap.evidence_expired,
         "storage_counters": snap.counters,
         "recovered_after_interruption": snap.recovered,
@@ -296,7 +297,7 @@ td.num { text-align: right; white-space: nowrap; }
 @media screen and (min-width: 900px) { .split { grid-template-columns: 1fr 1fr; } }
 .box { border: 1px dashed var(--line); padding: 6px 8px; border-radius: 4px; }
 figure { margin: 6px 0; }
-figure img { max-width: 100%; height: auto; border: 1px solid var(--line); }
+figure img, figure video { max-width: 100%; height: auto; border: 1px solid var(--line); }
 figcaption { font-size: 12px; color: var(--muted); }
 .mono { font-family: Consolas, "Courier New", monospace; font-size: 12px; }
 ul { margin: 4px 0 8px 20px; padding: 0; }
@@ -338,6 +339,7 @@ def render_html(snap: ExportSnapshot) -> str:
     w("</ul></section>")
 
     _session_section(w, snap)
+    _desk_scan_section(w, snap)  # A15, contract 1.2
     _coverage_section(w, snap)
     _incidents_section(w, snap)
     _environment_section(w, snap)
@@ -537,6 +539,61 @@ def _incident_card(w, snap: ExportSnapshot, n: int, d: IncidentDetail) -> None:
     w("</div></div>")
     _evidence_block(w, snap, d)
     w("</article>")
+
+
+DESK_SCAN_STATE_RU = {
+    "not_started": "не проводился",
+    "recording": "не завершён (результат неизвестен)",
+    "clear": "посторонних предметов не замечено",
+    "objects_found": "замечены предметы — проверьте",
+    "failed": "не удался (результат неизвестен, это не «чисто»)",
+    "skipped": "пропущен",
+}
+FIXED_CAMERA_REASON = "fixed_camera_teacher_check"
+
+
+def _desk_scan_section(w, snap: ExportSnapshot) -> None:
+    """A15: workplace scan before the exam. Helps the teacher; not evidence of a violation."""
+    ds = snap.summary.desk_scan
+    w("<section><h2>Осмотр рабочего места</h2>")
+    if ds is None:
+        w('<p class="muted">Осмотр рабочего места не проводился.</p></section>')
+        return
+    state = ds.state.value
+    cls = {"clear": "zone-green", "objects_found": "zone-yellow", "failed": "zone-red"}.get(state, "")
+    if state == "skipped" and ds.skip_reason == FIXED_CAMERA_REASON:
+        headline = "Осмотр камерой невозможен (стационарная камера) — подтверждён преподавателем"
+    else:
+        headline = f"Осмотр: {DESK_SCAN_STATE_RU.get(state, state)}"
+    w(f'<div class="banner {cls}"><strong>{esc(headline)}</strong>{esc(ds.message_ru or "")}</div>')
+    rows: list[tuple[str, Any]] = [
+        ("Начало (время сессии)", fmt_t(ds.started_t_ms)),
+        ("Длительность", fmt_dur(ds.duration_ms)),
+    ]
+    if ds.skip_reason:
+        rows.append(("Причина пропуска", ds.skip_reason))
+    _kv(w, rows)
+    if ds.objects:
+        w("<table><thead><tr><th>Предмет</th><th>Класс модели</th><th>Макс. уверенность модели</th><th>Виден, с</th></tr></thead><tbody>")
+        for o in ds.objects:
+            w(f"<tr><td>{esc(o.label_ru)}</td><td class=\"mono\">{esc(o.class_name)}</td>"
+              f"<td>{esc(f'{o.max_confidence:.2f}')}</td><td>{esc(f'{o.seen_ms / 1000:.1f}')}</td></tr>")
+        w("</tbody></table>")
+    ev = snap.evidence.get(ds.evidence_id) if ds.evidence_id else None
+    if ev is not None and ev.status == "ok" and ev.data is not None and ev.item.media_type == "video/webm":
+        data = base64.b64encode(ev.data).decode("ascii")
+        caption = f"Клип осмотра · SHA-256 {ev.item.sha256[:16]}…"
+        w(f'<figure><video controls preload="metadata" src="data:video/webm;base64,{data}"></video><figcaption>{esc(caption)}</figcaption></figure>')
+    elif ev is not None:
+        w(f'<p class="note">Клип осмотра: {esc(EVIDENCE_STATUS_RU.get(ev.status, ev.status))}</p>')
+    elif ds.evidence_id:
+        w('<p class="note">Клип осмотра удалён или недоступен.</p>')
+    elif state not in ("skipped", "not_started"):
+        why = "" if snap.info.retain_media else " (хранение медиа выключено)"
+        w(f'<p class="muted">Клип не сохранялся{esc(why)}.</p>')
+    w('<p class="muted">Осмотр помогает преподавателю, это не доказательство нарушения. Уверенность — оценка модели '
+      "(YOLO11n), а не вероятность нарушения; отсутствие находок не гарантирует чистый стол.</p>")
+    w("</section>")
 
 
 def _evidence_block(w, snap: ExportSnapshot, d: IncidentDetail) -> None:
