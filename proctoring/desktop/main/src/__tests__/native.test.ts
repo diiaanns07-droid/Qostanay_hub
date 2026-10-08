@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { test } from "node:test";
-import { checkHelper, NativeHelper, parseHelperLine, type NativeObservation } from "../environment/native";
+import { checkHelper, NativeHelper, parseHelperLine, resolveHelperCommand, type NativeObservation } from "../environment/native";
 
 const FAKE = resolve(__dirname, "..", "..", "main", "tests", "fake-helper.mjs");
 const cmd = (flags: string[] = []) => ({ command: process.execPath, prefixArgs: [FAKE, ...flags] });
@@ -81,4 +81,42 @@ test("stopSync kills immediately and stop() is then a no-op", async () => {
   helper.stopSync();
   assert.equal(helper.running, false);
   await helper.stop(); // must not hang or throw
+});
+
+test("Python helper resolves the backend interpreter, paths with spaces remain separate arguments", () => {
+  const script = resolve("helper folder", "guard.PY");
+  const python = resolve("python folder", "python.exe");
+  assert.deepEqual(resolveHelperCommand({ command: script }, "win32", { QORGAU_PYTHON: python }),
+    { command: python, prefixArgs: ["-u", script] });
+  const root = resolve("backend root");
+  assert.deepEqual(resolveHelperCommand({ command: script }, "win32", { QORGAU_PROCTORING_ROOT: root }),
+    { command: join(root, ".venv", "Scripts/python.exe"), prefixArgs: ["-u", script] });
+});
+
+test("default missing exe falls back to native/qorgau_guard.py; existing or explicit exe does not", () => {
+  const exe = resolve("desktop", "native", "bin", "qorgau-guard.exe");
+  const script = resolve("desktop", "native", "qorgau_guard.py");
+  const env = { QORGAU_PYTHON: "chosen-python" };
+  assert.deepEqual(resolveHelperCommand({ command: exe }, "win32", env, p => p === script),
+    { command: "chosen-python", prefixArgs: ["-u", script] });
+  assert.deepEqual(resolveHelperCommand({ command: exe }, "win32", env, () => true), { command: exe });
+  assert.deepEqual(resolveHelperCommand({ command: exe }, "win32", { ...env, QORGAU_SHELL_NATIVE_HELPER: exe }, () => false),
+    { command: exe });
+  assert.deepEqual(resolveHelperCommand(cmd(), "win32", env), cmd());
+});
+
+test(".py protocol-only helper starts through Python, self-checks and stops (NO actual hook)", async () => {
+  const script = resolve(__dirname, "..", "..", "native", "tests", "fake_helper.py");
+  const info = await checkHelper({ command: script }, "win32", false);
+  assert.equal(info.available, true, info.detail);
+  assert.equal(info.enforce, false);
+  const helper = new NativeHelper({ command: script }, { enforce: false, maxMinutes: 2, onObservation: () => undefined });
+  try {
+    assert.deepEqual(await helper.start("python-protocol-test"), { mode: "dry_run" });
+    assert.equal(helper.running, true);
+  } finally {
+    await helper.stop();
+  }
+  assert.equal(helper.lastBye, "stop_requested");
+  assert.equal(helper.running, false);
 });

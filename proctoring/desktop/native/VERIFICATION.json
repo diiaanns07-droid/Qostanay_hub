@@ -1,6 +1,47 @@
 {
   "_comment": "Manual controlled-test records for OS-level environment protection (owner: A06). The shell reads this at startup and only promotes a capability above 'unverified' when a record's platform AND os_release match the machine exactly (and, for a native 'blocked' record, the helper is available with enforcement enabled). Fill it ONLY from a real controlled test on a target Windows machine/VM with the test mode explicitly on; never edit it to claim an unproven block. Allowed status: blocked | detected_only | unsupported. Example records below are DISABLED (in _examples) and are not read.",
-  "records": [],
+  "records": [
+    {
+      "action": "shortcut_win",
+      "status": "blocked",
+      "mechanism": "native.ll_keyboard_hook",
+      "platform": "win32",
+      "os_release": "10.0.26200",
+      "verified_on": "Windows 11 10.0.26200; Python 3.12.14; standard user; enforce --max-minutes 2; manual 2026-10-08",
+      "date": "2026-10-08",
+      "note_ru": "Win подавлялась в enforce. Ctrl+Alt+Shift+F12 завершил helper; пользователь подтвердил восстановление клавиатуры и фокуса. LWin/RWin отдельно не проверялись. Тест отдельного helper, не полного Electron."
+    },
+    {
+      "action": "shortcut_alt_tab",
+      "status": "blocked",
+      "mechanism": "native.ll_keyboard_hook",
+      "platform": "win32",
+      "os_release": "10.0.26200",
+      "verified_on": "Windows 11 10.0.26200; Python 3.12.14; standard user; enforce --max-minutes 2; manual 2026-10-08",
+      "date": "2026-10-08",
+      "note_ru": "Alt+Tab не переключал окна в enforce; после аварийного выхода снова работал, что подтвердил пользователь. Alt+Esc и Ctrl+Esc в LIVE не проверялись. Тест отдельного helper, не полного Electron."
+    },
+    {
+      "action": "shortcut_print_screen",
+      "status": "blocked",
+      "mechanism": "native.ll_keyboard_hook",
+      "platform": "win32",
+      "os_release": "10.0.26200",
+      "verified_on": "Windows 11 10.0.26200; Python 3.12.14; standard user; enforce --max-minutes 2; manual 2026-10-08",
+      "date": "2026-10-08",
+      "note_ru": "PrtScn не открывал снимок в enforce, что подтвердил пользователь. В dry-run событие swallowed=false сопровождалось SnippingTool.exe. Другие способы захвата экрана не проверялись. Тест отдельного helper."
+    },
+    {
+      "action": "foreign_window_foreground",
+      "status": "detected_only",
+      "mechanism": "native.foreground_watch",
+      "platform": "win32",
+      "os_release": "10.0.26200",
+      "verified_on": "Windows 11 10.0.26200; Python 3.12.14; dry-run --max-minutes 2; manual 2026-10-08",
+      "date": "2026-10-08",
+      "note_ru": "Реальный dry-run фиксировал foreground: WindowsTerminal.exe, SearchHost.exe, explorer.exe, Code.exe, SnippingTool.exe; только basename, foreign=true. Блокировка сторонних окон не заявляется."
+    }
+  ],
   "_examples": [
     {
       "action": "shortcut_alt_tab",
