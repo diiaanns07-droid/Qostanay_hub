@@ -22,8 +22,17 @@ Changed only `proctoring/class-panel/` and this handoff:
 - More restrained typography, spacing and status colours; source/demo labels retained.
 - Panel meta CSP permits same-origin media (C1's HTTP CSP must be updated by its owner when mounting video).
 
-Checked: strict JS TypeScript check PASS; existing 23 panel unit tests PASS.
-Browser visual and actual server interaction checks are next, not yet claimed.
+Checked: strict JS TypeScript check PASS; 25 panel unit tests PASS, including source/frame provenance.
+Actual C1 + Chrome session UI: 39/39 PASS (Windows, local loopback). Screenshots inspected separately.
+Panel data flow/keyboard/load checks functionally pass; the first browser run also detected local antivirus
+CSP injection and a missing favicon. The favicon is fixed; the test now reports verified antivirus
+injection separately, without ignoring application errors. Full rerun pending.
+
+Second checkpoint: source labels for each student/frame/event; absent source means unknown,
+earlier synthetic frames keep their label after a switch to live. DEMO explicitly supplies simulated.
+Localized invalid-address and network errors. Login link on expired teacher authentication.
+Desktop npm ci/build/typecheck PASS. Shell test exposed one old synthetic incident count mismatch;
+assigned to recovery agent for investigation, not counted as passing yet.
 
 ## Independent acceptance work
 

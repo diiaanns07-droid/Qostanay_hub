@@ -26,6 +26,17 @@ test("priority order follows the protocol: red → yellow → grey → green", (
   assert.deepEqual(s.order, ["3", "2", "4", "1"]);
 });
 
+test("an earlier synthetic frame retains its own source after the student switches to live", () => {
+  const { s, at } = mk();
+  s.snapshot([st("1", { origin: "simulated" })]);
+  s.preview("1", "data:image/jpeg;base64,old", at(), "simulated");
+  s.studentUpdate(st("1", { origin: "real" }));
+  assert.equal(s.students.get("1").view.origin, "real");
+  assert.equal(s.students.get("1").preview.origin, "simulated");
+  s.preview("1", "data:image/jpeg;base64,legacy", at());
+  assert.equal(s.students.get("1").preview.origin, "unknown");
+});
+
 test("cards do not jump on every event: same-zone event changes wait for the slow cadence", () => {
   const { s, tick, at } = mk();
   s.snapshot([st("1", { last_event_at: new Date(at() - 60_000).toISOString() }), st("2", { last_event_at: new Date(at() - 30_000).toISOString() })]);

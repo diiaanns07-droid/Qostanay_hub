@@ -124,6 +124,7 @@ export function createDemoAdapter(opts = {}) {
     const decided = closed && rand() < 0.5;
     const inc = {
       incident_id: `demo-inc-${incSeq}`,
+      origin: "simulated",
       rule_id: def.rule_id,
       category: def.category,
       priority: /** @type {"low"|"medium"|"high"} */ (def.priority),
@@ -159,6 +160,7 @@ export function createDemoAdapter(opts = {}) {
     const z = simZone(s);
     return {
       student_id: s.id,
+      origin: "simulated",
       computer_name: s.computer,
       student_label: s.label,
       exam_state: s.exam,
@@ -235,7 +237,7 @@ export function createDemoAdapter(opts = {}) {
         s.nextStatusAt = t + 1800 + Math.floor(rand() * 400);
         if (!serverDown) {
           store.studentUpdate(statusMessage(s));
-          if (previewsOn && s.exam === "running" && s.camera === "ok") store.preview(s.id, previewSvg(s), t);
+          if (previewsOn && s.exam === "running" && s.camera === "ok") store.preview(s.id, previewSvg(s), t, "simulated");
         }
       }
     }
@@ -251,7 +253,7 @@ export function createDemoAdapter(opts = {}) {
     store.snapshot(sims.filter((s) => s.online).map(statusMessage).concat(sims.filter((s) => !s.online).map((s) => ({ ...statusMessage(s), connected: false }))));
     for (const s of sims) {
       for (const i of s.incidents) store.incident({ ...i, student_id: s.id });
-      if (s.online && s.exam === "running" && s.camera === "ok") store.preview(s.id, previewSvg(s), now());
+      if (s.online && s.exam === "running" && s.camera === "ok") store.preview(s.id, previewSvg(s), now(), "simulated");
     }
     store.setConnection({ status: "live", detail: "" });
   }

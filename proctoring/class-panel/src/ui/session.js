@@ -79,6 +79,13 @@ export function createSessionBar(mode) {
     return r.json();
   }
 
+  /** Network/parser messages from the browser are not useful instructions for a teacher. @param {unknown} err */
+  function failureText(err) {
+    if (err instanceof DOMException && err.name === "TimeoutError") return "Сервер долго не отвечает. Проверьте связь и попробуйте ещё раз.";
+    if (err instanceof TypeError) return "Не удалось связаться с сервером класса. Проверьте, что он запущен, и повторите попытку.";
+    return err instanceof Error ? err.message : "Не удалось выполнить запрос. Попробуйте ещё раз.";
+  }
+
   async function refresh() {
     if (loading || busy || !alive) return;
     loading = true;
@@ -100,7 +107,7 @@ export function createSessionBar(mode) {
       codeBox.hidden = true;
       create.disabled = true;
       setText(title, "Класс недоступен");
-      setText(note, err instanceof Error ? err.message : "Проверьте связь с сервером.");
+      setText(note, failureText(err));
       retry.hidden = false;
     } finally { loading = false; }
   }
@@ -113,7 +120,9 @@ export function createSessionBar(mode) {
     const urls = extra.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     try {
       for (const url of [...urls, ...(start ? [start] : [])]) {
-        const parsed = new URL(url);
+        let parsed;
+        try { parsed = new URL(url); }
+        catch { throw new Error("Проверьте адрес сайта. Например: https://exam.example.kz"); }
         if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error("Нужен адрес http:// или https:// без логина и пароля в ссылке.");
       }
       if (!name.value.trim()) throw new Error("Введите название класса.");
@@ -130,7 +139,7 @@ export function createSessionBar(mode) {
       dialog.close();
       setText(feedback, "Класс создан. Можно подключать студентов.");
     } catch (err) {
-      setText(error, err instanceof Error ? err.message : "Не удалось создать класс.");
+      setText(error, failureText(err));
       error.hidden = false;
     } finally {
       busy = false;

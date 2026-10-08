@@ -14,11 +14,18 @@
 /** @typedef {"red"|"yellow"|"grey"|"green"} Zone */
 /** @typedef {"idle"|"preflight"|"calibrating"|"running"|"paused"|"finished"} ExamState */
 /** @typedef {"ok"|"busy"|"off"|"unknown"} Camera */
+/** @typedef {"real"|"simulated"|"replay"|"unknown"} DataOrigin */
+export const ORIGIN_LABEL = { real: "Камера", simulated: "Тестовые данные", replay: "Видеозапись", unknown: "Источник не указан" };
+/** Missing/legacy provenance is never upgraded to live. @param {unknown} value @returns {DataOrigin} */
+export function normalizeOrigin(value) {
+  return value === "real" || value === "simulated" || value === "replay" ? value : "unknown";
+}
 
 /**
  * Normalised student card. `null` = not received / not determined (never a default "ok").
  * @typedef {object} StudentView
  * @property {string} id
+ * @property {DataOrigin} origin
  * @property {string|null} computerName
  * @property {string|null} label
  * @property {ExamState|null} examState
@@ -103,7 +110,7 @@ export function normalizeStudent(raw, receivedAt) {
   const known = new Set([
     "student_id", "id", "computer_name", "student_label", "exam_state", "camera", "monitoring", "zone", "zone_reasons_ru",
     "incidents_total", "incidents_by_priority", "locked", "mic_active", "connected", "last_status_at", "last_event_at",
-    "incidents_unreviewed", "app_version", "type", "v", "msg_id", "sent_at",
+    "incidents_unreviewed", "app_version", "type", "v", "msg_id", "sent_at", "origin",
   ]);
   const unknownKeys = Object.keys(r).filter((k) => !known.has(k));
   const reasons = Array.isArray(r.zone_reasons_ru) ? r.zone_reasons_ru.filter((x) => typeof x === "string").slice(0, 3).map((x) => x.slice(0, 200)) : [];
@@ -118,6 +125,7 @@ export function normalizeStudent(raw, receivedAt) {
   /** @type {StudentView} */
   const view = {
     id,
+    origin: normalizeOrigin(r.origin),
     computerName: str(r.computer_name),
     label: str(r.student_label),
     examState: /** @type {ExamState|null} */ (oneOf(r.exam_state, EXAM_STATES)),
@@ -151,6 +159,7 @@ export function mergeStudent(prev, next, raw) {
   const out = { ...prev };
   const has = (/** @type {string} */ k) => Object.prototype.hasOwnProperty.call(raw, k);
   if (has("computer_name")) out.computerName = next.computerName;
+  if (has("origin")) out.origin = next.origin;
   if (has("student_label")) out.label = next.label;
   if (has("exam_state")) out.examState = next.examState;
   if (has("camera")) out.camera = next.camera;
@@ -240,6 +249,7 @@ export function normalizeIncident(raw) {
   return {
     id,
     studentId: str(r.student_id),
+    origin: normalizeOrigin(r.origin),
     rule: str(r.rule_id),
     category: str(r.category),
     priority: /** @type {"low"|"medium"|"high"|null} */ (oneOf(r.priority, ["low", "medium", "high"])),

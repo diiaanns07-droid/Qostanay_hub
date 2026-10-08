@@ -35,7 +35,7 @@ export function createRealAdapter(opts = {}) {
       return {
         status: /** @type {const} */ ("auth"),
         detail:
-          "Нужен вход преподавателя (PIN, который сервер класса печатает при запуске). В qorgau.class.v1 вход описан только как cookie; страница входа должна прийти от сервера класса (C1).",
+          "Нужен вход преподавателя. Введите PIN из окна сервера, чтобы продолжить.",
       };
     }
     if (r.status === 403) {
@@ -68,7 +68,7 @@ export function createRealAdapter(opts = {}) {
     }
     const list = Array.isArray(body) ? body : Array.isArray(body?.students) ? body.students : null;
     if (!list) {
-      store.setConnection({ status: "error", detail: "Формат списка студентов не совпадает с ожидаемым (массив карточек). Нужна схема от C1." });
+      store.setConnection({ status: "error", detail: "Не удалось прочитать список студентов. Проверьте, что сервер и приложения обновлены." });
       return false;
     }
     store.snapshot(list);
@@ -147,7 +147,7 @@ export function createRealAdapter(opts = {}) {
           return;
         }
         const at = typeof msg.frame_wall === "string" ? Date.parse(msg.frame_wall) : NaN;
-        store.preview(id, `data:image/jpeg;base64,${b64}`, Number.isNaN(at) ? null : at);
+        store.preview(id, `data:image/jpeg;base64,${b64}`, Number.isNaN(at) ? null : at, msg.origin);
         return;
       }
       case "ack":

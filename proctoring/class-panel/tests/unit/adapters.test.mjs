@@ -80,7 +80,7 @@ test("REAL: server error → error + retry scheduled; unexpected shape → repor
   b.start(s2);
   await sleep(30);
   assert.equal(s2.connection.status, "error");
-  assert.match(s2.connection.detail, /Формат списка/);
+  assert.match(s2.connection.detail, /Не удалось прочитать список студентов/);
   assert.equal(s2.students.size, 0);
   b.stop();
 });

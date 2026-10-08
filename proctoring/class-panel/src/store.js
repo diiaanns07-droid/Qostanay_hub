@@ -10,6 +10,7 @@ import {
   mergeStudent,
   naturalCompare,
   normalizeIncident,
+  normalizeOrigin,
   normalizeStudent,
   ZONE_RANK,
 } from "./model.js";
@@ -30,7 +31,7 @@ const MAX_INCIDENTS_PER_STUDENT = 200;
  * @typedef {object} Entry
  * @property {StudentView} view
  * @property {string[]} unknownKeys
- * @property {{ url: string, at: number|null } | null} preview
+ * @property {{ url: string, at: number|null, origin: import("./model.js").DataOrigin } | null} preview
  * @property {number} flashUntil       highlight a fresh event without moving the card
  * @property {number} lastRank         zone rank used for the current order
  * @property {string} sig              last rendered signature (for change detection)
@@ -147,11 +148,11 @@ export class PanelStore {
     }
   }
 
-  /** @param {string} studentId @param {string} url @param {number|null} at */
-  preview(studentId, url, at) {
+  /** @param {string} studentId @param {string} url @param {number|null} at @param {unknown} [origin] */
+  preview(studentId, url, at, origin) {
     const e = this.students.get(studentId);
     if (!e) return;
-    e.preview = { url, at };
+    e.preview = { url, at, origin: normalizeOrigin(origin) };
     this.mark({ card: studentId });
   }
 

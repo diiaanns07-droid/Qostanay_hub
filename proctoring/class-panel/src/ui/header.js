@@ -27,7 +27,8 @@ export function createHeader(store, o) {
   const bannerText = h("span", { class: "banner-text" });
   const retryBtn = h("button", { type: "button", class: "btn btn-small", hidden: true }, ["Повторить сейчас"]);
   retryBtn.addEventListener("click", () => o.onRetry());
-  const banner = h("div", { class: "banner", role: "status", "aria-live": "polite", hidden: true }, [bannerText, retryBtn]);
+  const loginLink = h("a", { class: "btn", href: "/login", hidden: true }, ["Войти"]);
+  const banner = h("div", { class: "banner", role: "status", "aria-live": "polite", hidden: true }, [bannerText, retryBtn, loginLink]);
 
   // zone filter chips
   /** @type {Map<string, {btn: HTMLElement, n: HTMLElement}>} */
@@ -147,6 +148,7 @@ export function createHeader(store, o) {
     banner.className = `banner banner-${tone}`;
     setText(bannerText, text);
     retryBtn.hidden = !(conn.status === "error" || conn.status === "reconnecting");
+    loginLink.hidden = conn.status !== "auth";
   }
 
   return { root, render, searchInput: search };

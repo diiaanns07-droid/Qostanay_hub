@@ -2,7 +2,7 @@
 // One student card. Built once, then updated field by field (no re-render, fixed height → no layout jumps).
 // Every status is TEXT + ICON SHAPE + colour. Nothing is shown that the data did not say: an unknown camera
 // is "нет данных", never "работает"; "заблокирован" appears only when the data says locked=true.
-import { ago, CAMERA_LABEL, displayName, EXAM_STATE_LABEL, ZONE_LABEL } from "../model.js";
+import { ago, CAMERA_LABEL, displayName, EXAM_STATE_LABEL, ORIGIN_LABEL, ZONE_LABEL } from "../model.js";
 import { h, setAttr, setText, svg, toggleClass } from "./dom.js";
 import { ICON } from "./icons.js";
 
@@ -15,6 +15,7 @@ import { ICON } from "./icons.js";
  * @property {HTMLElement} zoneIcon
  * @property {HTMLElement} zoneText
  * @property {HTMLElement} link
+ * @property {HTMLElement} source
  * @property {HTMLElement} linkIcon
  * @property {HTMLElement} linkText
  * @property {HTMLElement} media
@@ -42,6 +43,7 @@ export function createCard(id) {
   const linkIcon = h("span", { class: "link-ico" });
   const linkText = h("span", { class: "link-text" });
   const link = h("span", { class: "link" }, [linkIcon, linkText]);
+  const source = h("span", { class: "source-label" });
   const img = /** @type {HTMLImageElement} */ (h("img", { alt: "", decoding: "async", draggable: "false", hidden: true }));
   const mediaNote = h("span", { class: "media-note" });
   const media = h("div", { class: "media" }, [img, mediaNote]);
@@ -59,14 +61,14 @@ export function createCard(id) {
     h("div", { class: "zone" }, [zoneIcon, zoneText]),
     media,
     h("div", { class: "card-id" }, [name, computer]),
-    h("div", { class: "card-line" }, [link, cam]),
+    h("div", { class: "card-line" }, [link, cam, source]),
     h("div", { class: "card-line" }, [episodes, flags]),
     h("div", { class: "card-line" }, [exam]),
     h("div", { class: "card-line muted" }, [last]),
   ]);
   const root = h("li", { class: "card", "data-id": id }, [body, hit]);
   return {
-    root, hit, zoneIcon, zoneText, link, linkIcon, linkText, media, img, mediaNote, name, computer, cam, camIcon, camText,
+    root, hit, zoneIcon, zoneText, link, source, linkIcon, linkText, media, img, mediaNote, name, computer, cam, camIcon, camText,
     exam, episodes, last, flags, zone: "", iconKey: "", linkKey: "", camKey: "",
   };
 }
@@ -103,6 +105,8 @@ export function updateCard(c, x, now, o) {
 
   // preview
   const p = x.entry.preview;
+  // A preview may belong to a previous source; use its own provenance, never the current card's.
+  const frameSource = p && p.origin !== "real" ? ORIGIN_LABEL[p.origin] : "";
   const fresh = p !== null && !d.stale && v.camera === "ok";
   toggleClass(c.root, "no-preview", !o.showPreview);
   if (o.showPreview && o.refreshPreview) {
@@ -110,13 +114,13 @@ export function updateCard(c, x, now, o) {
       if (c.img.getAttribute("src") !== p.url) c.img.src = p.url;
       c.img.hidden = false;
       toggleClass(c.media, "stale", false);
-      setText(c.mediaNote, "");
+      setText(c.mediaNote, frameSource);
     } else if (p) {
       // keep the last picture visible but clearly marked as old — never as current
       if (c.img.getAttribute("src") !== p.url) c.img.src = p.url;
       c.img.hidden = false;
       toggleClass(c.media, "stale", true);
-      setText(c.mediaNote, `превью устарело${p.at ? ` · ${ago(p.at, now)}` : ""}`);
+      setText(c.mediaNote, [frameSource, `превью устарело${p.at ? ` · ${ago(p.at, now)}` : ""}`].filter(Boolean).join(" · "));
     } else {
       c.img.hidden = true;
       toggleClass(c.media, "stale", false);
@@ -125,6 +129,9 @@ export function updateCard(c, x, now, o) {
   }
 
   setText(c.name, displayName(v));
+  setText(c.source, ORIGIN_LABEL[v.origin]);
+  c.source.hidden = v.origin === "real";
+  setAttr(c.source, "data-origin", v.origin);
   setText(c.computer, v.computerName ?? "компьютер —");
   const camKey = v.camera === null ? "unknown" : v.camera === "ok" ? "ok" : "bad";
   setIcon(c.camIcon, camKey, v.camera === "ok" ? ICON.camera : v.camera === null ? ICON.unknown : ICON.cameraOff, c, "camKey");
@@ -145,7 +152,7 @@ export function updateCard(c, x, now, o) {
   if (v.locked === true) flags.push("экран заблокирован");
   if (v.micActive === true) flags.push("микрофон включён");
   setText(c.flags, flags.join(" · "));
-  setText(c.last, v.lastEventAt === null ? "" : `Событие ${ago(v.lastEventAt, now)}`);
+  setText(c.last, (d.zone === "red" || d.zone === "yellow") && d.reasons[0] ? d.reasons[0] : v.lastEventAt === null ? "" : `Событие ${ago(v.lastEventAt, now)}`);
 
   toggleClass(c.root, "flash", x.flashing);
   toggleClass(c.root, "in-queue", x.inQueue);
@@ -160,7 +167,7 @@ export function updateCard(c, x, now, o) {
     v.camera === null ? "камера: нет данных" : d.stale ? "состояние камеры устарело" : CAMERA_LABEL[v.camera],
     total === null ? "эпизоды: нет данных" : `эпизодов ${total}${unrev !== null ? `, без решения ${unrev}` : ""}`,
     `последнее событие ${v.lastEventAt === null ? "нет" : ago(v.lastEventAt, now)}`,
-    o.demo ? "демо-данные" : null,
+    o.demo ? "демо-данные" : ORIGIN_LABEL[v.origin],
   ]
     .filter(Boolean)
     .join(". ");
