@@ -57,6 +57,9 @@ class ClassStateMsg(BaseModel):
     locked: bool = False
     lock_reason_ru: str | None = None
     lock_state: str = "unconfirmed"
+    lock_confirmed: bool = False
+    lock_requested: bool = False
+    lock_requested_reason_ru: str | None = None
     lock_error_ru: str | None = None
     lock_request: dict[str, Any] | None = None
     backend_instance_id: str | None = None
@@ -119,6 +122,7 @@ class Uplink:
                 log.info("uplink: %d queued message(s) of a previous class session dropped", dropped)
         self.connection = "connecting"
         self.class_session_id: str | None = None
+        self._class_scope_ready = False
         self.mic_active = False
         self.audio_direction: str | None = None
         self.exam: dict[str, Any] | None = None
@@ -256,6 +260,7 @@ class Uplink:
                 self.outbox.set_meta("student_id", str(msg["student_id"]))
                 self.exam = msg.get("exam")
                 self.class_session_id = msg.get("session_id")
+                self._class_scope_ready = True
                 self.lock_control.bind(self.student_id, self.class_session_id, self._snap.session_id)
                 return "ok"
             if msg.get("type") == "error":
@@ -320,7 +325,8 @@ class Uplink:
                 snap: Snapshot = await asyncio.to_thread(self.view.snapshot)
                 self._snap = snap
                 self.audio.observe(snap)
-                self.lock_control.bind(self.student_id, self.class_session_id, snap.session_id)
+                if self._class_scope_ready:
+                    self.lock_control.bind(self.student_id, self.class_session_id, snap.session_id)
                 self.lock_control.expire()
                 if self._diff_incidents(snap):
                     self._outbox_signal.set()
@@ -335,6 +341,9 @@ class Uplink:
             await self._flush_outbox(ws)
             snap = self._snap
             status = {**snap.status_fields(), "locked": self.locked, "mic_active": self.mic_active}
+            lock_status = self.lock_control.snapshot()
+            status.update({key: lock_status[key] for key in ("lock_state", "lock_confirmed", "lock_requested")})
+            status["lock_scope"] = "app_overlay"
             now = time.monotonic()
             if status != self._last_status or now - self._last_status_t >= self.cfg.status_interval_s:
                 await self._send(ws, envelope("status", **status))

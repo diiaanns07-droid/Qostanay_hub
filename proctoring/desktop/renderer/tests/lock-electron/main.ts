@@ -30,7 +30,7 @@ async function display(request: LockRequest | null, locked: boolean) {
 app.whenReady().then(async () => {
   try {
     window = new BrowserWindow({ width: 900, height: 650, show: true, title: "Adal safe lock fixture (no OS restrictions)",
-      webPreferences: { preload: join(__dirname, "preload.cjs"), contextIsolation: true, sandbox: true, nodeIntegration: false } });
+      webPreferences: { preload: join(__dirname, "preload.cjs"), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });
     window.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
     window.webContents.session.setPermissionCheckHandler(() => false);
     const client = { json: async (_method: string, path: string, body: Record<string, unknown>) => {
@@ -74,6 +74,13 @@ app.whenReady().then(async () => {
     console.log(JSON.stringify({ ok: true, tests: results, nativeHooks: false, mediaDevices: false }));
     writeFileSync(join(__dirname, "results.json"), JSON.stringify({ ok: true, tests: results }, null, 2));
     window.destroy(); app.exit(0);
-  } catch (error) { console.error(error); window?.destroy(); app.exit(1); }
+  } catch (error) {
+    console.error(error);
+    if (window && !window.isDestroyed()) {
+      console.error(await window.webContents.executeJavaScript("JSON.stringify({visible:document.visibilityState,body:document.body.innerHTML})"));
+      writeFileSync(join(__dirname, "failed.png"), (await window.webContents.capturePage()).toPNG());
+    }
+    window?.destroy(); app.exit(1);
+  }
 });
 setTimeout(() => { console.error("lock fixture watchdog"); app.exit(2); }, 25000).unref();

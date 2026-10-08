@@ -61,7 +61,7 @@ from .bootstrap.synthetic import ScriptedAttentionAnalyzer, ScriptedPhoneAnalyze
 from .session import Pipeline, PipelinePart, SessionManager
 from .settings import BACKEND_VERSION, PROCTORING_ROOT, Settings
 from .uplink import start_uplink  # C2: class-mode uplink (disabled unless QORGAU_CLASS_SERVER/CODE are set)
-from .uplink.lock import LockReceipt
+from .uplink.lock import LockReceipt, LockUiLost
 from .uplink.audio import install_audio_routes
 
 log = logging.getLogger("proctor.app")
@@ -573,6 +573,13 @@ def create_app(
         if uplink is None:
             return {"accepted": False, "reason": "class_not_connected"}
         return uplink.confirm_lock(body)
+
+    @api.post("/class/lock/lost")
+    def class_lock_renderer_lost(body: LockUiLost) -> dict[str, Any]:
+        uplink = state.get("uplink")
+        if uplink is None:
+            return {"accepted": False, "reason": "class_not_connected"}
+        return uplink.lock_control.renderer_lost(body.backend_instance_id)
 
     @api.get("/health", response_model=HealthReport)
     def health() -> HealthReport:
