@@ -41,6 +41,16 @@ Base: `2de547fe898cf78a6cfb673778fe91103fa7e4f8` (контракт 1.2.0); ве�
 - `backend/proctor/evidence/report.py` (A08): раздел «Осмотр рабочего места» (состояние цветом + текстом, вариант, таблица предметов с уверенностью и временем, `<video>` из data: если клип сохранён, иначе «Клип не сохранялся (хранение медиа выключено)»; для варианта 3 — «Осмотр камерой невозможен (стационарная камера) — подтверждён преподавателем»); CSP дополнен `media-src data:`; JSON: `desk_scan` верхнего уровня (+ `summary.desk_scan`); имя файла клипа в манифесте `.webm`.
 - Bootstrap `MemoryEvidenceStore` (synthetic без модуля evidence) не получил `record_desk_scan`: результат виден через GET (память процесса), но не в summary.
 
+## UI (desktop, A07 + IPC оболочки) — минимальные правки
+- Шаг `renderer/src/screens/DeskScan.tsx` между «Подготовкой» и «Калибровкой»; логика (подсказки по секундам, тексты результата, вариант → mode) — `renderer/src/lib/deskScan.ts`. Степпер: 6 шагов («Осмотр места» — 2-й; ключ i18n `step_desk_scan`, казахский текст — черновик).
+- Выбор варианта (по умолчанию «Ноутбук»), 12 с с обратным отсчётом и крупными подсказками (0–4 / 4–8 / 8–12 с; для USB — одна подсказка), превью камеры (`PreviewPanel`), «Повторить осмотр», «Далее» (запускает калибровку). Результат: зелёный «Стол осмотрен: посторонних предметов не замечено», жёлтый «Замечено: телефон, книга — уберите их и повторите осмотр», красный «Осмотр не удался: … Повторите…», пропуск — `message_ru`. Подпись: «Осмотр помогает преподавателю, это не доказательство нарушения. Видео осмотра сохраняется только если включено хранение медиа.»
+- «Камера не двигается»: «Осмотр места проведёт преподаватель в аудитории» → «Подтвердить (PIN преподавателя)» → тот же PIN-механизм, что для пропуска калибровки → `skipDeskScan(reason="fixed_camera_teacher_check")`. «Пропустить (оператор)» — PIN + причина. Действие после PIN выполняется само (запоминается на 60 с).
+- «Далее» доступен только после итога (clear/objects_found/failed/skipped), после тайм-аута опроса (duration + 20 с) или ошибки GET. В `not_started` — нет: либо осмотр, либо пропуск преподавателем.
+- Кнопка Preflight теперь «К осмотру рабочего места»; `calibrationStart` перенесён в «Далее» шага осмотра. Кнопка «Без калибровки…» на Preflight не менялась — этот путь обходит осмотр (осмотр остаётся `not_started`, в отчёте «не проводился»).
+- IPC: `getDeskScan`, `startDeskScan` (`validate.deskScanStart`: duration 5..30, mode laptop|usb до query-строки), `skipDeskScan` — в `OPERATOR_REQUIRED` (`main/src/shell/access.ts`). Методы bridge объявлены в `desktop/shared/desk-scan.ts` (`AppBridge = QorgauBridge & DeskScanBridge`), т.к. `contracts/ts/bridge.ts` — A01; при следующей правке контракта их стоит перенести туда.
+- FixtureBridge (FIXTURE): осмотр в памяти → `clear`, либо `objects_found` («телефон», 0.82) при включённом флаге панели или `student_label` с «phone»; skip без разблокировки оператора — отказ.
+- e2e-скрипты (`e2e-fixture/class/preflight`, `real-bridge/run-real`) проходят новый шаг (+~13 с).
+
 ## Проверено
 ```powershell
 cd proctoring
@@ -49,9 +59,21 @@ cd proctoring
 ```
 Тесты (заглушка анализатора, кадры от synthetic capture через `add_consumer`): телефон 1 с → `objects_found` / `cell phone` / «телефон»; пусто → `clear`; нет кадров (камера) → `failed`; ошибка анализатора и недоступная модель → `failed`; `running` и `created` → 409; повтор перезаписывает; второй старт во время записи → 409; вариант USB; вариант «камера не двигается» → `skipped` + строка отчёта; skip оператора с причиной; summary/preflight/HTML/JSON содержат осмотр; клип с настоящим A02 capture: `retain_media=true` → evidence `video/webm`, `<video>` в отчёте; `false` → `evidence_id=null`.
 
+Desktop (из `proctoring/desktop`, node_modules — junction на `A13-A07`, package-lock идентичен):
+```powershell
+node scripts/typecheck.mjs                       # PASS contracts/main/renderer
+node renderer/tests/run-unit.mjs                 # 22/22 (4 логики шага + FIXTURE: start->recording->clear, phone->objects_found, skip без PIN — отказ)
+node main/tests/run.mjs access validate          # 16/16 (skipDeskScan — только оператор)
+$env:QORGAU_PYTHON=...; $env:PYTHONPATH="<clone>\proctoringackend;<clone>\proctoring\contracts\python"
+node main/tests/run.mjs backend.integration      # 11 pass, 1 skip (POSIX-only); настоящий backend через bridge
+```
+Интеграция через bridge (настоящий процесс backend): старт осмотра `usb` → `recording` → итог с «Вариант: USB-камера.»; mode=phone — отказ валидации; skip без PIN → `operator_locked`; после PIN → `skipped`/`fixed_camera_teacher_check`; в `running` → `INVALID_STATE`. Без весов модели итог `failed` (мгновенно), с весами (`QORGAU_MODELS_DIR` → candidate) — полный 5-секундный осмотр.
+Субагент UI: FIXTURE-браузер (vite preview + Playwright/Chromium) 11/11 по шагу; `e2e-fixture.mjs` 100/102 — 2 падения «identity is not invented from contract 1.1» есть **уже в базе 2de547f** (тест ждёт «Не заявлено сервисом», `examChecks.ts` в SYNTHETIC даёт «Не используется»), к A15 не относятся.
+
 Смоук с реальными A02 + A03 (YOLO11n из `worktrees/candidate/proctoring/models`) + A08, синтетический источник, 6 с: `clear`, клип сохранён. Это проверка проводки, **не точность**.
 
 ## Не проверено
+- Упакованное Electron-приложение не запускалось; `e2e-class.mjs`, `e2e-preflight.mjs`, `run-real.mjs`, `run-replay.mjs` после правок не прогонялись; полный `main/tests/run.mjs` — только access/validate/backend.integration.
 - LIVE на ноутбуке капитана (CLEAR без предметов / OBJECTS_FOUND с телефоном) — ждёт готовности капитана; будет наблюдением, не точностью.
 - Нагрузка CPU: во время осмотра работают основной анализатор телефона (8 к/с), внимание и анализатор осмотра (4 к/с).
 - Во время быстрого движения ноутбука кадры смазаны — YOLO может не увидеть предмет; «не замечено» ≠ «нет».
