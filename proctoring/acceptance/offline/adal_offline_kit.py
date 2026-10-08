@@ -63,7 +63,8 @@ PREPARE_HINT = {
     "phone": ".\\.venv\\Scripts\\python.exe -m proctor.phone.prepare --download --models-dir <models>",
     "attention": ".\\.venv\\Scripts\\python.exe -m proctor.attention.model_tool fetch --models-dir <models>",
     "identity": ".\\.venv\\Scripts\\python.exe -m proctor.identity.prepare --download --models-dir <models>",
-    "audio": ".\\.venv\\Scripts\\python.exe -m proctor.audio.prepare --download --model-dir <models>\\audio",
+    "audio": ".\\.venv\\Scripts\\python.exe -m proctor.audio.prepare --download "
+             "(runtime читает только %LOCALAPPDATA%\\QorgauExam\\models\\audio)",
 }
 NETWORK_TOKENS = re.compile(
     r"\b(npm(?:\.cmd)?\s+(?:ci|install|i|update)\b|npx\b|uv\s+(?:run|sync|pip|add|tool)\b|pip(?:3)?(?:\.exe)?\s+install\b|"
@@ -1055,7 +1056,7 @@ def verify_record(site: Path, info: Path) -> str | None:
 
 
 def check_pc(repo: Path, role: str, python: Path | None, models_dir: Path | None, audio_dir: Path | None,
-             kit: Path | None, deep: bool) -> list[Item]:
+             kit: Path | None, deep: bool, backend_only: bool = False) -> list[Item]:
     items: list[Item] = []
     kit_pins = load_kit_pins(repo)
     venv_hint = "py -3.12 -m venv .venv; .\\.venv\\Scripts\\python.exe -m pip install --no-index --find-links <kit>\\wheels " \
@@ -1139,8 +1140,9 @@ def check_pc(repo: Path, role: str, python: Path | None, models_dir: Path | None
                               detail=f"{resolved_models} содержит не-ASCII символы. FaceLandmarker загружается по пути "
                                      "(model_asset_path); поведение MediaPipe с такими путями в Windows этим инструментом не проверено.",
                               remedy="Для репетиции используйте ASCII-путь, например C:\\AdalModels, и QORGAU_MODELS_DIR."))
-        items.extend(electron_state_items(repo, kit_pins, kit, deep))
-        for rel in ("dist/main/main.cjs", "dist/preload/preload.cjs", "dist/renderer/index.html"):
+        if not backend_only:
+            items.extend(electron_state_items(repo, kit_pins, kit, deep))
+        for rel in () if backend_only else ("dist/main/main.cjs", "dist/preload/preload.cjs", "dist/renderer/index.html"):
             path = repo / "desktop" / Path(*rel.split("/"))
             item = Item(id=f"build:{rel}", kind="build", requirement="required", roles=[role], feature="сборка desktop",
                         remedy=f"{ONLINE}: в proctoring\\desktop выполнить npm run build (актуальность сборки проверяет Start-Student.ps1)")
@@ -1279,30 +1281,30 @@ def launcher_audit(repo: Path, role: str) -> list[Item]:
 def plan_text(repo: Path) -> str:
     pin = load_electron_pin(repo, load_kit_pins(repo))
     return f"""ЭТАП 0 — ПОДГОТОВКА С ИНТЕРНЕТОМ (выполняет оператор вручную, ДО отключения; этот инструмент ничего не скачивает)
-Каталоги без пробелов/не-ASCII рекомендуются, например D:\\AdalPrep. Пример для PowerShell из proctoring\\:
+Копия репозитория по ASCII-пути без пробелов, например C:\\Adal\\Qostanay_hub. PowerShell из proctoring\\:
 
   py -3.12 -m venv .venv
   .\\.venv\\Scripts\\python.exe -m pip install --require-hashes -r requirements\\full.txt
   .\\.venv\\Scripts\\python.exe -m pip download --only-binary=:all: --require-hashes --no-deps -r requirements\\full.txt -d D:\\AdalPrep\\wheels
+  # только PC2/PC3: модели в proctoring\\models (значение backend по умолчанию, QORGAU_MODELS_DIR не нужен)
   $env:PYTHONPATH = "$PWD\\backend;$PWD\\contracts\\python"
-  $env:QORGAU_MODELS_DIR = 'D:\\AdalPrep\\models'
-  .\\.venv\\Scripts\\python.exe -m proctor.phone.prepare --download --models-dir D:\\AdalPrep\\models
-  .\\.venv\\Scripts\\python.exe -m proctor.attention.model_tool fetch --models-dir D:\\AdalPrep\\models
-  # необязательно: личность и речь
-  .\\.venv\\Scripts\\python.exe -m proctor.identity.prepare --download --models-dir D:\\AdalPrep\\models
-  .\\.venv\\Scripts\\python.exe -m proctor.audio.prepare --download --model-dir D:\\AdalPrep\\models\\audio
+  .\\.venv\\Scripts\\python.exe -m proctor.phone.prepare --download --models-dir "$PWD\\models"
+  .\\.venv\\Scripts\\python.exe -m proctor.attention.model_tool fetch --models-dir "$PWD\\models"
+  .\\.venv\\Scripts\\python.exe -m proctor.audio.prepare --download        # рекомендуется; %LOCALAPPDATA%\\QorgauExam\\models\\audio
+  .\\.venv\\Scripts\\python.exe -m proctor.identity.prepare --download --models-dir "$PWD\\models"   # необязательно
+  Remove-Item Env:PYTHONPATH
   Set-Location desktop; npm ci; node node_modules/electron/install.js; npm run build; Set-Location ..
   # архив Electron {pin.artifact} после install.js лежит в %LOCALAPPDATA%\\electron\\Cache
 
-ЭТАП 1 — СБОРКА КОМПЛЕКТА (без сети, только копирование проверенных файлов):
-  .\\.venv\\Scripts\\python.exe acceptance\\offline\\adal_offline_kit.py build --models-dir D:\\AdalPrep\\models `
-      --audio-dir D:\\AdalPrep\\models\\audio --wheelhouse D:\\AdalPrep\\wheels `
-      --electron-zip $env:LOCALAPPDATA\\electron\\Cache --out E:\\AdalKit
+ЭТАП 1 — СБОРКА КОМПЛЕКТА (без сети, только копирование проверенных файлов; --out вне репозитория):
+  .\\.venv\\Scripts\\python.exe acceptance\\offline\\adal_offline_kit.py build --models-dir "$PWD\\models" `
+      --audio-dir "$env:LOCALAPPDATA\\QorgauExam\\models\\audio" --wheelhouse D:\\AdalPrep\\wheels `
+      --electron-zip "$env:LOCALAPPDATA\\electron\\Cache" --out E:\\AdalKit
 
-ЭТАП 2 — ПОСЛЕ ОТКЛЮЧЕНИЯ ИНТЕРНЕТА на каждом ПК:
-  python acceptance\\offline\\adal_offline_kit.py verify --kit E:\\AdalKit
-  python acceptance\\offline\\adal_offline_kit.py check-pc --role student --kit E:\\AdalKit   (PC2/PC3)
-  python acceptance\\offline\\adal_offline_kit.py check-pc --role teacher                    (PC1)
+ЭТАП 2 — ПОСЛЕ ОТКЛЮЧЕНИЯ ИНТЕРНЕТА (ЛВС сохраняется) на каждом ПК:
+  .\\.venv\\Scripts\\python.exe acceptance\\offline\\adal_offline_kit.py verify --kit E:\\AdalKit
+  .\\.venv\\Scripts\\python.exe acceptance\\offline\\adal_offline_kit.py check-pc --role student --kit E:\\AdalKit   (PC2/PC3)
+  .\\.venv\\Scripts\\python.exe acceptance\\offline\\adal_offline_kit.py check-pc --role teacher                    (PC1)
 Подробно: proctoring/acceptance/offline/REHEARSAL_3PC.md
 """
 
@@ -1405,6 +1407,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     check.add_argument("--audio-dir", type=Path, help="default: %%LOCALAPPDATA%%/QorgauExam/models/audio")
     check.add_argument("--kit", type=Path, help="also compare Electron dist with the kit archive")
     check.add_argument("--deep", action="store_true", help="also verify installed package RECORD hashes and Electron CRC32")
+    check.add_argument("--backend-only", action="store_true", help="student backend/C2 diagnostics: skip Electron and desktop build")
     return parser.parse_args(argv)
 
 
@@ -1450,8 +1453,10 @@ def main(argv: list[str] | None = None) -> int:
             extra = {"kit_commit": manifest.get("repo_commit"), "repo_commit": git_head(repo)} if manifest else {}
             return emit(args, f"Adal offline kit — проверка комплекта {resolved(args.kit)}", items, extra)
         if args.command == "check-pc":
+            if args.backend_only and args.role != "student":
+                raise UsageError("--backend-only применяется только с --role student")
             items = check_pc(repo, args.role, args.python, args.models_dir, args.audio_dir,
-                             resolved(args.kit) if args.kit else None, args.deep)
+                             resolved(args.kit) if args.kit else None, args.deep, args.backend_only)
             return emit(args, f"Adal offline kit — готовность этого ПК без интернета (роль {args.role})", items)
     except UsageError as exc:
         print(f"Ошибка: {exc}", file=sys.stderr)

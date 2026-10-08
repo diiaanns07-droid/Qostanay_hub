@@ -529,6 +529,19 @@ class OfflineKitTests(unittest.TestCase):
         self.assertEqual(code, 1, "default proctoring/models is empty in the fixture")
         self.assertIn(str(self.fx.repo / "models"), by_id(report)["model:phone/yolo.onnx"]["detail"])
 
+    def test_check_pc_backend_only_skips_electron_but_not_models(self):
+        self.fx.prepared_pc()
+        shutil.rmtree(self.fx.repo / "desktop" / "node_modules")
+        shutil.rmtree(self.fx.repo / "desktop" / "dist")
+        code, report = self.check_pc("--backend-only")
+        self.assertEqual(code, 0, report)
+        self.assertFalse(any(i.startswith(("electron:", "build:")) for i in by_id(report)))
+        (self.fx.models / "phone" / "yolo.onnx").unlink()
+        code, report = self.check_pc("--backend-only")
+        self.assertEqual(code, 1)
+        code, _, _ = run_tool(self.base + ["check-pc", "--role", "teacher", "--backend-only"])
+        self.assertEqual(code, 64)
+
     def test_check_pc_missing_build(self):
         self.fx.prepared_pc()
         (self.fx.repo / "desktop" / "dist" / "renderer" / "index.html").unlink()
