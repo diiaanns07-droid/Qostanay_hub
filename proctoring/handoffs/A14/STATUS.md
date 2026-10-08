@@ -1,5 +1,13 @@
 # A14 — возможная речь или разговор рядом
 
+## Новая ветка YAMNet, 2026-10-08
+
+`codex/proctor-A14-yamnet` создана от `b4cce9c141fd73f0db326cffac7e7cd18eb57c89`.
+Исходное состояние и зависимости: [YAMNET_PRECHECK.md](YAMNET_PRECHECK.md).
+Тесты существующего A14: **20 PASS**. Реализация YAMNet ожидает самого задания:
+капитан сообщил ветку, пути и срок, но не поведение, классы или критерий приёмки; уточнение отправлено.
+Новых установок и LIVE с микрофоном не было. Ниже сохранена прежняя поставка Silero.
+
 Base: `6263aef9aabdee678b96d44b11cfec9e565370f7`; branch `codex/proctor-A14`.
 Contract 1.1 unchanged. Ownership: `backend/proctor/audio/`, `handoffs/A14/`.
 
