@@ -1,0 +1,46 @@
+{
+  "student_id": "st-0001",
+  "session_id": "cs-0001",
+  "student_label": "EXAMPLE: source not selected",
+  "computer_name": "SIM-PC-01",
+  "app_version": "qorgau-exam-uplink-0.1.0",
+  "origin": "unknown",
+  "connection": "online",
+  "last_seen_at": "2026-10-09T09:00:04.200000Z",
+  "connected_since": "2026-10-09T09:00:00Z",
+  "reconnects": 1,
+  "capabilities": [
+    "audio_start",
+    "audio_stop",
+    "finish_exam",
+    "lock",
+    "request_clip",
+    "start_exam",
+    "unlock"
+  ],
+  "exam_state": "running",
+  "camera": "ok",
+  "monitoring": "ok",
+  "zone_reported": "yellow",
+  "zone": "yellow",
+  "zone_source": "student",
+  "zone_reasons_ru": [
+    "СИМУЛЯЦИЯ: телефон виден"
+  ],
+  "incidents_total": 1,
+  "incidents_by_priority": {
+    "low": 0,
+    "medium": 1,
+    "high": 0
+  },
+  "locked": false,
+  "mic_active": false,
+  "stale": false,
+  "connected": true,
+  "last_status_at": "2026-10-09T09:00:04.200000Z",
+  "last_event_at": "2026-10-09T09:00:04.200000Z",
+  "incidents_open": 0,
+  "incidents_unreviewed": null,
+  "preview_url": "/api/teacher/students/st-0001/preview.jpg?seq=3",
+  "preview_at": "2026-10-09T09:00:04.200000Z"
+}

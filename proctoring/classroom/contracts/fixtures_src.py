@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .models import CONTRACT_VERSION, WIRE_EXTENSION
+
 T0 = "2026-10-09T09:00:00Z"
 T1 = "2026-10-09T09:00:04.200000Z"
 TOKEN = "3f" * 32
@@ -38,7 +40,7 @@ COMMAND = {
 
 def build() -> dict[str, Any]:
     env = {"v": 1, "msg_id": "m-0001", "sent_at": T0}
-    return {
+    fixtures = {
         # ------------------------------------------------------------------ student -> server (v1 + v1.1)
         "Hello.join_code_v1": {**env, "type": "hello", "protocol": "qorgau.class.v1", "join_code": "482915", "computer_name": "PC-07", "student_label": "Студент 7", "app_version": "qorgau-exam/0.1.0"},
         "Hello.resume_v11": {**env, "type": "hello", "protocol": "qorgau.class.v1", "resume_token": TOKEN, "computer_name": "SIM-PC-01", "student_label": "SIM-01 (симуляция)", "app_version": "qorgau-class-simulator/0.1", "client_run_id": "run-a1b2c3", "simulated": True, "capabilities": {"commands": ["apply_policy"], "modes": ["url", "app"], "command_progress": True, "command_expiry": True, "site_timer_pause": False}},
@@ -68,7 +70,7 @@ def build() -> dict[str, Any]:
         "CommandAck.late": {"command_id": "cmd-0004", "ok": True, "code": None, "error_ru": None, "executed_at": None, "received_at": "2026-10-09T09:03:00Z", "late": True, "result": None},
         "AudioSession.active": {"audio_session_id": "au-0001", "student_id": "st-0001", "direction": "listen", "state": "active", "started_by": "teacher", "start_command_id": "cmd-0003", "stop_command_id": None, "requested_at": T0, "active_at": T1, "ended_at": None, "end_reason": None},
         "ExamPolicy.app_v11": {"exam_id": "exam-cs-0002", "title": "Программирование (пример)", "mode": "app", "allowed_urls": [], "allowed_apps": ["code.exe"], "instructions_ru": "", "policy_id": "pol-1", "version": 2, "start_url": None, "auth_domains": []},
-        "ServerInfo.example": {"contract": "qorgau.classroom", "contract_version": "1.0.0", "wire_protocol": "qorgau.class.v1", "wire_extension": "1.1", "server_version": "0.1.0", "server_time": T0, "session": None, "students_online": 0, "students_total": 0, "simulated_students": 0, "features": [{"name": "history", "owner": "T03", "status": "not_installed", "detail": "classreview is not installed in this build"}]},
+        "ServerInfo.example": {"contract": "qorgau.classroom", "contract_version": CONTRACT_VERSION, "wire_protocol": "qorgau.class.v1", "wire_extension": WIRE_EXTENSION, "server_version": "0.1.0", "server_time": T0, "session": None, "students_online": 0, "students_total": 0, "simulated_students": 0, "features": [{"name": "history", "owner": "T03", "status": "not_installed", "detail": "classreview is not installed in this build"}]},
         # ------------------------------------------------------------------ teacher request bodies
         "LoginRequest.pin": {"pin": "123456"},
         "SessionCreate.url": {"title": "Математика, вариант 1 (пример)", "mode": "url", "allowed_urls": ["https://exam.example.kz/*"], "allowed_apps": [], "instructions_ru": ""},
@@ -81,3 +83,12 @@ def build() -> dict[str, Any]:
         "TResync.overflow": {"type": "resync_required", "seq": 7, "sent_at": T1, "reason": "queue_overflow"},
         "TeacherAudioSignal.offer": {"type": "audio_signal", "student_id": "st-0001", "command_id": "cmd-0003", "sdp": "v=0\r\n"},
     }
+    fixtures.update({
+        "Hello.source_unknown_v12": {**fixtures["Hello.join_code_v1"], "source_mode": "unknown", "source_session_id": None},
+        "Status.synthetic_v12": {**fixtures["Status.running_yellow"], "source_mode": "synthetic", "source_session_id": "local-synthetic-1"},
+        "IncidentMsg.replay_v12": {**fixtures["IncidentMsg.phone_closed_v11"], "source_mode": "replay", "source_session_id": "local-replay-1"},
+        "Preview.synthetic_v12": {**fixtures["Preview.small"], "source_mode": "synthetic", "source_session_id": "local-synthetic-1"},
+        "StudentCard.source_unknown": {**fixtures["StudentCard.simulated"], "origin": "unknown", "app_version": "qorgau-exam-uplink-0.1.0", "student_label": "EXAMPLE: source not selected"},
+        "StudentCard.replay": {**fixtures["StudentCard.simulated"], "origin": "replay", "app_version": "qorgau-exam-uplink-0.1.0", "student_label": "EXAMPLE: recorded source"},
+    })
+    return fixtures

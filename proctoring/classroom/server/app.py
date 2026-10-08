@@ -275,7 +275,7 @@ def create_app(
         st = _student(student_id)
         if st.preview is None:
             return Response(status_code=204)
-        return Response(st.preview, media_type="image/jpeg", headers={"Cache-Control": "no-store", "X-Qorgau-Origin": st.origin.value})
+        return Response(st.preview, media_type="image/jpeg", headers={"Cache-Control": "no-store", "X-Qorgau-Origin": (st.preview_meta or {}).get("origin", "unknown")})
 
     @t.post("/api/teacher/students/{student_id}/commands", response_model=m.Command, status_code=202)
     async def submit(student_id: str, body: m.CommandCreate, request: Request) -> m.Command:
