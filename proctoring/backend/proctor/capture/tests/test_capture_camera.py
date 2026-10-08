@@ -222,3 +222,54 @@ def test_camera_source_is_the_only_videocapture_user():
     assert users == ["replay.py", "sources.py"], users
     assert "cv2.VideoCapture(index, backend)" in (root / "sources.py").read_text(encoding="utf-8")
     assert CameraSource.mode == SourceMode.LIVE
+
+
+class _FakeKey:
+    def __init__(self, value):
+        self.value = value
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+
+class _FakeWinreg:
+    """Read-only fake of the winreg API surface used by windows_camera_consent()."""
+
+    HKEY_LOCAL_MACHINE = "HKLM"
+    HKEY_CURRENT_USER = "HKCU"
+
+    def __init__(self, values):
+        self.values = values  # {(hive, subkey_suffix): "Allow"|"Deny"}
+        self.opened: list[tuple[str, str]] = []
+
+    def OpenKey(self, hive, sub):  # noqa: N802
+        suffix = "NonPackaged" if sub.endswith("NonPackaged") else "webcam"
+        self.opened.append((hive, suffix))
+        if (hive, suffix) not in self.values:
+            raise OSError("no key")
+        return _FakeKey(self.values[(hive, suffix)])
+
+    def QueryValueEx(self, key, name):  # noqa: N802
+        assert name == "Value"
+        return key.value, 1
+
+
+@pytest.mark.parametrize(
+    "values,expected",
+    [
+        ({}, None),
+        ({("HKCU", "webcam"): "Allow", ("HKCU", "NonPackaged"): "Allow"}, "Allow"),
+        ({("HKCU", "webcam"): "Allow", ("HKCU", "NonPackaged"): "Deny"}, "Deny"),  # desktop apps switched off
+        ({("HKLM", "webcam"): "Deny"}, "Deny"),  # device-wide switch off
+    ],
+)
+def test_windows_consent_diagnosis_with_fake_registry(values, expected):
+    from proctor.capture.sources import windows_camera_consent
+
+    reg = _FakeWinreg(values)
+    assert windows_camera_consent(reg, platform="win32") == expected
+    assert all(sub in ("webcam", "NonPackaged") for _, sub in reg.opened)  # read-only queries only
+    assert windows_camera_consent(reg, platform="linux") is None

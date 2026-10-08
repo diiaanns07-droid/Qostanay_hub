@@ -152,17 +152,21 @@ def _backend_label(backend: int) -> str:
     return names.get(backend, str(backend))
 
 
-def windows_camera_consent() -> str | None:
-    """Read-only diagnosis of the Windows camera privacy switch ("Allow"/"Deny"/None).
+def windows_camera_consent(winreg_module: Any = None, platform: str = sys.platform) -> str | None:
+    """Read-only diagnosis of the Windows camera privacy switches ("Allow"/"Deny"/None).
 
-    Only READS HKCU/HKLM ...\\CapabilityAccessManager\\ConsentStore\\webcam (and the
-    NonPackaged subkey used for desktop apps). Never writes. Any error -> None (unknown).
-    Called only after an open failure to pick CAMERA_DENIED vs CAMERA_UNAVAILABLE.
+    Only READS ...\CapabilityAccessManager\ConsentStore\webcam ``Value`` under HKLM ("camera access
+    for this device") and HKCU ("let apps access your camera"), plus their ``NonPackaged`` subkey
+    ("let desktop apps access your camera", which covers this Python backend). Never writes.
+    Any error -> None (unknown). Called only after an open failure, to choose CAMERA_DENIED
+    over CAMERA_UNAVAILABLE. ``winreg_module`` is injectable for tests.
     """
-    if sys.platform != "win32":
+    if platform != "win32":
         return None
     try:
-        import winreg  # type: ignore
+        winreg = winreg_module
+        if winreg is None:
+            import winreg  # type: ignore[no-redef]
 
         base = r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam"
         seen: list[str] = []
@@ -179,7 +183,7 @@ def windows_camera_consent() -> str | None:
             return "Deny"
         if seen:
             return "Allow"
-    except Exception:  # pragma: no cover - Windows only
+    except Exception:
         return None
     return None
 

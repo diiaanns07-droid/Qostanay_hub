@@ -32,6 +32,14 @@ capture = create_capture_service(settings)              # -> proctor_contracts.i
   `timeout_s` (default 3 s) and then reports the thread as leaked.
 * `frame.meta.source_mode` is the session's mode. A replay frame is `replay` everywhere downstream.
 
+## Queues and metrics
+
+Every consumer queue is a size-1 mailbox by construction (queue depth ≤ 1, nothing can pile up); pressure shows as
+`ConsumerMetrics.frames_skipped` (a pending frame replaced by a newer one) and as `frame_age_ms` (capture → callback
+start). `frames_dropped` counts frames discarded before fan-out (replay late-skip, undecodable/unusable frames).
+`e2e_latency_ms` = callback return − `t_capture_mono_ns` over analysis consumers (not `preview`). All values are
+measured on the monotonic clock over the last 5 s; an empty window is `null`, never a nominal number.
+
 ## Overlays (A07)
 
 Draw a result on the preview only when `observation.frame_id == PreviewFrameMeta.frame_id`; otherwise show its age
