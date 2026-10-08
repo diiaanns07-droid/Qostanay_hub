@@ -46,6 +46,21 @@ let electron, chrome, student, teacher, context, connection;
 const errors = [];
 let diagnostics = null;
 const report = () => writeFileSync(join(out, "results.json"), JSON.stringify({ source: "actual production Electron + proctor/C2 + C1; CREATED synthetic sessions", nativeGuard: false, camera: false, microphone: false, results, diagnostics }, null, 2));
+// Passive production event/DOM observation only; never call the receipt bridge.
+function observeStudent() {
+  window.lockObservations = [];
+  window.qorgau.subscribeEvents(({message:m}) => {
+    if(m.type === 'class_state' && window.lockObservations.length < 80) window.lockObservations.push({state:m.lock_state, requested:m.lock_requested, locked:m.locked, error:m.lock_error_ru, recovery:m.lock_request?.recovery});
+  });
+  new MutationObserver(() => {
+    const app = document.querySelector('[data-adal-app]'), o = document.querySelector('[data-adal-lock]');
+    if(!o || window.lockObservations.length >= 80) return;
+    const b = o.getBoundingClientRect(), css = getComputedStyle(o);
+    window.lockObservations.push({ visible: document.visibilityState, inert: app?.inert, hidden: app?.getAttribute('aria-hidden'), reason:o.querySelector('[data-lock-reason]')?.textContent,
+      box:{left:b.left, top:b.top, right:b.right, bottom:b.bottom}, viewport:{w:innerWidth,h:innerHeight,clientWidth:document.documentElement.clientWidth,clientHeight:document.documentElement.clientHeight},
+      css:{visibility:css.visibility,display:css.display,opacity:css.opacity},hit:o.contains(document.elementFromPoint(innerWidth/2,innerHeight/2)) });
+  }).observe(document,{childList:true,subtree:true,attributes:true});
+}
 async function launchStudent() {
   electron = await _electron.launch({ executablePath: require(join(desktop, "node_modules/electron")), args: [desktop, `--user-data-dir=${join(work, "electron-profile")}`], cwd: desktop, timeout: 45000,
     env: { ...env, QORGAU_PYTHON: python, QORGAU_PROCTORING_ROOT: proctoring,
@@ -54,9 +69,12 @@ async function launchStudent() {
       QORGAU_SHELL_NATIVE_ENFORCE: "0", QORGAU_SHELL_SELFTEST: "0", QORGAU_SHELL_NATIVE_HELPER: join(work, "absent-native-helper.exe"),
       QORGAU_SHELL_LOG_LEVEL: "error", QORGAU_LOG_LEVEL: "WARNING" } });
   student = await electron.firstWindow();
+  student.setDefaultTimeout(12000);
   student.on("pageerror", e => errors.push(e.message));
   await student.waitForFunction(async () => (await window.qorgau.getShellState()).backend === "ready", null, { timeout: 25000 });
   await student.locator('[data-testid="class-connection"]').getByText("подключено", { exact: true }).waitFor({ timeout: 15000 });
+  await student.evaluate(observeStudent);
+  await student.addInitScript(observeStudent);
 }
 async function openStudent(id) {
   await teacher.goto(connection.base);
@@ -91,20 +109,6 @@ try {
   check("two independent real C2 identities and synthetic provenance", sidA !== sidB);
   check("legacy initial false is not a confirmed unlock", !(await getCard(sidA)).lock_confirmed);
   await openStudent(sidA);
-  await student.evaluate(() => {
-    window.lockObservations = [];
-    window.qorgau.subscribeEvents(({message:m}) => {
-      if(m.type === 'class_state' && window.lockObservations.length < 80) window.lockObservations.push({state:m.lock_state, requested:m.lock_requested, locked:m.locked, error:m.lock_error_ru});
-    });
-    new MutationObserver(() => {
-      const app = document.querySelector('[data-adal-app]'), o = document.querySelector('[data-adal-lock]');
-      if(!o || window.lockObservations.length >= 80) return;
-      const b = o.getBoundingClientRect(), css = getComputedStyle(o);
-      window.lockObservations.push({ visible: document.visibilityState, inert: app?.inert, hidden: app?.getAttribute('aria-hidden'), reason:o.querySelector('[data-lock-reason]')?.textContent,
-        box:{left:b.left, top:b.top, right:b.right, bottom:b.bottom}, viewport:{w:innerWidth,h:innerHeight,clientWidth:document.documentElement.clientWidth,clientHeight:document.documentElement.clientHeight},
-        css:{visibility:css.visibility,display:css.display,opacity:css.opacity},hit:o.contains(document.elementFromPoint(innerWidth/2,innerHeight/2)) });
-    }).observe(document.body,{childList:true,subtree:true,attributes:true});
-  });
   await teacher.evaluate(() => {
     window.controlStates = [];
     const el = document.querySelector('[data-testid="adal-command"]');
@@ -140,7 +144,7 @@ try {
   await student.reload();
   await student.locator('[data-adal-lock]').waitFor();
   await until(async () => { const c = await getCard(sidA); return c.lock_confirmed && c.lock_state === "applied"; }, "lock recovery after renderer reload");
-  check("renderer reload restores lock through a new painted receipt", await student.locator('[data-adal-app]').getAttribute('aria-hidden') === "true");
+  check("renderer reload restores lock through a new painted receipt", await student.locator('[data-adal-app]').getAttribute('aria-hidden') === "true" && await student.evaluate(() => window.lockObservations.some(o => o.recovery === true && o.state === "requested")));
   await electron.close(); electron = null;
   await until(async () => !(await getCard(sidA)).connected, "student A disconnect");
   check("student shutdown invalidates current lock confirmation", !(await getCard(sidA)).lock_confirmed);

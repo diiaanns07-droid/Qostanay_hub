@@ -15,3 +15,9 @@ Verified: production IPC creates a synthetic session; C1 receives two independen
 Reported the exact measurements to root. Root owns the product correction and regression test. This acceptance harness is kept unchanged as the independent recheck after that fix. Remaining lock/unlock/reload/restart scenarios are implemented but not yet passed at this checkpoint.
 
 Run instructions and evidence boundaries: `acceptance/classroom/control-chain/README.md`. Raw runtime data lives outside Git; commit only sanitized results and cropped screenshots.
+
+## Scrollbar fix recheck
+
+Root fix `52a6ed9` was cherry-picked as `61618fe`; rebuilt production main/preload. Twelve checks now pass: actual UI lock/receipt/unlock, custom reason, pending, isolated second student, real no-renderer timeout, hidden-window refusal, and a fresh visible request after refusal. `actual-lock.png` was visually inspected; it shows only the synthetic lock and custom reason, no credentials.
+
+The run then exposed a second product recovery issue: reload returns an overlay but leaves the current backend lock failed/unconfirmed. A recovery request is emitted during navigation before the new renderer listens; C2's 5s state republish interval matches its 5s receipt deadline. Root has the report and owns the correction. `reload-before-fix.json` records twelve passes and the exact failed scenario; full restart remains unverified until rerun. The harness now passively observes the new renderer's genuine `recovery=true` request so a stale prior receipt cannot satisfy the reload assertion.
