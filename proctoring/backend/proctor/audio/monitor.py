@@ -8,7 +8,8 @@ from uuid import uuid4
 from proctor_contracts.v1 import (AudioObservation, Component, Health, HealthObservation,
                                  HealthStatus, ObservationStatus, Producer, SignalState)
 
-from .vad import AudioDetector, BLOCK, RATE
+from .vad import BLOCK, RATE
+from .combined import CombinedAudioDetector
 
 _MICROPHONE = threading.Lock()
 
@@ -49,9 +50,11 @@ class MicrophoneLease:
 
 
 class AudioMonitor:
-    def __init__(self, session_id, source_mode, clock, publish, *, stream_factory=None, detector_factory=AudioDetector):
+    def __init__(self, session_id, source_mode, clock, publish, *, stream_factory=None,
+                 detector_factory=CombinedAudioDetector, diagnostics_callback=None):
         self.session_id, self.mode, self.clock, self.publish = session_id, source_mode, clock, publish
         self.stream_factory, self.detector_factory = stream_factory, detector_factory
+        self.diagnostics_callback = diagnostics_callback  # optional scalar-only LIVE comparison, never PCM
         self._thread = None
         self._stop = threading.Event()
         self._lifecycle = threading.Lock()
@@ -77,7 +80,7 @@ class AudioMonitor:
         t = self.clock.now_ms() if t is None else t
         return dict(observation_id=f"audio-{uuid4().hex}", session_id=self.session_id, frame_id=None,
                     t_session_ms=t, wall_time=self.clock.wall_at(t), source_mode=self.mode,
-                    producer=Producer(module="audio", version="a14-1.0.0"))
+                    producer=Producer(module="audio", version="a14-1.1.0"))
 
     def _health(self, code, status):
         if not self._stop.is_set():
@@ -93,6 +96,7 @@ class AudioMonitor:
     def _run(self):
         pcm = queue.Queue(maxsize=16)  # <=512 ms; never written or published
         overflow = threading.Event()
+        detector = None
 
         def callback(indata, frames, timing, status):
             if self._stop.is_set():
@@ -144,16 +148,22 @@ class AudioMonitor:
                         summary = detector.feed(block)
                         if summary is None or self._stop.is_set():
                             continue
-                        code = "noise_calibration" if summary.voice_like == "unknown" else (
-                            "energy_fallback" if detector.vad is None else "audio_ok")
+                        code = getattr(summary, "health_code", None) or (
+                            "noise_calibration" if summary.voice_like == "unknown" else (
+                            "energy_fallback" if detector.vad is None else "audio_ok"))
                         if code != previous:
                             self._health(code, HealthStatus.OK if code == "audio_ok" else HealthStatus.DEGRADED)
                             previous = code
                         self.publish(AudioObservation(**self._base(t),
-                            status=ObservationStatus.DEGRADED if code != "audio_ok" else ObservationStatus.OK,
+                            status=ObservationStatus.DEGRADED if getattr(summary, "observation_degraded", code != "audio_ok") else ObservationStatus.OK,
                             voice_like=SignalState(summary.voice_like), voice_probability=summary.probability,
                             rms_dbfs=summary.rms_dbfs, noise_floor_dbfs=summary.noise_floor_dbfs,
                             reasons=summary.reasons))
+                        if self.diagnostics_callback is not None and hasattr(summary, "diagnostics"):
+                            try:
+                                self.diagnostics_callback({"t_session_ms": t, **summary.diagnostics})
+                            except Exception:
+                                pass  # diagnostic consumers cannot interrupt monitoring
         except Exception:
             self._health("audio_unavailable", HealthStatus.DEGRADED)
             self._unknown("audio_unavailable")
@@ -163,3 +173,5 @@ class AudioMonitor:
                     pcm.get_nowait()
                 except queue.Empty:
                     break
+            if detector is not None and callable(getattr(detector, "close", None)):
+                detector.close()
