@@ -565,7 +565,7 @@ class SessionRuntime:
             )
         counts: dict[str, int] = {}
         for item in caps.items:
-            if item.mechanism in ("electron.display_count.multiple", "electron.display_count.unavailable"):
+            if item.mechanism in ("electron.display_count.multiple", "electron.display_count.unavailable") or item.mechanism.startswith("native.remote_check."):
                 return PreflightCheck(
                     check_id=PreflightCheckId.ENVIRONMENT_PROTECTION, status=CheckStatus.FAIL,
                     required=required, message_code="environment_condition_failed",

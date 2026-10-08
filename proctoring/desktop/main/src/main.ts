@@ -32,7 +32,8 @@ import { fail, shellError } from "./errors";
 import { buildCapabilities, parseVerificationRecords, summarize, type NativeHelperInfo, type PlatformInfo, type ProbeResults, type VerificationRecord } from "./environment/capabilities";
 import { EnvironmentEventQueue } from "./environment/events";
 import { ExamGuard, type GuardPlatform } from "./environment/guard";
-import { withDisplayCheck } from "./environment/preflight";
+import { withDisplayCheck, withRemoteCheck } from "./environment/preflight";
+import { checkRemoteEnvironment } from "./environment/remote";
 import { checkHelper, NativeHelper } from "./environment/native";
 import { createElectronProbeDriver } from "./environment/probe-electron";
 import { probeSummary, runSelfTest } from "./environment/probe";
@@ -114,6 +115,7 @@ const guardPlatform: GuardPlatform = {
 
 const guard = new ExamGuard(() => mainWindow, events, guardPlatform, {
   enforce: cfg.nativeEnforce,
+  scanRemote: process.platform === "win32" ? () => checkRemoteEnvironment({ command: cfg.nativeHelperPath }) : undefined,
   emergencyAccelerator: cfg.emergencyAccelerator,
   onEmergencyHotkey: () => void emergencyExit("emergency_hotkey"),
 });
@@ -171,6 +173,9 @@ async function reportCapabilities(strict = false): Promise<void> {
   let displayCount = 0;
   try { displayCount = screen.getAllDisplays().length; } catch { /* unknown is a preflight failure */ }
   capabilities = withDisplayCheck(capabilities, displayCount);
+  if (process.platform === "win32") {
+    capabilities = withRemoteCheck(capabilities, await checkRemoteEnvironment({ command: cfg.nativeHelperPath }));
+  }
   log.info(`capability matrix: ${JSON.stringify(summarize(capabilities))}`);
   if (!supervisor.connection) return;
   const r = await client.json("PUT", BackendClient.path("environment", "capabilities"), capabilities);

@@ -14,6 +14,7 @@ import { logger } from "../log";
 import type { Guard } from "../shell/state";
 import type { EventSink } from "./events";
 import { classifyExamKey, KeyEventThrottle, type KeyInput } from "./keyboard";
+import { remoteNames, type RemoteSnapshot } from "./remote";
 
 const log = logger("guard");
 
@@ -63,6 +64,7 @@ export interface GuardOptions {
   refocus?: boolean;
   /** Explicit enforce mode only; dry-run must never pull focus back. */
   enforce?: boolean;
+  scanRemote?: () => Promise<RemoteSnapshot>;
   now?: () => number;
 }
 
@@ -82,6 +84,11 @@ export class ExamGuard implements Guard {
   private displayTimer: NodeJS.Timeout | null = null;
   private lastDisplayCount: number | null = null;
   private lastRefocusAt = -Infinity;
+  private remoteTimer: NodeJS.Timeout | null = null;
+  private remoteGeneration = 0;
+  private remotePending = false;
+  private remoteSeen = new Set<string>();
+  private remoteFailed = false;
   /** Last engage report (for the handoff/diagnostics; no user content). */
   lastEngage: { steps: Record<string, "ok" | "failed" | "skipped">; registrations: ShortcutRegistration[] } | null = null;
 
@@ -170,6 +177,12 @@ export class ExamGuard implements Guard {
         this.displayTimer = setInterval(() => this.checkDisplays(), 2_000);
         this.displayTimer.unref();
       }, false);
+      if (this.opts.scanRemote) {
+        this.remoteGeneration++;
+        void this.checkRemote();
+        this.remoteTimer = setInterval(() => void this.checkRemote(), 5_000);
+        this.remoteTimer.unref();
+      }
     } catch (err) {
       this.releaseSync("engage_failed");
       throw err;
@@ -219,6 +232,12 @@ export class ExamGuard implements Guard {
     if (this.displayTimer) clearInterval(this.displayTimer);
     this.displayTimer = null;
     this.lastDisplayCount = null;
+    if (this.remoteTimer) clearInterval(this.remoteTimer);
+    this.remoteTimer = null;
+    this.remoteGeneration++;
+    this.remotePending = false;
+    this.remoteSeen.clear();
+    this.remoteFailed = false;
     const w = this.win();
     const attempt = (name: string, fn: () => void) => {
       try {
@@ -275,6 +294,30 @@ export class ExamGuard implements Guard {
       }
     } catch {
       this.emit("enforcement_error", "failed", "electron.display_poll", "os_session");
+    }
+  }
+
+  private async checkRemote(): Promise<void> {
+    if (!this.active || !this.opts.scanRemote || this.remotePending) return;
+    const generation = this.remoteGeneration;
+    this.remotePending = true;
+    try {
+      const snapshot = await this.opts.scanRemote();
+      if (!this.active || generation !== this.remoteGeneration) return;
+      if (!snapshot.available) throw new Error("remote check unavailable");
+      this.remoteFailed = false;
+      const names = new Set(remoteNames(snapshot));
+      for (const name of names) if (!this.remoteSeen.has(name)) {
+        this.emit("foreign_window_foreground", "detected_only", "native.remote_access", "os_session", { process_name: name });
+      }
+      this.remoteSeen = names;
+    } catch {
+      if (this.active && generation === this.remoteGeneration && !this.remoteFailed) {
+        this.remoteFailed = true;
+        this.emit("enforcement_error", "failed", "native.remote_access", "os_session");
+      }
+    } finally {
+      if (generation === this.remoteGeneration) this.remotePending = false;
     }
   }
 
