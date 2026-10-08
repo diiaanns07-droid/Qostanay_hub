@@ -100,7 +100,7 @@ async function run(viewport) {
     check(`[${tag}] mic banner removed when mic_active=false`, true);
 
     // Lock above the full-screen calibration layer
-    await page.getByText("синтетический тест").click();
+    await page.getByText("синтетический тест", { exact: true }).click();
     await page.getByText("Студент ознакомлен").click();
     await page.getByRole("button", { name: "Создать сессию и проверить" }).click();
     await page.getByText("Обязательные проверки пройдены").waitFor();

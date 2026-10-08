@@ -5,7 +5,7 @@
 //   VITE_QORGAU_FIXTURE=1 npx vite build --outDir "$PWD/dist/renderer-fixture"
 //   npx vite preview --outDir "$PWD/dist/renderer-fixture" &   then   node renderer/tests/e2e-fixture.mjs [outDir]
 // Requires a Playwright install (not a project dependency; see handoffs/A07/DEPENDENCIES.txt).
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -16,6 +16,7 @@ const OUT = process.argv[2] ?? "e2e-shots";
 mkdirSync(OUT, { recursive: true });
 
 const results = [];
+const newRules = ["Возможная речь рядом", "Видны наушники", "Лицо не совпадает с началом экзамена", "Посторонний предмет в кадре", "Второй экран или ноутбук в кадре"];
 const check = (name, ok, detail = "") => {
   results.push({ name, ok, detail });
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${detail}` : ""}`);
@@ -69,9 +70,17 @@ async function flow(page, tag, shot, consoleErrors) {
   await page.goto(`${BASE}?bridge=fixture`);
   await page.getByText("FIXTURE-режим").waitFor();
   check(`[${tag}] fixture label visible`, true);
+  check(`[${tag}] ADAL page title and brand`, (await page.title()) === "ADAL" && (await page.locator(".brand-name").textContent())?.trim() === "ADAL");
+  const checks = page.getByTestId("exam-checks");
+  await checks.waitFor();
+  await page.getByTestId("exam-check-audio").getByText("Не заявлено сервисом").waitFor();
+  check(`[${tag}] student sees check readiness before consent`, await checks.getByRole("heading", { name: "Что проверяет ADAL на этом экзамене" }).isVisible());
+  check(`[${tag}] synthetic mode does not claim live camera or CV`, (await page.getByTestId("exam-check-capture").textContent()).includes("Камера не используется") && (await page.getByTestId("exam-check-phone").textContent()).includes("Имитация"));
+  for (const id of ["audio", "identity"]) check(`[${tag}] ${id} is not invented from contract 1.1`, (await page.getByTestId(`exam-check-${id}`).textContent()).includes("Не заявлено сервисом"));
   await page.getByText("Оболочка ещё измеряет возможности защиты").waitFor();
   check(`[${tag}] capabilities "not measured yet" shown, then retried`, true);
   await page.getByText("Защита частичная").waitFor({ timeout: 10000 });
+  check(`[${tag}] unverified keys do not claim blocking`, (await page.getByTestId("exam-check-shortcut_win").textContent()).includes("не проверено"));
   await shot("01-preflight-form");
   await noOverflow(page, `${tag} preflight`);
 
@@ -95,7 +104,7 @@ async function flow(page, tag, shot, consoleErrors) {
   await page.getByRole("button", { name: "Новая сессия" }).click();
 
   // SYNTHETIC session.
-  await page.getByText("синтетический тест").click();
+  await page.getByText("синтетический тест", { exact: true }).click();
   await page.getByText("Студент ознакомлен").click();
   await page.getByRole("button", { name: "Создать сессию и проверить" }).click();
   await page.getByText("Обязательные проверки пройдены").waitFor();
@@ -198,6 +207,13 @@ async function flow(page, tag, shot, consoleErrors) {
   await page.getByText("Наблюдение за сессией").waitFor();
   await page.locator(".preview-box img").waitFor();
   await page.getByText("Идёт экзамен: показан только поток событий").waitFor();
+  await page.getByRole("button", { name: "FIXTURE · сбои" }).click();
+  await page.getByRole("button", { name: "Эпизоды 1.1 (FIXTURE)" }).click();
+  await page.getByRole("button", { name: "FIXTURE · сбои" }).click();
+  for (const label of newRules) {
+    await page.locator(".inc-item").filter({ hasText: label }).first().click();
+    check(`[${tag}] 1.1 episode card: ${label}`, await page.locator(".incident").getByRole("heading", { name: label, exact: true }).isVisible());
+  }
   await page.locator(".inc-item").first().waitFor({ timeout: 20000 });
   await page.waitForTimeout(6000);
   await page.locator(".inc-item").first().click();
@@ -259,11 +275,14 @@ async function flow(page, tag, shot, consoleErrors) {
   await shot("14-review");
   await page.getByRole("button", { name: "К итогу →" }).click();
   await page.getByText("Покрытие наблюдением").waitFor();
+  for (const label of newRules) check(`[${tag}] 1.1 summary: ${label}`, await page.getByRole("cell", { name: label, exact: true }).isVisible());
   await shot("15-summary");
   await noOverflow(page, `${tag} summary`);
   const [h] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Сохранить отчёт HTML" }).click()]);
   await page.getByText("Файл записан").waitFor();
   check(`[${tag}] HTML export downloaded + confirmed`, /fixture\.html$/.test(h.suggestedFilename()), h.suggestedFilename());
+  const exportText = readFileSync(await h.path(), "utf8");
+  for (const label of newRules) check(`[${tag}] 1.1 FIXTURE HTML label: ${label}`, exportText.includes(label));
   const [j] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Экспорт JSON" }).click()]);
   check(`[${tag}] JSON export downloaded`, /fixture\.json$/.test(j.suggestedFilename()), j.suggestedFilename());
 
