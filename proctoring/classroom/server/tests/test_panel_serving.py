@@ -32,7 +32,7 @@ def test_login_page_guards_the_panel(panel_server):
     cookie = r.headers["set-cookie"].lower()
     assert "httponly" in cookie and "samesite=strict" in cookie
     page = anon.get("/")
-    assert page.status_code == 200 and "Qorgau" in page.text and page.headers["cache-control"] == "no-store"
+    assert page.status_code == 200 and "Adal" in page.text and page.headers["cache-control"] == "no-store"
     assert anon.get("/config.json").json() == {"adapter": "real"}  # the repo file says demo; C1 serves real (T02 HANDOFF)
     assert anon.get("/src/adapters/real.js").status_code == 200
     assert anon.post("/logout", headers=origin).status_code == 303
