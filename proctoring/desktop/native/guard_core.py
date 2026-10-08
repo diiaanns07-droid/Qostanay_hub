@@ -28,6 +28,7 @@ class StopState:
         self.event = threading.Event()
         self.reason = "normal_exit"
         self.error = None
+        self.pending_signal = None
         self._lock = threading.Lock()
 
     def request(self, reason: str, error: str | None = None):
@@ -181,6 +182,8 @@ class Runtime:
             self.stop.request("stdin_failed", "stdin_failed")
 
     def poll(self):
+        if self.stop.pending_signal:
+            self.stop.request(self.stop.pending_signal)
         now = self.clock()
         if now - self.last_hb >= HEARTBEAT_SECONDS:
             self.stop.request("heartbeat_lost")
@@ -197,6 +200,7 @@ class Runtime:
             if self.stop.event.is_set():
                 return
             self.hook.start()
+            self.poll()
             if self.stop.event.is_set():
                 return
             self.output.emit({"type": "ready", "version": VERSION,

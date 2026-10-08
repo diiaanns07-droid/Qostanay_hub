@@ -88,8 +88,15 @@ export function CalibrationScreen() {
   // Auto-advance: when no target is collecting, request the next pending one (order center→down).
   useEffect(() => {
     if (!armed || !cal || cal.phase !== "collecting" || busy || backendLost) return;
-    if (cal.targets.some((t) => t.state === "collecting" || t.state === "failed")) return;
-    const next = CalibrationTargetValues.find((t) => cal.targets.find((x) => x.target === t)?.state === "pending");
+    // "up" is optional (laptop webcam above the screen): its failure must not stop the walk to "down".
+    // A "collecting" target that is no longer the current one was interrupted (e.g. by "Повторить «вверх»"):
+    // A04 returns it to pending; treat it the same here so the walk never stalls.
+    const stalled = (x: { target: CalibrationTarget; state: string }) => x.state === "collecting" && x.target !== cal.current_target;
+    if (cal.targets.some((t) => (t.state === "collecting" && !stalled(t)) || (t.state === "failed" && t.target !== "up"))) return;
+    const next = CalibrationTargetValues.find((t) => {
+      const x = cal.targets.find((y) => y.target === t);
+      return !!x && (x.state === "pending" || stalled(x));
+    });
     if (!next) return;
     const key = `${cal.calibration_id}:${next}`;
     if (autoRequested.current === key) return;
@@ -189,7 +196,8 @@ export function CalibrationScreen() {
   const current = busy === "target" ? presented : cal?.current_target ?? null;
   const curStatus = cal?.targets.find((t) => t.target === current) ?? null;
   const failed = cal?.targets.filter((t) => t.state === "failed") ?? [];
-  const allOk = !!cal && cal.targets.every((t) => t.state === "ok");
+  const upSkipped = !!cal && cal.targets.some((t) => t.target === "up" && t.state === "failed");
+  const allOk = !!cal && cal.targets.every((t) => t.state === "ok" || (t.target === "up" && t.state === "failed"));
   const okCount = cal?.targets.filter((t) => t.state === "ok").length ?? 0;
 
   const begin = () => {
@@ -250,7 +258,8 @@ export function CalibrationScreen() {
                 </>
               )}
               {busy !== "target" && curStatus && curStatus.state === "failed" && <>Точка {TARGET[curStatus.target]} не собрана</>}
-              {allOk && <>Все точки собраны — нажмите «Завершить калибровку»</>}
+              {allOk && !upSkipped && <>Все точки собраны — нажмите «Завершить калибровку»</>}
+              {allOk && upSkipped && <>Точка «вверх» необязательна: можно повторить её или нажать «Завершить калибровку»</>}
             </div>
             <ul className="calfs-list">
               {(cal.targets ?? []).map((t) => (
@@ -279,12 +288,20 @@ export function CalibrationScreen() {
       <div className="calfs-bar">
         <div className="actions calfs-actions">
           {failed.map((t) => (
-            <Button key={t.target} size="sm" disabled={busy !== null || backendLost} onClick={() => void selectTarget(t.target)}>
+            <Button
+              key={t.target}
+              size="sm"
+              disabled={busy !== null || backendLost}
+              onClick={() => {
+                autoRequested.current = null; // a retry interrupts the current target: let the walk request it again
+                void selectTarget(t.target);
+              }}
+            >
               Повторить «{TARGET[t.target]}»
             </Button>
           ))}
           {armed && (
-            <Button variant="primary" disabled={!allOk || backendLost || cal?.phase !== "collecting"} busy={busy === "finish"} onClick={() => void finish()}>
+            <Button variant="primary" disabled={!allOk || backendLost || cal?.phase !== "collecting" || (busy !== null && busy !== "finish")} busy={busy === "finish"} onClick={() => void finish()}>
               Завершить калибровку
             </Button>
           )}
