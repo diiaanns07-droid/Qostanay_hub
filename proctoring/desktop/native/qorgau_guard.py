@@ -42,6 +42,7 @@ def minutes(value):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-check", action="store_true")
+    parser.add_argument("--environment-check", action="store_true")
     parser.add_argument("--parent-pid", type=int)
     parser.add_argument("--mode", choices=("dry-run", "enforce"), default="dry-run")
     parser.add_argument("--max-minutes", type=minutes, default=120)
@@ -51,6 +52,14 @@ def main(argv=None):
         return 2
     from guard_win32 import KeyboardHook, ParentHandle, Win32
     api = Win32()
+    if args.environment_check:
+        from environment_check import snapshot
+        try:
+            write_line(json.dumps(snapshot(api)) + "\n")
+            return 0  # read-only: no keyboard hook, focus change, clipboard or OS settings
+        except Exception:
+            write_line('{"type":"error","code":"environment_check_failed"}\n')
+            return 2
     if args.self_check:
         version = sys.getwindowsversion()
         write_line(json.dumps({"type": "selfcheck", "version": VERSION,

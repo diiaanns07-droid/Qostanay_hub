@@ -24,6 +24,7 @@ import type { OperatorAuth } from "../shell/operator";
 import type { ShellStateMachine } from "../shell/state";
 import type { InvokeName } from "./channels";
 import * as v from "./validate";
+import { environmentBlockReason } from "../environment/preflight";
 
 const log = logger("api");
 const P = BackendClient.path;
@@ -33,6 +34,7 @@ export interface ApiDeps {
   machine: ShellStateMachine;
   operator: OperatorAuth;
   capabilities(): EnvironmentCapabilities | null;
+  refreshEnvironment?(): Promise<void>;
   /** Abort the bound session (best effort) and release every restriction. */
   emergencyExit(reason: string): Promise<void>;
   /** Deliver queued environment events before a call that ends/pauses the session (they are rejected after). */
@@ -185,7 +187,11 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       if (r.ok) await machine.observe(r.data);
       return r;
     },
-    runPreflight: async (sid) => client.json<PreflightReport>("POST", P("sessions", v.id(sid, "session_id"), "preflight"), undefined, 60_000),
+    runPreflight: async (sid) => {
+      const s = v.id(sid, "session_id");
+      await d.refreshEnvironment?.();
+      return client.json<PreflightReport>("POST", P("sessions", s, "preflight"), undefined, 60_000);
+    },
     calibrationStart: async (sid) => client.json<CalibrationState>("POST", P("sessions", v.id(sid, "session_id"), "calibration", "start")),
     calibrationTarget: async (sid, target) =>
       client.json<CalibrationState>("POST", P("sessions", v.id(sid, "session_id"), "calibration", "target"), {
@@ -201,6 +207,9 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       if (machine.state.session_id !== sid) {
         return fail(shellError("SESSION_MISMATCH", "session_not_bound", "Start only the session created in this shell run"));
       }
+      await d.refreshEnvironment?.();
+      const reason = environmentBlockReason(d.capabilities());
+      if (reason) return fail(shellError("PREFLIGHT_FAILED", "enforcement_error", reason, true));
       return latched(sid) ?? sessionCall("POST", P("sessions", sid, "start"));
     },
     pauseExam: async (sid, body) => {
@@ -210,6 +219,9 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
     resumeExam: async (sid) => {
       const s = v.id(sid, "session_id");
       if (machine.state.session_id !== s) return fail(shellError("SESSION_MISMATCH", "session_not_bound", "Resume only the bound session"));
+      await d.refreshEnvironment?.();
+      const reason = environmentBlockReason(d.capabilities());
+      if (reason) return fail(shellError("PREFLIGHT_FAILED", "enforcement_error", reason, true));
       return latched(s) ?? sessionCall("POST", P("sessions", s, "resume"));
     },
     finishExam: async (sid) => {

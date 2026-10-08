@@ -1,4 +1,12 @@
-# A06-native — checkpoint 3, controlled Windows LIVE passed
+# A06 — current environment additions
+
+New branch `codex/proctor-A06-env` from `eee203111a9dcb9274646bad643779206f7cd879` implements
+second-monitor preflight/polling, enforce focus return, remote-process/RDP checks and 1 s clipboard clear.
+See [current handoff and test results](ENV-2026-10-08.md). Controlled LIVE of these additions is **not run**;
+it requires a new captain yes and the Ctrl+Alt+Shift+F12 emergency shortcut. Historical approval/results
+below concern the previous native helper only.
+
+## Historical A06-native — checkpoint 3, controlled Windows LIVE passed
 
 Branch: `codex/proctor-A06-native`. Base: `64354c014c4ad51054e8bb67fe841580771d43e5`.
 Helper tested from pushed code `29778e9f23200132427c7a31d10098e044464c92`; this checkpoint changes
