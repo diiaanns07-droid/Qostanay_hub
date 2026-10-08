@@ -481,10 +481,19 @@ class FusionEngine:
         direction: Direction | None = None
         via_head = False
         if face_count and obs.primary_face_present is not False:
-            if obs.gaze is not None and obs.gaze.direction != Direction.UNKNOWN:
-                direction = obs.gaze.direction
-            elif obs.head_direction != Direction.UNKNOWN:
-                direction, via_head = obs.head_direction, True
+            gaze_dir = obs.gaze.direction if obs.gaze is not None else Direction.UNKNOWN
+            head_dir = obs.head_direction
+            away = (Direction.LEFT, Direction.RIGHT, Direction.DOWN)
+            if gaze_dir in away:
+                direction = gaze_dir
+            elif head_dir in away:
+                # head clearly turned while the eye estimate says centre/up: the head pose wins
+                # (real A04 output on a camera clip: yaw -50 deg, gaze flipping left/up every 0.5 s)
+                direction, via_head = head_dir, True
+            elif gaze_dir != Direction.UNKNOWN:
+                direction = gaze_dir
+            elif head_dir != Direction.UNKNOWN:
+                direction, via_head = head_dir, True
         down = None if direction is None else direction == Direction.DOWN
         side = None if direction is None else direction in (Direction.LEFT, Direction.RIGHT)
         if face_count is None:

@@ -14,7 +14,7 @@ import json
 from dataclasses import asdict, dataclass, field, fields, replace
 from typing import Any
 
-RULE_VERSION = "a05-rules-1.0.0"
+RULE_VERSION = "a05-rules-1.1.0"
 CONFIG_NAME = "a05-default-1"
 
 
@@ -29,7 +29,7 @@ class IntervalParams:
     * merge/close: once open, a false observation at least ``merge_gap_ms`` after the last true one
       closes the episode (``condition_cleared``, ``t_end`` = last true observation); a re-appearance
       inside the gap continues the same episode (one incident, ``appearances`` + 1);
-    * ``long_ms``: an episode at least this long raises review priority one level (None = never).
+    * ``long_ms``: an episode LONGER than this raises review priority one level (None = never).
     """
 
     min_duration_ms: float
@@ -42,7 +42,7 @@ class IntervalParams:
 def _priority_base() -> dict[str, str]:
     return {
         "phone_visible": "medium",
-        "phone_raised": "medium",
+        "phone_raised": "high",  # zones spec 2026-10-08: phone raised / aimed at the screen = high
         "possible_screen_capture": "high",
         "gaze_prolonged_down": "low",
         "gaze_prolonged_side": "low",
@@ -80,9 +80,11 @@ class FusionConfig:
     phone_visible: IntervalParams = IntervalParams(1000.0, 3, 500.0, 2000.0, 10000.0)
     phone_raised: IntervalParams = IntervalParams(0.0, 1, 500.0, 5000.0, None)
     possible_screen_capture: IntervalParams = IntervalParams(500.0, 2, 500.0, 5000.0, None)
-    gaze_prolonged_down: IntervalParams = IntervalParams(3000.0, 3, 400.0, 1500.0, 10000.0)
-    gaze_prolonged_side: IntervalParams = IntervalParams(3000.0, 3, 400.0, 1500.0, 10000.0)
-    face_missing: IntervalParams = IntervalParams(2000.0, 3, 500.0, 2000.0, 15000.0)
+    # gaze (zones spec, agreed with the captain): 3-8 s = low, > 8 s = medium; never higher by duration
+    gaze_prolonged_down: IntervalParams = IntervalParams(3000.0, 3, 400.0, 1500.0, 8000.0)
+    gaze_prolonged_side: IntervalParams = IntervalParams(3000.0, 3, 400.0, 1500.0, 8000.0)
+    # face missing longer than the threshold = medium (zones spec); no escalation to high by duration
+    face_missing: IntervalParams = IntervalParams(2000.0, 3, 500.0, 2000.0, None)
     multiple_faces: IntervalParams = IntervalParams(1000.0, 3, 500.0, 3000.0, None)
 
     # --- freshness / unknown ---
@@ -109,7 +111,9 @@ class FusionConfig:
 
     # --- priority of HUMAN REVIEW (never a probability of guilt) ---
     priority_base: dict[str, str] = field(default_factory=_priority_base)
-    repeat_segments: int = 3  # an episode with this many appearances raises priority one level
+    repeat_segments: int = 3  # an episode with this many appearances raises priority one level ...
+    # ... only for these rules (gaze/face priority depends on duration only: zones spec)
+    repeat_escalation_rules: tuple[str, ...] = ("phone_visible", "phone_raised", "possible_screen_capture", "multiple_faces")
 
     # --- output shaping ---
     update_every_ms: float = 5000.0  # an open episode is re-emitted at most this often (episode time)
@@ -131,6 +135,8 @@ class FusionConfig:
                     raise ValueError(f"invalid {f.name}: {value}")
             elif isinstance(value, (int, float)) and not isinstance(value, bool) and value < 0:
                 raise ValueError(f"{f.name} must be >= 0")
+        if not set(self.repeat_escalation_rules) <= rules:
+            raise ValueError(f"invalid repeat_escalation_rules {self.repeat_escalation_rules}")
         for pair in self.link_pairs:
             if len(pair) != 2 or not set(pair) <= rules:
                 raise ValueError(f"invalid link pair {pair}")
