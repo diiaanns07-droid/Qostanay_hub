@@ -47,10 +47,13 @@ RULE_RU = {
     "environment_blocked_action": "Заблокированное действие в среде экзамена",
     "environment_escape": "Выход из окна экзамена",
     "monitoring_degraded": "Наблюдение ухудшено (технический эпизод)",
+    "background_speech": "Возможная речь рядом",
+    "headphones_visible": "Видны наушники",
+    "identity_mismatch": "Лицо не совпадает с началом экзамена",
     "foreign_object_visible": "В кадре книга или посторонний предмет (только для проверки)",
     "second_screen_visible": "В кадре второй экран или ноутбук (только для проверки)",
 }
-CATEGORY_RU = {"phone": "телефон", "attention": "внимание", "presence": "присутствие", "environment": "среда", "technical": "техника", "objects": "предметы"}
+CATEGORY_RU = {"phone": "телефон", "attention": "внимание", "presence": "присутствие", "environment": "среда", "technical": "техника", "audio": "звук", "identity": "личность", "objects": "предметы"}
 PRIORITY_RU = {"low": "низкий", "medium": "средний", "high": "высокий"}
 REVIEW_RU = {
     "pending": "не проверено",

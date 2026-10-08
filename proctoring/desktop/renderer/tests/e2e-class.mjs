@@ -101,7 +101,7 @@ async function run(viewport) {
 
     // Lock above the full-screen calibration layer
     await page.locator(".preflight-settings > summary").click();
-    await page.getByText("синтетический тест").click();
+    await page.getByText("синтетический тест", { exact: true }).click();
     await page.getByText("Студент ознакомлен").click();
     await page.getByRole("button", { name: "Проверить устройства" }).click();
     await page.getByText("Обязательные проверки пройдены").waitFor();

@@ -1,4 +1,8 @@
-/* Qorgau Exam — renderer styles (A07). System fonts only: no runtime downloads. */
+/* Adal — renderer styles (A07). System fonts only: no runtime downloads. */
+.exam-checks-list { list-style: none; margin: 0; padding: 0; }
+.exam-checks-list li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.exam-check-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.exam-checks-list p { margin: 4px 0 0; }
 :root {
   --bg: #f4f5f2;
   --surface: #ffffff;
