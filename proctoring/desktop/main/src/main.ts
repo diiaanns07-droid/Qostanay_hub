@@ -56,6 +56,7 @@ if (!app.requestSingleInstanceLock()) {
 
 const cfg = loadConfig(app.getAppPath(), process.env, app.isPackaged, process.platform);
 for (const w of cfg.warnings) log.warn(w);
+log.info(`teacher access policy: ${cfg.accessPolicy} (operator idle ${cfg.operatorIdleMs / 1000}s, max ${cfg.operatorMaxMs / 1000}s)`);
 const devOrigin = cfg.devRendererUrl ? new URL(cfg.devRendererUrl).origin : null;
 const platformInfo: PlatformInfo = {
   platform: process.platform,
@@ -219,6 +220,8 @@ function registerIpc(): void {
     capabilities: () => capabilities,
     emergencyExit,
     flushEvents: () => events.flush(),
+    accessPolicy: cfg.accessPolicy,
+    operatorTimeouts: { idleMs: cfg.operatorIdleMs, maxMs: cfg.operatorMaxMs },
     saveFile: async (defaultName, bytes, filters) => {
       const w = mainWindow;
       const opts = { defaultPath: join(app.getPath("documents"), defaultName), filters };
@@ -451,6 +454,14 @@ for (const sig of ["SIGINT", "SIGTERM"] as const) {
 
 process.on("uncaughtException", (err) => {
   log.error("uncaught exception in main", err);
+  try {
+    events.emit({ action: "enforcement_error", enforcement: "failed", mechanism: "electron.watchdog", scope: "app", detail: { shortcut: "main_exception" } });
+  } catch {
+    /* reporting must never block the release */
+  }
+  // main is in an unknown state: release now and never re-engage this session (no engage/crash loop)
+  const sid = machine.state.session_id;
+  if (sid) machine.forbidEngage(sid);
   guard.releaseSync("main_exception");
   void machine.releaseTo("error", "engage_failed", shellError("INTERNAL", "enforcement_error", "Shell error: restrictions released", true));
 });

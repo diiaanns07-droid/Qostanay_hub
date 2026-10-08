@@ -1,12 +1,59 @@
 # A06 — STATUS (Electron shell, trusted IPC, backend process, exam-environment protection)
 
-Role: A06. Branch: `claude/inspiring-feynman-h9n9v8` (platform-assigned; fast-forwarded to BOOTSTRAP).
-Contract/baseline: BOOTSTRAP A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` (branch `claude/nifty-ride-ux8e4j`), contract `qorgau.v1` 1.0.0.
-Previous verified checkpoint: 35bea4c (BOOTSTRAP, no A06 code).
-Stage: **checkpoint 2 delivered** — secure shell + backend lifecycle + bridge (cp1) **plus**
-environment restrictions, runtime self-test, capability matrix, optional Windows helper (controller
-tested with a fake), verification matrix and emergency release.
+Role: A06. Branch: `claude/inspiring-feynman-h9n9v8` (platform-assigned).
+Contract/baseline: BOOTSTRAP A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`, contract `qorgau.v1` 1.0.0.
+Round-2 continuation SHA (previous verified delivery): `62a7fb1e42bc723152f49338ba4f816dfcad9334` (cp2).
+Stage: **round 2 — teacher access model, no-stuck-restriction recovery checks, honest helper status.**
+The new commit SHA is reported after push (a commit cannot contain its own SHA).
 
+## Round 2 (task coordination/improvements-r2/04_A06_WINDOWS.txt)
+
+### Delivered
+* **Teacher access policy** (`main/src/shell/access.ts`, wired in `ipc/api.ts`; coordination doc
+  `handoffs/A06/ACCESS_POLICY.md` with the full method table for A07/A01):
+  default `review_after_pause` — during the exam review/history/report/evidence/summary/export/delete are
+  closed even with the PIN; teacher reviews after pause (PIN) or finish. Opt-in
+  `operator_live_review` (`QORGAU_SHELL_OPERATOR_LIVE_REVIEW=1`, **pending A01 approval, off by default**):
+  PIN-unlocked console may read/review the **bound session only**; history/export/delete stay closed.
+  No bypass in either policy.
+* **Operator unlock expiry**: idle 180 s / absolute 30 min (configurable, bounded); a timer locks
+  proactively and pushes `ShellState`. Exam start still clears the unlock.
+* `calibrationSkip` now requires the operator unlock in main (A07 already asks for the PIN there).
+* **Main exception latch**: an uncaught exception in main records `enforcement_error`, releases
+  synchronously and forbids re-engaging that session (no engage/crash loop).
+* **Release-path smoke extended** (stub, real backend): finish, emergency hotkey (+latch), renderer crash
+  (+re-engage after recovery), renderer unresponsive 5 s (+re-engage), uncaught exception (+latch),
+  backend SIGKILL (+restart, dead session not resurrected), quit during the exam — after each path the
+  smoke asserts no restriction is left on the window and no global shortcut is registered.
+* Capability test: helper `ready`/self-check alone never promotes an OS-level item.
+
+### NOT delivered (honest)
+* **Windows native helper source/build: NOT delivered in round 2.** The attempt was stopped and is not in
+  the repository. OS-level blocking (Alt+Tab, Win, PrtScn) and foreign-window identification therefore
+  remain an **open gap**: the shell detects focus loss only and reports those items `unverified`
+  (Windows) / `unsupported` (elsewhere). The shell-side controller/protocol stays tested against the
+  protocol fake. Supported alternative for the demo machine: institution-managed Keyboard Filter /
+  Assigned Access (`native/README.md`), measured and recorded in `VERIFICATION.json`.
+* **Real Electron: NOT RUN** — the Electron 43.7.5 binary is not available in this sandbox (not retried).
+  Every "Shell logic" PASS is Node + Electron **API stub** + real backend, never real Electron/Windows.
+
+### Round-2 checks (Linux container, Node 22.22.0, Python 3.12 venv; no Electron binary, no Windows)
+| Command (from `proctoring/desktop`) | Result |
+|---|---|
+| `npm run typecheck` | PASS contracts, PASS main/preload, SKIP renderer (A07 not on this branch) |
+| `npm run build:electron` | PASS |
+| `node main/tests/run.mjs` | 74/74 PASS (incl. access policy unit tests + live-review integration against the real backend) |
+| `node main/tests/shell-smoke.mjs` | 48/48 PASS (Electron **API stub** + real backend; all release paths) |
+| `python coordination/verify_ownership.py --agent A06 --base 62a7fb1…` and `--base 35bea4c…` | PASS (see commit report) |
+
+### Next
+A01: approve/reject live review; integrate A06 with A07 on the candidate. A09/teacher machine: `npm ci` +
+`npm start` on Windows to run the real-Electron self-test and fill the NOT RUN column of `main/MATRIX.md`.
+OS-level blocking needs either a reviewed helper implementation or the managed Windows lockdown.
+
+---
+
+## History: checkpoint 2 (62a7fb1)
 ## Paths changed (all A06-owned)
 `desktop/main/` (src, tests, tools, MATRIX.md), `desktop/preload/src/preload.ts`,
 `desktop/native/` (README.md, VERIFICATION.json; `bin/` is git-ignored, see DEPENDENCIES #2),

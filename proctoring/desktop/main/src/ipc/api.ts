@@ -19,6 +19,7 @@ import type {
 import { BackendClient } from "../backend/client";
 import { fail, ok, shellError } from "../errors";
 import { logger } from "../log";
+import { decideAccess, LIVE_REVIEW, OPERATOR_REQUIRED, OperatorSession, type AccessPolicy } from "../shell/access";
 import type { OperatorAuth } from "../shell/operator";
 import type { ShellStateMachine } from "../shell/state";
 import type { InvokeName } from "./channels";
@@ -38,23 +39,15 @@ export interface ApiDeps {
   flushEvents?(): Promise<void>;
   /** Native save dialog; returns null when cancelled. Main writes the file, the renderer never sees a path. */
   saveFile(defaultName: string, bytes: Buffer, filters: { name: string; extensions: string[] }[]): Promise<string | null>;
+  /** Teacher access policy (shell/access.ts). Default "review_after_pause". */
+  accessPolicy?: AccessPolicy;
+  /** Operator unlock lifetime. Defaults: 180 s idle, 30 min total. */
+  operatorTimeouts?: { idleMs: number; maxMs: number };
+  now?: () => number;
 }
 
 type Handler = (...args: unknown[]) => Promise<unknown>;
 
-/** Methods unavailable while exam restrictions are engaged (history/review/report/evidence). */
-const BLOCKED_IN_EXAM = new Set<InvokeName>([
-  "listSessions",
-  "listIncidents",
-  "getIncident",
-  "addReview",
-  "getEvidence",
-  "getSummary",
-  "exportReport",
-  "deleteSession",
-]);
-/** Methods that require operator_unlocked. */
-const OPERATOR_ONLY = new Set<InvokeName>(["pauseExam", "resumeExam", "addReview", "getEvidence", "exportReport", "deleteSession"]);
 /** Arity of every method (exact). */
 const ARITY: Record<InvokeName, number> = {
   getShellState: 0,
@@ -90,8 +83,19 @@ const ARITY: Record<InvokeName, number> = {
   deleteSession: 1,
 };
 
+export const DEFAULT_OPERATOR_TIMEOUTS = { idleMs: 180_000, maxMs: 30 * 60_000 };
+
 export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
   const { client, machine } = d;
+  const policy: AccessPolicy = d.accessPolicy ?? "review_after_pause";
+  const opSession = new OperatorSession({
+    ...(d.operatorTimeouts ?? DEFAULT_OPERATOR_TIMEOUTS),
+    ...(d.now ? { now: d.now } : {}),
+    onExpire: (reason) => {
+      log.info(`operator unlock expired (${reason})`);
+      machine.setOperator(false);
+    },
+  });
 
   /** Session-changing calls feed the state machine (this is what engages/releases exam mode). */
   const sessionCall = async (method: "POST", path: string, body?: unknown, flushFirst = false): Promise<BridgeResult<SessionInfo>> => {
@@ -124,6 +128,7 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       const outcome = d.operator.check(pin);
       if (outcome === "ok") {
         machine.setOperator(true);
+        opSession.unlocked();
         return ok<ShellState>(machine.state);
       }
       const map = {
@@ -134,6 +139,7 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       return fail(map[outcome]);
     },
     operatorLock: async () => {
+      opSession.locked();
       machine.setOperator(false);
       return machine.state;
     },
@@ -239,12 +245,13 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
         if (args.length !== ARITY[name]) throw new v.ValidationError("args", `expected ${ARITY[name]} argument(s), got ${args.length}`);
         v.checkSize(args);
         const st = machine.state;
-        if (st.exam_mode_active && BLOCKED_IN_EXAM.has(name)) {
-          return fail(shellError("INVALID_STATE", "exam_mode_active", `${name} is not available during the exam`));
+        if (!st.operator_unlocked) opSession.locked(); // e.g. cleared by the state machine at exam start
+        const unlocked = st.operator_unlocked && opSession.check(); // expiry locks the shell state too
+        const decision = decideAccess(name, args[0], { examActive: st.exam_mode_active, operatorUnlocked: unlocked, boundSessionId: st.session_id }, policy);
+        if (!decision.allow) {
+          return fail(shellError(decision.code, decision.shellCode, decision.message));
         }
-        if (OPERATOR_ONLY.has(name) && !st.operator_unlocked) {
-          return fail(shellError("INVALID_STATE", "operator_locked", `${name} requires the operator (teacher) unlock`));
-        }
+        if (unlocked && (OPERATOR_REQUIRED.has(name) || LIVE_REVIEW.has(name))) opSession.touch();
         return await fn(...args);
       } catch (err) {
         if (err instanceof v.ValidationError) {
@@ -259,6 +266,7 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
   // getShellState / operatorLock return plain ShellState (not BridgeResult) per bridge.ts
   wrapped.getShellState = async () => machine.state;
   wrapped.operatorLock = async () => {
+    opSession.locked();
     machine.setOperator(false);
     return machine.state;
   };

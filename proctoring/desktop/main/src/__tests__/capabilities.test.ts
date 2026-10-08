@@ -116,3 +116,12 @@ test("verification JSON parsing is defensive", () => {
   assert.equal(records.length, 1);
   assert.equal(invalid, 2);
 });
+
+test("helper self-check/ready alone never promotes an OS-level item (needs a measured record)", () => {
+  const helper = { available: true, enforce: true, detail: "self-check ok" };
+  const caps = buildCapabilities({ platform: win, shellVersion: "0.1.0", probe: {}, probeRanAt: null, records: [], helper });
+  for (const a of ["shortcut_alt_tab", "shortcut_win", "shortcut_print_screen", "foreign_window_foreground"]) {
+    assert.equal(item(caps, a).status, "unverified", a);
+    assert.equal(item(caps, a).verified_on, null, a);
+  }
+});

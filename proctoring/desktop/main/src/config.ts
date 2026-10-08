@@ -11,6 +11,11 @@
 //   QORGAU_SHELL_NATIVE_ENFORCE=1   helper swallows keys (controlled test only); default = dry-run
 //   QORGAU_SHELL_SELFTEST=0         skip the startup self-test (matrix then stays "unverified")
 //   QORGAU_SHELL_READY_TIMEOUT_MS   backend READY timeout (default 60000)
+//   QORGAU_SHELL_OPERATOR_LIVE_REVIEW=1  teacher console may review the CURRENT session during the exam
+//                                   after the PIN unlock (pending A01 approval; default: review after
+//                                   pause/finish only). See shell/access.ts.
+//   QORGAU_SHELL_OPERATOR_IDLE_S    operator unlock expires after this idle time (default 180, 30..1800)
+//   QORGAU_SHELL_OPERATOR_MAX_S     ...and after this total time (default 1800, 60..14400)
 import { join, resolve } from "node:path";
 
 export interface ShellConfig {
@@ -27,7 +32,20 @@ export interface ShellConfig {
   verificationPath: string;
   selfTest: boolean;
   readyTimeoutMs: number;
+  accessPolicy: "review_after_pause" | "operator_live_review";
+  operatorIdleMs: number;
+  operatorMaxMs: number;
   warnings: string[];
+}
+
+function boundedSeconds(raw: string | undefined, def: number, min: number, max: number, name: string, warnings: string[]): number {
+  if (raw === undefined || raw === "") return def * 1000;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < min || n > max) {
+    warnings.push(`${name} must be ${min}..${max} seconds; using ${def}`);
+    return def * 1000;
+  }
+  return Math.round(n * 1000);
 }
 
 const DEV_URL_RE = /^http:\/\/(127\.0\.0\.1|localhost):\d{2,5}\/?$/;
@@ -61,6 +79,9 @@ export function loadConfig(appRoot: string, env: NodeJS.ProcessEnv, isPackaged: 
     verificationPath: join(appRoot, "native", "VERIFICATION.json"),
     selfTest: env.QORGAU_SHELL_SELFTEST !== "0",
     readyTimeoutMs: Number.isFinite(timeout) && timeout >= 1000 ? timeout : 60_000,
+    accessPolicy: env.QORGAU_SHELL_OPERATOR_LIVE_REVIEW === "1" ? "operator_live_review" : "review_after_pause",
+    operatorIdleMs: boundedSeconds(env.QORGAU_SHELL_OPERATOR_IDLE_S, 180, 30, 1800, "QORGAU_SHELL_OPERATOR_IDLE_S", warnings),
+    operatorMaxMs: boundedSeconds(env.QORGAU_SHELL_OPERATOR_MAX_S, 1800, 60, 14400, "QORGAU_SHELL_OPERATOR_MAX_S", warnings),
     warnings,
   };
 }
