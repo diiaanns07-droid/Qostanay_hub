@@ -236,6 +236,49 @@
       "consumes": [
         "the integration candidate SHA from A01 (read-only)"
       ]
+    },
+    "A12": {
+      "role": "Headphones / accessories detection (optional)",
+      "paths": [
+        "proctoring/backend/proctor/accessories/",
+        "proctoring/handoffs/A12/"
+      ],
+      "provides": [
+        "proctor.accessories.create_accessory_analyzer(settings) -> FrameAnalyzer (name='accessories')"
+      ],
+      "consumes": [
+        "FramePacket via A02 add_consumer"
+      ]
+    },
+    "C1": {
+      "role": "Class server + teacher dashboard (qorgau.class.v1, teacher side)",
+      "paths": [
+        "proctoring/classroom/",
+        "proctoring/handoffs/C1/"
+      ],
+      "provides": [
+        "python -m classroom.server (port 8765): /ws/student, /api/student/*, loopback-only /api/teacher/*, /ws/teacher, dashboard at /"
+      ],
+      "consumes": [
+        "proctoring/contracts/class/PROTOCOL_v1.md"
+      ]
+    },
+    "C2": {
+      "role": "Student uplink (qorgau.class.v1, student backend side)",
+      "paths": [
+        "proctoring/backend/proctor/uplink/",
+        "proctoring/handoffs/C2/"
+      ],
+      "provides": [
+        "uplink client started by the student backend when QORGAU_CLASS_SERVER is set; forwards status/incident/preview, executes commands via public hooks"
+      ],
+      "consumes": [
+        "proctoring/contracts/class/PROTOCOL_v1.md",
+        "A05 assess_session_zone",
+        "A08 store (public)",
+        "A02 preview frames"
+      ],
+      "notes": "Minimal wiring in backend/proctor/app.py is granted to C2 by A01 for 8 Oct (one import + start/stop hook), documented in handoff."
     }
   },
   "integration_order": [
