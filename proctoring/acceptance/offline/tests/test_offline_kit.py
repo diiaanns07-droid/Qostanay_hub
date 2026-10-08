@@ -41,13 +41,52 @@ FORBIDDEN_IMPORTS = {"socket", "ssl", "http", "urllib", "subprocess", "requests"
 TRIPWIRE = textwrap.dedent('''
     import os, socket, subprocess, sys
     _log = os.environ.get("ADAL_TRIPWIRE_LOG")
-    def _record(what):
+    _protected = [os.path.realpath(p) for p in os.environ.get("ADAL_TRIPWIRE_PROTECT", "").split(os.pathsep) if p]
+    def _write(line):
         if _log:
             with open(_log, "a", encoding="utf-8") as stream:
-                stream.write(what + "\\n")
+                stream.write(line + "\\n")
+    def _record(what):
+        _write(what)
         raise PermissionError("tripwire: " + what)
-    _record_ok = lambda what: open(_log, "a", encoding="utf-8").write(what + "\\n") if _log else None
-    _record_ok("loaded")
+    def _inside(path):
+        try:
+            real = os.path.realpath(os.fsdecode(path))
+        except (TypeError, ValueError):
+            return False
+        return any(real == p or real.startswith(p + os.sep) for p in _protected)
+    _NET = ("socket.", "urllib.Request", "http.client", "ftplib.", "smtplib.", "webbrowser.")
+    _PROC = ("subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.startfile", "os.fork",
+             "_winapi.CreateProcess", "pty.spawn")
+    _MUTATE = ("os.remove", "os.unlink", "os.rename", "os.replace", "os.rmdir", "os.mkdir", "os.chmod", "os.utime",
+               "os.truncate", "shutil.copyfile", "shutil.copytree", "shutil.rmtree", "shutil.move", "os.symlink", "os.link")
+    _busy = False
+    def _hook(event, args):
+        global _busy
+        if _busy:
+            return
+        _busy = True
+        try:
+            if event.startswith(_NET) and event not in ("socket.__new__",):
+                _write("audit " + event)
+            elif event.startswith(_PROC):
+                _write("audit " + event)
+            elif event == "open" and _protected and len(args) >= 2 and args[0] is not None and not isinstance(args[0], int):
+                mode, flags = args[1], (args[2] if len(args) > 2 else 0)
+                writing = (isinstance(mode, str) and any(c in mode for c in "wax+")) or \\
+                          (isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND))
+                if writing and _inside(args[0]):
+                    _write("audit write-open " + os.fsdecode(args[0]))
+            elif event.startswith(_MUTATE) and _protected and args:
+                paths = [a for a in args if isinstance(a, (str, bytes, os.PathLike))]
+                if event in ("shutil.copyfile", "shutil.copytree"):
+                    paths = paths[1:2]  # reading the source is allowed; only the destination is written
+                if any(_inside(a) for a in paths):
+                    _write("audit " + event + " " + repr([os.fsdecode(a) for a in paths]))
+        finally:
+            _busy = False
+    _write("loaded")
+    sys.addaudithook(_hook)
     socket.socket.connect = lambda self, *a, **k: _record("socket.connect %r" % (a,))
     socket.socket.connect_ex = lambda self, *a, **k: _record("socket.connect_ex %r" % (a,))
     socket.socket.sendto = lambda self, *a, **k: _record("socket.sendto")
@@ -268,12 +307,20 @@ class ToolTest(unittest.TestCase):
                     pass
         self.tmp.cleanup()
 
-    def run_tool(self, *args: str, root: Path | None = None, env: dict | None = None) -> subprocess.CompletedProcess:
+    def run_tool(self, *args: str, root: Path | None = None, env: dict | None = None,
+                 protect: list[Path] | None = None) -> subprocess.CompletedProcess:
+        """Run the CLI under the tripwire. Default protected (never written) trees: the source root and inputs."""
+        if protect is None:
+            protect = [self.fx.root, self.fx.inputs]
+            if args and args[0] == "check" and "--kit" in args:
+                protect.append(Path(args[args.index("--kit") + 1]))
         environment = {k: v for k, v in os.environ.items() if not k.startswith(("QORGAU_", "PYTHON"))}
         environment.update(PYTHONPATH=str(self.tripwire_dir), ADAL_TRIPWIRE_LOG=str(self.tripwire_log),
-                           PYTHONIOENCODING="utf-8")
+                           ADAL_TRIPWIRE_PROTECT=os.pathsep.join(str(p) for p in protect), PYTHONIOENCODING="utf-8")
         environment.update(env or {})
         root = root or self.fx.root
+        if self.tripwire_log.exists():
+            self.tripwire_log.unlink()  # one log per run, so "loaded" proves this very run was guarded
         result = subprocess.run([sys.executable, str(TOOL), "--root", str(root), "--spec", str(self.fx.spec), *args],
                                 cwd=str(self.base), env=environment, capture_output=True, text=True,
                                 encoding="utf-8", errors="replace", timeout=120)
@@ -296,15 +343,22 @@ class ToolTest(unittest.TestCase):
 
     def test_tripwire_catches_network_and_processes(self):
         """The no-network proof is only as good as the tripwire: show that it records real attempts."""
+        protected = self.base / "защищено"
+        protected.mkdir()
         environment = {k: v for k, v in os.environ.items() if not k.startswith("PYTHON")}
-        environment.update(PYTHONPATH=str(self.tripwire_dir), ADAL_TRIPWIRE_LOG=str(self.tripwire_log))
-        probe = ("import socket, subprocess, urllib.request\n"
+        environment.update(PYTHONPATH=str(self.tripwire_dir), ADAL_TRIPWIRE_LOG=str(self.tripwire_log),
+                           ADAL_TRIPWIRE_PROTECT=str(protected), PROBE_DIR=str(protected))
+        probe = ("import os, shutil, socket, subprocess, urllib.request\n"
                  "for call in (lambda: socket.create_connection(('pypi.org', 443)), lambda: socket.getaddrinfo('pypi.org', 443),\n"
-                 "             lambda: subprocess.run(['npm', 'ci']), lambda: urllib.request.urlopen('https://pypi.org')):\n"
+                 "             lambda: socket.socket().connect(('1.1.1.1', 53)),\n"
+                 "             lambda: subprocess.run(['npm', 'ci']), lambda: urllib.request.urlopen('https://pypi.org'),\n"
+                 "             lambda: open(os.path.join(os.environ['PROBE_DIR'], 'x.txt'), 'w').close(),\n"
+                 "             lambda: os.mkdir(os.path.join(os.environ['PROBE_DIR'], 'd'))):\n"
                  "    try:\n        call()\n    except PermissionError:\n        pass\n")
         subprocess.run([sys.executable, "-c", probe], env=environment, timeout=60, check=True)
         log = self.tripwire_log.read_text(encoding="utf-8")
-        for expected in ("socket.create_connection", "socket.getaddrinfo", "subprocess", "urllib.urlopen"):
+        for expected in ("socket.create_connection", "socket.getaddrinfo", "socket.connect", "subprocess",
+                         "urllib.urlopen", "audit write-open", "audit os.mkdir"):
             self.assertIn(expected, log)
 
     # ----------------------------------------------------------------------------------- positive path
@@ -546,9 +600,14 @@ class ToolTest(unittest.TestCase):
         desktop = self.fx.root / "desktop"
         electron = desktop / "node_modules" / "electron"
         (electron / "dist").mkdir(parents=True)
+        with zipfile.ZipFile(self.fx.electron_zip) as archive:  # what install.js would extract
+            archive.extractall(electron / "dist")
         (electron / "dist" / "electron.exe").write_bytes(pe_header(machine))
-        (electron / "dist" / "version").write_text(Fixture.ELECTRON)
         (electron / "path.txt").write_text("electron.exe")
+        for relative in ("package.json", "native/qorgau_guard.py", "native/guard_core.py", "native/guard_win32.py",
+                         "native/environment_check.py", "shared/class-lock.ts"):
+            (desktop / relative).parent.mkdir(parents=True, exist_ok=True)
+            (desktop / relative).write_text("# fixture")
         source = desktop / "main" / "src" / "main.ts"
         source.parent.mkdir(parents=True)
         source.write_text("// source")
@@ -610,6 +669,26 @@ class ToolTest(unittest.TestCase):
         _result, rows = self.install_report(env={"QORGAU_MODELS_DIR": str(self.fx.models)})
         self.assertEqual(rows["model:fake-face"]["status"], "PASS")
         self.assertNotIn("models:location", rows)
+
+    def test_check_install_electron_completeness_and_hidden_staleness(self):
+        out = self.build_ok()
+        self.prepare_installed_desktop()
+        _result, rows = self.install_report("--models-dir", str(self.fx.models), "--kit", str(out))
+        self.assertEqual(rows[f"electron:runtime-files:{Fixture.ELECTRON}"]["status"], "PASS")
+        self.assertNotIn("desktop:build-unchecked-inputs", rows)
+        os.remove(self.fx.root / "desktop/node_modules/electron/dist/LICENSES.chromium.html")
+        shared = self.fx.root / "desktop/shared/class-lock.ts"
+        os.utime(shared, (1_900_000_000, 1_900_000_000))
+        _result, rows = self.install_report("--models-dir", str(self.fx.models), "--kit", str(out),
+                                            env={"ELECTRON_MIRROR": "https://mirror.invalid/"})
+        self.assertEqual(rows[f"electron:runtime-files:{Fixture.ELECTRON}"]["code"], "incomplete_runtime")
+        self.assertIn("LICENSES.chromium.html", rows[f"electron:runtime-files:{Fixture.ELECTRON}"]["message"])
+        self.assertEqual(rows["desktop:build"]["status"], "PASS", "the launcher rule itself still passes")
+        self.assertEqual(rows["desktop:build-unchecked-inputs"]["code"], "stale_unchecked")
+        self.assertEqual(rows["electron:download-env"]["code"], "download_override")
+        os.remove(self.fx.root / "desktop/native/guard_win32.py")
+        _result, rows = self.install_report("--models-dir", str(self.fx.models))
+        self.assertEqual(rows["file:desktop/native/guard_win32.py"]["status"], "FAIL")
 
     def test_teacher_scenario_needs_no_models_or_electron(self):
         result = self.run_tool("inventory", "--scenario", "teacher", "--out", str(self.base / "inv.json"))

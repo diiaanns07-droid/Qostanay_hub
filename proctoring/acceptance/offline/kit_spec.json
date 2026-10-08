@@ -31,8 +31,14 @@
       "required_files": [
         "backend/proctor/__main__.py",
         "contracts/python/proctor_contracts/v1.py",
-        "demo/exams/demo_exam.json"
-      ]
+        "demo/exams/demo_exam.json",
+        "desktop/package.json",
+        "desktop/native/qorgau_guard.py",
+        "desktop/native/guard_core.py",
+        "desktop/native/guard_win32.py",
+        "desktop/native/environment_check.py"
+      ],
+      "required_files_note": "desktop/native/*.py: on win32 a missing or failing helper makes the remote-access check unavailable and blocks startExam/resumeExam with PREFLIGHT_FAILED (desktop/main/src/environment/preflight.ts, ipc/api.ts)."
     }
   },
   "models": [
@@ -133,16 +139,16 @@
     }
   ],
   "wheels": {
-    "prepare_online": "на ПК Windows x64 с Python 3.12 и интернетом: py -3.12 -m pip download --only-binary=:all: --require-hashes -r proctoring\\{requirements} -d \"<wheels>\"",
-    "install": "py -3.12 -m venv proctoring\\.venv; proctoring\\.venv\\Scripts\\python.exe -m pip install --no-index --find-links \"<kit>\\wheels\" --require-hashes -r proctoring\\{requirements}"
+    "prepare_online": "на ПК Windows x64 с CPython 3.12 x64 и интернетом: py -3.12 -m pip download --only-binary=:all: --require-hashes --disable-pip-version-check -r proctoring\\{requirements} -d \"<wheels>\"",
+    "install": "py -3.12 -m venv proctoring\\.venv; proctoring\\.venv\\Scripts\\python.exe -m pip install --no-index --find-links \"<kit>\\wheels\" --only-binary=:all: --require-hashes --disable-pip-version-check -r proctoring\\{requirements}"
   },
   "electron": {
     "levels": {
       "teacher": "not-used",
       "student": "required"
     },
-    "prepare_online": "в proctoring\\desktop на ПК Windows x64 с интернетом: npm ci (кладёт electron-v<версия>-win32-x64.zip в %LOCALAPPDATA%\\electron\\Cache, сверяя с checksums.json закреплённого пакета electron; tarball electron остаётся в %LOCALAPPDATA%\\npm-cache)",
-    "install": "До отключения на каждом ПК студента: npm ci и npm run build в proctoring\\desktop. Офлайн-вариант: $env:npm_config_update_notifier = \"false\"; $env:electron_config_cache = \"<kit>\\electron-cache\"; npm ci --offline --no-update-notifier --cache \"<kit>\\npm-cache\" (нужен --feature npm-offline), затем npm run build. Не копируйте dist из другой версии.",
+    "prepare_online": "в proctoring\\desktop на ПК Windows x64 с интернетом: npm ci, затем node node_modules\\electron\\install.js (npm ci сам Electron НЕ скачивает: у electron@43.7.5 нет install-скрипта). install.js кладёт electron-v<версия>-win32-x64.zip в %LOCALAPPDATA%\\electron\\Cache\\<hash>\\ и сверяет с checksums.json закреплённого пакета; tarball electron остаётся в %LOCALAPPDATA%\\npm-cache",
+    "install": "Рекомендуется: до отключения на каждом ПК студента npm ci, node node_modules\\electron\\install.js, npm run build в proctoring\\desktop. Офлайн-вариант из комплекта: $env:npm_config_update_notifier = \"false\"; $env:electron_config_cache = \"<kit>\\electron-cache\"; npm ci --offline --no-update-notifier --cache \"<kit>\\npm-cache\" (нужен --feature npm-offline); node node_modules\\electron\\install.js; npm run build. Переменные electron_use_remote_checksums, force_no_cache, ELECTRON_MIRROR должны быть не заданы. Не копируйте dist из другой версии.",
     "license": "MIT (Electron) + Chromium third-party licenses",
     "license_status": "CONFIRMED",
     "license_evidence": [
@@ -150,7 +156,16 @@
       "LICENSE and LICENSES.chromium.html inside the zip (checked by build)"
     ],
     "distribution": "PERMITTED_WITH_NOTICE",
-    "distribution_note": "Keep LICENSE and LICENSES.chromium.html (they stay inside the zip)."
+    "distribution_note": "Keep LICENSE and LICENSES.chromium.html (they stay inside the zip).",
+    "download_env": [
+      "electron_use_remote_checksums",
+      "npm_config_electron_use_remote_checksums",
+      "force_no_cache",
+      "ELECTRON_MIRROR",
+      "npm_config_electron_mirror",
+      "ELECTRON_CUSTOM_DIR",
+      "ELECTRON_OVERRIDE_DIST_PATH"
+    ]
   },
   "npm_cache": {
     "levels": {
@@ -182,7 +197,12 @@
       "tsconfig.renderer.json",
       "scripts/build-electron.mjs"
     ],
-    "fix": "В proctoring\\desktop выполните npm run build (работает без сети, если есть node_modules; нужен Node >= 22.12). Не копируйте dist из другой версии."
+    "fix": "В proctoring\\desktop выполните npm run build (работает без сети, если есть node_modules; нужен Node >= 22.12). Не копируйте dist из другой версии.",
+    "unchecked_build_input_dirs": [
+      "shared",
+      "../class-audio/web/shared"
+    ],
+    "unchecked_note": "Bundled into main.cjs/preload.cjs/renderer but not in the Start-Student.ps1 staleness list; reported as a separate WARN."
   },
   "external_prerequisites": [
     {
@@ -199,9 +219,9 @@
     }
   ],
   "install_steps": [
-    "Python: py -3.12 -m venv proctoring\\.venv; proctoring\\.venv\\Scripts\\python.exe -m pip install --no-index --find-links \"<kit>\\wheels\" --require-hashes -r proctoring\\requirements\\full.txt (преподаватель: requirements\\runtime.txt)",
+    "Python: py -3.12 -m venv proctoring\\.venv; proctoring\\.venv\\Scripts\\python.exe -m pip install --no-index --find-links \"<kit>\\wheels\" --only-binary=:all: --require-hashes --disable-pip-version-check -r proctoring\\requirements\\full.txt (преподаватель: requirements\\runtime.txt). Проект не ставится через pip install -e: launcher использует PYTHONPATH, а сборка editable требует setuptools из сети",
     "Модели: $env:QORGAU_MODELS_DIR = \"$env:LOCALAPPDATA\\QorgauExam\\models\"; скопируйте туда <kit>\\models\\attention и identity (phone — из комплекта, только если он туда включён, иначе python -m proctor.phone.prepare на онлайн-стадии); <kit>\\models\\audio — в %LOCALAPPDATA%\\QorgauExam\\models\\audio",
-    "Electron (только офлайн-установка): $env:npm_config_update_notifier = \"false\"; $env:electron_config_cache = \"<kit>\\electron-cache\"; npm ci --offline --no-update-notifier --cache \"<kit>\\npm-cache\"; npm run build (без --offline/--no-update-notifier npm сам обращается к registry за проверкой обновлений)",
+    "Electron (только офлайн-установка): $env:npm_config_update_notifier = \"false\"; $env:electron_config_cache = \"<kit>\\electron-cache\"; npm ci --offline --no-update-notifier --cache \"<kit>\\npm-cache\"; node node_modules\\electron\\install.js; npm run build (без --offline/--no-update-notifier npm сам обращается к registry; install.js без кэша скачивает с GitHub)",
     "Затем check-install с тем же QORGAU_MODELS_DIR в том же окне PowerShell, из которого запускается launcher"
   ],
   "excluded_by_design": [
