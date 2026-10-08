@@ -1,0 +1,29 @@
+{
+  "format": "qorgau.replay.v1",
+  "replay_id": "phone_raise_01",
+  "title": "Phone raised in front of the screen (example manifest, no media in Git)",
+  "media": {
+    "kind": "video",
+    "path": "media/phone_raise_01.avi",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "fps": 30.0,
+    "timestamps": "sidecar",
+    "timestamps_path": "media/phone_raise_01.ts.json",
+    "mirrored": false
+  },
+  "pacing": "realtime",
+  "speed": 1.0,
+  "loop": false,
+  "start_ms": 0,
+  "end_ms": null,
+  "labels": [
+    {"label": "phone_visible", "t_start_ms": 2500, "t_end_ms": 9000, "note": "phone in hand"},
+    {"label": "phone_raised", "t_start_ms": 4200, "t_end_ms": 6100, "note": "raised to eye level"}
+  ],
+  "provenance": {
+    "recorded_with": "proctor.capture.record 0.1.0",
+    "recorded_at": "2026-10-09T10:00:00+00:00",
+    "consent": "team member A, written consent; local use only"
+  },
+  "notes": "sha256 above is a placeholder: replay-hash the real file and paste the value"
+}
