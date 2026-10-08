@@ -261,3 +261,28 @@ def test_c1_request_failure_and_timeout_are_persisted_across_restart(tmp_path):
             requested_at, count = conn.execute("SELECT requested_at,COUNT(*) FROM clip_requests WHERE command_id=?",
                                               (pending["command_id"],)).fetchone()
         assert datetime.fromisoformat(requested_at) == datetime.fromisoformat(pending["issued_at"]) and count == 1
+
+
+def test_c1_closed_episode_retains_accepted_clip_readiness(tmp_path):
+    with running(tmp_path / "clip-ready") as server, closing(server.teacher()) as teacher:
+        student, welcome, _ = join(server, teacher)
+        sid = welcome["student_id"]
+        try:
+            student.incident(1, "test-ready-before-close", source_mode="synthetic", clip_available=True)
+            await_incident(teacher, sid, "test-ready-before-close")
+            student.incident(2, "test-ready-before-close", state="closed", source_mode="synthetic")
+            row = await_incident(teacher, sid, "test-ready-before-close", lambda i: i["state"] == "closed")
+            assert row["clip_available"] is True and row["clip"]["can_request"] is True
+            student.incident(3, "test-delayed-ready", state="closed", source_mode="synthetic")
+            await_incident(teacher, sid, "test-delayed-ready")
+            # Backlogged open/ready event arrives after close. C1 preserves closed state and merges evidence.
+            student.incident(4, "test-delayed-ready", source_mode="synthetic", clip_available=True,
+                             snapshot_jpeg_b64=base64.b64encode(TINY_JPEG).decode())
+            row = await_incident(teacher, sid, "test-delayed-ready", lambda i: len(i["event_provenance"]) == 2)
+            assert row["state"] == "closed" and row["clip_available"] is True
+            assert row["snapshot_available"] is True
+            assert teacher.get(f"/api/teacher/students/{sid}/incidents/test-delayed-ready/snapshot").content == TINY_JPEG
+            assert_mounted(teacher)
+        finally:
+            student.silent = True
+            student.close()
