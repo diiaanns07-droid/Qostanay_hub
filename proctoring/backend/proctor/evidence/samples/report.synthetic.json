@@ -5,7 +5,7 @@
   "manifest": {
     "contract": "qorgau.v1",
     "contract_version": "1.0.0",
-    "exported_at": "2026-10-08T05:04:58.382870Z",
+    "exported_at": "2026-10-08T09:10:00.931232Z",
     "session_id": "s-sample-synthetic-0001",
     "source_mode": "synthetic",
     "backend_version": "0.1.0",
@@ -25,11 +25,11 @@
       {
         "name": "report.html",
         "media_type": "text/html",
-        "sha256": "af3dc007d34c96b3270cf89ec3fa10a3fcaa535f9e0b84385f6b32ddb6847e7b",
-        "size_bytes": 41150
+        "sha256": "2def9d3608f1f125baceaeabba5e38afb8416eaa2dc834eac2678e606ef03127",
+        "size_bytes": 42108
       },
       {
-        "name": "ev-12cc66e812a4a674484ecdac.jpg",
+        "name": "ev-7868fbcf7bc22802d09933ad.jpg",
         "media_type": "image/jpeg",
         "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
         "size_bytes": 11905
@@ -60,9 +60,9 @@
     "exam_id": "demo-exam-1",
     "student_label": "student-demo",
     "retain_media": true,
-    "created_at": "2026-10-08T04:52:58Z",
-    "started_at": "2026-10-08T04:53:28Z",
-    "finished_at": "2026-10-08T05:03:28Z",
+    "created_at": "2026-10-08T08:58:00Z",
+    "started_at": "2026-10-08T08:58:30Z",
+    "finished_at": "2026-10-08T09:08:30Z",
     "exam_started_t_ms": 30000.0,
     "paused_total_ms": 0.0,
     "calibration": {
@@ -71,7 +71,7 @@
       "targets": [],
       "current_target": null,
       "message_code": null,
-      "updated_at": "2026-10-08T04:53:18Z"
+      "updated_at": "2026-10-08T08:58:20Z"
     },
     "contract_version": "1.0.0",
     "backend_version": "0.1.0",
@@ -93,9 +93,9 @@
       "exam_id": "demo-exam-1",
       "student_label": "student-demo",
       "retain_media": true,
-      "created_at": "2026-10-08T04:52:58Z",
-      "started_at": "2026-10-08T04:53:28Z",
-      "finished_at": "2026-10-08T05:03:28Z",
+      "created_at": "2026-10-08T08:58:00Z",
+      "started_at": "2026-10-08T08:58:30Z",
+      "finished_at": "2026-10-08T09:08:30Z",
       "exam_started_t_ms": 30000.0,
       "paused_total_ms": 0.0,
       "calibration": {
@@ -104,7 +104,7 @@
         "targets": [],
         "current_target": null,
         "message_code": null,
-        "updated_at": "2026-10-08T04:53:18Z"
+        "updated_at": "2026-10-08T08:58:20Z"
       },
       "contract_version": "1.0.0",
       "backend_version": "0.1.0",
@@ -153,7 +153,12 @@
       "Интервалов без наблюдения или с неопределёнными результатами: 3. В них нарушения не определялись — это «неизвестно», а не «нарушений нет».",
       "Эпизодов, не закрытых до конца сессии: 1 (длительность — до последнего обновления).",
       "Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера."
-    ]
+    ],
+    "review_zone": null,
+    "review_zone_reasons_ru": [
+      "Зона не рассчитана. Просмотрите эпизоды вручную."
+    ],
+    "review_zone_rule_version": null
   },
   "coverage": {
     "window": {
@@ -215,8 +220,8 @@
         "priority": "medium",
         "t_start_ms": 95000.0,
         "t_end_ms": 101000.0,
-        "wall_start": "2026-10-08T04:54:33Z",
-        "wall_end": "2026-10-08T04:54:39Z",
+        "wall_start": "2026-10-08T08:59:35Z",
+        "wall_end": "2026-10-08T08:59:41Z",
         "duration_ms": 6000.0,
         "source_mode": "synthetic",
         "max_confidence": 0.71,
@@ -246,7 +251,7 @@
         "trigger_frame_id": 264,
         "related_incident_ids": [],
         "evidence_ids": [
-          "ev-12cc66e812a4a674484ecdac"
+          "ev-7868fbcf7bc22802d09933ad"
         ],
         "rule_version": "sample-rules-1",
         "config_version": "sample-config-1",
@@ -256,29 +261,29 @@
       },
       "reviews": [
         {
-          "review_id": "rev-9b2cb1c394cefa9290aa",
+          "review_id": "rev-c25bdd24373ee39e1bff",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-phone-1",
           "decision": "inconclusive",
           "comment": "Нужно пересмотреть снимок.",
           "operator": "teacher-demo",
-          "created_at": "2026-10-08T05:04:58.379416Z",
+          "created_at": "2026-10-08T09:10:00.915314Z",
           "supersedes_review_id": null
         },
         {
-          "review_id": "rev-c72998c8488c98b97a1f",
+          "review_id": "rev-8614bb2defa5c001e701",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-phone-1",
           "decision": "dismissed",
           "comment": "Телефон лежал на столе экраном вниз.",
           "operator": "teacher-demo",
-          "created_at": "2026-10-08T05:04:58.380025Z",
-          "supersedes_review_id": "rev-9b2cb1c394cefa9290aa"
+          "created_at": "2026-10-08T09:10:00.916321Z",
+          "supersedes_review_id": "rev-c25bdd24373ee39e1bff"
         }
       ],
       "evidence": [
         {
-          "evidence_id": "ev-12cc66e812a4a674484ecdac",
+          "evidence_id": "ev-7868fbcf7bc22802d09933ad",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-phone-1",
           "kind": "snapshot",
@@ -287,7 +292,7 @@
           "media_type": "image/jpeg",
           "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
           "size_bytes": 11905,
-          "created_at": "2026-10-08T05:04:58.211663Z"
+          "created_at": "2026-10-08T09:10:00.609489Z"
         }
       ]
     },
@@ -301,8 +306,8 @@
         "priority": "low",
         "t_start_ms": 150000.0,
         "t_end_ms": 150000.0,
-        "wall_start": "2026-10-08T04:55:28Z",
-        "wall_end": "2026-10-08T04:55:28Z",
+        "wall_start": "2026-10-08T09:00:30Z",
+        "wall_end": "2026-10-08T09:00:30Z",
         "duration_ms": 0.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -348,8 +353,8 @@
         "priority": "low",
         "t_start_ms": 200000.0,
         "t_end_ms": 209000.0,
-        "wall_start": "2026-10-08T04:56:18Z",
-        "wall_end": "2026-10-08T04:56:27Z",
+        "wall_start": "2026-10-08T09:01:20Z",
+        "wall_end": "2026-10-08T09:01:29Z",
         "duration_ms": 9000.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -397,8 +402,8 @@
         "priority": "low",
         "t_start_ms": 300000.0,
         "t_end_ms": 306000.0,
-        "wall_start": "2026-10-08T04:57:58Z",
-        "wall_end": "2026-10-08T04:58:04Z",
+        "wall_start": "2026-10-08T09:03:00Z",
+        "wall_end": "2026-10-08T09:03:06Z",
         "duration_ms": 6000.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -445,8 +450,8 @@
         "priority": "high",
         "t_start_ms": 480000.0,
         "t_end_ms": 483200.0,
-        "wall_start": "2026-10-08T05:00:58Z",
-        "wall_end": "2026-10-08T05:01:01.200000Z",
+        "wall_start": "2026-10-08T09:06:00Z",
+        "wall_end": "2026-10-08T09:06:03.200000Z",
         "duration_ms": 3200.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -481,13 +486,13 @@
       },
       "reviews": [
         {
-          "review_id": "rev-ac34bfbf13e18255334c",
+          "review_id": "rev-add8e83ffde17fd8632c",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-env-2",
           "decision": "confirmed",
           "comment": "Переключение на другое окно подтверждено.",
           "operator": "teacher-demo",
-          "created_at": "2026-10-08T05:04:58.380438Z",
+          "created_at": "2026-10-08T09:10:00.916321Z",
           "supersedes_review_id": null
         }
       ],
@@ -503,7 +508,7 @@
         "priority": "medium",
         "t_start_ms": 600000.0,
         "t_end_ms": null,
-        "wall_start": "2026-10-08T05:02:58Z",
+        "wall_start": "2026-10-08T09:08:00Z",
         "wall_end": null,
         "duration_ms": 30000.0,
         "source_mode": "synthetic",
@@ -549,7 +554,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 260,
       "t_session_ms": 95000.0,
-      "wall_time": "2026-10-08T04:54:33Z",
+      "wall_time": "2026-10-08T08:59:35Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.phone",
@@ -595,7 +600,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 264,
       "t_session_ms": 96000.0,
-      "wall_time": "2026-10-08T04:54:34Z",
+      "wall_time": "2026-10-08T08:59:36Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.phone",
@@ -641,7 +646,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 284,
       "t_session_ms": 101000.0,
-      "wall_time": "2026-10-08T04:54:39Z",
+      "wall_time": "2026-10-08T08:59:41Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.phone",
@@ -687,7 +692,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 150000.0,
-      "wall_time": "2026-10-08T04:55:28Z",
+      "wall_time": "2026-10-08T09:00:30Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "environment",
@@ -706,7 +711,7 @@
       "mechanism": "electron.before_input_event",
       "scope": "window",
       "client_seq": 1,
-      "client_wall_time": "2026-10-08T04:55:27.990000Z",
+      "client_wall_time": "2026-10-08T09:00:29.990000Z",
       "detail": {
         "process_name": null,
         "shortcut": "Alt+Tab",
@@ -718,7 +723,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 680,
       "t_session_ms": 200000.0,
-      "wall_time": "2026-10-08T04:56:18Z",
+      "wall_time": "2026-10-08T09:01:20Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.attention",
@@ -753,7 +758,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 716,
       "t_session_ms": 209000.0,
-      "wall_time": "2026-10-08T04:56:27Z",
+      "wall_time": "2026-10-08T09:01:29Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.attention",
@@ -788,7 +793,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 300000.0,
-      "wall_time": "2026-10-08T04:57:58Z",
+      "wall_time": "2026-10-08T09:03:00Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "capture",
@@ -816,7 +821,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 306000.0,
-      "wall_time": "2026-10-08T04:58:04Z",
+      "wall_time": "2026-10-08T09:03:06Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "capture",
@@ -844,7 +849,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 480000.0,
-      "wall_time": "2026-10-08T05:00:58Z",
+      "wall_time": "2026-10-08T09:06:00Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "environment",
@@ -863,7 +868,7 @@
       "mechanism": "electron.blur",
       "scope": "window",
       "client_seq": 2,
-      "client_wall_time": "2026-10-08T05:00:57.990000Z",
+      "client_wall_time": "2026-10-08T09:05:59.990000Z",
       "detail": {
         "process_name": null,
         "shortcut": null,
@@ -875,7 +880,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 2280,
       "t_session_ms": 600000.0,
-      "wall_time": "2026-10-08T05:02:58Z",
+      "wall_time": "2026-10-08T09:08:00Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.attention",
@@ -916,7 +921,7 @@
         "b"
       ],
       "client_seq": 1,
-      "saved_at": "2026-10-08T05:04:58.157038Z"
+      "saved_at": "2026-10-08T09:10:00.497234Z"
     },
     {
       "session_id": "s-sample-synthetic-0001",
@@ -926,14 +931,14 @@
         "c"
       ],
       "client_seq": 2,
-      "saved_at": "2026-10-08T05:04:58.227542Z"
+      "saved_at": "2026-10-08T09:10:00.625056Z"
     },
     {
       "session_id": "s-sample-synthetic-0001",
       "question_id": "q3",
       "value": "Ответ текстом: 42",
       "client_seq": 3,
-      "saved_at": "2026-10-08T05:04:58.249039Z"
+      "saved_at": "2026-10-08T09:10:00.662698Z"
     }
   ],
   "producers": [
@@ -968,7 +973,7 @@
   ],
   "evidence_files": [
     {
-      "evidence_id": "ev-12cc66e812a4a674484ecdac",
+      "evidence_id": "ev-7868fbcf7bc22802d09933ad",
       "status": "ok",
       "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
       "size_bytes": 11905
@@ -978,9 +983,9 @@
   "storage_counters": {},
   "recovered_after_interruption": false,
   "disclaimer_ru": [
-    "Эпизоды — это объяснимые сигналы для проверки преподавателем, а не доказательство нарушения и не «вероятность списывания».",
+    "Эпизоды — объяснимые сигналы, помогающие преподавателю выбрать порядок проверки.",
     "Решение по каждому эпизоду принимает преподаватель; автоматических санкций нет.",
-    "Приоритет — очерёдность проверки по прозрачным правилам, а не степень вины.",
+    "Приоритет показывает, какие эпизоды открыть в первую очередь.",
     "Интервалы без наблюдения означают «неизвестно», а не «нарушений нет»."
   ]
 }

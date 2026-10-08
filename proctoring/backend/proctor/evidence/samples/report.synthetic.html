@@ -21,6 +21,12 @@ h3 { font-size: 15px; margin: 0 0 6px; }
 .banner.replay { border-color: var(--warn); background: var(--warnbg); color: var(--warn); }
 .banner.live { border-color: var(--live); background: var(--livebg); color: var(--live); }
 .banner.alert { border-color: var(--warn); background: var(--warnbg); color: var(--warn); }
+.zone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.zone-grid .banner { margin: 6px 0; }
+.zone-green { border-color: #236044; background: #e6f4ec; }
+.zone-yellow { border-color: #946000; background: #fff4d6; }
+.zone-red { border-color: #a52636; background: #fff0f1; }
+.zone-grey, .zone-none { border-color: #59616c; background: #f0f2f5; }
 .note { border-left: 4px solid var(--line); padding: 6px 10px; margin: 8px 0; background: #f6f7f9; }
 table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; }
 th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
@@ -50,13 +56,24 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 </style></head><body>
 <header>
 <h1>Qorgau Exam — отчёт о сессии экзамена</h1>
-<div class="muted">Сессия <span class="mono">s-sample-synthetic-0001</span> · экспортировано 2026-10-08 05:04:58 UTC</div>
+<div class="muted">Сессия <span class="mono">s-sample-synthetic-0001</span> · экспортировано 2026-10-08 09:10:00 UTC</div>
 <div class="banner synthetic"><strong>СИНТЕТИЧЕСКИЕ ДАННЫЕ</strong>Сценарные наблюдения для проверки системы. Это не результат работы камеры и не сведения об участнике.</div>
+<div class="zone-grid">
+<section class="banner zone-none"><strong>— Зона не рассчитана</strong>
+<div>Приоритет проверки преподавателем</div><ul>
+<li>Зона не рассчитана. Просмотрите эпизоды вручную.</li>
+</ul>
+</section><section class="banner"><strong>Решения преподавателя</strong>
+<ul>
+<li>не проверено: 4</li>
+<li>подтверждено преподавателем: 1</li>
+<li>отклонено преподавателем: 1</li>
+</ul><div>Решения показаны отдельно и не меняют зону.</div></section></div>
 </header>
 <section><h2>Как читать отчёт</h2><ul>
-<li>Эпизоды — это объяснимые сигналы для проверки преподавателем, а не доказательство нарушения и не «вероятность списывания».</li>
+<li>Эпизоды — объяснимые сигналы, помогающие преподавателю выбрать порядок проверки.</li>
 <li>Решение по каждому эпизоду принимает преподаватель; автоматических санкций нет.</li>
-<li>Приоритет — очерёдность проверки по прозрачным правилам, а не степень вины.</li>
+<li>Приоритет показывает, какие эпизоды открыть в первую очередь.</li>
 <li>Интервалы без наблюдения означают «неизвестно», а не «нарушений нет».</li>
 </ul></section>
 <section><h2>Сессия</h2>
@@ -66,9 +83,9 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <tr><th>Состояние</th><td>завершена</td></tr>
 <tr><th>Режим источника</th><td>synthetic</td></tr>
 <tr><th>Источник</th><td>синтетический генератор, 640×480 @ 30 fps</td></tr>
-<tr><th>Создана</th><td>2026-10-08 04:52:58 UTC</td></tr>
-<tr><th>Экзамен начат</th><td>2026-10-08 04:53:28 UTC</td></tr>
-<tr><th>Завершена</th><td>2026-10-08 05:03:28 UTC</td></tr>
+<tr><th>Создана</th><td>2026-10-08 08:58:00 UTC</td></tr>
+<tr><th>Экзамен начат</th><td>2026-10-08 08:58:30 UTC</td></tr>
+<tr><th>Завершена</th><td>2026-10-08 09:08:30 UTC</td></tr>
 <tr><th>Калибровка взгляда</th><td>completed</td></tr>
 <tr><th>Сохранение снимков</th><td>включено</td></tr>
 <tr><th>Версия backend / контракта</th><td>0.1.0 / 1.0.0</td></tr>
@@ -111,7 +128,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <p>Телефон виден 6,0 с; требуется проверка преподавателем.</p>
 <table class="kv"><tbody>
 <tr><th>Время сессии</th><td>1:35.0 — 1:41.0</td></tr>
-<tr><th>Время (UTC)</th><td>2026-10-08 04:54:33 UTC — 2026-10-08 04:54:39 UTC</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 08:59:35 UTC — 2026-10-08 08:59:41 UTC</td></tr>
 <tr><th>Длительность</th><td>6,0 с</td></tr>
 <tr><th>Завершение</th><td>условие прекратилось</td></tr>
 <tr><th>Макс. оценка модели (не вероятность)</th><td>0.71</td></tr>
@@ -126,8 +143,8 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 </div>
 <div class="box human"><strong>Решение преподавателя: отклонено преподавателем</strong>
 <table><thead><tr><th>Время (UTC)</th><th>Решение</th><th>Оператор</th><th>Комментарий</th></tr></thead><tbody>
-<tr><td>2026-10-08 05:04:58 UTC</td><td>не удалось определить</td><td>teacher-demo</td><td>Нужно пересмотреть снимок.</td></tr>
-<tr><td>2026-10-08 05:04:58 UTC</td><td>отклонено преподавателем</td><td>teacher-demo</td><td>Телефон лежал на столе экраном вниз.</td></tr>
+<tr><td>2026-10-08 09:10:00 UTC</td><td>не удалось определить</td><td>teacher-demo</td><td>Нужно пересмотреть снимок.</td></tr>
+<tr><td>2026-10-08 09:10:00 UTC</td><td>отклонено преподавателем</td><td>teacher-demo</td><td>Телефон лежал на столе экраном вниз.</td></tr>
 </tbody></table>
 <p class="muted">История решений сохраняется полностью; действует последнее.</p>
 </div></div>
@@ -141,7 +158,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <p>Нажато Alt+Tab; действие заблокировано оболочкой.</p>
 <table class="kv"><tbody>
 <tr><th>Время сессии</th><td>2:30.0 — 2:30.0</td></tr>
-<tr><th>Время (UTC)</th><td>2026-10-08 04:55:28 UTC — 2026-10-08 04:55:28 UTC</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 09:00:30 UTC — 2026-10-08 09:00:30 UTC</td></tr>
 <tr><th>Длительность</th><td>0,0 с</td></tr>
 <tr><th>Завершение</th><td>условие прекратилось</td></tr>
 <tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
@@ -167,7 +184,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <p>Голова опущена вниз 9,0 с (приблизительная оценка).</p>
 <table class="kv"><tbody>
 <tr><th>Время сессии</th><td>3:20.0 — 3:29.0</td></tr>
-<tr><th>Время (UTC)</th><td>2026-10-08 04:56:18 UTC — 2026-10-08 04:56:27 UTC</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 09:01:20 UTC — 2026-10-08 09:01:29 UTC</td></tr>
 <tr><th>Длительность</th><td>9,0 с</td></tr>
 <tr><th>Завершение</th><td>условие прекратилось</td></tr>
 <tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
@@ -193,7 +210,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <p>Камера не передавала кадры 6,0 с: интервал не наблюдался.</p>
 <table class="kv"><tbody>
 <tr><th>Время сессии</th><td>5:00.0 — 5:06.0</td></tr>
-<tr><th>Время (UTC)</th><td>2026-10-08 04:57:58 UTC — 2026-10-08 04:58:04 UTC</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 09:03:00 UTC — 2026-10-08 09:03:06 UTC</td></tr>
 <tr><th>Длительность</th><td>6,0 с</td></tr>
 <tr><th>Завершение</th><td>условие прекратилось</td></tr>
 <tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
@@ -219,7 +236,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <p>Окно экзамена потеряло фокус на 3,2 с; блокировка не сработала (только зафиксировано).</p>
 <table class="kv"><tbody>
 <tr><th>Время сессии</th><td>8:00.0 — 8:03.2</td></tr>
-<tr><th>Время (UTC)</th><td>2026-10-08 05:00:58 UTC — 2026-10-08 05:01:01 UTC</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 09:06:00 UTC — 2026-10-08 09:06:03 UTC</td></tr>
 <tr><th>Длительность</th><td>3,2 с</td></tr>
 <tr><th>Завершение</th><td>условие прекратилось</td></tr>
 <tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
@@ -234,7 +251,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 </div>
 <div class="box human"><strong>Решение преподавателя: подтверждено преподавателем</strong>
 <table><thead><tr><th>Время (UTC)</th><th>Решение</th><th>Оператор</th><th>Комментарий</th></tr></thead><tbody>
-<tr><td>2026-10-08 05:04:58 UTC</td><td>подтверждено преподавателем</td><td>teacher-demo</td><td>Переключение на другое окно подтверждено.</td></tr>
+<tr><td>2026-10-08 09:10:00 UTC</td><td>подтверждено преподавателем</td><td>teacher-demo</td><td>Переключение на другое окно подтверждено.</td></tr>
 </tbody></table>
 </div></div>
 <p class="muted">Снимок для эпизода отсутствует.</p>
@@ -247,7 +264,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <p>В кадре два лица; эпизод не закрыт до конца сессии.</p>
 <table class="kv"><tbody>
 <tr><th>Время сессии</th><td>10:00.0 — не закрыт</td></tr>
-<tr><th>Время (UTC)</th><td>2026-10-08 05:02:58 UTC — —</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 09:08:00 UTC — —</td></tr>
 <tr><th>Длительность</th><td>30,0 с</td></tr>
 <tr><th>Завершение</th><td>—</td></tr>
 <tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
@@ -275,9 +292,9 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 </section>
 <section><h2>Ответы (3)</h2>
 <table><thead><tr><th>Вопрос</th><th>Ответ</th><th>Сохранён (UTC)</th></tr></thead><tbody>
-<tr><td class="mono">q1</td><td>b</td><td>2026-10-08 05:04:58 UTC</td></tr>
-<tr><td class="mono">q2</td><td>a, c</td><td>2026-10-08 05:04:58 UTC</td></tr>
-<tr><td class="mono">q3</td><td>Ответ текстом: 42</td><td>2026-10-08 05:04:58 UTC</td></tr>
+<tr><td class="mono">q1</td><td>b</td><td>2026-10-08 09:10:00 UTC</td></tr>
+<tr><td class="mono">q2</td><td>a, c</td><td>2026-10-08 09:10:00 UTC</td></tr>
+<tr><td class="mono">q3</td><td>Ответ текстом: 42</td><td>2026-10-08 09:10:00 UTC</td></tr>
 </tbody></table></section>
 <section><h2>Ограничения</h2><ul>
 <li>СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для проверки системы, а не результат работы камеры и CV.</li>
@@ -290,7 +307,7 @@ ul { margin: 4px 0 8px 20px; padding: 0; }
 <section><h2>Целостность и версии</h2>
 <p class="note">SHA-256 позволяет обнаружить случайное изменение файлов после экспорта. Это не защита от изменения владельцем компьютера и не криптографическое доказательство подлинности.</p>
 <table><thead><tr><th>Файл</th><th>Состояние</th><th>Размер, байт</th><th>SHA-256</th></tr></thead><tbody>
-<tr><td class="mono">ev-12cc66e812a4a674484ecdac.jpg</td><td>встроен</td><td class="num">11905</td><td class="mono">787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768</td></tr>
+<tr><td class="mono">ev-7868fbcf7bc22802d09933ad.jpg</td><td>встроен</td><td class="num">11905</td><td class="mono">787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768</td></tr>
 </tbody></table>
 <table><thead><tr><th>Компонент</th><th>Версия</th></tr></thead><tbody>
 <tr><td class="mono">evidence_schema</td><td class="mono">1</td></tr>

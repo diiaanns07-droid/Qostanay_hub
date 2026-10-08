@@ -4,6 +4,7 @@
 // Loads the file in Chromium with the network forced offline, records every request, console
 // message and page error, prints the page to an A4 PDF and screenshots it at phone width.
 const path = require("path");
+const { pathToFileURL } = require("url");
 const { chromium } = require("playwright");
 
 (async () => {
@@ -16,7 +17,7 @@ const { chromium } = require("playwright");
   page.on("request", (r) => requests.push(r.url().slice(0, 120)));
   page.on("console", (m) => messages.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
   page.on("pageerror", (e) => messages.push(`pageerror: ${e.message}`.slice(0, 300)));
-  await page.goto("file://" + path.resolve(htmlPath), { waitUntil: "load" });
+  await page.goto(pathToFileURL(path.resolve(htmlPath)).href, { waitUntil: "load" });
   const info = await page.evaluate(() => ({
     title: document.title,
     scripts: document.scripts.length,
