@@ -70,7 +70,8 @@ Added portable `proctoring/class-panel/tests/e2e/session.e2e.mjs`. It defaults t
 `QORGAU_TEST_ROOT`, `PYTHON`, `PLAYWRIGHT_MODULE`, and `PLAYWRIGHT_CHANNEL` (default `chrome`, headless).
 Starts actual C1 on ephemeral loopback port with `--ui class-panel`, temporary data and stdin EOF shutdown.
 PIN is read privately from the child handshake. No fixed PIN, route/API/WebSocket mocks, devices, student commands,
-public navigation, saved cookie storage or unmasked codes in screenshots. Output directory must be outside both repos.
+public navigation or saved cookie storage. Screenshot redaction is corrected in checkpoint 4 below.
+Output directory must be outside both repos.
 Temporary runtime data is removed after server stop; evidence remains separately for review.
 
 Observed: **39/39 PASS**, headless installed Chrome on Windows, 6.63 s for the final process run.
@@ -104,6 +105,22 @@ node proctoring/class-panel/tests/e2e/session.e2e.mjs '<directory outside reposi
 
 Final local evidence (not committed/pushed):
 `C:/Users/LEGION/.codex/visualizations/2026/10/08/01a1199e-0be4-7bc2-9a7d-ff0fe11cfb02/session-real-e2e-pass2/`.
-Contains masked screenshots plus non-sensitive `results.json`. No real-classroom/device capability claim.
+The code-redaction claim for this older evidence directory was incorrect: strict CSP rejected screenshot CSS,
+so the class-created images showed the temporary test code. That C1 was stopped and its data removed.
+Use checkpoint 4 evidence below instead. No real-classroom/device capability claim.
 Next: coordinator cherry-picks checkpoint 3 after the already integrated launchers, then can run the test against
 its own checkout without `QORGAU_TEST_ROOT`. `node --check` and `git diff --check` also passed.
+
+## Checkpoint 4 — CSP-independent screenshot redaction
+
+Coordinator's visual QA caught the older screenshot CSS mask being blocked by strict `style-src`.
+Changed only `snapshot()` in the browser test: before capture, directly replace `.join-code.textContent`
+with six bullets and clear `#pin.value`; restore both in `finally`. No input events, session-model changes,
+CSS injection, launcher or product/runtime edits.
+
+Actual Chrome + C1 browser test rerun: **39/39 PASS**. Opened the actual PNG pixels with `view_image`:
+both `1366-class-created.png` and `390-class-created.png` visibly contain six bullets instead of the test code.
+New evidence directory (outside Git):
+`C:/Users/LEGION/.codex/visualizations/2026/10/08/01a1199e-0be4-7bc2-9a7d-ff0fe11cfb02/session-real-e2e-dom-mask/`.
+Use these screenshots for further review. Previous evidence was not silently overwritten.
+Next: coordinator cherry-picks this isolated fix after `7c6de2c`.
