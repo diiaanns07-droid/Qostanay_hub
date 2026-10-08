@@ -85,13 +85,31 @@ def main(argv: list[str] | None = None) -> int:
     st = t.student(a.student)
     sid = st["student_id"]
     if a.action == "clip":
-        incs = [i for i in (t.call("GET", f"/api/teacher/students/{sid}/incidents") or []) if i.get("clip_available")]
+        body = t.call("GET", f"/api/teacher/students/{sid}/incidents") or []
+        items = body.get("incidents", []) if isinstance(body, dict) else body  # T03 mounted: {incidents, review}
+        incs = [i for i in items if i.get("clip_available")]
         if not incs:
             raise SystemExit("no episode with a clip yet")
         inc = incs[-1]
-        state = t.command(sid, "request_clip", {"incident_id": inc["incident_id"]})
-        print(f"request_clip {inc['incident_id']}: {state.get('status')} {json.dumps(state.get('ack'), ensure_ascii=False)}")
-        print(f"teacher clip URL (panel/browser): {t.base}/api/teacher/clips/{inc['incident_id']}")
+        iid = inc["incident_id"]
+        url = f"{t.base}/api/teacher/clips/{iid}?student_id={sid}"
+        if (inc.get("clip") or {}).get("state") != "available":
+            state = t.command(sid, "request_clip", {"incident_id": iid})
+            print(f"request_clip {iid}: {state.get('status')} {json.dumps(state.get('ack'), ensure_ascii=False)}")
+            for _ in range(60):  # T03: the upload completes the request (up to 8 MB from the student)
+                body = t.call("GET", f"/api/teacher/students/{sid}/incidents") or []
+                items = body.get("incidents", []) if isinstance(body, dict) else body
+                inc = next((i for i in items if i.get("incident_id") == iid), inc)
+                if (inc.get("clip") or {}).get("state") in ("available", "unavailable"):
+                    break
+                time.sleep(0.5)
+        clip = inc.get("clip") or {}
+        if clip.get("state") == "available":
+            how = "plays in the panel (<video>)" if clip.get("browser_playable") else "download and open in a video player (AVI/MJPG)"
+            print(f"clip {iid}: {clip.get('codec_label') or clip.get('media_type')}, {clip.get('size_bytes')} B — {how}")
+        elif clip:
+            print(f"clip {iid}: {clip.get('state')} {clip.get('reason_ru') or ''}")
+        print(f"teacher clip URL (panel/browser): {url}")
         return 0
     kind = {"start": "start_exam", "finish": "finish_exam", "lock": "lock", "unlock": "unlock"}[a.action]
     payload = {"reason_ru": a.text or "Проверка преподавателем"} if kind == "lock" else {}

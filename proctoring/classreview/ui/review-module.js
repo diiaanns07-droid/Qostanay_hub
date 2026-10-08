@@ -351,14 +351,14 @@ function mountReview(root, studentId, o) {
         });
         box.append(video);
       } else {
-        box.append(h("p", {}, [`Клип получен (${c.codec_label ?? c.media_type}), но браузер его не воспроизводит. Скачайте файл.`]));
+        box.append(h("p", { class: "t3-clip-file" }, [`Клип получен (${c.codec_label ?? c.media_type}). Браузер этот формат не воспроизводит — скачайте файл и откройте в видеоплеере (Windows Media Player, VLC).`]));
       }
       box.append(
         note,
         h("p", { class: "t3-muted" }, [
           `Источник: ${src}. ${c.duration_s ? `Длина ${String(c.duration_s).replace(".", ",")} с. ` : ""}SHA-256 ${String(c.sha256).slice(0, 16)}…`,
         ]),
-        h("a", { href: clipUrl(e), download: "", class: "t3-link" }, ["Скачать клип"]),
+        h("a", { href: clipUrl(e), download: "", class: "t3-link" }, [c.browser_playable ? "Скачать клип" : "Скачать и открыть в плеере"]),
       );
       return box;
     }

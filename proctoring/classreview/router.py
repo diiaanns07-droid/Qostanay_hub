@@ -22,7 +22,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
 from .config import CLIP_MEDIA_TYPES
-from .media import RangeNotSatisfiable, base_media_type, iter_file, parse_range
+from .media import BROWSER_CODECS, RangeNotSatisfiable, base_media_type, iter_file, parse_range
 from .store import ID_RE, ReviewError, ReviewStore
 
 TeacherGuard = Callable[[Request], str]
@@ -172,11 +172,13 @@ def create_review_router(
             size = meta["size_bytes"]
             ext = "mp4" if meta["container"] == "mp4" else "avi"
             name = SAFE_NAME.sub("_", f"clip-{meta['student_id']}-{incident_id}")[:120]
+            # MP4 H.264/VP9/AV1 plays in <video>; anything else (A02 MJPG .avi today) is a download for a video player
+            playable = meta["container"] == "mp4" and meta.get("codec") in BROWSER_CODECS
             headers = {
                 **NO_STORE,
                 "Accept-Ranges": "bytes",
                 "ETag": f'"{meta["sha256"]}"',
-                "Content-Disposition": f'inline; filename="{name}.{ext}"',
+                "Content-Disposition": f'{"inline" if playable else "attachment"}; filename="{name}.{ext}"',
                 "X-Qorgau-Clip-Source": meta["source"],
                 "Content-Security-Policy": "default-src 'none'",
             }
