@@ -94,12 +94,16 @@ def run_full_flow(be: BackendProcess, phone_timeout: float = 45.0) -> Rows:
             checks = {c.check_id.value: c for c in pf.checks}
             rows.check("preflight_ready", pf.ready, ", ".join(f"{k}={c.status.value}" for k, c in checks.items()))
             labelled = all(
-                c.details.get("impl") == "bootstrap" and c.status.value != "pass"
+                c.status.value != "pass"
                 for k, c in checks.items()
                 if k in ("phone_model", "face_model", "fusion", "storage")
+                and c.details.get("impl") == "bootstrap"
             )
             rows.check("preflight_bootstrap_parts_labelled_not_pass", labelled, "bootstrap parts must be WARN + impl=bootstrap, never PASS")
-            rows.check("preflight_offline_assets_not_faked", checks["offline_assets"].status.value != "pass", checks["offline_assets"].message_code)
+            # Once real modules land, their checks may correctly PASS. Inspect actual
+            # bootstrap substitutions rather than requiring every module to be missing.
+            incomplete = any(c.required and c.status.value == "fail" for c in pf.checks)
+            rows.check("preflight_no_failed_required_check_when_ready", not (pf.ready and incomplete))
 
         cal = _try(rows, "calibration", lambda: api.calibrate(sid))
         if cal is not None:
@@ -123,8 +127,17 @@ def run_full_flow(be: BackendProcess, phone_timeout: float = 45.0) -> Rows:
             rows.check("environment_events", ack.accepted == len(events) and ack.duplicates == 0, f"accepted={ack.accepted}")
             again = contract.ok(http.post(f"/sessions/{sid}/environment/events", json={"session_id": sid, "events": events}), "EnvironmentEventAck")
             rows.check("environment_events_dedup", again.accepted == 0 and again.duplicates == len(events), f"dup={again.duplicates}")
-            env_incs = stream.wait(lambda ms: len({c["incident"]["observation_ids"][0] for c in incidents(ms) if c["incident"]["category"] == "environment"}) >= len(events) or None, 10)
-            rows.check("environment_incidents_on_stream", bool(env_incs), f"expected one episode per event ({len(events)})")
+            # A05 intentionally merges related actions into episodes. Requiring one
+            # incident per event is a bootstrap implementation detail, not the contract.
+            required_actions = {action for action, _ in REQUIRED_ENV_ACTIONS}
+            def environment_covered(ms):
+                seen = {m["message"]["observation"]["action"] for m in ms
+                        if m["message"]["type"] == "observation"
+                        and m["message"]["observation"]["kind"] == "environment"}
+                episodes = [c for c in incidents(ms) if c["incident"]["category"] == "environment"]
+                return required_actions <= seen and bool(episodes)
+            env_incs = stream.wait(environment_covered, 10)
+            rows.check("environment_incidents_on_stream", bool(env_incs), "all actions observed; one or more grouped environment episodes")
 
         opened = stream.wait(lambda ms: [c for c in incidents(ms, "phone_visible") if c["change"] == "opened"], phone_timeout)
         rows.check("phone_episode_opened_on_stream", bool(opened), (opened[0]["incident"]["explanation"]["summary_ru"] if opened else f"none in {phone_timeout}s"))

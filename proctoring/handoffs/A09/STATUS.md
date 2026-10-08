@@ -59,3 +59,29 @@ integrated module SHAs; confirmation of performance targets. Requests: `handoffs
    (replace one module at a time), replay quality protocol, offline guard with CV models loaded.
 2. Windows protocol on the demo laptop (`qa/scenarios/WINDOWS.md`), performance record.
 3. `packaging/`: one-command Windows working-dir bundle with model checksum gate, then portable package if time.
+
+## Windows continuation checkpoint by Codex
+
+Branch `codex/proctor-A09`, starting from published A09
+`fbd9dcbb84ca981bc7632260f589d34f06400ee3`. Windows 11 build 26200, Python 3.12.14,
+unchanged A01 pinned lockfile installed with `uv sync --frozen --extra cv --extra dev`.
+
+Added source-checkout preparation/launch scripts, a read-only dependency/model checksum gate,
+seven negative/positive asset checks, timestamped result directories, UTF-8 subprocess logs,
+exact candidate SHA guard and harness source hashes. Adapted orchestration assertions to permit
+A05 grouped incidents and integrated module health; preparation-only model download CLIs are
+excluded explicitly from the runtime static scan (runtime network guard remains active).
+
+Final pre-sync run: 335 PASS, 13 XFAIL, 1 SKIP, 0 FAIL; evidence:
+`qa/results/20261008T055245Z_windows_final_fbd9dcbb84ca/`.
+Initial baseline checks also passed. The intermediate failed run is retained; its two failures
+were in A09's synthetic preflight assertion and were fixed before this final run.
+
+Backend readiness PASS. Desktop readiness correctly FAILS because the integration candidate,
+compiled desktop and models are absent here. PowerShell syntax PASS. No webcam or OS restriction
+was activated. This checkpoint is local; external push awaits explicit approval after the tool's
+automatic publication review rejected the earlier A10 push request.
+
+Latest A09 upstream `f8ac90617147152d2032b57034560b395f1d1c8f` appeared during work.
+Its same-role fault-injection additions are now retained as the parent of this Windows continuation.
+Next step: check the combined suite. A01 product integration remains outside this role.

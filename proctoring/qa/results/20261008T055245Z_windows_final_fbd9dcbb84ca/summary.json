@@ -1,0 +1,70 @@
+{
+  "tested_sha": "fbd9dcbb84ca981bc7632260f589d34f06400ee3",
+  "product_tree_dirty": false,
+  "harness_uncommitted": true,
+  "harness_files_sha256": {
+    "qa\\qorgau_qa\\__init__.py": "fac65ab62ed3eff1a77e1058081c927123849463356775d3bef0590d236d9a61",
+    "qa\\qorgau_qa\\backend.py": "709e3eba96c58aefbb989a6223cb5b1d56f15efc629ec2d2d76ce1544c9db3b6",
+    "qa\\qorgau_qa\\contract.py": "7cdd1b322efcabff2f1890140b99a3b19ad31d10badb49f767a645af53f269e2",
+    "qa\\qorgau_qa\\netguard.py": "eb80727619a86efd982b3242d1eef72d1c0fd4f0883a18368f3668072790ffef",
+    "qa\\qorgau_qa\\netns.py": "b37e716eb0d1f822e7c03a04bbb508cf41f54801785b9c94296d69eff4562577",
+    "qa\\qorgau_qa\\offline_check.py": "b12bd30fa8ca75e339bc79f305a9528a4837060dcde3f87de64f680b5df7360a",
+    "qa\\qorgau_qa\\scenario.py": "9259e1724fef0d8e091e7b67c075707820f1ebdc00efde6b5b42a0efeb48d8a9",
+    "qa\\qorgau_qa\\stream.py": "cb95905a7153eeaf84bffe092fe9f1962ab865f1f044c4a1a026ebbe40e51b71",
+    "qa\\run_qa.py": "3e97eaa7e7ec453836e04ac85a45207122d557314021388cfd4b711ac6e66681",
+    "qa\\tests\\conftest.py": "f5a6cd5093fc954873986b4b2cfa0062634d008c08b204d3bbce06b1d4773564",
+    "qa\\tests\\test_e2e_synthetic.py": "c4ed94bf7091e3ea6a39b2ea85d3f166fdaa3820720154009604d0cd8d816f29",
+    "qa\\tests\\test_harness_selfcheck.py": "9c40c228e7f740a1898612011b6434abeb08fdcd71d55e26aece08e23e8ca8ec",
+    "qa\\tests\\test_lifecycle_matrix.py": "83a58708caef7492861b7f60526fa993fbc0402b0348092ffbe824ec2e3fb383",
+    "qa\\tests\\test_offline.py": "724c89c978f4252e693a841acb17f3f826b8c46d63d5781ed43b42acc5110be6",
+    "qa\\tests\\test_packaging_readiness.py": "84ce96e6112b1be95f71035f129c606965288ef2d7b04599e03360a9a0c36f7e",
+    "qa\\tests\\test_payload_negative.py": "990d522b4da2d1763ac2748b78460e69c23b92bfd1a5a2ee6ccfb624c75d1c01",
+    "qa\\tests\\test_process_failures.py": "cc5979a573559634e1839e0735cb7b39941ef9882af082137435a492c0e2d657",
+    "qa\\tests\\test_security_negative.py": "d4db5f35574221da03655aa1097c0cc2af93022f1244318376b641cc568b02eb",
+    "qa\\tests\\test_stream_preview.py": "f49918c1db5509202567efe09e0acb033e71fa88bbfc8430b43318129c97d7c8"
+  },
+  "product_release_verified": false,
+  "label": "windows_final",
+  "partial": false,
+  "started_at": "2026-10-08T05:52:45+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "fastapi": "0.141.1",
+    "uvicorn": "0.53.0",
+    "websockets": "17.1",
+    "pydantic": "2.13.5",
+    "numpy": "2.4.6",
+    "cv2": "4.13.0",
+    "mediapipe": "0.10.35",
+    "onnxruntime": "1.29.0",
+    "httpx": "0.28.1",
+    "pytest": "9.1.1"
+  },
+  "scope_note": "SYNTHETIC/bootstrap pipeline unless stated; not CV accuracy, not Windows environment protection",
+  "suites": {
+    "a09_qa": {
+      "status": "PASS",
+      "exit_code": 0,
+      "counts": {
+        "PASS": 335,
+        "SKIP": 1,
+        "XFAIL": 13
+      },
+      "log": "pytest.txt"
+    }
+  },
+  "known_issues": [
+    "QA-BUG-001",
+    "QA-BUG-002",
+    "QA-BUG-003",
+    "QA-OBS-003",
+    "QA-OBS-004",
+    "QA-OBS-005",
+    "QA-OBS-006"
+  ],
+  "failures": [],
+  "hex64_strings_in_logs": [],
+  "finished_at": "2026-10-08T05:54:14+00:00"
+}

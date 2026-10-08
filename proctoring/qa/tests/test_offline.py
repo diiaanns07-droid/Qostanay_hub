@@ -114,6 +114,11 @@ def test_no_download_calls_in_backend_runtime_source():
         rel = path.relative_to(root).as_posix()
         if "/tests/" in f"/{rel}" or rel.endswith("bootstrap/smoke.py"):
             continue
+        # These two reviewed preparation CLIs download weights explicitly before
+        # runtime; their presence does not imply a runtime network dependency.
+        # The runtime audit guard remains active and catches attempted connections.
+        if rel in {"phone/model_tool.py", "attention/model_tool.py"}:
+            continue
         for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             if line.lstrip().startswith("#"):
                 continue

@@ -15,6 +15,7 @@ Windows/LIVE protocols. A09 does not patch other modules: findings go to owners 
 | `qorgau_qa/fakes.py` | QA-only fault-injection doubles for the five module factories, injected into a real `serve` process via `sys.modules` (`QA_FAKES` env); labelled `qa.fake_*`, never module/CV results |
 | `tests/` | pytest suites (below) |
 | `run_qa.py` | runs everything and writes `results/<date>_<label>_<sha12>/summary.{json,md}` bound to the tested SHA |
+| `../packaging/` | Windows preparation/launch scripts and read-only file/import/model-checksum gate |
 | `ACCEPTANCE_MATRIX.md` | PDF requirement → measurable acceptance → test → status |
 | `scenarios/FAILURES.md`, `scenarios/WINDOWS.md` | failure matrix; manual Windows / offline / security / LIVE protocol |
 | `protocols/PERFORMANCE.md`, `protocols/MODEL_QUALITY.md` | how performance and episode quality will be measured (drafts) |
@@ -26,9 +27,15 @@ Windows/LIVE protocols. A09 does not patch other modules: findings go to owners 
 ```bash
 .venv/bin/python -m pytest qa/tests -q            # Windows: .venv\Scripts\python -m pytest qa\tests -q
 .venv/bin/python qa/run_qa.py --with-baseline     # + A01 checks; writes qa/results/...
+.venv/bin/python qa/run_qa.py --label candidate --expected-sha FULL_SHA_FROM_A01
 ```
 `qa/tests` is deliberately not in the default `testpaths` (A01's `pytest -q` stays fast); ~3 min, needs no camera,
 no network, no admin. On Windows everything runs except the Linux network-namespace layer (skipped with a reason).
+
+Result directory names now include a UTC timestamp so later runs do not overwrite earlier evidence.
+The runner records SHA256 for each harness source file and forces UTF-8 in child processes on Windows.
+The tested commit includes the harness when it is committed; `product_tree_dirty` excludes A09-owned paths.
+`product_release_verified` remains false until the separate candidate/LIVE/Windows acceptance is complete.
 
 Suites: `test_e2e_synthetic` (scenario, finish/abort/pause during an open episode, restart) ·
 `test_lifecycle_matrix` (8 states × 11 actions, concurrency) · `test_security_negative` (token, Host, Origin/CORS,

@@ -15,6 +15,8 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import hashlib
+import os
 import platform
 import re
 import subprocess
@@ -63,7 +65,8 @@ def _run(cmd: list[str], log: Path, timeout: int) -> int:
         fh.write("$ " + " ".join(cmd) + "\n")
         fh.flush()
         try:
-            return subprocess.run(cmd, cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT, timeout=timeout).returncode
+            env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+            return subprocess.run(cmd, cwd=ROOT, env=env, stdout=fh, stderr=subprocess.STDOUT, timeout=timeout).returncode
         except subprocess.TimeoutExpired:
             fh.write(f"\nTIMEOUT after {timeout}s\n")
             return 124
@@ -73,15 +76,20 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--label", default="bootstrap")
     ap.add_argument("--with-baseline", action="store_true")
+    ap.add_argument("--expected-sha", help="refuse a different HEAD than A01's candidate SHA")
     ap.add_argument("-k", default=None, help="pytest -k expression (partial runs are labelled partial)")
     ap.add_argument("--base", default=None, help="product SHA under test when HEAD also carries A09 commits; the run records that the product tree equals it")
     args = ap.parse_args()
 
     sha = _git("rev-parse", "HEAD")
+    if args.expected_sha and sha != args.expected_sha:
+        ap.error("HEAD does not match --expected-sha")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", args.label):
+        ap.error("--label must contain 1-64 ASCII letters, digits, underscores or hyphens")
     # product = everything except the A09 harness paths; the harness version is recorded separately
     dirty = bool(_git("status", "--porcelain", "--", ".", ":!qa", ":!packaging", ":!handoffs/A09"))
     harness_dirty = bool(_git("status", "--porcelain", "--", "qa", "packaging"))
-    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d")
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = QA / "results" / f"{stamp}_{args.label}_{sha[:12]}"
     out.mkdir(parents=True, exist_ok=True)
 
@@ -89,6 +97,10 @@ def main() -> int:
         "tested_sha": sha,
         "product_tree_dirty": dirty,
         "harness_uncommitted": harness_dirty,
+        "harness_files_sha256": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+                                  for p in sorted(QA.rglob("*.py")) if "__pycache__" not in p.parts},
+        "product_release_verified": False,
+        "log_normalization": "UTF-8; trailing horizontal whitespace removed for repository checks",
         "label": args.label,
         "partial": bool(args.k),
         "started_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
@@ -115,6 +127,10 @@ def main() -> int:
     if args.k:
         cmd += ["-k", args.k]
     rc = _run(cmd, out / "pytest.txt", 3600)
+    for log_path in out.iterdir():
+        if log_path.suffix in (".txt", ".xml"):
+            raw = log_path.read_text(encoding="utf-8", errors="replace")
+            log_path.write_text(re.sub(r"[ \t]+(?=\r?$)", "", raw, flags=re.MULTILINE), encoding="utf-8")
     rows = _junit_rows(out / "junit.xml") if (out / "junit.xml").exists() else []
     counts: dict[str, int] = {}
     for r in rows:
