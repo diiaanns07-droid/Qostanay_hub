@@ -309,7 +309,7 @@ export function PreflightScreen() {
         </div>
 
         <div className="stack preflight-sidebar">
-          <ClassBlock state={live.classState} />
+          <ClassBlock state={live.classState} health={health} />
           <details className="preflight-details preflight-diagnostics">
             <summary>Диагностика компьютера {health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}</summary>
             <Card title="Компоненты" aside={health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}>
