@@ -49,6 +49,7 @@ import { ExamSurface, isExamWebContents } from "./exam/surface";
 import { EXAM_CHANNEL } from "./exam/channels";
 import { ClassLockController, ClassStateDelivery, LOCK_ACK_CHANNEL } from "./class-lock";
 import { createClassAudio } from "./class-audio";
+import { EmergencyQuit } from "./emergency-quit";
 
 const log = logger("main");
 
@@ -76,6 +77,8 @@ const platformInfo: PlatformInfo = {
 let mainWindow: BrowserWindow | null = null;
 let quitting = false;
 let shutdownDone = false;
+let shutdownStarted = false;
+let emergencyQuit: EmergencyQuit | null = null;
 let previewWanted = false;
 let capabilities: EnvironmentCapabilities | null = null;
 let vmSnapshot = unknownVm();
@@ -152,6 +155,7 @@ const stream = new BackendSocket("stream", supervisorTarget, {
     classAudio.reset();
   },
   onEnvelope: (env) => {
+    if (quitting) return;
     const msg = env.message;
     // Close the native website before forwarding a requested overlay to React.
     classLock.consumeClassState(msg);
@@ -187,9 +191,11 @@ const supervisor: BackendSupervisor = new BackendSupervisor(
 );
 
 async function onBackendReady(conn: BackendConnection): Promise<void> {
+  if (quitting) return;
   const h = await client.json("GET", BackendClient.path("health"));
   if (!h.ok) log.warn(`health after READY failed: ${h.error.message}`);
   await reportCapabilities();
+  if (quitting) return;
   stream.open();
   if (previewWanted) preview.open();
   log.info(`backend connected (launch #${conn.launchId})`);
@@ -225,8 +231,40 @@ async function reportCapabilities(strict = false): Promise<void> {
 async function emergencyExit(reason: string): Promise<void> {
   const sid = machine.state.session_id;
   const st = machine.boundSessionState;
+  if (reason === "emergency_hotkey") {
+    emergencyQuit ??= new EmergencyQuit({
+      release: [
+        () => { quitting = true; guard.preventEngage(); if (sid) machine.forbidEngage(sid); },
+        () => guard.releaseSync("emergency_hotkey"),
+        () => classStateDelivery.invalidate(true),
+        () => classLock.reset(),
+        () => classAudio.reset(),
+        () => examSurface.dispose(),
+        () => stream.close(),
+        () => preview.close(),
+      ],
+      cleanup: [
+        async () => { log.warn(`EMERGENCY EXIT (emergency_hotkey) session=${sid ?? "-"}`); },
+        () => machine.releaseTo("normal", "emergency_exit", null),
+        () => events.flush(),
+        async () => {
+          if (sid && st && !TERMINAL_STATES.includes(st) && supervisor.connection) {
+            const r = await client.json("POST", BackendClient.path("sessions", sid, "abort"),
+              { reason: "emergency_exit: emergency_hotkey" }, 1_500);
+            if (!r.ok) log.error(`emergency abort failed: ${r.error.code}`);
+          }
+        },
+      ],
+      quit: () => app.quit(),
+      forceExit: () => app.exit(1),
+      report: (error) => log.error("emergency cleanup failed", error),
+    });
+    return emergencyQuit.request();
+  }
+  // The existing in-app panic action releases the exam and retains the recovery UI.
   log.warn(`EMERGENCY EXIT (${reason}) session=${sid ?? "-"}`);
   if (sid) machine.forbidEngage(sid);
+  guard.releaseSync("emergency_exit");
   await machine.releaseTo("normal", "emergency_exit", null); // never depends on the backend
   await Promise.race([events.flush(), delay(2_000)]);
   if (sid && st && !TERMINAL_STATES.includes(st) && supervisor.connection) {
@@ -257,7 +295,7 @@ function trustedSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
   const w = mainWindow;
   const frame = event.senderFrame;
   return (
-    !!w &&
+    !quitting && !!w &&
     !w.isDestroyed() &&
     event.sender === w.webContents &&
     !!frame &&
@@ -540,12 +578,14 @@ app.on("before-quit", (event) => {
   quitting = true;
   if (shutdownDone) return;
   event.preventDefault();
+  if (shutdownStarted) return;
+  shutdownStarted = true;
   const hard = setTimeout(() => {
     log.error("shutdown timed out; exiting");
     guard.releaseSync("shutdown_timeout");
     app.exit(1);
   }, 20_000);
-  void shutdown("before-quit").finally(() => {
+  void shutdown("before-quit").catch(error => log.error("shutdown failed", error)).finally(() => {
     clearTimeout(hard);
     shutdownDone = true;
     app.quit();
@@ -553,6 +593,7 @@ app.on("before-quit", (event) => {
 });
 
 app.on("will-quit", () => {
+  emergencyQuit?.complete();
   guard.releaseSync("will_quit");
   globalShortcut.unregisterAll();
 });

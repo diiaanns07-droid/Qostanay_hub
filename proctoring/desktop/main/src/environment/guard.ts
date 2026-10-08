@@ -78,6 +78,7 @@ export interface ShortcutRegistration {
 }
 
 export class ExamGuard implements Guard {
+  private engageDisabled = false;
   private activeSession: string | null = null;
   private blurAt: number | null = null;
   private unsubDisplay: (() => void) | null = null;
@@ -111,6 +112,9 @@ export class ExamGuard implements Guard {
     return this.activeSession !== null;
   }
 
+  /** Permanent for this shell run: an emergency app exit cannot be undone by queued/new sessions. */
+  preventEngage(): void { this.engageDisabled = true; }
+
   /** Attach the Windows helper once its availability is known (never while engaged). */
   setNative(native: NativeHelperHandle | null): void {
     if (this.active) throw new Error("cannot change the native helper while engaged");
@@ -126,6 +130,7 @@ export class ExamGuard implements Guard {
   }
 
   async engage(sessionId: string): Promise<void> {
+    if (this.engageDisabled) throw new Error("application is exiting; exam mode refused");
     if (this.activeSession === sessionId) return;
     if (this.activeSession !== null) this.releaseSync("rebind");
     const w = this.win();
@@ -179,7 +184,12 @@ export class ExamGuard implements Guard {
         w.focus();
       }, false);
       this.registrations = [];
-      step("emergency_hotkey", () => this.register(this.opts.emergencyAccelerator, "emergency_exit", () => this.opts.onEmergencyHotkey()), false);
+      step("emergency_hotkey", () => {
+        if (!this.register(this.opts.emergencyAccelerator, "emergency_exit", () => this.opts.onEmergencyHotkey())) {
+          this.emit("enforcement_error", "failed", "electron.global_shortcut", "app", { shortcut: "emergency_hotkey" });
+          if (this.opts.enforce) throw new Error("emergency hotkey unavailable; Enforce refused");
+        }
+      }, this.opts.enforce === true);
       if (this.platform.platform === "win32") {
         step("print_screen_hotkey", () =>
           this.register("PrintScreen", "print_screen", () =>
@@ -216,12 +226,11 @@ export class ExamGuard implements Guard {
     } else {
       steps.native_helper = "skipped";
     }
-    if (this.activeSession !== sessionId) throw new Error("released while engaging");
-    this.lastEngage = { steps, registrations: [...this.registrations] };
-    const emergency = this.registrations.find((r) => r.purpose === "emergency_exit");
-    if (!emergency?.registered) {
-      this.emit("enforcement_error", "failed", "electron.global_shortcut", "app", { shortcut: "emergency_hotkey" });
+    if (this.engageDisabled || this.activeSession !== sessionId) {
+      this.releaseSync("released_while_engaging");
+      throw new Error("released while engaging");
     }
+    this.lastEngage = { steps, registrations: [...this.registrations] };
     this.emit("exam_mode_engaged", "allowed", "electron.kiosk", "window");
     const vm = this.opts.vmSnapshot?.();
     if (vm && !this.vmReportedSessions.has(sessionId)) {
@@ -233,7 +242,7 @@ export class ExamGuard implements Guard {
     log.info(`engaged for ${sessionId}: ${JSON.stringify(steps)}`);
   }
 
-  private register(accelerator: string, purpose: ShortcutRegistration["purpose"], cb: () => void): void {
+  private register(accelerator: string, purpose: ShortcutRegistration["purpose"], cb: () => void): boolean {
     let registered = false;
     try {
       registered = this.platform.registerShortcut(accelerator, cb) && this.platform.isShortcutRegistered(accelerator);
@@ -243,6 +252,7 @@ export class ExamGuard implements Guard {
     // A false result means another application owns it: the API call itself is not evidence.
     this.registrations.push({ accelerator, purpose, registered });
     if (!registered) log.warn(`global shortcut ${accelerator} (${purpose}) NOT registered`);
+    return registered;
   }
 
   /** Synchronous part of release: safe in crash handlers. Never throws. */

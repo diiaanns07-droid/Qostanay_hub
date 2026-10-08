@@ -109,10 +109,14 @@ try {
         $child.Process.StandardInput.Flush()
         Wait-QorgauProcess $child 'backend' $student.Timeout $student.StopAfter $false @($token, $student.JoinCode)
     } else {
-        if ($student.StopAfter) { throw '-StopAfterSeconds применяется только с -BackendOnly. Electron завершайте через окно приложения.' }
         Write-Host 'Открывается Adal. Проверки LIVE и готовность среды выполняются внутри приложения.'
-        Write-Host 'Завершить: закройте приложение; аварийный выход из экзамена: Ctrl+Alt+Shift+F12.'
-        $child = Start-QorgauProcess $pythonExe $root $environment @{kind='desktop'; electron=$electron; desktop=$desktop}
+        Write-Host 'Аварийное завершение Adal: Ctrl+Alt+Shift+F12. Удерживайте сочетание до выхода.'
+        if ($student.StopAfter) { Write-Host "Пробный запуск: Adal автоматически завершится через $($student.StopAfter) секунд." }
+        $child = Start-QorgauProcess $pythonExe $root $environment @{
+            kind='desktop'; electron=$electron; desktop=$desktop
+            emergency_watchdog=$true; enforce=$student.Enforce; max_duration_seconds=$student.StopAfter
+        }
+        Write-Host "ADAL_LAUNCHER_PID $($child.Process.Id)"
         Wait-QorgauProcess $child 'desktop' $student.Timeout 0 $false @($student.JoinCode)
     }
 } catch {

@@ -147,7 +147,7 @@ class Launchers(unittest.TestCase):
                 with urllib.request.urlopen(f"http://127.0.0.1:{port}/login", timeout=3) as response:
                     self.assertEqual(response.status, 200)
                 with urllib.request.urlopen(f"http://127.0.0.1:{port}/config.json", timeout=3) as response:
-                    self.assertEqual(json.load(response), {"adapter": "real"})
+                    self.assertEqual(json.load(response), {"adapter": "real", "features": ["history", "exams", "audio"]})
                 self.assertEqual(server.process.wait(timeout=20), 0, sanitized("".join(server.lines)))
                 self.assertFalse(listening(port))
             finally:

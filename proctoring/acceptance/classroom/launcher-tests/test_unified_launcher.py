@@ -31,12 +31,14 @@ if ($Library) {
     function Start-QorgauProcess([string]$PythonExe, [string]$Root, [hashtable]$Environment, [hashtable]$Payload) {
         if ($Payload.kind -ne 'desktop') { throw 'fixture forbids non-desktop process' }
         $safe = @{kind=$Payload.kind; root=$Root; python=$PythonExe; enforce=$Environment.QORGAU_SHELL_NATIVE_ENFORCE;
+            emergency_watchdog=$Payload.emergency_watchdog; payload_enforce=$Payload.enforce;
+            max_duration_seconds=$Payload.max_duration_seconds;
             path=$Environment.PYTHONPATH; selftest=$Environment.QORGAU_SHELL_SELFTEST;
             emergency=$Environment.QORGAU_SHELL_EMERGENCY_ACCELERATOR; demo=$Environment.QORGAU_SHELL_DEMO_OPERATOR;
             server=$Environment.QORGAU_CLASS_SERVER; node=$Environment.ELECTRON_RUN_AS_NODE;
             dev=$Environment.QORGAU_SHELL_DEV_RENDERER_URL; models=$Environment.QORGAU_MODELS_DIR}
         Write-Host ('STUB_DESKTOP ' + ($safe | ConvertTo-Json -Compress))
-        return @{}
+        return @{Process=[pscustomobject]@{Id=73142}}
     }
     function Wait-QorgauProcess { Write-Host 'STUB_WAIT' }
     function Stop-QorgauProcess { Write-Host 'STUB_CLEANUP' }
@@ -101,7 +103,14 @@ class UnifiedLauncher(unittest.TestCase):
     def desktop(self, output):
         rows = [line.partition("STUB_DESKTOP ")[2] for line in output.splitlines() if "STUB_DESKTOP " in line]
         self.assertEqual(len(rows), 1, output)
-        return json.loads(rows[0])
+        data = json.loads(rows[0])
+        self.assertIs(data["emergency_watchdog"], True, "every desktop launch must start the independent watchdog")
+        self.assertIsInstance(data["payload_enforce"], bool)
+        self.assertEqual(data["enforce"], "1" if data["payload_enforce"] else "0")
+        self.assertIs(type(data["max_duration_seconds"]), int)
+        self.assertEqual([line.strip() for line in output.splitlines() if line.startswith("ADAL_LAUNCHER_PID ")],
+                         ["ADAL_LAUNCHER_PID 73142"], "PID must come from the process owner returned by the launcher")
+        return data
 
     def student_args(self):
         return ("-Role", "Student", "-Server", "127.0.0.1:8765", "-JoinCode", "004201", "-Label", "fixture")
@@ -116,6 +125,21 @@ class UnifiedLauncher(unittest.TestCase):
         self.assertEqual(on["emergency"], "CommandOrControl+Alt+Shift+F12")
         self.assertIsNone(on["node"])
         self.assertIsNone(on["dev"])
+
+    def test_student_and_standalone_forward_watchdog_enforce_and_trial_duration(self):
+        for args in (self.student_args(), ("-Role", "Standalone")):
+            for enforce in (False, True):
+                for duration in (0, 120):
+                    with self.subTest(role=args[1], enforce=enforce, duration=duration):
+                        options = (*args, *(("-Enforce",) if enforce else ()))
+                        if duration:
+                            options += ("-StopAfterSeconds", duration)
+                        output = self.invoke(*options)
+                        data = self.desktop(output)
+                        self.assertIs(data["payload_enforce"], enforce)
+                        self.assertEqual(data["max_duration_seconds"], duration)
+                        self.assertIn("STUB_WAIT", output)
+                        self.assertIn("STUB_CLEANUP", output)
 
     def test_standalone_uses_shared_owner_current_source_and_no_inherited_class(self):
         self.env.update(PYTHONPATH="Z:/old-editable", QORGAU_CLASS_SERVER="old:1234", QORGAU_CLASS_CODE="004201")
