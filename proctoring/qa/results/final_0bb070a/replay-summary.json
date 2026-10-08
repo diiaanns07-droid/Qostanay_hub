@@ -1,0 +1,219 @@
+{
+  "recorded_at": "2026-10-08T15:27:40.461Z",
+  "platform": "win32",
+  "scope": "product renderer + real main API + real backend/CV; Chromium transport, no OS guard or native save dialog",
+  "backend_sha": "2ade8cae1f324ce9920b1b9c1fba147e8eba3234",
+  "backend_dirty": "",
+  "checks": [
+    {
+      "name": "real backend READY through A06 BackendSupervisor",
+      "ok": true,
+      "detail": "pid 32744"
+    },
+    {
+      "name": "product renderer, no FixtureBridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: teacher authenticated for this bound session",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 2397 ms"
+    },
+    {
+      "name": "zone_a_green_01: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: expected green",
+      "ok": true,
+      "detail": "actual green"
+    },
+    {
+      "name": "zone_a_green_01: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: teacher authenticated for this bound session",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 663 ms"
+    },
+    {
+      "name": "zone_b_yellow_02: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: expected yellow",
+      "ok": true,
+      "detail": "actual yellow"
+    },
+    {
+      "name": "zone_b_yellow_02: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: teacher authenticated for this bound session",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 661 ms"
+    },
+    {
+      "name": "zone_c_red_01: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: expected red",
+      "ok": true,
+      "detail": "actual red"
+    },
+    {
+      "name": "zone_c_red_01: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "renderer never opens camera/microphone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no CSP violations",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "backend checkout stayed at the recorded revision",
+      "ok": true,
+      "detail": "2ade8cae1f324ce9920b1b9c1fba147e8eba3234"
+    }
+  ],
+  "product_base": "0bb070a92ed9a141d0c80a4c585bf01c88e2414a",
+  "cases": [
+    {
+      "replay_id": "zone_a_green_01",
+      "expected": "green",
+      "actual": "green",
+      "session_id": "s-20261008-202548-68ddb008",
+      "media_sha256": "6352319b66ce6c984ded5237d2ad5143de053b98412bd924a4126d3cc3e30a93",
+      "start_delay_ms": 2397,
+      "html_title": "Adal — отчёт s-20261008-202548-68ddb008",
+      "visible_adal": true,
+      "old_product_brand_visible": false,
+      "brand_note": "Internal qorgau.v1 and qorgau.report.v1 identifiers retained as requested"
+    },
+    {
+      "replay_id": "zone_b_yellow_02",
+      "expected": "yellow",
+      "actual": "yellow",
+      "session_id": "s-20261008-202621-f35f7a7f",
+      "media_sha256": "35ce7af762900a1c1478d8f2ccace57830e08c5bd08758971ac47a8162f38ce7",
+      "start_delay_ms": 663,
+      "html_title": "Adal — отчёт s-20261008-202621-f35f7a7f",
+      "visible_adal": true,
+      "old_product_brand_visible": false,
+      "brand_note": "Internal qorgau.v1 and qorgau.report.v1 identifiers retained as requested"
+    },
+    {
+      "replay_id": "zone_c_red_01",
+      "expected": "red",
+      "actual": "red",
+      "session_id": "s-20261008-202658-8c96224c",
+      "media_sha256": "3cf25248c9b57c310be4dbc0a4502150d59cc32896b11ca5c074cb0ff4f83787",
+      "start_delay_ms": 661,
+      "html_title": "Adal — отчёт s-20261008-202658-8c96224c",
+      "visible_adal": true,
+      "old_product_brand_visible": false,
+      "brand_note": "Internal qorgau.v1 and qorgau.report.v1 identifiers retained as requested"
+    }
+  ],
+  "qa_adapter": {
+    "original": "desktop/renderer/tests/real-bridge/run-replay.mjs",
+    "original_sha256": "011e004f75afe18cad8423ae41dbb40f4a77c33c931cdaf50086d077cae32009",
+    "change": "Re-enter existing per-run teacher PIN via UI after preflight binds session; all original checks retained",
+    "product_modified": false
+  }
+}

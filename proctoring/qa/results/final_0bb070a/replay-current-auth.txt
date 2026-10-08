@@ -1,0 +1,81 @@
+node.exe : 2026-10-08T15:25:45.288Z INFO shell.state: mode=normal exam=false backend=starting session=-
+строка:2 знак:561
++ ... lyContinue; & node.exe qa/tools/replay-current-auth.mjs 'C:\Qostanay_ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-10-08T15:2...rting session=-:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+2026-10-08T15:25:45.297Z INFO shell.backend: launch #1:
+C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Scripts\python.exe -m proctor serve
+--token-stdin --port 0 (cwd C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring)
+2026-10-08T15:25:47.480Z WARN shell.backend: READY pid 32744 differs from child pid 2196
+2026-10-08T15:25:47.480Z INFO shell.backend: launch #1 ready: port 51605, backend 0.1.0
+2026-10-08T15:25:47.480Z INFO shell.state: mode=normal exam=false backend=ready session=-
+PASS  real backend READY through A06 BackendSupervisor — pid 32744
+2026-10-08T15:25:47.574Z INFO shell.stream: stream connected
+2026-10-08T15:25:47.575Z INFO shell.stream: preview connected
+PASS  product renderer, no FixtureBridge
+START zone_a_green_01
+2026-10-08T15:25:48.336Z INFO shell.state: mode=normal exam=false backend=ready session=-
+PASS  zone_a_green_01: preflight marked REPLAY
+2026-10-08T15:25:48.497Z INFO shell.state: mode=normal exam=false backend=ready session=-
+2026-10-08T15:25:48.497Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-202548-68ddb008
+2026-10-08T15:25:50.464Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-202548-68ddb008
+PASS  zone_a_green_01: teacher authenticated for this bound session
+2026-10-08T15:25:50.735Z INFO shell.state: mode=exam exam=true backend=ready session=s-20261008-202548-68ddb008
+PASS  zone_a_green_01: exam opened through UI — preflight-to-exam 2397 ms
+PASS  zone_a_green_01: recording end is visible
+2026-10-08T15:26:20.369Z INFO shell.state: mode=releasing exam=true backend=ready session=s-20261008-202548-68ddb008
+2026-10-08T15:26:20.369Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202548-68ddb008
+2026-10-08T15:26:20.472Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202548-68ddb008
+PASS  zone_a_green_01: expected green — actual green
+PASS  zone_a_green_01: UI zone matches backend
+PASS  zone_a_green_01: summary REPLAY visible
+PASS  zone_a_green_01: exported HTML opens with zone
+PASS  zone_a_green_01: HTML is marked REPLAY
+2026-10-08T15:26:21.080Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202548-68ddb008
+START zone_b_yellow_02
+2026-10-08T15:26:21.183Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202548-68ddb008
+PASS  zone_b_yellow_02: preflight marked REPLAY
+2026-10-08T15:26:21.304Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202548-68ddb008
+2026-10-08T15:26:21.304Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-202621-f35f7a7f
+2026-10-08T15:26:21.611Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-202621-f35f7a7f
+PASS  zone_b_yellow_02: teacher authenticated for this bound session
+2026-10-08T15:26:21.726Z INFO shell.state: mode=exam exam=true backend=ready session=s-20261008-202621-f35f7a7f
+PASS  zone_b_yellow_02: exam opened through UI — preflight-to-exam 663 ms
+PASS  zone_b_yellow_02: recording end is visible
+2026-10-08T15:26:56.971Z INFO shell.state: mode=releasing exam=true backend=ready session=s-20261008-202621-f35f7a7f
+2026-10-08T15:26:56.971Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202621-f35f7a7f
+2026-10-08T15:26:57.485Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202621-f35f7a7f
+PASS  zone_b_yellow_02: expected yellow — actual yellow
+PASS  zone_b_yellow_02: UI zone matches backend
+PASS  zone_b_yellow_02: summary REPLAY visible
+PASS  zone_b_yellow_02: exported HTML opens with zone
+PASS  zone_b_yellow_02: HTML is marked REPLAY
+2026-10-08T15:26:58.143Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202621-f35f7a7f
+START zone_c_red_01
+2026-10-08T15:26:58.233Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202621-f35f7a7f
+PASS  zone_c_red_01: preflight marked REPLAY
+2026-10-08T15:26:58.328Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202621-f35f7a7f
+2026-10-08T15:26:58.328Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-202658-8c96224c
+2026-10-08T15:26:58.652Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-202658-8c96224c
+PASS  zone_c_red_01: teacher authenticated for this bound session
+2026-10-08T15:26:58.773Z INFO shell.state: mode=exam exam=true backend=ready session=s-20261008-202658-8c96224c
+PASS  zone_c_red_01: exam opened through UI — preflight-to-exam 661 ms
+PASS  zone_c_red_01: recording end is visible
+2026-10-08T15:27:38.774Z INFO shell.state: mode=releasing exam=true backend=ready session=s-20261008-202658-8c96224c
+2026-10-08T15:27:38.774Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202658-8c96224c
+2026-10-08T15:27:38.879Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202658-8c96224c
+PASS  zone_c_red_01: expected red — actual red
+PASS  zone_c_red_01: UI zone matches backend
+PASS  zone_c_red_01: summary REPLAY visible
+PASS  zone_c_red_01: exported HTML opens with zone
+PASS  zone_c_red_01: HTML is marked REPLAY
+2026-10-08T15:27:39.704Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-202658-8c96224c
+PASS  renderer never opens camera/microphone
+PASS  no CSP violations
+PASS  no renderer errors
+PASS  backend checkout stayed at the recorded revision — 2ade8cae1f324ce9920b1b9c1fba147e8eba3234
+2026-10-08T15:27:40.460Z INFO shell.backend: launch #1 exited: code 0, signal null, expected true
+2026-10-08T15:27:40.461Z INFO shell.state: mode=normal exam=false backend=stopped session=s-20261008-202658-8c96224c
+33/33 checks passed

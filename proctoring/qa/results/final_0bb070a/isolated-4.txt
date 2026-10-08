@@ -1,0 +1,85 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________________ test_app_health_lists_phone_model_missing __________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-254/test_app_health_lists_phone_mo0')
+no_network = ['socket.connect']
+
+    def test_app_health_lists_phone_model_missing(tmp_path, no_network):
+        app = create_app(_app_settings(tmp_path), TOKEN)
+>       with TestClient(app, base_url="http://127.0.0.1", headers=AUTH) as client:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:780:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\starlette\testclient.py:504: in __enter__
+    self.portal = portal = stack.enter_context(anyio.from_thread.start_blocking_portal(**self.async_backend))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\from_thread.py:554: in start_blocking_portal
+    portal = future.result()
+             ^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\from_thread.py:538: in run_blocking_portal
+    run_eventloop(
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\_core\_eventloop.py:83: in run
+    return async_backend.run(func, args, {}, backend_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\_backends\_asyncio.py:2547: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (<socket.socket [closed] fd=-1, family=2, type=1, proto=0>, ('127.0.0.1', 49272))
+kwargs = {}
+
+    def _deny(*args, **kwargs):
+        calls.append(name)
+>       raise AssertionError(f"network access attempted: {name}")
+E       AssertionError: network access attempted: socket.connect
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:98: AssertionError
+============================== warnings summary ===============================
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_app_health_lists_phone_model_missing
+1 failed, 1 warning in 0.72s
+Exception ignored in: <function BaseEventLoop.__del__ at 0x0000015F18DC8CC0>
+Traceback (most recent call last):
+  File "C:\Qostanay_hub-codex-proctoring-prompts\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 732, in __del__
+  File "C:\Qostanay_hub-codex-proctoring-prompts\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 697, in close
+  File "C:\Qostanay_hub-codex-proctoring-prompts\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 779, in _close_self_pipe
+AttributeError: 'ProactorEventLoop' object has no attribute '_ssock'

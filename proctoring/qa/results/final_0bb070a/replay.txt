@@ -1,0 +1,29 @@
+node.exe : 2026-10-08T15:23:19.610Z INFO shell.state: mode=normal exam=false backend=starting session=-
+строка:2 знак:561
++ ... lyContinue; & node.exe renderer/tests/real-bridge/run-replay.mjs 'C:\ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-10-08T15:2...rting session=-:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+2026-10-08T15:23:19.623Z INFO shell.backend: launch #1:
+C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Scripts\python.exe -m proctor serve
+--token-stdin --port 0 (cwd C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring)
+2026-10-08T15:23:22.765Z WARN shell.backend: READY pid 30736 differs from child pid 29736
+2026-10-08T15:23:22.765Z INFO shell.backend: launch #1 ready: port 51735, backend 0.1.0
+2026-10-08T15:23:22.765Z INFO shell.state: mode=normal exam=false backend=ready session=-
+PASS  real backend READY through A06 BackendSupervisor — pid 30736
+2026-10-08T15:23:23.103Z INFO shell.stream: stream connected
+2026-10-08T15:23:23.105Z INFO shell.stream: preview connected
+PASS  product renderer, no FixtureBridge
+START zone_a_green_01
+2026-10-08T15:23:24.032Z INFO shell.state: mode=normal exam=false backend=ready session=-
+PASS  zone_a_green_01: preflight marked REPLAY
+2026-10-08T15:23:24.202Z INFO shell.state: mode=normal exam=false backend=ready session=-
+2026-10-08T15:23:24.202Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-202324-6eff6c2d
+FAIL  REPLAY flow completed — TimeoutError: locator.fill: Timeout 30000ms exceeded.
+Call log:
+  - waiting for getByLabel('Причина', { exact: true })
+
+2026-10-08T15:23:57.163Z INFO shell.backend: launch #1 exited: code 0, signal null, expected true
+2026-10-08T15:23:57.163Z INFO shell.state: mode=preflight exam=false backend=stopped session=s-20261008-202324-6eff6c2d
+3/4 checks passed

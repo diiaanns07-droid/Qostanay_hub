@@ -1,0 +1,48 @@
+
+SELF_TEST {"key_ctrl_c":{"status":"pass","detail":"prevented before the page: C:KeyC"},"key_ctrl_v":{"status":"pass","detail":"prevented before the page: C:KeyV"},"key_shift_insert":{"status":"pass","detail":"prevented before the page: S:Insert"},"key_ctrl_x":{"status":"pass","detail":"prevented before the page: C:KeyX"},"key_ctrl_tab":{"status":"pass","detail":"prevented before the page: C:Tab"},"key_alt_f4":{"status":"pass","detail":"prevented before the page: A:F4"},"key_devtools":{"status":"pass","detail":"prevented before the page: :F12,CS:KeyI"},"key_reload":{"status":"pass","detail":"prevented before the page: :F5,C:KeyR"},"key_print":{"status":"pass","detail":"prevented before the page: C:KeyP"},"key_save":{"status":"pass","detail":"prevented before the page: C:KeyS"},"key_source":{"status":"pass","detail":"prevented before the page: C:KeyU"},"key_zoom":{"status":"pass","detail":"prevented before the page: C:Equal,C:Minus,C:Digit0"},"key_context_menu":{"status":"pass","detail":"prevented before the page: S:F10"},"window_open":{"status":"pass","detail":"window.open returned null, no new window"},"page_print":{"status":"pass","detail":"print: prevented=true, reported=true"},"page_context_menu":{"status":"pass","detail":"context_menu: prevented=true, reported=true"},"page_selection":{"status":"pass","detail":"selection: prevented=true, reported=true"},"page_drag":{"status":"pass","detail":"drag: prevented=true, reported=true"},"page_zoom":{"status":"pass","detail":"zoom: prevented=true, reported=true"},"navigation":{"status":"pass","detail":"location change to a remote URL was cancelled"},"devtools":{"status":"pass","detail":"devtools not open after openDevTools()"},"window_close":{"status":"pass","detail":"close() was cancelled by the close handler"}}
+PASS built-in Chromium self-test covers print/save/source/context/selection/drag/zoom/reload
+PASS approved site/scripts load in isolated sandbox with zero app bridges
+PASS website print/context/selection/drag/wheel prevented and reported
+PASS subframe CSP blocks and reports print; native drag/right-click intercepted before iframe
+PASS wrong host/path resources, iframe, fetch and navigation blocked before server receipt
+PASS new windows denied even for approved authentication URLs
+PASS file/data/app/OS navigation never escapes exam view
+PASS listed same-window authentication redirect works
+PASS redirect outside approved paths blocked before HTTP request
+PASS download response cancelled without writing a file
+PASS camera/microphone/geolocation denied without capture; workers disabled
+PASS history API cannot leave an unapproved path visible; reload restores approved page
+PASS temporary lock hides/mutes/freezes timers, gates fetch/beacon/images/socket and closes HTTP stream
+PASS unlock preserves the same document, unsubmitted typed answer and authenticated session
+PASS shell dialogs remove native view; malicious bounds cannot cover header/footer
+PASS backend stream loss preserves answer and stays hidden until fresh class-state replay
+node.exe : 2026-10-08T15:23:19.791Z INFO shell.state: mode=normal exam=false backend=ready session=-
+строка:2 знак:129
++ ... lyContinue; & node.exe main/tests/exam-surface.mjs *> ../qa/results/f ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-10-08T15:2...ready session=-:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+2026-10-08T15:23:19.795Z INFO shell.state: mode=preflight exam=false backend=ready session=fixture-session
+2026-10-08T15:23:19.795Z INFO shell.state: mode=exam exam=true backend=ready session=fixture-session
+2026-10-08T15:23:19.796Z INFO shell.state: mode=releasing exam=true backend=ready session=fixture-session
+2026-10-08T15:23:19.797Z INFO shell.state: mode=preflight exam=false backend=ready session=fixture-session
+2026-10-08T15:23:19.797Z INFO shell.state: mode=exam exam=true backend=ready session=fixture-session
+2026-10-08T15:23:19.822Z INFO shell.state: mode=releasing exam=true backend=ready session=fixture-session
+2026-10-08T15:23:19.823Z INFO shell.state: mode=error exam=false backend=ready session=fixture-session
+2026-10-08T15:23:19.824Z INFO shell.state: mode=exam exam=true backend=ready session=fixture-session
+PASS reconnect, actual machine pause/resume and recoverable error preserve typed answer
+PASS rapid lock/unlock/lock never reattaches a stale asynchronous resume
+2026-10-08T15:23:20.101Z INFO shell.state: mode=releasing exam=true backend=ready session=fixture-session
+2026-10-08T15:23:20.103Z INFO shell.state: mode=normal exam=false backend=ready session=fixture-session
+PASS actual machine finish destroys old document and clears website session cookies
+2026-10-08T15:23:20.255Z INFO shell.state: mode=preflight exam=false backend=ready session=fixture-next-session
+2026-10-08T15:23:20.255Z INFO shell.state: mode=exam exam=true backend=ready session=fixture-next-session
+PASS new session and policy replacement use fresh isolated data without old answers
+2026-10-08T15:23:20.640Z INFO shell.state: mode=preflight exam=false backend=ready session=fixture-third-session
+2026-10-08T15:23:20.641Z INFO shell.state: mode=exam exam=true backend=ready session=fixture-third-session
+PASS rebinding a running session destroys previous document and replaces storage partition
+PASS WebSocket document explicitly falls back to destruction; no persistent socket remains hidden
+PASS stalled freeze and thaw acknowledgements fail closed within deadline; explicit reload recovers
+PASS unavailable freeze controller fails closed with explicit answer-loss message
+{"test":"actual-electron-exam-surface","passed":24,"device_capture":false,"native_guard":false,"checks":["built-in Chromium self-test covers print/save/source/context/selection/drag/zoom/reload","approved site/scripts load in isolated sandbox with zero app bridges","website print/context/selection/drag/wheel prevented and reported","subframe CSP blocks and reports print; native drag/right-click intercepted before iframe","wrong host/path resources, iframe, fetch and navigation blocked before server receipt","new windows denied even for approved authentication URLs","file/data/app/OS navigation never escapes exam view","listed same-window authentication redirect works","redirect outside approved paths blocked before HTTP request","download response cancelled without writing a file","camera/microphone/geolocation denied without capture; workers disabled","history API cannot leave an unapproved path visible; reload restores approved page","temporary lock hides/mutes/freezes timers, gates fetch/beacon/images/socket and closes HTTP stream","unlock preserves the same document, unsubmitted typed answer and authenticated session","shell dialogs remove native view; malicious bounds cannot cover header/footer","backend stream loss preserves answer and stays hidden until fresh class-state replay","reconnect, actual machine pause/resume and recoverable error preserve typed answer","rapid lock/unlock/lock never reattaches a stale asynchronous resume","actual machine finish destroys old document and clears website session cookies","new session and policy replacement use fresh isolated data without old answers","rebinding a running session destroys previous document and replaces storage partition","WebSocket document explicitly falls back to destruction; no persistent socket remains hidden","stalled freeze and thaw acknowledgements fail closed within deadline; explicit reload recovers","unavailable freeze controller fails closed with explicit answer-loss message"]}
