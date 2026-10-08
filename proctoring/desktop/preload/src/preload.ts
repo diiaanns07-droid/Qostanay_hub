@@ -3,6 +3,7 @@
 // Runs with contextIsolation + sandbox. Every method is one fixed IPC channel; no generic invoke,
 // no ipcRenderer, no Node API and no IPC event objects ever reach the page.
 import { contextBridge, ipcRenderer } from "electron";
+import "./class-audio";
 import { BRIDGE_VERSION, type QorgauBridge, type ShellState, type Unsubscribe } from "@contracts/bridge";
 import type { PreviewFrameMeta, StreamEnvelope } from "@contracts/qorgau-v1.generated";
 import { INVOKE, PUSH, SEND, type InvokeName } from "../../main/src/ipc/channels";
