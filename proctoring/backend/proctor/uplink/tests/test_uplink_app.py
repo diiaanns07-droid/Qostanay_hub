@@ -79,6 +79,11 @@ def test_end_to_end_commands_incident_clip_and_class_state_on_stream(tmp_path, m
                 while time.monotonic() < deadline:
                     msg = ws.receive_json()["message"]
                     seen.append(msg)
+                    if msg.get("type") == "class_state" and msg.get("lock_request"):
+                        request = msg["lock_request"]
+                        # Explicit UI stand-in: this test verifies the local API, not rendering.
+                        body = {k: v for k, v in request.items() if k not in ("expires_at", "recovery")}
+                        assert c.post("/v1/class/lock/ack", json={**body, "applied": True}).json()["accepted"]
                     if msg.get("type") == "class_state" and msg.get("locked"):
                         break
                 cs = [m for m in seen if m.get("type") == "class_state"][-1]
