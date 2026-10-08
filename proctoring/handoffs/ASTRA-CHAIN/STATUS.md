@@ -53,3 +53,13 @@ and reported separately because clip encoding finishes asynchronously.
 Coordinator routes/fixes synthetic origin propagation, integrates selected files,
 then reruns this CLI on the final integration revision. No main merge requested.
 This checkpoint's SHA and actual push outcome are sent out-of-band after commit.
+
+## Git delivery
+
+Harness checkpoint: `d182923e11ae8bc758024e481c738f47519daa6e`.
+Push has **not succeeded**. The default attempt could not reach GitHub; the
+escalated attempt was rejected by automatic approval review because the inherited
+AGENTS instructions expect GOV_DIPLOME while this assigned worktree uses
+Qostanay_hub. No alternate push route was attempted. The coordinator has the local
+SHA and can integrate locally; a push requires trusted authorization resolving the
+origin discrepancy. This handoff update is a separate local checkpoint.
