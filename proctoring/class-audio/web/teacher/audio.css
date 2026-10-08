@@ -1,0 +1,216 @@
+/* Qorgau class audio (T05) — teacher panel + standalone page. System fonts, no external resources. */
+:root {
+  --qa-ink: #1d2226;
+  --qa-muted: #5f6a70;
+  --qa-line: #dfe3de;
+  --qa-bg: #f4f5f2;
+  --qa-accent: #0f766e;
+  --qa-ok: #15803d;
+  --qa-warn: #a15c07;
+  --qa-danger: #b42318;
+}
+body {
+  margin: 0;
+  font: 15px/1.5 "Segoe UI", system-ui, sans-serif;
+  color: var(--qa-ink);
+  background: var(--qa-bg);
+}
+.qa-top {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 18px;
+  background: #fff;
+  border-bottom: 1px solid var(--qa-line);
+}
+.qa-dev {
+  font-size: 12px;
+  color: #7a1d14;
+  background: #fdecea;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.qa-conn {
+  margin-left: auto;
+  font-size: 13px;
+}
+.qa-up {
+  color: var(--qa-ok);
+}
+.qa-down {
+  color: var(--qa-danger);
+  font-weight: 600;
+}
+.qa-main {
+  max-width: 760px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+.qa-join {
+  font-size: 14px;
+  color: var(--qa-muted);
+}
+.qa-students {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.qa-student {
+  text-align: left;
+  font: inherit;
+  padding: 8px 12px;
+  border: 1px solid var(--qa-line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.qa-student.qa-sel {
+  border-color: var(--qa-accent);
+  box-shadow: inset 3px 0 0 var(--qa-accent);
+}
+.qa-login {
+  display: grid;
+  gap: 8px;
+  max-width: 320px;
+}
+.qa-login input {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid #c9cfc8;
+  border-radius: 6px;
+}
+.qa-audio {
+  background: #fff;
+  border: 1px solid var(--qa-line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.qa-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.qa-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.qa-who {
+  color: var(--qa-muted);
+  font-size: 13px;
+}
+.qa-status {
+  margin: 10px 0;
+  font-weight: 600;
+}
+.qa-connected {
+  color: var(--qa-ok);
+}
+.qa-reconnecting,
+.qa-requesting,
+.qa-connecting {
+  color: var(--qa-warn);
+}
+.qa-ended,
+.qa-rejected,
+.qa-error {
+  color: var(--qa-danger);
+}
+.qa-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.qa-btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 7px;
+  border: 1px solid #c9cfc8;
+  background: #fff;
+  color: var(--qa-ink);
+  cursor: pointer;
+}
+.qa-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.qa-btn:focus-visible,
+.qa-student:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.4);
+  outline-offset: 1px;
+}
+.qa-btn.qa-on {
+  background: var(--qa-accent);
+  border-color: var(--qa-accent);
+  color: #fff;
+}
+.qa-btn.qa-stop {
+  color: var(--qa-danger);
+  border-color: #f0b8b1;
+}
+.qa-small {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+.qa-live {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.qa-yes::before {
+  content: "● ";
+  color: var(--qa-ok);
+}
+.qa-no::before {
+  content: "○ ";
+  color: var(--qa-muted);
+}
+.qa-meter {
+  display: inline-block;
+  width: 120px;
+  height: 8px;
+  background: var(--qa-line);
+  border-radius: 4px;
+  vertical-align: middle;
+  overflow: hidden;
+}
+.qa-meter-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--qa-ok);
+}
+.qa-problem {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background: #fdecea;
+  border: 1px solid #f3b8b1;
+  color: #7a1d14;
+  font-size: 14px;
+}
+.qa-busy {
+  padding: 8px 12px;
+  background: #fdf3dc;
+  border: 1px solid #f0d18a;
+  border-radius: 7px;
+  color: #7c4505;
+}
+.qa-note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--qa-muted);
+}
+[hidden] {
+  display: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
