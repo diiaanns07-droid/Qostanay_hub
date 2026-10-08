@@ -26,7 +26,7 @@ visible; this is not a durable disk-failure journal and cannot guarantee recover
 
 | ID | Disposition | Current evidence / remaining action |
 |---|---|---|
-| F01 | Previously fixed in source | IPC `decideAccess` considers operator/session context; coordinator reports full shell suite 105 PASS, 1 SKIP. This task does not claim physical Electron enforcement. |
+| F01 | Previous policy/UI mismatch fixed | Default remains review-after-pause; `Operator.tsx:restAllowed` prevents forbidden REST calls and explains the policy. Optional operator_live_review is bound-session-only in `shell/access.ts`; FixtureBridge mirrors the default gate. This is policy alignment, not a claim that default LIVE review is enabled. Coordinator reports shell suite 105 PASS, 1 SKIP. |
 | F02 | Previously fixed in source | `main.ts` clears operator on main-frame navigation/renderer loss; `shell/state.ts` clears it on error. Coordinator checkpoint `3935a30`. |
 | F03 | Previously fixed in source | `shell/state.ts:bind` clears operator; access policy gates calibrationSkip. Coordinator's shell regression run covers the integration. |
 | F04 | Still open, desktop policy owner | `shell/operator.ts:check` still rejects correct PIN during exponential lockout; IPC logs but does not persist failed attempts. Needs explicit operator-access/audit policy, not removal of brute-force protection. |
@@ -46,3 +46,26 @@ visible; this is not a durable disk-failure journal and cannot guarantee recover
 
 Next: coordinator integrates tested checkpoint and owns F04/F11/F12/F13 and remaining physical checks.
 Do not describe all 17 as newly fixed or all 17 as still open.
+
+## Final verification
+
+Tested committed source **`9c5577a5ee5ce993f641c3b7719664fb1dc37134`**:
+**123 PASS, 2 SKIP, 0 FAIL** in 32.44 s. Scope: all `backend/tests`, all
+`backend/proctor/evidence/tests`, and `backend/proctor/fusion/tests/test_engine.py`.
+Six A11 regressions are included. Raw output `regression.txt`; individual results `regression.xml`.
+One existing Starlette/httpx deprecation warning. Skips: real replay acceptance without supplied
+media and A08 browser-print check because its Node/Playwright probe is unavailable in this environment.
+
+The launcher imported reviewed `qorgau_qa.fakes.install({})` before pytest, replacing **only**
+AudioMonitor with the labelled no-device double. This matters because the older backend
+`test_registered_modules_are_used_for_live` injects fake capture/CV but otherwise starts A14 audio.
+All storage/TEMP/TMP/models/replay paths were isolated under this task, classroom uplink disabled;
+no actual microphone, webcam, CV model or native guard used. Synthetic integrated flow and real
+SQLite crash/transaction tests passed. This is separate evidence from the earlier QA 380-pass run,
+which predates these production changes; full QA has not been rerun at this SHA.
+
+Run form (with explicit task PYTHONPATH and isolated environment):
+`python -c 'from qorgau_qa.fakes import install; install({}); import pytest; raise SystemExit(pytest.main(["proctoring/backend/tests", "proctoring/backend/proctor/evidence/tests", "proctoring/backend/proctor/fusion/tests/test_engine.py", "-q", "--import-mode=importlib", "--basetemp=<task-only-temp>", "--junitxml=proctoring/handoffs/ADAL-A11-CLOSEOUT/regression.xml"]))'`.
+
+Final evidence commit changes only this handoff and sanitized test reports; tested code is unchanged.
+Branch remains local and clean after commit. No agent push; coordinator merges and publishes.
