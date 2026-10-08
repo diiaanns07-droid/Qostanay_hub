@@ -246,10 +246,15 @@ class CameraSource:
             backends = [0]
         tried: list[str] = []
         opened_without_frames = False
-        for backend in backends:
+        out_of_time = False
+        for i, backend in enumerate(backends):
             if stop.is_set():
                 break
             label = _backend_label(backend)
+            if time.monotonic() >= deadline - 0.2:
+                tried.append(f"{label}:no_time")
+                out_of_time = True
+                continue
             try:
                 cap = self._opener(self.index, backend)
             except Exception as exc:  # OpenCV may raise on invalid index/backend
@@ -261,7 +266,16 @@ class CameraSource:
                 self._safe_release(cap)
                 continue
             self._configure(cap)
-            first = self._probe_first_frame(cap, min(deadline, time.monotonic() + self._probe_timeout_s))
+            # split what is left of the budget between this and the remaining backends, so a busy
+            # camera (opens, no frames) on every backend is still classified before the deadline
+            left = deadline - 0.2 - time.monotonic()
+            if left <= 0:  # the device open itself used the whole budget: frames were never probed
+                tried.append(f"{label}:open_too_slow")
+                out_of_time = True
+                self._safe_release(cap)
+                continue
+            budget = min(self._probe_timeout_s, left / (len(backends) - i))
+            first = self._probe_first_frame(cap, time.monotonic() + budget)
             if first is None:
                 tried.append(f"{label}:no_frames")
                 opened_without_frames = True
@@ -278,7 +292,7 @@ class CameraSource:
             self.opens += 1
             log.info("camera %d opened via %s: %s", self.index, self._backend_name, self._actual)
             return
-        raise self._classify_failure(tried, opened_without_frames)
+        raise self._classify_failure(tried, opened_without_frames, out_of_time)
 
     def _configure(self, cap: VideoCaptureLike) -> None:
         if cv2 is None:
@@ -318,7 +332,7 @@ class CameraSource:
                 pass
         self._actual = actual
 
-    def _classify_failure(self, tried: list[str], opened_without_frames: bool) -> CaptureError:
+    def _classify_failure(self, tried: list[str], opened_without_frames: bool, out_of_time: bool = False) -> CaptureError:
         details = {"camera_index": self.index, "backends_tried": ",".join(tried)[:200]}
         if opened_without_frames:
             return CaptureError(
@@ -326,6 +340,14 @@ class CameraSource:
                 "Camera opened but delivered no frames (it may be used by another application)",
                 retryable=True,
                 reason="camera_no_frames",
+                **details,
+            )
+        if out_of_time:
+            return CaptureError(
+                ErrorCode.CAMERA_UNAVAILABLE,
+                "Opening the camera took longer than the time budget (slow driver or device busy)",
+                retryable=True,
+                reason="open_timeout",
                 **details,
             )
         probe = self._device_path_probe(self.index)

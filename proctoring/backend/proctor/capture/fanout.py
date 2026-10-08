@@ -111,6 +111,10 @@ class ConsumerWorker:
     def alive(self) -> bool:
         return self._thread.is_alive()
 
+    @property
+    def thread(self) -> threading.Thread:
+        return self._thread
+
     # ----------------------------------------------------------------- delivery
     def wants(self, packet: FramePacket) -> bool:
         """Lockstep only: media-time decimation by max_fps (deterministic)."""

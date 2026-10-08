@@ -140,7 +140,28 @@ def _inside(root: Path, rel: str) -> Path:
     return path
 
 
+_SHA_CACHE: dict[tuple[str, int, int], str] = {}
+_SHA_LOCK = threading.Lock()
+
+
 def sha256_file(path: Path) -> str:
+    """sha256 of a file; cached by (resolved path, size, mtime_ns) so a large replay is not
+    re-hashed on every session (any change of the file changes size or mtime)."""
+    st = path.stat()
+    key = (str(path.resolve()), st.st_size, st.st_mtime_ns)
+    with _SHA_LOCK:
+        hit = _SHA_CACHE.get(key)
+    if hit is not None:
+        return hit
+    digest = _sha256_file_uncached(path)
+    with _SHA_LOCK:
+        if len(_SHA_CACHE) > 256:
+            _SHA_CACHE.clear()
+        _SHA_CACHE[key] = digest
+    return digest
+
+
+def _sha256_file_uncached(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as fh:
         for chunk in iter(lambda: fh.read(1 << 20), b""):
@@ -172,7 +193,19 @@ class ResolvedReplay:
 
 
 def load_replay(replay_dir: Path, replay_id: str | None, *, verify_sha256: bool = True) -> ResolvedReplay:
-    """Validate the manifest and media of ``replay_id``; raise CaptureError(REPLAY_INVALID)."""
+    """Validate the manifest and media of ``replay_id``; raise CaptureError(REPLAY_INVALID).
+
+    OS-level problems (permission denied, a file locked by another process, an online-only
+    cloud placeholder, a symlink loop) are reported as REPLAY_INVALID/media_unreadable."""
+    try:
+        return _load_replay(replay_dir, replay_id, verify_sha256=verify_sha256)
+    except CaptureError:
+        raise
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise _invalid(f"replay files cannot be read: {type(exc).__name__}", "media_unreadable", replay_id=str(replay_id or "")[:64]) from None
+
+
+def _load_replay(replay_dir: Path, replay_id: str | None, *, verify_sha256: bool = True) -> ResolvedReplay:
     if not replay_id:
         raise _invalid("replay source requires replay_id", "replay_id_missing")
     if not REPLAY_ID_RE.match(replay_id):
@@ -306,6 +339,10 @@ class _SequenceReader:
         self._i = len(self._files)
 
 
+class _Stopped(Exception):
+    """close() was requested while the source was decoding/skipping."""
+
+
 class ReplaySource:
     """Plays a validated replay; owned by the capture thread."""
 
@@ -340,6 +377,7 @@ class ReplaySource:
         self._media_size: tuple[int, int] | None = None
         self._pending_first: tuple[np.ndarray | None, float, int] | None = None
         self._nominal_ms = 1000.0 / 30.0
+        self._skip_deadline: float | None = None  # open(): the trim skip must fit the open budget
 
     @property
     def manifest(self) -> ReplayManifest:
@@ -371,7 +409,17 @@ class ReplaySource:
         self._origin_mono = None
         self._ended = False
         # validate the first frame now (bad media fails preflight, not mid-exam)
-        first = self._next_in_loop()
+        self._skip_deadline = deadline
+        try:
+            first = self._next_in_loop()
+        except _Stopped:
+            self._reader.close()
+            raise _invalid("replay open was cancelled", "open_cancelled", replay_id=self.replay_id) from None
+        except CaptureError:
+            self._reader.close()
+            raise
+        finally:
+            self._skip_deadline = None
         if first is None:
             self._reader.close()
             raise _invalid("replay media has no decodable frames in the selected range", "media_no_frames", replay_id=self.replay_id)
@@ -404,7 +452,10 @@ class ReplaySource:
         man = self.manifest
         reader = self._reader
         assert reader is not None
+        skipped = 0
         while True:
+            if self._stop.is_set():
+                raise _Stopped()
             ok, container_pts = reader.grab()
             if not ok:
                 return None
@@ -412,6 +463,11 @@ class ReplaySource:
             self._index += 1
             pts = self._pts_for(index, container_pts)
             if pts < man.start_ms:
+                skipped += 1
+                if self._skip_deadline is not None and skipped % 16 == 0 and time.monotonic() > self._skip_deadline:
+                    raise _invalid(
+                        "skipping to start_ms takes too long: trim the media file instead", "trim_too_slow", replay_id=self.replay_id
+                    )
                 continue
             if man.end_ms is not None and pts > man.end_ms:
                 return None
@@ -469,7 +525,10 @@ class ReplaySource:
                     expected_rel = self._pts_base_ms + (self._last_pts_rel or 0.0) + self._nominal_ms
                     lateness = (time.monotonic() - self._origin_mono) * 1000.0 * speed - expected_rel
                     late = lateness > self.LATE_DROP_MS and expected_rel - self._last_emit_rel < self.MIN_EMIT_MS
-                item = self._next_in_loop(decode=not late)
+                try:
+                    item = self._next_in_loop(decode=not late)
+                except _Stopped:
+                    return None
                 if item is None:
                     if self._restart_loop():
                         continue

@@ -39,3 +39,17 @@ R6 (FYI) metric definitions used by A02 (RuntimeMetrics):
       In A01's SessionRuntime the callback includes analyzer.process() + publish_observation(), so this is
       "capture -> observation published to bus/fusion queue"; WebSocket delivery to the UI is NOT included.
     * t_capture_mono_ns = when cv2 read() returned; driver/sensor buffering before that is not visible to OpenCV.
+
+R7 (needed before the demo; A01 session.py, FYI A05) spurious "monitoring_degraded" incident at EVERY finish/abort.
+    SessionRuntime._end() calls _release_capture() -> capture.close() while self._accepting is still True. close() is a
+    capture state change, so A02 notifies the listener with stopped/closed (CaptureService contract: "called on every
+    capture state change"); A01 wraps it into a HealthObservation and queues it to fusion. A05's engine treats
+    HealthStatus.STOPPED as a coverage gap and opens monitoring_degraded right before engine.finish().
+    Reproduced (scratch, nothing merged): A02 @ b390856 + A05 fusion @ 8f763a1 (zen-mayer-e0tivt), synthetic session
+    via create_app, start -> 1.5 s -> finish ->  GET incidents:
+      monitoring_degraded closed 1617 1617 session_finished "Наблюдение было неполным 0,0 с (камера — closed); ..."
+    Proposal (A01, one line): in _release_capture() call capture.set_health_listener(None) BEFORE capture.close()
+    (or set self._accepting = False before _release_capture() in _end()). The operator UI then learns "capture
+    closed" from the session_state message instead. A05 may additionally ignore capture code "closed".
+    Verified in the same scratch setup: with set_health_listener(None) moved before close() the incident list is empty.
+    A02 keeps emitting stopped/closed (contract); stopped/replay_ended mid-session IS a real gap (use loop=true for demos).

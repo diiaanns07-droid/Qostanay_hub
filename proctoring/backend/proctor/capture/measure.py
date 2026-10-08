@@ -210,6 +210,7 @@ def run_soak(
                     "consumers": {c.name: {"fps": c.processed_fps, "skipped": c.frames_skipped, "errors": c.errors} for c in m.consumers},
                     "e2e_p95": m.e2e_latency_ms_p95,
                     "rss_mb": round(rss / 2**20, 1) if rss is not None else None,
+                    "loadavg_1m": round(os.getloadavg()[0], 2) if hasattr(os, "getloadavg") else None,
                     "health": svc.health().code,
                 }
             )
@@ -242,6 +243,7 @@ def run_soak(
         "frames_dropped": final.frames_dropped,
         "capture_fps_mean": round(frames / duration, 2) if duration > 0 else None,
         "capture_fps_samples": _pct([s["capture_fps"] for s in samples[2:]] or [s["capture_fps"] for s in samples]),
+        "loadavg_1m_samples": _pct([s["loadavg_1m"] for s in samples if s.get("loadavg_1m") is not None]),
         "consumers": {},
         "memory": {
             "rss_before_mb": round(rss_before / 2**20, 1) if rss_before else None,
