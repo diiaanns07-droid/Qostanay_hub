@@ -127,6 +127,8 @@ export class ShellStateMachine {
 
   /** A new session was created through the bridge: bind it (releases anything left over). */
   bind(info: SessionInfo): Promise<void> {
+    // Authentication belongs to the previous view/session, not to the next student.
+    this.setOperator(false);
     return this.run(async () => {
       if (this.guard.active) await this.guard.release("rebind");
       this.sessionState = info.state;
@@ -183,6 +185,7 @@ export class ShellStateMachine {
 
   /** Release every restriction and move to `target`. Safe to call any time, any number of times. */
   releaseTo(target: ShellMode, reason: ReleaseReason, error: ApiErrorBody | null): Promise<void> {
+    if (target === "error") this.setOperator(false);
     return this.run(async () => {
       if (this.guard.active || this.s.exam_mode_active) {
         this.patch({ mode: "releasing" });

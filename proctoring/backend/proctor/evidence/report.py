@@ -69,7 +69,7 @@ STATE_RU = {
     "running": "идёт",
     "paused": "пауза",
     "finished": "завершена",
-    "aborted": "прервана оператором",
+    "aborted": "прервана",
     "failed": "прервана сбоем",
 }
 END_RU = {

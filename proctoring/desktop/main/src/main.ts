@@ -398,6 +398,7 @@ function createWindow(ses: Session): BrowserWindow {
   w.on("resize", () => examSurface.resized());
   w.webContents.on("did-start-navigation", (_event, _url, inPlace, isMainFrame) => {
     if (isMainFrame && !inPlace) {
+      machine.setOperator(false);
       examSurface.setViewport(null);
       examSurface.setBlocked("renderer-loading", true);
       classAudio.reset();
@@ -434,6 +435,7 @@ function createWindow(ses: Session): BrowserWindow {
   });
   const crashes: number[] = [];
   w.webContents.on("render-process-gone", (_e, details) => {
+    machine.setOperator(false);
     examSurface.setBlocked("renderer-loading", true);
     classAudio.reset();
     void classLock.rendererLost();

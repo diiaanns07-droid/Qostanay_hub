@@ -16,6 +16,31 @@ test("starts in normal mode with nothing engaged", () => {
   assert.equal(m.state.operator_unlocked, false);
 });
 
+test("a new student's session revokes the previous operator before queued transitions", async () => {
+  const { m } = mk();
+  await m.bind(sessionInfo("first", "finished"));
+  m.setOperator(true);
+  const next = m.bind(sessionInfo("second", "created"));
+  assert.equal(m.state.operator_unlocked, false, "no interval in which privileged IPC can inherit the old PIN");
+  await next;
+  assert.equal(m.state.session_id, "second");
+  assert.equal(m.state.operator_unlocked, false);
+});
+
+test("failure paths revoke operator access before asynchronous guard cleanup", async () => {
+  const { m } = mk();
+  await m.bind(sessionInfo("s1", "ready"));
+  await m.observe(sessionInfo("s1", "running"));
+  m.setOperator(true);
+  const lost = m.backendLost("test disconnect");
+  assert.equal(m.state.operator_unlocked, false);
+  await lost;
+  m.setOperator(true);
+  const crashed = m.releaseTo("error", "renderer_gone", null);
+  assert.equal(m.state.operator_unlocked, false);
+  await crashed;
+});
+
 test("bind -> preflight; running engages exam; finish releases to normal", async () => {
   const { guard, m } = mk();
   await m.bind(sessionInfo("s1", "created"));
