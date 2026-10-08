@@ -1830,6 +1830,37 @@ code,
   font-weight: 500;
 }
 
+/* Preparation: one primary action, with technical options available on demand. */
+.preflight .screen-head { align-items: flex-start; }
+.preflight > .banner { margin-bottom: 16px; }
+.preflight-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.preflight .preflight-name { margin-bottom: 18px; }
+.preflight .preflight-name > .hint { font-weight: 400; font-size: 13px; margin: 0; }
+.preflight-privacy { margin-bottom: 16px; color: var(--ink-2); }
+.preflight-privacy h3 { font-size: 14px; margin-bottom: 6px; }
+.preflight-privacy p { font-size: 14px; margin: 0 0 8px; line-height: 1.5; }
+.preflight-primary { margin-top: 18px; }
+.preflight-primary .hint { margin: 0; }
+.preflight-details { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 16px; }
+.preflight-details > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.preflight-details > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; border-radius: 3px; }
+.preflight-details[open] > summary { margin-bottom: 14px; }
+.preflight-settings > .hint { margin-bottom: 14px; }
+.preflight-diagnostics { margin: 0; padding: 0; border: 0; }
+.preflight-diagnostics > summary { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.preflight-diagnostics > summary .badge { margin-left: 6px; }
+.preflight-sidebar .table { table-layout: fixed; overflow-wrap: anywhere; }
+.preflight-sidebar .classblock-list dd { overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 1050px) {
+  .preflight-layout { grid-template-columns: minmax(0, 1fr); }
+  .preflight-sidebar { gap: 12px; }
+}
+
 /* ---------------------------------------------------------------- A07-student: full-screen calibration */
 .calfs {
   position: fixed;
