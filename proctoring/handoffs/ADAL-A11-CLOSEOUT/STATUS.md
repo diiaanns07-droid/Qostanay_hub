@@ -69,3 +69,16 @@ Run form (with explicit task PYTHONPATH and isolated environment):
 
 Final evidence commit changes only this handoff and sanitized test reports; tested code is unchanged.
 Branch remains local and clean after commit. No agent push; coordinator merges and publishes.
+
+## Follow-up: standard lifecycle test isolates audio itself
+
+`backend/tests/test_lifecycle_api.py::test_registered_modules_are_used_for_live` now installs a tiny
+local, labelled FakeAudioMonitor in `sys.modules` before application/session creation. Pytest's
+monkeypatch restores the module entry afterward. No QA-package dependency, launcher injection or
+production switch is required. Assertions verify the runtime chose this class, start/stop were
+called for the same session, and its labelled `qa_audio_isolated` health observation reached the engine.
+
+Ordinary command, with only backend/contracts PYTHONPATH and isolated task temp:
+`python -m pytest proctoring/backend/tests/test_lifecycle_api.py -q --basetemp=<task-only-temp>`
+→ **16 PASS**, 2.27 s, one existing Starlette/httpx deprecation warning. No microphone/camera/model/native
+guard was activated. Only this test file and this handoff changed in the follow-up; coordinator owns push.

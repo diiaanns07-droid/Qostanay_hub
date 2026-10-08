@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import sys
 import time
 from datetime import datetime, timezone
+from types import ModuleType
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,6 +21,7 @@ from proctor_contracts.v1 import (
     AttentionObservation,
     Component,
     Health,
+    HealthObservation,
     HealthStatus,
     Explanation,
     Incident,
@@ -28,6 +31,7 @@ from proctor_contracts.v1 import (
     IncidentRule,
     IncidentState,
     ReviewPriority,
+    Producer,
     SourceConfig,
     SourceMode,
     StreamEnvelope,
@@ -274,9 +278,36 @@ class _RecordingEngine(BootstrapIncidentEngine):
         return [IncidentChange(change=IncidentChangeType.CLOSED, incident=inc)]
 
 
-def test_registered_modules_are_used_for_live(tmp_path):
+def test_registered_modules_are_used_for_live(tmp_path, monkeypatch):
     """With module factories present, LIVE uses them (and never the scripted analyzers)."""
     _RecordingEngine.consumed = []
+    audio_calls = []
+
+    class FakeAudioMonitor:
+        """LABELLED TEST DOUBLE: no PCM, microphone, model, lease or worker thread."""
+
+        def __init__(self, session_id, mode, clock, publish):
+            self.session_id, self.mode, self.clock, self.publish = session_id, mode, clock, publish
+
+        def start(self):
+            audio_calls.append(("start", self.session_id))
+            t = self.clock.now_ms()
+            self.publish(HealthObservation(
+                observation_id=f"qa-audio-{self.session_id}", session_id=self.session_id,
+                frame_id=None, t_session_ms=t, wall_time=self.clock.wall_at(t), source_mode=self.mode,
+                producer=Producer(module="qa.backend.fake_audio", version="test"), status="degraded",
+                health=Health(component="audio", status="degraded", code="qa_audio_isolated",
+                              message="LABELLED TEST DOUBLE: no microphone or model"),
+            ))
+
+        def stop(self):
+            audio_calls.append(("stop", self.session_id))
+
+    # SessionRuntime imports this lazily on LIVE start; replace it before constructing the app.
+    # Keep the fixture local: ordinary pytest needs no QA launcher or production test switch.
+    audio_module = ModuleType("proctor.audio.monitor")
+    audio_module.AudioMonitor = FakeAudioMonitor
+    monkeypatch.setitem(sys.modules, "proctor.audio.monitor", audio_module)
 
     def ok(component):
         return lambda: Health(component=component, status=HealthStatus.OK, code="ok")
@@ -309,12 +340,16 @@ def test_registered_modules_are_used_for_live(tmp_path):
         assert all(ch["status"] == "pass" for ch in report["checks"] if ch["required"]), [(ch["check_id"], ch["status"], ch["message_code"]) for ch in report["checks"]]
         c.post(f"/v1/sessions/{sid}/calibration/skip", json={"reason": "t"})
         assert c.post(f"/v1/sessions/{sid}/start").json()["state"] == "running"
+        assert isinstance(c.app.state.proctor["manager"].runtime(sid)._audio_monitor, FakeAudioMonitor)
         deadline = time.monotonic() + 3
         while time.monotonic() < deadline and not any(isinstance(o, AttentionObservation) for o in _RecordingEngine.consumed):
             time.sleep(0.05)
         assert c.post(f"/v1/sessions/{sid}/finish").json()["state"] == "finished"
         assert any(isinstance(o, AttentionObservation) for o in _RecordingEngine.consumed)
         assert all(o.session_id == sid for o in _RecordingEngine.consumed)
+        assert audio_calls == [("start", sid), ("stop", sid)]
+        assert any(isinstance(o, HealthObservation) and o.producer.module == "qa.backend.fake_audio"
+                   and o.health.code == "qa_audio_isolated" for o in _RecordingEngine.consumed)
         # incident closed by finish() is recorded, not lost
         assert store._incidents[sid][f"inc-{sid}-final"].state == IncidentState.CLOSED
 
