@@ -1,0 +1,96 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square] __
+
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+input_size = 640, rect = False
+
+    @pytest.mark.real_model
+    @pytest.mark.parametrize("rect", [True, False], ids=["rect", "square"])
+    @pytest.mark.parametrize("input_size", [320, 640])
+    def test_real_boxes_map_to_unmirrored_normalized_frame_coordinates(model_file, manifest, input_size, rect):
+        """A real box for a drawn disc lands on that disc in normalized coords of the ORIGINAL, UNMIRRORED
+        frame, for several frame sizes / aspect ratios (letterbox scale + offset undone correctly).
+        Class-agnostic config: geometry of the pipeline only, not phone detection accuracy."""
+>       det = _any_class_detector(model_file, manifest, input_size=input_size, rect=rect)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_real_model.py:522:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\phone\tests\test_real_model.py:146: in _any_class_detector
+    cfg = dataclasses.replace(PhoneConfig(), phone_class_names=names, conf_threshold=0.05, min_box_area=0.0, **overrides)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:48: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PhoneConfig(input_size=640, rect=False, conf_threshold=0.05, nms_iou=0.45, max_detections=16, min_box_area=0.0, phone_..._zone_y_max=0.55, capture_min_area=0.012, capture_steady_ms=800.0, capture_max_motion=0.035, capture_min_hit_ratio=0.6)
+
+    def __post_init__(self) -> None:
+        problems = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{f.name} must be a finite number")
+        if self.input_size % 32 or not 160 <= self.input_size <= 1280:
+            problems.append("input_size must be a multiple of 32 in [160, 1280]")
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+            if not 0.0 < getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in (0, 1]")
+        for name in (
+            "min_box_area",
+            "track_center_gate",
+            "raise_zone_y_max",
+            "raise_exit_y",
+            "raise_min_rise",
+            "capture_zone_x_min",
+            "capture_zone_x_max",
+            "capture_zone_y_max",
+            "capture_min_area",
+            "capture_max_motion",
+            "small_object_area",
+            "edge_margin",
+        ):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in [0, 1]")
+        if not 1 <= self.max_detections <= 16:
+            problems.append("max_detections must be in [1, 16]")
+        if self.intra_op_threads < 1 or self.track_confirm_hits < 1 or self.max_tracks < 1 or self.track_recent_len < 1:
+            problems.append("thread/track counts must be >= 1")
+        if self.raise_exit_y < self.raise_zone_y_max:
+            problems.append("raise_exit_y must be >= raise_zone_y_max (hysteresis)")
+        if self.capture_zone_x_min >= self.capture_zone_x_max:
+            problems.append("capture_zone_x_min must be < capture_zone_x_max")
+        if self.execution_provider not in ("cpu", "auto"):
+            problems.append("execution_provider must be 'cpu' or 'auto'")
+        if not self.phone_class_names:
+            problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
+        for name in (
+            "min_interval_ms",
+            "stale_ms",
+            "track_max_miss_ms",
+            "track_history_ms",
+            "coast_visible_ms",
+            "raise_window_ms",
+            "raise_hold_ms",
+            "raise_min_history_ms",
+            "capture_steady_ms",
+        ):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} must be >= 0")
+        if self.track_history_ms < max(self.raise_window_ms, self.capture_steady_ms):
+            problems.append("track_history_ms must cover raise_window_ms and capture_steady_ms")
+        if problems:
+>           raise ValueError("; ".join(problems))
+E           ValueError: object_class_names must not repeat phone classes
+
+backend\proctor\phone\config.py:144: ValueError
+=========================== short test summary info ===========================
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square]
+1 failed in 0.36s

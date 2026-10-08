@@ -23,7 +23,9 @@
 | typecheck @ f6525a6 | FAIL, новый QA-FINAL-009, A01/A06 | `backend.integration.test.ts:151–152`: TS18047, dsDone может быть null; contracts и renderer PASS. [Отдельный повтор main TS — FAIL](../qa/results/final_f6525a6/typecheck-main-isolated.txt) |
 | Изменённые Python-пути f6525a6: deskscan/evidence/backend tests/audio класса | PASS | **112 PASS / 3 SKIP**; [лог](../qa/results/final_f6525a6/changed-paths.txt). QA-FINAL-001 закрыт поставкой integration: оба прежних FAIL аудио проходят |
 | REPLAY через продуктовый renderer + настоящий backend @ f6525a6 | PASS | **30/30**: zone_a_green_01 → green, zone_b_yellow_02 → yellow, zone_c_red_01 → red. Экзамен, сводка, экспорт и открытие HTML; REPLAY виден. [Лог](../qa/results/final_f6525a6/replay.txt). Chromium transport, без native guard/диалога сохранения Electron; приватные скриншоты/HTML вне Git в tmp/final-qa-replay-f652 |
-| Полный pytest @ f6525a6 | RUNNING | Тот же полный набор, PYTHONUTF8=1, реальные модели, установленный Chrome через QA adapter |
+| Полный pytest @ f6525a6 | FAIL | **1463 PASS / 14 FAIL / 10 SKIP**, 306,50 с. Все 14 повторены отдельно: 12 FAIL, 2 PASS (флейки). [Лог](../qa/results/final_f6525a6/full-pytest.txt), [повторы](../qa/results/final_f6525a6/isolated-results.json) |
+| C2 Start-AdalClassDemo.ps1 -CheckOnly @ f6525a6 | PASS | T03 HTTP 200, студент online; собственные процессы остановлены; [лог](../qa/results/final_f6525a6/class-check.txt) |
+| run_qa.py, повтор f6525a6 | INTERRUPTED | Прерван без итоговой строки/JUnit/summary; не засчитывается как завершённый прогон |
 | Проверка моделей телефона / лица / сверки лица | PASS | Официальные CLI --check/verify, все exit=0; реальная загрузка YOLO/YuNet/SFace; [логи](../qa/results/final_f12cea4/) |
 | Свежесть integration перед сдачей | PENDING | Последний взятый SHA f6525a6; повторный fetch перед сдачей |
 

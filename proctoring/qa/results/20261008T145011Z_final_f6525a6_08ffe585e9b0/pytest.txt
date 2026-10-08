@@ -1,0 +1,7 @@
+$ C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Scripts\python.exe -m pytest qa/tests -q -rA -p no:cacheprovider --junitxml=C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring\qa\results\20261008T145011Z_final_f6525a6_08ffe585e9b0\junit.xml
+F...........F........................................................... [ 19%]
+........................................................................ [ 38%]
+................FFFFFFFF.......FsF.............xxx...................... [ 57%]
+..........................................................X.........X... [ 77%]
+............................................x........................... [ 96%]
+.......

@@ -13,12 +13,11 @@
 | QA-FINAL-004 / P2 harness | A09 | Fault-injection camera_unplugged берёт последний health любой компоненты и получает audio/noise_calibration вместо capture/camera_disconnected. Отдельный повтор FAIL. Фильтровать по компоненте и ждать нужное событие. |
 | QA-FINAL-005 / P2 harness | A09 | Static offline gate считает `audio/prepare.py`, `identity/prepare.py`, `uplink/client.py`, `uplink/demo_teacher.py` runtime downloads. Первые — явная подготовка моделей; остальные — разрешённый класс/демо. Уточнить границы статического аудита, сохранив динамический запрет внешней сети для автономного экзамена. |
 | QA-FINAL-006 / P2 отчёт harness | A09 | run_qa JUnit parser теряет non-strict XPASS: пишет PASS=356 вместо pytest PASS=354, XPASS=2. Исправленные QA-OBS-003/004 нельзя скрывать в PASS; отчёт FINAL_QA приводит фактические статусы. |
-| QA-WIN-003 / прежний P2 | A03 | Три прежних Windows FAIL повторились отдельно. Последующий C2 redelivered-command падает из-за отложенного BaseEventLoop.__del__, отдельно PASS: известный плавающий эффект no_network/Windows, а не доказанный дефект C2. |
-
+| QA-WIN-003 / прежний P2 | A03 | Прежние Windows FAIL повторились отдельно. Последующий C2-тест падает из-за отложенного BaseEventLoop.__del__, отдельно PASS: известный плавающий эффект no_network/Windows, а не доказанный дефект C2. |
 | QA-FINAL-007 / P1 тестовой приёмки | A03 | С реальными весами 7 дополнительных FAIL: phone_only/4 boxes_map/prepadded создают несовместимую с новой object-веткой конфигурацию (`object_class_names must not repeat phone classes`); deterministic ожидает 2 ONNX-вызова, фактически 8 при одинаковом итоговом результате. Все повторились отдельно. Обновить реальные тесты с учётом нескольких проходов и раздельных наборов классов; качество модели из этих FAIL не следует. |
 | QA-FINAL-008 / P2 теста UI | T03 | E2E ожидает bundled Chromium, которого нет. С QA-only выбором установленного Chrome он получает карточку/red/клип HTTP 206, но падает на strict locator `.t3-test-label`: после добавления provenance теперь 2 элемента. Уточнить селектор; оставшиеся шаги и рестарт этим прогоном не проверены. |
-
 | QA-FINAL-009 / P1 проверки типов | A01/A06 | Новый в f6525a6: `main/src/__tests__/backend.integration.test.ts:151–152`, TS18047: dsDone possibly null. Отдельный `tsc --project tsconfig.main.json --noEmit` повторяет FAIL. Добавить проверку ненулевого результата before field access в тесте; build и 107 shell-тестов проходят. |
+| QA-FINAL-010 / P2 метрик, FLAKY | A03 | f6525a6, `test_real_latency_p50_from_runtime_stats`: FAIL в общем прогоне, PASS отдельно. Порог скорости не нарушен; `process_ms_p50=31.0 < infer_ms_p50=32.72`. Analyzer использует monotonic_ns, detector — perf_counter; владельцу проверить согласованность и разрешение часов Windows, не ослабляя проверку вслепую. |
 
 P0 видео пока не подтверждены: REPLAY/HTML ещё проверяются. LIVE preflight и калибровка PASS по капитану.
 

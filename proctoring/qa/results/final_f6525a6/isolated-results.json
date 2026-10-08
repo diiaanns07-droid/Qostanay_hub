@@ -1,0 +1,86 @@
+[
+  {
+    "nodeid": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_success_writes_atomically",
+    "exit_code": 1,
+    "seconds": 2.34,
+    "log": "isolated-1.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_source_error_leaves_nothing_and_keeps_existing_target",
+    "exit_code": 1,
+    "seconds": 1.72,
+    "log": "isolated-2.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_real_prepare_from_file_installs_and_check_loads",
+    "exit_code": 1,
+    "seconds": 1.67,
+    "log": "isolated-3.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_app_health_lists_phone_model_missing",
+    "exit_code": 1,
+    "seconds": 1.42,
+    "log": "isolated-4.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_phone_only_config_does_not_report_other_objects",
+    "exit_code": 1,
+    "seconds": 1.38,
+    "log": "isolated-5.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_inference_is_deterministic",
+    "exit_code": 1,
+    "seconds": 1.41,
+    "log": "isolated-6.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-rect]",
+    "exit_code": 1,
+    "seconds": 1.28,
+    "log": "isolated-7.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-square]",
+    "exit_code": 1,
+    "seconds": 1.17,
+    "log": "isolated-8.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-rect]",
+    "exit_code": 1,
+    "seconds": 1.14,
+    "log": "isolated-9.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square]",
+    "exit_code": 1,
+    "seconds": 1.17,
+    "log": "isolated-10.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_prepadded_frame_gives_identical_boxes",
+    "exit_code": 1,
+    "seconds": 1.16,
+    "log": "isolated-11.txt"
+  },
+  {
+    "nodeid": "backend/proctor/phone/tests/test_real_model.py::test_real_latency_p50_from_runtime_stats",
+    "exit_code": 0,
+    "seconds": 1.56,
+    "log": "isolated-12.txt"
+  },
+  {
+    "nodeid": "backend/proctor/uplink/tests/test_lock.py::test_local_ack_route_requires_auth_and_strict_scope",
+    "exit_code": 0,
+    "seconds": 3.16,
+    "log": "isolated-13.txt"
+  },
+  {
+    "nodeid": "classreview/tests/test_review_e2e.py::test_teacher_flow_in_browser_with_restart",
+    "exit_code": 1,
+    "seconds": 7.69,
+    "log": "isolated-14.txt"
+  }
+]
