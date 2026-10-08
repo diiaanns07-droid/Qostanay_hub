@@ -2,9 +2,12 @@
 
 New branch `codex/proctor-A06-env` from `eee203111a9dcb9274646bad643779206f7cd879` implements
 second-monitor preflight/polling, enforce focus return, remote-process/RDP checks and 1 s clipboard clear.
-See [current handoff and test results](ENV-2026-10-08.md). Controlled LIVE of these additions is **not run**;
-it requires a new captain yes and the Ctrl+Alt+Shift+F12 emergency shortcut. Historical approval/results
-below concern the previous native helper only.
+See [current handoff and test results](ENV-2026-10-08.md).
+Captain-approved component LIVE on integration `73d6b14` is now complete for one display, Alt+Tab,
+and focus return from Task Manager: **432 ms**, followed by successful Ctrl+Alt+Shift+F12 release and
+captain-confirmed normal keyboard/focus recovery. See [LIVE protocol and evidence](checks/live-env-73d6b14/RESULTS.md).
+Second-display LIVE is NOT TESTED (no second display available). This is not a full backend/camera exam.
+Historical approval/results below concern the previous native helper only.
 
 ## Historical A06-native — checkpoint 3, controlled Windows LIVE passed
 
