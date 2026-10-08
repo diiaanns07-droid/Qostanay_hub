@@ -251,6 +251,7 @@ class SessionRuntime:
         self._info_lock = threading.Lock()  # guards _info; never held while waiting on the fusion thread
         self._analyzer_status: dict[Component, HealthStatus] = {}
         self.health_reporter: Callable[[], Any] | None = None  # set by the app: builds a HealthReport
+        self._audio_monitor = None
 
     # ------------------------------------------------------------------ info
     @property
@@ -692,7 +693,21 @@ class SessionRuntime:
             self._fusion_thread.start()
             self._accepting = True
             t = self.clock.now_ms()
-            return self._update(state=SessionState.RUNNING, started_at=utc_now(), exam_started_t_ms=t)
+            info = self._update(state=SessionState.RUNNING, started_at=utc_now(), exam_started_t_ms=t)
+            self._start_audio()
+            return info
+
+    def _start_audio(self) -> None:
+        if self.mode != SourceMode.LIVE:
+            return  # replay/demo must never open a real microphone
+        from .audio.monitor import AudioMonitor
+        if self._audio_monitor is None:
+            self._audio_monitor = AudioMonitor(self.session_id, self.mode, self.clock, self.publish_observation)
+        self._audio_monitor.start()
+
+    def _stop_audio(self) -> None:
+        if self._audio_monitor is not None:
+            self._audio_monitor.stop()
 
     def _record_session_config(self) -> None:
         """Hand loaded model manifests + the engine's effective thresholds to the store (A08 #2, A05 A01-2).
@@ -722,6 +737,7 @@ class SessionRuntime:
     def pause(self, body: PauseRequest) -> SessionInfo:
         with self._lock:
             self._require("pause", SessionState.RUNNING)
+            self._stop_audio()
             t = self.clock.now_ms()
             self._accepting = False
             self._control(_Control("pause", t))
@@ -737,7 +753,9 @@ class SessionRuntime:
             self._pause_started_ms = None
             self._control(_Control("resume", t))
             self._accepting = True
-            return self._update(state=SessionState.RUNNING, paused_total_ms=self._info.paused_total_ms + paused)
+            info = self._update(state=SessionState.RUNNING, paused_total_ms=self._info.paused_total_ms + paused)
+            self._start_audio()
+            return info
 
     def finish(self) -> SessionInfo:
         return self._end(SessionState.FINISHED, IncidentEndReason.SESSION_FINISHED)
@@ -754,6 +772,7 @@ class SessionRuntime:
                 self._require("end", *ACTIVE_STATES)
             t = self.clock.now_ms()
             # 1) stop producing frames/observations (joins consumer threads)
+            self._stop_audio()
             self._release_capture()
             # 2) drain queued observations, then close all open incidents
             self._accepting = False
