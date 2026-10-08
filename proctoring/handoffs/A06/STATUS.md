@@ -1,4 +1,28 @@
-# A06 — STATUS (Electron shell, trusted IPC, backend process, exam-environment protection)
+# A06-native — checkpoint 1, Python helper + protocol/lifecycle tests
+
+Branch: `codex/proctor-A06-native`. Exact base: `64354c014c4ad51054e8bb67fe841580771d43e5`
+(`codex/proctor-integration`, fetched and verified). Separate checkout `worktrees/A06-native`.
+Scope for this continuation: native/, environment/native.ts + adjacent tests, handoffs/A06/ only.
+
+- Python 3.12 ctypes helper implements the existing JSON-line protocol; dry-run by default.
+- Dedicated WH_KEYBOARD_LL message thread, minimal callback, bounded output queue and separate writer.
+- Win L/R, Alt+Tab, Alt+Esc, Ctrl+Esc, PrintScreen; emergency Ctrl+Alt+Shift+F12 passes and requests release.
+- Stop/EOF/heartbeat loss/parent-handle death/time limit/error/console signal cleanup; no foreign process termination.
+- Foreground emits only sanitized basename + foreign flag. No typed text/window titles/clipboard data.
+- No SDK/compiler/packages installed. Uses existing candidate Python 3.12.14.
+
+Checks on Windows: `python -m pytest proctoring/desktop/native/tests -q -p no:cacheprovider`
+→ **36 PASS** (all hooks and Win32 lifecycle operations faked; no actual hook installed).
+`qorgau_guard.py --self-check` → PASS, os `10.0.26200`, standard user; no hook installed.
+
+NEXT: shell .py launch resolution/tests; then controlled LIVE only after explicit captain approval.
+QA-WIN-001 is still OPEN; VERIFICATION.json unchanged (`records: []`). LIVE, real suppression/release,
+foreground observation and emergency chord have NOT been verified on hardware.
+Limitations: unsigned Python prototype; Ctrl+Alt+Del/UAC cannot be blocked; OS may silently remove slow hooks.
+No guarantee against Python/OS scheduling stalls. No registry/policy changes, service, autostart or installer.
+
+---
+# Historical A06 shell delivery (before A06-native)
 
 Role: A06. Branch: `claude/inspiring-feynman-h9n9v8` (platform-assigned).
 Contract/baseline: BOOTSTRAP A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`, contract `qorgau.v1` 1.0.0.
