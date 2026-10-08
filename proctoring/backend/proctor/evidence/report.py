@@ -50,8 +50,8 @@ RULE_RU = {
     "background_speech": "Возможная речь рядом",
     "headphones_visible": "Видны наушники",
     "identity_mismatch": "Лицо не совпадает с началом экзамена",
-    "foreign_object_visible": "В кадре книга или посторонний предмет (только для проверки)",
-    "second_screen_visible": "В кадре второй экран или ноутбук (только для проверки)",
+    "foreign_object_visible": "Посторонний предмет в кадре",
+    "second_screen_visible": "Второй экран или ноутбук в кадре",
 }
 CATEGORY_RU = {"phone": "телефон", "attention": "внимание", "presence": "присутствие", "environment": "среда", "technical": "техника", "audio": "звук", "identity": "личность", "objects": "предметы"}
 PRIORITY_RU = {"low": "низкий", "medium": "средний", "high": "высокий"}
