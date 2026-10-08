@@ -102,8 +102,8 @@ class ConsumerWorker:
 
     def join(self, timeout: float) -> bool:
         """True when the worker thread has exited."""
-        if self._thread.ident is None:
-            return True
+        if self._thread.ident is None or self._thread is threading.current_thread():
+            return True  # never started, or close() called from inside this consumer's callback
         self._thread.join(max(0.0, timeout))
         return not self._thread.is_alive()
 
@@ -187,6 +187,10 @@ class ConsumerWorker:
                 with self._cond:
                     if self._stop:
                         return
+                    if not self.lockstep and self._pending is not None:
+                        # a newer frame arrived while we waited for the lock (restart overlap): take it
+                        self.frames_skipped += 1
+                        packet, self._pending = self._pending, None
                 start_ns = time.monotonic_ns()
                 self._next_allowed = start_ns / 1e9 + consumer.min_interval_s
                 ok = True

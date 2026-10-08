@@ -327,3 +327,39 @@ def test_fake_device_helper_sanity():
     assert ok and img.shape == (480, 640, 3)
     cap.release()
     assert d.active_handles == 0
+
+
+def test_listener_may_close_the_service_without_deadlock(make_service, device):
+    svc = make_service(camera_kwargs=camera_kwargs(device))
+    closed = threading.Event()
+
+    def listener(h):
+        if h.code == "camera_disconnected":
+            svc.close(timeout_s=1.0)  # re-entrant call from the capture thread's notification
+            closed.set()
+
+    svc.set_health_listener(listener)
+    svc.open("s-reentrant", SourceConfig(mode=SourceMode.LIVE), SessionClock())
+    assert wait_until(lambda: svc.metrics().frames_captured > 2)
+    device.connected = False
+    assert closed.wait(5.0)
+    assert wait_until(lambda: svc.health().code == "closed", timeout=3.0)
+    assert not svc.is_open
+
+
+def test_consumer_may_close_the_service_from_its_callback(make_service, thread_baseline):
+    svc = make_service()
+    done = threading.Event()
+
+    def closer(p):
+        if p.frame_id == 3 and p.session_id == "s-cb-close":
+            svc.close(timeout_s=1.0)
+            done.set()
+
+    svc.add_consumer("closer", closer)
+    svc.open("s-cb-close", SYN, SessionClock())
+    assert done.wait(3.0)
+    assert wait_until(lambda: svc.health().code == "closed")
+    svc.open("s-cb-close-2", SYN, SessionClock())  # restart works afterwards
+    assert wait_until(lambda: svc.metrics().frames_captured > 5)
+    svc.close()

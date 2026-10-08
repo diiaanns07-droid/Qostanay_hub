@@ -1,0 +1,225 @@
+{
+  "$defs": {
+    "ReplayLabel": {
+      "additionalProperties": false,
+      "description": "Ground-truth interval for evaluation (A09/A10). Capture never reads it.",
+      "properties": {
+        "label": {
+          "pattern": "^[a-z0-9_.]{1,64}$",
+          "title": "Label",
+          "type": "string"
+        },
+        "t_start_ms": {
+          "minimum": 0,
+          "title": "T Start Ms",
+          "type": "number"
+        },
+        "t_end_ms": {
+          "minimum": 0,
+          "title": "T End Ms",
+          "type": "number"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "t_start_ms",
+        "t_end_ms"
+      ],
+      "title": "ReplayLabel",
+      "type": "object"
+    },
+    "ReplayMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "video",
+            "image_sequence"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$",
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "fps": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 240,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fps"
+        },
+        "timestamps": {
+          "default": "container",
+          "enum": [
+            "container",
+            "fps",
+            "sidecar"
+          ],
+          "title": "Timestamps",
+          "type": "string"
+        },
+        "timestamps_path": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timestamps Path"
+        },
+        "mirrored": {
+          "default": false,
+          "title": "Mirrored",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "path"
+      ],
+      "title": "ReplayMedia",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "qorgau.replay.v1",
+      "title": "Format",
+      "type": "string"
+    },
+    "replay_id": {
+      "title": "Replay Id",
+      "type": "string"
+    },
+    "title": {
+      "default": "",
+      "maxLength": 200,
+      "title": "Title",
+      "type": "string"
+    },
+    "media": {
+      "$ref": "#/$defs/ReplayMedia"
+    },
+    "pacing": {
+      "default": "realtime",
+      "enum": [
+        "realtime",
+        "lockstep"
+      ],
+      "title": "Pacing",
+      "type": "string"
+    },
+    "speed": {
+      "default": 1.0,
+      "exclusiveMinimum": 0,
+      "maximum": 16,
+      "title": "Speed",
+      "type": "number"
+    },
+    "loop": {
+      "default": false,
+      "title": "Loop",
+      "type": "boolean"
+    },
+    "start_ms": {
+      "default": 0.0,
+      "minimum": 0,
+      "title": "Start Ms",
+      "type": "number"
+    },
+    "end_ms": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "End Ms"
+    },
+    "labels": {
+      "items": {
+        "$ref": "#/$defs/ReplayLabel"
+      },
+      "maxItems": 1000,
+      "title": "Labels",
+      "type": "array"
+    },
+    "provenance": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "maxLength": 300,
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "maxProperties": 32,
+      "title": "Provenance",
+      "type": "object"
+    },
+    "notes": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Notes",
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "replay_id",
+    "media"
+  ],
+  "title": "Qorgau replay manifest (qorgau.replay.v1, owner A02)",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "qorgau.replay.v1"
+}

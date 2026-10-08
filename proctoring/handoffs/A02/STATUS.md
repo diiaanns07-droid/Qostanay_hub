@@ -3,13 +3,17 @@
 Role: A02, the single owner of the camera/replay/synthetic frame source.
 Branch: `claude/pensive-pasteur-wnjd2n` (platform-assigned), fast-forwarded from 7bccece to the A01 BOOTSTRAP.
 Contract / baseline SHA: `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` (A01 BOOTSTRAP, qorgau.v1 1.0.0, frozen).
-Previous checkpoint: none (this is checkpoint 1). The new commit SHA is reported to the user after push.
-Stage: **checkpoint 1 — `create_capture_service(settings)`, live/replay/synthetic sources, bounded latest-frame
-fan-out, clean close/restart, health state machine, measured metrics.**
+Previous checkpoint: `e4934b3b566504779bf3a72ec3d6f7d69bcb8b2d` (checkpoint 1, pushed). New SHAs are reported to the user after push.
+Stage: **checkpoint 2 — tools (`python -m proctor.capture soak | verify-live | record | replay-check | replay-hash`),
+module README + replay JSON Schema, fixes from self-review (close() from a listener/consumer thread no longer
+self-joins; a worker that waited for a restart-overlapping callback takes the newest frame; re-entrant notify lock).**
+Checkpoint 1: `create_capture_service(settings)`, live/replay/synthetic sources, bounded latest-frame fan-out,
+clean close/restart, health state machine, measured metrics.
 
 ## Changed paths (A02 only)
 `proctoring/backend/proctor/capture/` (`__init__.py`, `service.py`, `fanout.py`, `sources.py`, `replay.py`,
-`stats.py`, `tests/`) and `proctoring/handoffs/A02/`. No shared file edited (requests: `DEPENDENCIES.txt`).
+`stats.py`, `measure.py`, `verify_live.py`, `record.py`, `__main__.py`, `README.md`, `replay.schema.json`,
+`examples/`, `tests/`) and `proctoring/handoffs/A02/`. No shared file edited (requests: `DEPENDENCIES.txt`).
 
 ## Interfaces provided
 * `proctor.capture.create_capture_service(settings) -> FrameCaptureService` — implements
@@ -49,8 +53,10 @@ fan-out, clean close/restart, health state machine, measured metrics.**
 ## Checks run (Linux x86_64 cloud container, Xeon 2.8 GHz 4 vCPU, Python 3.12.3, opencv-contrib 4.13.0; NO camera)
 | Command (from `proctoring/`) | Result |
 |---|---|
-| `.venv/bin/python -m pytest -q backend/proctor/capture/tests` | 76 passed (fan-out 10, lifecycle 19, camera 17 on a FAKE device, replay 25, app integration 5) |
-| `.venv/bin/python -m pytest -q` (whole repo) | 139 passed, **1 failed**: A01 `test_health_reports_missing_modules_honestly` (expects capture "module_not_integrated"; R1) |
+| `.venv/bin/python -m pytest -q backend/proctor/capture/tests` | 86 passed (fan-out 10, lifecycle 21, camera 17 on a FAKE device, replay 25, app integration 5, tools 8) |
+| `.venv/bin/python -m pytest -q` (whole repo) | 149 passed, **1 failed**: A01 `test_health_reports_missing_modules_honestly` (expects capture "module_not_integrated"; R1) |
+| `python -m proctor.capture soak --source synthetic --seconds 15` | 15.0 s, 451 frames, 30.06 FPS, phone_sim 8.0 FPS e2e p95 92 ms, attention_sim 14.9 FPS e2e p95 57 ms, threads released (short run; long run pending) |
+| `python -m proctor.capture verify-live` (container) | FAIL camera_enumeration: no camera (expected here; success path tested on a FAKE device only) |
 | `.venv/bin/python -m proctor smoke` | 34/34 PASS — now through the real A02 capture module (synthetic) |
 | `.venv/bin/python contracts/tools/generate.py --check` | PASS |
 | `.venv/bin/python coordination/verify_ownership.py --agent A02 --base 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` | see commit report |
@@ -75,7 +81,12 @@ A03/A04: get frames only via `add_consumer` (A01 registers them); never open cv2
 observation whose `frame_id` == `PreviewFrameMeta.frame_id`, otherwise show age = preview.t_session_ms − obs.t_session_ms.
 A10: replay manifests in `demo/replay/` per the format above; media files outside Git.
 
+## Tools (see `backend/proctor/capture/README.md`)
+`soak` (long run, JSON report: hardware, resolution, FPS, frame age/e2e p50/p95/p99, RSS, threads; targets kept
+separate from measurements), `verify-live` (Windows checklist: enumeration, open, format, preview, 30 s load,
+restart ×3; `--interactive`: mirror, unplug/replug, busy, privacy → PASS/FAIL/MANUAL/NOT_RUN), `record`
+(consented clip via the same service, sidecar timestamps, sha256, provenance), `replay-check`, `replay-hash`.
+
 ## Next (A02)
-Live verification script for Windows (`python -m proctor.capture verify-live`), long-run measurement tool
-(`soak`), recorder for consented demo clips + sidecar timestamps, replay checker CLI, adversarial review of
-threading/shutdown, then integration runs with A03/A04 via contracts.
+Adversarial multi-agent review of threading/shutdown/replay/contract (running), long synthetic+replay soak on this
+container, then integration runs with A03/A04 via contracts.

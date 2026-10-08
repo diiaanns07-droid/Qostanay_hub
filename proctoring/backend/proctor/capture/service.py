@@ -173,7 +173,7 @@ class FrameCaptureService:
         self._run: _Run | None = None
         self._zombies: list[_Run] = []
         self._listener: HealthListener | None = None
-        self._notify_lock = threading.Lock()
+        self._notify_lock = threading.RLock()  # re-entrant: a listener may call close()/health()
         self._pending_health: deque[Health] = deque(maxlen=256)
         self._status = HealthStatus.STOPPED
         self._code = "idle"
@@ -417,8 +417,9 @@ class FrameCaptureService:
         for w in workers:
             w.request_stop()
         alive = 0
+        me = threading.current_thread()
         for t in (run.capture_thread, run.watchdog_thread):
-            if t is not None and t.ident is not None:
+            if t is not None and t.ident is not None and t is not me:  # close() from a listener on that thread
                 t.join(max(0.0, deadline - time.monotonic()))
                 alive += t.is_alive()
         for w in workers:

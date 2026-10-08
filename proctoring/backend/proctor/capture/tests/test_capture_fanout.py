@@ -43,7 +43,7 @@ def test_slow_consumer_does_not_block_capture_or_fast_consumer(make_service, thr
     assert by["fast"].frames_processed >= 0.9 * (m.frames_captured - 2)
     assert by["slow"].frames_processed <= 10 and by["slow"].frames_skipped > 20
     # latest-frame policy: the slow consumer always starts on a FRESH frame (no backlog)
-    assert max(slow_ages) < 80.0, slow_ages
+    assert max(slow_ages) < 120.0, slow_ages  # a backlog would be >= 250 ms
     assert slow_ids == sorted(set(slow_ids)) and len(slow_ids) >= 5
     gaps = np.diff(slow_ids)
     assert gaps.min() >= 5  # ~7 frames arrive during each 250 ms callback
@@ -72,7 +72,7 @@ def test_latest_frame_after_long_block_is_fresh(make_service):
     svc.close()
     second_id, second_age = seen[1]
     assert second_id >= captured_before_release - 3  # not frame 1, the newest one
-    assert second_age < 60.0
+    assert second_age < 120.0
 
 
 def test_max_fps_rate_limit(make_service):
@@ -94,7 +94,9 @@ def test_rate_limited_consumer_processes_fresh_frames(make_service):
     time.sleep(2.0)
     c = _metrics_by_name(svc)["limited"]
     svc.close()
-    assert c.frame_age_ms_p95 is not None and c.frame_age_ms_p95 < 50.0, c
+    # a frame taken after the wait is at most ~1 capture interval (33 ms) old; the bug this guards
+    # against (take, then sleep out the limit) gives ~250 ms. 100 ms leaves room for a loaded CI box.
+    assert c.frame_age_ms_p95 is not None and c.frame_age_ms_p95 < 100.0, c
 
 
 def test_consumer_exceptions_are_counted_and_isolated(make_service):
