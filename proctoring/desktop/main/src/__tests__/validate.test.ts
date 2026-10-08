@@ -57,6 +57,25 @@ test("bodies: reason, answer, review, calibration target, format, pin", () => {
   assert.throws(() => v.pin("12 34"));
 });
 
+test("A15 desk scan: start {duration_s 5..30, mode laptop|usb} and skip {reason}", () => {
+  assert.deepEqual(v.deskScanStart({ duration_s: 12, mode: "laptop" }), { duration_s: 12, mode: "laptop" });
+  assert.deepEqual(v.deskScanStart({ duration_s: 5, mode: "usb" }), { duration_s: 5, mode: "usb" });
+  for (const bad of [
+    { duration_s: 4, mode: "laptop" },
+    { duration_s: 31, mode: "usb" },
+    { duration_s: 12.5, mode: "usb" },
+    { duration_s: 12, mode: "fixed" },
+    { duration_s: 12, mode: "laptop&x=1" },
+    { duration_s: 12 },
+    { duration_s: 12, mode: "usb", extra: 1 },
+  ]) {
+    assert.throws(() => v.deskScanStart(bad), v.ValidationError, JSON.stringify(bad));
+  }
+  assert.deepEqual(v.deskScanSkip({ reason: "fixed_camera_teacher_check" }), { reason: "fixed_camera_teacher_check" });
+  assert.throws(() => v.deskScanSkip({ reason: "" }));
+  assert.throws(() => v.deskScanSkip({ reason: "x".repeat(201) }));
+});
+
 test("checkSize caps serialized arguments", () => {
   v.checkSize([{ reason: "x" }]);
   assert.throws(() => v.checkSize(["x".repeat(v.MAX_ARG_JSON_BYTES)]), /larger/);

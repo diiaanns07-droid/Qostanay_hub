@@ -3,11 +3,11 @@
 //    (`npm run build:renderer` for the product does not contain it: no fixture data, no fixture PIN);
 //  * even then it is used only when there is no shell AND it was requested (?bridge=fixture or dev server).
 // A packaged app whose preload failed shows an error instead of silently switching to fixture data.
-import type { QorgauBridge } from "@contracts/bridge";
+import type { AppBridge } from "../../../shared/desk-scan";
 import type { FixtureBridge } from "./fixtureBridge";
 
 export type BridgeChoice =
-  | { kind: "electron"; bridge: QorgauBridge }
+  | { kind: "electron"; bridge: AppBridge }
   | { kind: "fixture"; bridge: FixtureBridge }
   | { kind: "missing"; reason: string };
 
@@ -19,7 +19,8 @@ export async function selectBridge(): Promise<BridgeChoice> {
     if (shell.bridgeVersion !== "1.0.0") {
       return { kind: "missing", reason: `Несовместимая версия моста оболочки: ${String(shell.bridgeVersion)} (ожидается 1.0.0)` };
     }
-    return { kind: "electron", bridge: shell };
+    // preload (same build) exposes QorgauBridge + the A15 desk-scan methods; window.qorgau is typed by A01 contracts
+    return { kind: "electron", bridge: shell as AppBridge };
   }
   if (FIXTURE_BUILD) {
     const params = new URLSearchParams(window.location.search);

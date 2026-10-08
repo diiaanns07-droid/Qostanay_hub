@@ -1,13 +1,15 @@
 import { createContext, useContext } from "react";
-import type { QorgauBridge, ShellState } from "@contracts/bridge";
+import type { ShellState } from "@contracts/bridge";
 import type { SessionInfo } from "@contracts/qorgau-v1.generated";
 import type { FixtureBridge } from "../bridge/fixtureBridge";
 import type { LiveStore } from "./liveStore";
+import type { AppBridge } from "../../../shared/desk-scan";
 
 export type Role = "student" | "teacher";
 
 export interface AppApi {
-  bridge: QorgauBridge;
+  /** QorgauBridge + the A15 desk-scan methods (shared/desk-scan.ts). */
+  bridge: AppBridge;
   /** Non-null only for the explicitly labelled FixtureBridge. */
   fixture: FixtureBridge | null;
   live: LiveStore;
