@@ -18,6 +18,20 @@ def write_line(line):
         data = data[os.write(sys.stdout.fileno(), data):]
 
 
+class RawInput:
+    """Avoid a daemon holding Python's buffered stdin lock at interpreter exit."""
+    def readline(self, limit):
+        data = bytearray()
+        while len(data) < limit:
+            char = os.read(sys.stdin.fileno(), 1)
+            if not char:
+                break
+            data.extend(char)
+            if char == b'\n':
+                break
+        return data.decode('ascii', errors='replace')
+
+
 def minutes(value):
     n = float(value)
     if not math.isfinite(n) or not 0 < n <= 240:
@@ -52,7 +66,9 @@ def main(argv=None):
     finished = threading.Event()
 
     def on_signal(_signum, _frame):
-        stop.request("console_signal")
+        # Python signal handlers can interrupt Event.set/Lock.acquire on the main
+        # thread. Defer all locking to Runtime.poll instead of re-entering a lock.
+        stop.pending_signal = "console_signal"
 
     @api.CTRLHANDLER
     def console_handler(kind):
@@ -75,7 +91,7 @@ def main(argv=None):
         parent = ParentHandle(api, args.parent_pid)
         hook = KeyboardHook(api, stop, output, enforce=args.mode == "enforce")
         Runtime(hook, parent, lambda: api.foreground(args.parent_pid), output, stop,
-                mode=args.mode, max_minutes=args.max_minutes).run(sys.stdin)
+                mode=args.mode, max_minutes=args.max_minutes).run(RawInput())
     except BaseException:
         stop.request("startup_failed", "startup_failed")
         if output.thread.ident is None:

@@ -1,4 +1,30 @@
-# A06-native — checkpoint 1, Python helper + protocol/lifecycle tests
+# A06-native — checkpoint 2, Python launch + controlled-test preparation
+
+Previous checkpoint pushed: `94b1c81042ea0ac13aa29c882411c5200e380ad4` (before 17:00).
+Same branch/base/scope as checkpoint 1 below; no foreign paths changed.
+
+- `environment/native.ts`: .py helpers launch as `QORGAU_PYTHON -u <script>`; default interpreter
+  matches the backend venv. Missing default exe falls back to native/qorgau_guard.py. Explicit exe preserved.
+  Existing default dry-run / QORGAU_SHELL_NATIVE_ENFORCE=1 opt-in and capability verification gates unchanged.
+- Added actual Python subprocess protocol-fake test (no Win32); existing controller tests retained.
+- Hardened Python stdin/stdout against daemon buffered-stdio shutdown deadlocks; actual pipe watchdog tests.
+  Python signal handler defers locking to the coordinator, avoiding reentrant signal/lock deadlock.
+- `LIVE_CHECK_RU.md` + `live_console.py`: heartbeat sender, max-minutes=2, stop command, local evidence logs;
+  no automatic VERIFICATION.json promotion. Both real dry-run and enforce await captain's explicit yes.
+
+Checked using existing candidate Python / existing Node dependencies (no packages, SDK or compiler installed):
+- `python -m pytest proctoring/desktop/native/tests -q -p no:cacheprovider` → **41 PASS**, 2.08 s;
+  fake Win32 only; includes real subprocess pipes left open for heartbeat/parent/duration exits.
+- `node main/tests/run.mjs native config capabilities guard` → **33 PASS**; native subset **11 PASS**.
+- `npm run typecheck` → PASS contracts/main/renderer; `npm run build:electron` → PASS.
+- Actual `--self-check` only → Windows `10.0.26200`, standard user, no hook installed.
+
+NOT checked: real keyboard hook, key suppression/detection, foreground watch, console-close cleanup,
+emergency chord and normal keyboard/focus after release. QA-WIN-001 remains OPEN pending controlled LIVE.
+`desktop/native/VERIFICATION.json` still unchanged with records []. No blocking claim from fake tests/selfcheck.
+
+---
+## Checkpoint 1 — Python helper + protocol/lifecycle tests
 
 Branch: `codex/proctor-A06-native`. Exact base: `64354c014c4ad51054e8bb67fe841580771d43e5`
 (`codex/proctor-integration`, fetched and verified). Separate checkout `worktrees/A06-native`.
@@ -15,7 +41,7 @@ Checks on Windows: `python -m pytest proctoring/desktop/native/tests -q -p no:ca
 → **36 PASS** (all hooks and Win32 lifecycle operations faked; no actual hook installed).
 `qorgau_guard.py --self-check` → PASS, os `10.0.26200`, standard user; no hook installed.
 
-NEXT: shell .py launch resolution/tests; then controlled LIVE only after explicit captain approval.
+At checkpoint 1: shell .py launch was pending; implemented in checkpoint 2 above.
 QA-WIN-001 is still OPEN; VERIFICATION.json unchanged (`records: []`). LIVE, real suppression/release,
 foreground observation and emergency chord have NOT been verified on hardware.
 Limitations: unsigned Python prototype; Ctrl+Alt+Del/UAC cannot be blocked; OS may silently remove slow hooks.

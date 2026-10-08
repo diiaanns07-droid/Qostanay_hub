@@ -17,7 +17,8 @@ window cannot see or stop by itself (Alt+Tab, Win, PrintScreen, foreign-window f
 `guard_win32.py` owns the Win32 resources; `guard_core.py` owns the bounded line protocol/lifecycle.
 It is **unsigned**, not a production kiosk solution. QA-WIN-001 stays OPEN until the captain explicitly
 authorizes and performs the controlled Windows test. `VERIFICATION.json` remains untouched/empty.
-The first checkpoint includes the helper and fake-hook tests. Python shell-launch support is the next step.
+The shell now supports `.py` via `QORGAU_PYTHON` (same venv selection as the backend), and falls back to
+`native/qorgau_guard.py` when the default exe is absent. Explicitly configured missing exes do not fall back.
 
 The hook runs on a dedicated message thread. Its callback only updates modifier/target-key state,
 decides pass/swallow, and enqueues an allow-listed event. A separate daemon writes stdout with `os.write`.
@@ -87,8 +88,12 @@ disappears, or `--max-minutes` elapses. No restriction may survive a reboot.
 
 | Variable | Meaning |
 |---|---|
-| `QORGAU_SHELL_NATIVE_HELPER` | path to the helper exe (default `desktop/native/bin/qorgau-guard.exe`) |
+| `QORGAU_SHELL_NATIVE_HELPER` | helper `.exe` or `.py`; default exe, then `desktop/native/qorgau_guard.py` if exe absent |
+| `QORGAU_PYTHON` | Python executable for `.py` (otherwise the backend root's `.venv/Scripts/python.exe`) |
 | `QORGAU_SHELL_NATIVE_ENFORCE=1` | allow `--mode enforce` (swallow keys); **controlled test only**, default dry-run |
+
+Interactive test instructions: [LIVE_CHECK_RU.md](LIVE_CHECK_RU.md). `live_console.py` supplies heartbeat,
+caps each run at 2 minutes, writes protocol evidence locally and never edits `VERIFICATION.json`.
 
 ## Verifying OS-level items
 
