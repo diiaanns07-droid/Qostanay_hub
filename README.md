@@ -16,7 +16,7 @@
 
 **Локальный прокторинг для компьютерного класса.** Студент проходит экзамен на своём ПК, преподаватель видит события и проверяет подозрительные эпизоды.
 
-**[Открыть презентацию ↗](https://diiaanns07-droid.github.io/Qostanay_hub/)** · [Презентация PDF](presentation/Adal_Presentation.pdf) · [Запуск на Windows](proctoring/README.md) · [Сценарий демо](proctoring/docs/submission/ADAL_DEMO.md) · [Проверки и ограничения](docs/STATUS.md)
+**[Открыть презентацию ↗](https://diiaanns07-droid.github.io/Qostanay_hub/)** · [Презентация PDF](presentation/Adal_Presentation.pdf) · [Техническое описание PDF](presentation/Adal_Description.pdf) · [Запуск на Windows](proctoring/README.md) · [Сценарий демо](proctoring/docs/submission/ADAL_DEMO.md) · [Проверки и ограничения](docs/STATUS.md)
 
 ## Что делает Adal
 
