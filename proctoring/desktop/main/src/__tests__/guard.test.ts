@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { ExamGuard, type NativeHelperHandle } from "../environment/guard";
 import { FakePlatform, FakeWindow, RecordingSink } from "./helpers";
 
-const mk = (platform = new FakePlatform("win32"), native: NativeHelperHandle | null = null) => {
+const mk = (platform = new FakePlatform("win32"), native: NativeHelperHandle | null = null, enforce = false) => {
   const win = new FakeWindow();
   const sink = new RecordingSink();
   let emergencies = 0;
@@ -12,6 +12,7 @@ const mk = (platform = new FakePlatform("win32"), native: NativeHelperHandle | n
     emergencyAccelerator: "CommandOrControl+Alt+Shift+F12",
     onEmergencyHotkey: () => emergencies++,
     native,
+    enforce,
     refocus: false,
     now: () => now,
   });
@@ -86,6 +87,52 @@ test("emergency hotkey callback reaches the shell", async () => {
   await guard.engage("s1");
   platform.registered.get("CommandOrControl+Alt+Shift+F12")!();
   assert.equal(emergencies(), 1);
+});
+
+test("Enforce refuses unavailable or unverified emergency shortcut and releases partial restrictions", async () => {
+  for (const failure of ["refused", "unverified", "throws"]) {
+    const p = new FakePlatform("win32");
+    if (failure === "refused") p.refuse.add("CommandOrControl+Alt+Shift+F12");
+    if (failure === "unverified") p.isShortcutRegistered = () => false;
+    if (failure === "throws") p.registerShortcut = () => { throw new Error("OS refused registration"); };
+    let starts = 0;
+    const native: NativeHelperHandle = { running: false, start: async () => { starts++; return { mode: "enforce" }; },
+      stop: async () => {}, stopSync: () => {} };
+    const { guard, win, sink } = mk(p, native, true);
+    await assert.rejects(guard.engage("s1"), /emergency hotkey unavailable/);
+    assert.equal(starts, 0, "no native hook may start without a verified emergency route");
+    assert.equal(guard.active, false);
+    for (const flag of ["kiosk", "fullscreen", "alwaysOnTop", "contentProtection"]) assert.equal(win.flags[flag], false);
+    assert.equal(win.flags.closable, true);
+    assert.equal(p.registered.size, 0);
+    assert.ok(sink.actions().includes("enforcement_error:failed"));
+    assert.ok(!sink.actions().includes("exam_mode_engaged:allowed"));
+  }
+});
+
+test("emergency exit permanently prevents queued and new sessions from engaging", async () => {
+  const { guard, win, platform } = mk(new FakePlatform("win32"), null, true);
+  await guard.engage("s1");
+  guard.preventEngage(); guard.releaseSync("emergency_hotkey");
+  for (const id of ["s1", "s2"]) await assert.rejects(guard.engage(id), /application is exiting/);
+  assert.equal(guard.active, false);
+  assert.equal(win.flags.kiosk, false);
+  assert.equal(platform.registered.size, 0);
+});
+
+test("native start completing after emergency release is stopped again and cannot engage", async () => {
+  let ready!: (value: { mode: "enforce" }) => void;
+  let stops = 0;
+  const native: NativeHelperHandle = { running: false, start: () => new Promise(resolve => { ready = resolve; }),
+    stop: async () => {}, stopSync: () => { stops++; } };
+  const { guard, sink } = mk(new FakePlatform("win32"), native, true);
+  const engaging = guard.engage("s1");
+  guard.preventEngage(); guard.releaseSync("emergency_hotkey");
+  ready({ mode: "enforce" });
+  await assert.rejects(engaging, /released while engaging/);
+  assert.equal(stops, 2);
+  assert.equal(guard.active, false);
+  assert.ok(!sink.actions().includes("exam_mode_engaged:allowed"));
 });
 
 test("non-Windows: no PrintScreen hotkey attempt", async () => {
