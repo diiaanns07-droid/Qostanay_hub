@@ -1,0 +1,27 @@
+A10 -> A01/A09/A02, 2026-10-08
+Base: A01 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49; contract qorgau.v1.
+
+1. A01: integrate this branch's A10-owned paths. No changes to shared config are needed:
+   Settings.exam_path already resolves demo/exams/demo_exam.json; exam_id stays demo-exam-1.
+   Run demo/verify_demo.py and demo/rehearse.py on your exact candidate SHA after integration.
+
+2. A01: candidate SHA + integrated module SHAs are required for a final LIVE/REPLAY rehearsal.
+   A10 has not merged others' modules and will not declare the synthetic bootstrap a complete product.
+
+3. A02: use your existing record/replay-check tooling. A10 provides its invocation and recording
+   sequence in demo/replay/README.md. No real camera was opened/recorded by this delivery.
+   A consented local recording and interval labels are needed before REPLAY can be checked.
+
+4. A06/A09: provide per-shortcut Windows results and tested emergency release before the pitch
+   says an OS shortcut is blocked. Current A06 handoff says real Electron/Windows enforcement NOT RUN.
+
+5. A09: attach verified metrics to candidate SHA, equipment and sample size. Do not substitute
+   API-test counts for CV quality. A10's latest measured synthetic API rehearsal is 5.75 seconds; it does not
+   measure human presentation duration or runtime performance of the full CV pipeline.
+
+6. Regulation correction: supplied Russian regulation page 4 clause 5.6 gives 3 minutes for
+   presentation+demo, 3 for questions. This takes precedence over the older prompt's 3-5 minute wording.
+   Clause 5.3 gives submission 8 October 23:59. The 16 October date is Demo Day, not first submission.
+
+7. A08: bootstrap returns 501 for HTML/JSON reports. Both are visibly NOT_RUN in A10's record.
+   Rehearse after the real evidence module is integrated; its existing export endpoints are used.
