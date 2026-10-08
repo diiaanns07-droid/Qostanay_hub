@@ -21,7 +21,7 @@ const checkTone = (c: PreflightCheck): Tone =>
   c.status === "pass" ? "ok" : c.status === "fail" ? (c.required ? "danger" : "warn") : c.status === "warn" ? "warn" : "neutral";
 
 export function PreflightScreen() {
-  const { bridge, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher, live } = useApp();
+  const { bridge, shell, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher, live } = useApp();
   useLive(live);
   const [health, setHealth] = useState<HealthReport | null>(null);
   const [caps, setCaps] = useState<EnvironmentCapabilities | null | { error: ApiErrorBody }>(null);
@@ -49,8 +49,10 @@ export function PreflightScreen() {
   }, [bridge]);
 
   useEffect(() => {
-    void loadEnv();
-  }, [loadEnv]);
+    // The renderer can appear before the child service is ready. Refresh after recovery too,
+    // so a startup/restart error never requires a manual retry once the service is available.
+    if (shell?.backend === "ready" && !backendLost) void loadEnv();
+  }, [loadEnv, shell?.backend, backendLost]);
 
   // The shell measures capabilities at startup (self-test); "not measured yet" is retryable → poll briefly.
   useEffect(() => {

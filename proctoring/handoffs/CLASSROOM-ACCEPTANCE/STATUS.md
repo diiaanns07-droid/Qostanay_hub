@@ -45,4 +45,38 @@ assigned to recovery agent for investigation, not counted as passing yet.
 T01 feature adapters for T03/T04/T05 are still being developed externally. Source merge alone is not mounting.
 No claim of 100 real cameras, working WebRTC in Electron, or complete external-site confinement.
 Current C2 still acknowledges lock/mic flags before actual renderer/device confirmation.
-Synthetic backend provenance on the class wire is not yet correctly represented by the original implementation.
+Synthetic backend provenance was corrected by c3c1329; initial/legacy unknown sources remain unknown.
+
+## Final acceptance on Windows (2026-10-08)
+
+- Actual C1 + two complete `proctor serve` / C2 processes: **15/15 PASS** after provenance fix.
+  Sanitized evidence: `proctoring/acceptance/classroom/chain/windows-integration-result.json`.
+  Includes targeted commands, distinct student event histories, previews, C1 crash/restart, student restart,
+  persistence and bounded cleanup. Synthetic input; loopback network.
+- Teacher panel: **61/61 browser checks PASS**, 2/30/100 synthetic cards, focus, filters, reconnect,
+  layout, reduced motion, mock-adapter errors. 100-card render p95 = 2.4 ms on this machine.
+  10 CSP console warnings attributed to observed Kaspersky DOM injection were counted separately.
+- Real C1 + Chrome teacher form: **39/39 PASS** (no mock API), 390/1366 widths.
+  Screenshot masking now replaces DOM text temporarily, since the strict CSP blocked injected CSS.
+- Panel unit tests: **25 PASS**; strict JS checking PASS.
+- C1/class contracts/C2 tests: **150 PASS** (source-owner run); generated schemas/42 fixtures/TS PASS.
+- Windows launchers: **9/9** on PowerShell 5.1 and **9/9** on PowerShell 7 (source-owner runs).
+- Desktop build/typecheck PASS. Full shell suite: **80 PASS, 1 platform-specific SKIP**, no failures.
+- Student preparation UX: two fixture viewport runs, 11 checks each, PASS; these are not real CV tests.
+- Actual Electron + actual backend startup PASS. No session/camera/microphone started.
+  Real startup exposed a stale preflight error: health requests now wait for readiness, rerun on state
+  changes, and ignore late results from the previous effect. Preflight reloads after recovery.
+  Portable regression: `desktop/renderer/tests/electron-startup.mjs` (build first; set QORGAU_PYTHON
+  and PLAYWRIGHT_MODULE where needed). It checks visible connection/diagnostics, not only process state.
+
+## Publishing and next step
+
+Agent ASTRA-CHAIN's individual push was rejected due to the unrelated GOV_DIPLOME instructions in its
+limited context. Its saved commits were integrated locally. Root revalidated the exact origin against
+the human's explicit Qostanay_hub repository request; the approval review accepted root's integration
+push. Therefore the earlier blocked agent branch is not the delivery: use `codex/classroom-acceptance`.
+
+This is a verified integration checkpoint, not a Windows installer or a proven 100-camera deployment.
+Next milestone: T01 mounts the supplied history/control/audio feature adapters; validate clips, explicit
+student audio indication and effective lock acknowledgements across the user's three physical PCs.
+The main teaching flow should then expose only capabilities those adapters actually confirm.
