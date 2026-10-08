@@ -262,14 +262,21 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
     assert.equal(g2.active, false);
     assert.ok(((await live.operatorUnlock("2468")) as R).ok);
     const exportAfter = (await live.exportReport(sid, "json")) as R;
-    assert.notEqual(exportAfter.error?.details.shell_code, "exam_mode_active", "after finish export is no longer closed by the shell");
+    // the shell no longer blocks it: the request reaches the backend (bootstrap store: report = 501)
+    assert.ok(exportAfter.ok || exportAfter.error?.code === "NOT_IMPLEMENTED", JSON.stringify(exportAfter));
   });
 
   test("arity/size/untrusted values are rejected before reaching the backend", async () => {
     const r1 = (await api.getSession()) as { ok: boolean; error?: { code: string } };
     assert.equal(r1.error?.code, "INVALID_ARGUMENT");
-    const r2 = (await api.getSession("../../health")) as { ok: boolean; error?: { code: string } };
-    assert.equal(r2.error?.code, "INVALID_ARGUMENT");
+    // a foreign/garbage session id is refused by the access policy first (teacher-only) ...
+    const r2 = (await api.getSession("../../health")) as { ok: boolean; error?: { code: string; details: Record<string, unknown> } };
+    assert.equal(r2.error?.details.shell_code, "operator_locked");
+    // ... and, for the unlocked teacher, by argument validation — never by the backend
+    assert.ok(((await api.operatorUnlock("2468")) as { ok: boolean }).ok);
+    const r2b = (await api.getSession("../../health")) as { ok: boolean; error?: { code: string } };
+    assert.equal(r2b.error?.code, "INVALID_ARGUMENT");
+    await api.operatorLock();
     const r3 = (await api.saveAnswer("s", "q", { value: "x".repeat(70_000), client_seq: 1 })) as { ok: boolean; error?: { code: string } };
     assert.equal(r3.error?.code, "INVALID_ARGUMENT");
   });

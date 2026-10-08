@@ -19,7 +19,7 @@ import type {
 import { BackendClient } from "../backend/client";
 import { fail, ok, shellError } from "../errors";
 import { logger } from "../log";
-import { decideAccess, LIVE_REVIEW, OPERATOR_REQUIRED, OperatorSession, type AccessPolicy } from "../shell/access";
+import { decideAccess, OperatorSession, type AccessPolicy } from "../shell/access";
 import type { OperatorAuth } from "../shell/operator";
 import type { ShellStateMachine } from "../shell/state";
 import type { InvokeName } from "./channels";
@@ -107,6 +107,21 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
     return r;
   };
 
+  /** Exam = restrictions engaged OR the bound session still RUNNING (e.g. after a release path). */
+  const examInProgress = (): boolean => machine.state.exam_mode_active || machine.boundSessionState === "running";
+
+  const decide = (name: InvokeName, firstArg: unknown) => {
+    const st = machine.state;
+    if (!st.operator_unlocked) opSession.locked(); // e.g. cleared by the state machine when the exam engages
+    const unlocked = st.operator_unlocked && opSession.check(); // expiry locks the shell state too
+    return decideAccess(name, firstArg, { examActive: examInProgress(), operatorUnlocked: unlocked, boundSessionId: st.session_id }, policy);
+  };
+
+  const latched = (sid: string): BridgeResult<never> | null =>
+    machine.engageForbidden(sid)
+      ? fail(shellError("INVALID_STATE", "enforcement_error", "Exam restrictions cannot be re-engaged for this session; finish or abort it"))
+      : null;
+
   const bound = (sid: string): BridgeResult<never> | null => {
     const s = machine.state.session_id;
     if (s !== null && s !== sid && machine.state.exam_mode_active) {
@@ -181,7 +196,7 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       if (machine.state.session_id !== sid) {
         return fail(shellError("SESSION_MISMATCH", "session_not_bound", "Start only the session created in this shell run"));
       }
-      return sessionCall("POST", P("sessions", sid, "start"));
+      return latched(sid) ?? sessionCall("POST", P("sessions", sid, "start"));
     },
     pauseExam: async (sid, body) => {
       const s = v.id(sid, "session_id");
@@ -190,7 +205,7 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
     resumeExam: async (sid) => {
       const s = v.id(sid, "session_id");
       if (machine.state.session_id !== s) return fail(shellError("SESSION_MISMATCH", "session_not_bound", "Resume only the bound session"));
-      return sessionCall("POST", P("sessions", s, "resume"));
+      return latched(s) ?? sessionCall("POST", P("sessions", s, "resume"));
     },
     finishExam: async (sid) => {
       const s = v.id(sid, "session_id");
@@ -229,6 +244,9 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       const fmt = v.exportFormat(fmtRaw);
       const r = await client.binary(P("sessions", sid, `report.${fmt}`), 60_000);
       if (!r.ok) return r;
+      // the fetch can take long: never open a native dialog if an exam started meanwhile
+      const again = decide("exportReport", sid);
+      if (!again.allow) return fail(shellError(again.code, again.shellCode, again.message));
       const fileName = `qorgau-report-${sid}.${fmt}`;
       const saved = await d.saveFile(fileName, r.data.bytes, [{ name: fmt.toUpperCase(), extensions: [fmt] }]);
       return ok<SavedExport>({ file_name: fileName, saved: saved !== null });
@@ -244,15 +262,15 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
       try {
         if (args.length !== ARITY[name]) throw new v.ValidationError("args", `expected ${ARITY[name]} argument(s), got ${args.length}`);
         v.checkSize(args);
-        const st = machine.state;
-        if (!st.operator_unlocked) opSession.locked(); // e.g. cleared by the state machine at exam start
-        const unlocked = st.operator_unlocked && opSession.check(); // expiry locks the shell state too
-        const decision = decideAccess(name, args[0], { examActive: st.exam_mode_active, operatorUnlocked: unlocked, boundSessionId: st.session_id }, policy);
+        const decision = decide(name, args[0]);
         if (!decision.allow) {
           return fail(shellError(decision.code, decision.shellCode, decision.message));
         }
-        if (unlocked && (OPERATOR_REQUIRED.has(name) || LIVE_REVIEW.has(name))) opSession.touch();
-        return await fn(...args);
+        const result = await fn(...args);
+        // only a successful call that actually needed the unlock keeps it alive (no refresh by polling
+        // PIN-free reads or by rejected arguments)
+        if (decision.operator && (result as { ok?: boolean } | null)?.ok === true) opSession.touch();
+        return result;
       } catch (err) {
         if (err instanceof v.ValidationError) {
           log.warn(`${name}: rejected argument ${err.field}: ${err.problem}`);

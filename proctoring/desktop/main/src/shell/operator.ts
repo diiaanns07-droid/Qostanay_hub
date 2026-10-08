@@ -31,7 +31,7 @@ export class OperatorAuth {
 
   constructor(
     env: NodeJS.ProcessEnv,
-    private readonly now: () => number = Date.now,
+    private readonly now: () => number = () => Number(process.hrtime.bigint() / 1_000_000n), // monotonic
   ) {
     const configured = env.QORGAU_OPERATOR_PIN_HASH ? parseHash(env.QORGAU_OPERATOR_PIN_HASH) : null;
     if (env.QORGAU_OPERATOR_PIN_HASH && !configured) log.error("QORGAU_OPERATOR_PIN_HASH has an invalid format; operator unlock disabled");

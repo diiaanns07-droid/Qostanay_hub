@@ -101,16 +101,31 @@ test("emergency latch: a session can never re-engage after an emergency exit", a
   assert.equal(m.state.mode, "error");
 });
 
-test("operator unlock is cleared when a new exam starts, kept across pause/resume", async () => {
+test("operator unlock is cleared on EVERY engage: start, resume, recovery", async () => {
   const { m } = mk();
   await m.bind(sessionInfo("s1", "ready"));
   m.setOperator(true);
   await m.observe(sessionInfo("s1", "running"));
-  assert.equal(m.state.operator_unlocked, false);
-  m.setOperator(true);
+  assert.equal(m.state.operator_unlocked, false, "start");
+  m.setOperator(true); // teacher unlocks to pause
   await m.observe(sessionInfo("s1", "paused"));
+  assert.equal(m.state.operator_unlocked, true, "still unlocked while paused (teacher present)");
   await m.observe(sessionInfo("s1", "running"));
-  assert.equal(m.state.operator_unlocked, true);
+  assert.equal(m.state.operator_unlocked, false, "resume: student at the keyboard again, PIN needed to pause");
+  m.setOperator(true);
+  await m.backendLost("x"); // release path ...
+  await m.bind(sessionInfo("s2", "ready"));
+  m.setOperator(true);
+  await m.releaseTo("error", "renderer_gone", null);
+  await m.observe(sessionInfo("s2", "running")); // ... and recovery re-engage
+  assert.equal(m.state.operator_unlocked, false, "recovery re-engage");
+});
+
+test("engageForbidden reports the latch", async () => {
+  const { m } = mk();
+  assert.equal(m.engageForbidden("s1"), false);
+  m.forbidEngage("s1");
+  assert.equal(m.engageForbidden("s1"), true);
 });
 
 test("rebinding releases a still-engaged previous session", async () => {

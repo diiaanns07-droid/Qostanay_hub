@@ -368,15 +368,29 @@ function createWindow(ses: Session): BrowserWindow {
     unresponsiveTimer = null;
     void refreshBoundSession();
   });
+  const crashes: number[] = [];
   w.webContents.on("render-process-gone", (_e, details) => {
     log.error(`renderer gone: ${details.reason} (exit ${details.exitCode})`);
     events.emit({ action: "enforcement_error", enforcement: "failed", mechanism: "electron.watchdog", scope: "app", detail: { shortcut: "renderer_gone" } });
     void machine.releaseTo("error", "renderer_gone", shellError("INTERNAL", "enforcement_error", `Renderer ${details.reason}: restrictions released`, true));
-    if (!quitting && details.reason !== "clean-exit") {
-      setTimeout(() => {
-        if (!w.isDestroyed()) void w.loadURL(cfg.devRendererUrl ?? APP_ENTRY);
-      }, 1_000);
+    if (quitting || details.reason === "clean-exit") return;
+    const now = Date.now();
+    crashes.push(now);
+    while (crashes.length && now - crashes[0]! > 120_000) crashes.shift();
+    const loop = crashes.length >= 3;
+    if (loop) {
+      // crash loop: stop toggling restrictions; the session continues unrestricted and is recorded
+      const sid = machine.state.session_id;
+      if (sid) machine.forbidEngage(sid);
+      log.error("renderer crash loop: exam restrictions will not be re-engaged for this session");
     }
+    setTimeout(() => {
+      if (w.isDestroyed()) return;
+      // after the reload, main itself re-reads the bound session: a RUNNING session re-engages
+      // (unless latched) without relying on the renderer to ask
+      if (!loop) w.webContents.once("did-finish-load", () => void refreshBoundSession());
+      void w.loadURL(cfg.devRendererUrl ?? APP_ENTRY);
+    }, 1_000);
   });
   w.on("closed", () => {
     mainWindow = null;
@@ -459,9 +473,11 @@ process.on("uncaughtException", (err) => {
   } catch {
     /* reporting must never block the release */
   }
-  // main is in an unknown state: release now and never re-engage this session (no engage/crash loop)
+  // main is in an unknown state: release now; if an exam was in progress, never re-engage that
+  // session (no engage/crash loop). A session still in preflight is not latched: its later start
+  // engages normally.
   const sid = machine.state.session_id;
-  if (sid) machine.forbidEngage(sid);
+  if (sid && (guard.active || machine.boundSessionState === "running")) machine.forbidEngage(sid);
   guard.releaseSync("main_exception");
   void machine.releaseTo("error", "engage_failed", shellError("INTERNAL", "enforcement_error", "Shell error: restrictions released", true));
 });

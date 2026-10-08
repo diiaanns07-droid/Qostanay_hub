@@ -44,7 +44,10 @@ applied automatically.
 
 "Shell logic" = `node main/tests/run.mjs` (real backend process) and `node main/tests/shell-smoke.mjs`
 (built `main.cjs` under the Electron **API stub** + real backend; after every path the smoke asserts the
-stub window has kiosk/always-on-top off, closable on and zero global shortcuts). Round 2: 74 + 48 PASS.
+stub window has kiosk/always-on-top off, closable on and zero global shortcuts — fullscreen/content
+protection/minimizable/resizable/movable are not part of that assertion). Round 2: 78 + 48 PASS.
+Caveat: the smoke runs in the same process as main.cjs, whose `uncaughtException` handler can swallow
+a harness error; read the per-check lines, not only the exit code.
 
 | Case | Expected | Shell logic | Real Electron / Windows |
 |---|---|---|---|
@@ -53,17 +56,17 @@ stub window has kiosk/always-on-top off, closable on and zero global shortcuts).
 | Normal start → exam mode | guard engaged only on `running`; teacher unlock cleared | PASS (smoke) | NOT RUN |
 | Pause (operator PIN) | restrictions released, session kept | PASS (integration) | NOT RUN |
 | Finish | released, `normal`, review open again | PASS (smoke) | NOT RUN |
-| Emergency hotkey | release first (no backend dependency), abort, latch: never re-engages | PASS (smoke) | NOT RUN |
-| Renderer crash during exam | release, `error`, reload; RUNNING session re-engages when the UI is back | PASS (smoke, stub event) | NOT RUN |
+| Emergency hotkey | release first (no backend dependency), abort, latch: never re-engages | release+abort PASS (smoke); latch PASS (`state.test.ts`) | NOT RUN |
+| Renderer crash during exam | release, `error`, reload; main re-reads the session after reload → RUNNING re-engages; 3 crashes/2 min → latch | release+reload PASS (smoke, stub event); re-engage PASS via an explicit `getSession` in the smoke; main's own re-read not separately asserted | NOT RUN |
 | Renderer unresponsive 5 s | release, `error`; re-engage when responsive | PASS (smoke, stub event, 5 s real timer) | NOT RUN |
-| Uncaught exception in main | synchronous release, `enforcement_error` event, session latched (no engage/crash loop) | PASS (smoke) | NOT RUN |
-| Backend SIGKILL during exam | release, `error`, restart with new token/port, dead session not resurrected | PASS (smoke + integration) | NOT RUN |
+| Uncaught exception in main | synchronous release, `enforcement_error` event, session latched only if an exam was in progress | release + latch PASS (smoke); event not asserted | NOT RUN |
+| Backend SIGKILL during exam | release, `error`, restart with new token/port, dead session not resurrected | PASS (integration: new token, old token 401); smoke: release PASS, restart check weak | NOT RUN |
 | Backend ignores shutdown | terminate → kill | PASS (integration) | NOT RUN |
 | Graceful stdin shutdown with RUNNING session | backend aborts the session and exits 0 by itself | PASS (integration) | NOT RUN |
-| Quit during exam | release, flush events, backend stopped, exit 0 | PASS (smoke) | NOT RUN |
+| Quit during exam | release, flush events, backend stopped, exit 0 | release + backend unreachable PASS (smoke); exit code / orphan check not asserted | NOT RUN |
 | Force close (Alt+F4 / window close) during exam | prevented | PASS (guard + smoke) | NOT RUN |
-| Teacher access during exam | default: review closed; opt-in live review: bound session + PIN + expiry | PASS (unit + integration) | NOT RUN |
-| Windows helper lifecycle (stdin EOF, stop, heartbeat, parent death, max duration, hook error) | helper unhooks and exits on every path | controller PASS vs protocol fake only | **NOT DELIVERED** (no helper source/build in this round) |
+| Teacher access during exam | default: review closed; opt-in live review: bound session + PIN + expiry; no other session reachable; unlock cleared on every engage | PASS (unit + integration) | NOT RUN |
+| Windows helper lifecycle (stdin EOF, stop, heartbeat, parent death, max duration, hook error) | helper unhooks and exits on every path | controller side only: start/ready/stop/kill/unexpected-exit PASS vs protocol fake; helper-side paths not tested | **NOT DELIVERED** (no helper source/build in this round) |
 
 ## How to complete the NOT RUN column (Windows, A06-cp2 / A09)
 

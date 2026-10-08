@@ -62,3 +62,13 @@ A06 -> A01 requests (shared files are NOT edited by A06). Baseline: BOOTSTRAP 35
     unverified/unsupported. Options for the demo: institution-managed Keyboard Filter / Assigned Access
     (desktop/native/README.md) measured on the target and recorded in VERIFICATION.json, or a separately
     reviewed helper meeting the requirements listed in desktop/native/README.md.
+
+12. A07 — after the round-2 review the shell is stricter (handoffs/A06/ACCESS_POLICY.md, regenerated table):
+    * history is teacher-only: listSessions and ANY call with a session id other than the one created in
+      this shell run need the operator unlock outside the exam (shell_code operator_locked);
+    * during the exam every session-scoped call must use the current session id (session_not_bound);
+    * the unlock is cleared on every engage (start, resume, crash recovery): after resume the teacher
+      re-enters the PIN to pause again;
+    * startExam/resumeExam of a session whose restrictions cannot be re-engaged (emergency exit, main
+      exception during the exam, renderer crash loop) return INVALID_STATE / enforcement_error — show
+      "finish or abort", not a retry loop.
