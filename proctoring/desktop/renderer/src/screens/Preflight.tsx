@@ -1,0 +1,383 @@
+import { useCallback, useEffect, useState } from "react";
+import type {
+  ApiErrorBody,
+  EnvironmentCapabilities,
+  HealthReport,
+  PreflightCheck,
+  PreflightReport,
+  SourceMode,
+} from "@contracts/qorgau-v1.generated";
+import { useApp } from "../lib/appContext";
+import { call } from "../lib/result";
+import { CAPABILITY, CHECK, CHECK_STATUS, COMPONENT, ENV_ACTION, HEALTH, SOURCE_MODE_RU } from "../lib/labels";
+import { Badge, Banner, Button, Card, Dialog, Dot, ErrorBanner, Spinner, type Tone } from "../components/ui";
+
+const CONSENT_VERSION = "consent-ru-1";
+const DEFAULT_EXAM_ID = "demo-exam-1";
+
+const checkTone = (c: PreflightCheck): Tone =>
+  c.status === "pass" ? "ok" : c.status === "fail" ? (c.required ? "danger" : "warn") : c.status === "warn" ? "warn" : "neutral";
+
+export function PreflightScreen() {
+  const { bridge, session, setSession, live, backendLost, role, requestTeacher } = useApp();
+  const [health, setHealth] = useState<HealthReport | null>(null);
+  const [caps, setCaps] = useState<EnvironmentCapabilities | null | "none">(null);
+  const [loadErr, setLoadErr] = useState<ApiErrorBody | null>(null);
+  const [report, setReport] = useState<PreflightReport | null>(null);
+  const [busy, setBusy] = useState<null | "create" | "preflight" | "calibrate" | "skip" | "abort">(null);
+  const [actionErr, setActionErr] = useState<{ ctx: string; error: ApiErrorBody } | null>(null);
+  const [skipOpen, setSkipOpen] = useState(false);
+
+  // form
+  const [mode, setMode] = useState<SourceMode>(bridge.transport === "fixture" ? "synthetic" : "live");
+  const [replayId, setReplayId] = useState("");
+  const [label, setLabel] = useState("");
+  const [examId, setExamId] = useState(DEFAULT_EXAM_ID);
+  const [retainMedia, setRetainMedia] = useState(false);
+  const [consent, setConsent] = useState(false);
+
+  const loadEnv = useCallback(async () => {
+    setLoadErr(null);
+    const [h, c] = await Promise.all([call(bridge.health()), call(bridge.getEnvironmentCapabilities())]);
+    if (h.ok) setHealth(h.data);
+    else setLoadErr(h.error);
+    setCaps(c.ok ? c.data : "none");
+  }, [bridge]);
+
+  useEffect(() => {
+    void loadEnv();
+  }, [loadEnv]);
+
+  const runPreflight = useCallback(
+    async (sid: string) => {
+      setBusy("preflight");
+      setActionErr(null);
+      const r = await call(bridge.runPreflight(sid));
+      setBusy(null);
+      if (!r.ok) return setActionErr({ ctx: "Проверка", error: r.error });
+      setReport(r.data);
+      const s = await call(bridge.getSession(sid));
+      if (s.ok) setSession(s.data);
+    },
+    [bridge, setSession],
+  );
+
+  // A session restored after reload/reconnect in created/preflight: re-run checks so the report is current.
+  useEffect(() => {
+    if (session && (session.state === "created" || session.state === "preflight") && !report && busy === null) {
+      void runPreflight(session.session_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.session_id]);
+
+  const create = async () => {
+    setBusy("create");
+    setActionErr(null);
+    const r = await call(
+      bridge.createSession({
+        source: {
+          mode,
+          camera_index: 0,
+          replay_id: mode === "replay" ? replayId.trim() : null,
+          width: 640,
+          height: 480,
+          fps: 30,
+        },
+        exam_id: examId.trim(),
+        student_label: label.trim() || null,
+        consent: { accepted: true, text_version: CONSENT_VERSION, accepted_at: new Date().toISOString() },
+        retain_media: retainMedia,
+      }),
+    );
+    setBusy(null);
+    if (!r.ok) return setActionErr({ ctx: "Создание сессии", error: r.error });
+    live.reset(r.data.session_id);
+    setSession(r.data);
+    await runPreflight(r.data.session_id);
+  };
+
+  const toCalibration = async () => {
+    if (!session) return;
+    setBusy("calibrate");
+    setActionErr(null);
+    const r = await call(bridge.calibrationStart(session.session_id));
+    if (!r.ok) {
+      setBusy(null);
+      return setActionErr({ ctx: "Калибровка", error: r.error });
+    }
+    const s = await call(bridge.getSession(session.session_id));
+    setBusy(null);
+    if (s.ok) setSession(s.data);
+  };
+
+  const skip = async (reason: string) => {
+    if (!session) return;
+    setBusy("skip");
+    const r = await call(bridge.calibrationSkip(session.session_id, { reason }));
+    if (!r.ok) {
+      setBusy(null);
+      return setActionErr({ ctx: "Пропуск калибровки", error: r.error });
+    }
+    const s = await call(bridge.getSession(session.session_id));
+    setBusy(null);
+    setSkipOpen(false);
+    if (s.ok) setSession(s.data);
+  };
+
+  const abort = async () => {
+    if (!session) return;
+    setBusy("abort");
+    const r = await call(bridge.abortExam(session.session_id, { reason: "cancelled_at_preflight" }));
+    setBusy(null);
+    if (!r.ok) return setActionErr({ ctx: "Отмена сессии", error: r.error });
+    setSession(r.data);
+  };
+
+  const sessionActive = session && (session.state === "created" || session.state === "preflight");
+  const requiredFailed = report?.checks.filter((c) => c.required && c.status !== "pass") ?? [];
+  const formValid = consent && examId.trim().length > 0 && (mode !== "replay" || replayId.trim().length > 0);
+
+  return (
+    <div className="screen preflight">
+      <div className="screen-head">
+        <div>
+          <h1>Подготовка к экзамену</h1>
+          <p className="lead">
+            Перед началом проверяем локальный сервис, источник кадров, модели и защиту среды. Всё работает на этом
+            компьютере, без интернета.
+          </p>
+        </div>
+      </div>
+
+      {loadErr && <ErrorBanner context="Состояние сервиса" error={loadErr} onRetry={() => void loadEnv()} />}
+      {actionErr && <ErrorBanner context={actionErr.ctx} error={actionErr.error} onDismiss={() => setActionErr(null)} />}
+
+      <div className="grid-2">
+        <div className="stack">
+          {!sessionActive ? (
+            <Card title="1. Информированное начало">
+              <div className="privacy">
+                <div>
+                  <h3>Что обрабатывается</h3>
+                  <ul>
+                    <li>Кадры камеры — только на этом компьютере: телефон в кадре, наличие и число лиц, положение головы.</li>
+                    <li>События окна экзамена: сочетания клавиш, потеря фокуса, посторонние окна (без текста и заголовков окон).</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3>Что сохраняется</h3>
+                  <ul>
+                    <li>Метаданные наблюдений, эпизоды, ответы и решения преподавателя — локально.</li>
+                    <li>
+                      Кадры-доказательства — <b>только</b> если включено ниже. Биометрические шаблоны лица не создаются.
+                    </li>
+                    <li>Решение принимает преподаватель. Автоматических санкций нет.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <fieldset className="field">
+                <legend>Источник кадров</legend>
+                <div className="segmented" role="radiogroup">
+                  {(["live", "replay", "synthetic"] as const).map((m) => (
+                    <label key={m} className={`seg ${mode === m ? "seg-on" : ""}`}>
+                      <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} />
+                      {SOURCE_MODE_RU[m]}
+                    </label>
+                  ))}
+                </div>
+                <p className="hint">
+                  {mode === "live" && "Камера этого компьютера. Требует все модели и защиту среды; без них начать нельзя."}
+                  {mode === "replay" && "Заранее записанное видео проходит через тот же конвейер. Везде помечается как REPLAY."}
+                  {mode === "synthetic" && "Тестовый режим без камеры и без CV. Везде помечается как SYNTHETIC."}
+                </p>
+              </fieldset>
+
+              {mode === "replay" && (
+                <label className="field">
+                  <span>Идентификатор записи</span>
+                  <input value={replayId} onChange={(e) => setReplayId(e.target.value)} placeholder="например, demo-phone-01" />
+                </label>
+              )}
+              <div className="row-2">
+                <label className="field">
+                  <span>Метка студента (необязательно)</span>
+                  <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="псевдоним, без ФИО" maxLength={64} />
+                </label>
+                <label className="field">
+                  <span>Экзамен</span>
+                  <input value={examId} onChange={(e) => setExamId(e.target.value)} />
+                </label>
+              </div>
+              <label className="check">
+                <input type="checkbox" checked={retainMedia} onChange={(e) => setRetainMedia(e.target.checked)} />
+                <span>Сохранять кадры-доказательства для эпизодов (по умолчанию выключено)</span>
+              </label>
+              <label className="check check-strong">
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                <span>Студент ознакомлен с тем, что обрабатывается и сохраняется, и согласен начать (текст {CONSENT_VERSION})</span>
+              </label>
+              <div className="actions">
+                <Button variant="primary" size="lg" busy={busy === "create" || busy === "preflight"} disabled={!formValid || backendLost} onClick={() => void create()}>
+                  Создать сессию и проверить
+                </Button>
+                {!consent && <span className="hint">Нужно согласие участника.</span>}
+              </div>
+            </Card>
+          ) : (
+            <Card
+              title="2. Проверка готовности"
+              aside={<span className="mono muted">{session.session_id}</span>}
+            >
+              {busy === "preflight" && !report && <Spinner label="Выполняем проверки…" />}
+              {report && (
+                <>
+                  {report.ready ? (
+                    <Banner tone="ok" title="Обязательные проверки пройдены">
+                      Предупреждения ниже не мешают начать, но отражаются в отчёте.
+                    </Banner>
+                  ) : (
+                    <Banner tone="danger" title="Начать нельзя: не пройдены обязательные проверки">
+                      {requiredFailed.map((c) => CHECK[c.check_id]).join(", ") || "см. список ниже"}
+                    </Banner>
+                  )}
+                  <ul className="checks">
+                    {report.checks.map((c) => (
+                      <li key={c.check_id} className={`check-row tone-${checkTone(c)}`}>
+                        <Dot tone={checkTone(c)} />
+                        <div className="check-main">
+                          <div className="check-name">
+                            {CHECK[c.check_id]}
+                            {c.required ? <Badge tone="neutral">обязательно</Badge> : <span className="muted small">необязательно</span>}
+                          </div>
+                          <div className="check-msg">{c.message_ru}</div>
+                        </div>
+                        <div className={`check-status status-${c.status}`}>{CHECK_STATUS[c.status]}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <div className="actions">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  disabled={!report?.ready || backendLost}
+                  busy={busy === "calibrate"}
+                  onClick={() => void toCalibration()}
+                  title={!report?.ready ? "Сначала должны пройти обязательные проверки" : undefined}
+                >
+                  К калибровке
+                </Button>
+                <Button busy={busy === "preflight"} disabled={backendLost} onClick={() => void runPreflight(session.session_id)}>
+                  Проверить снова
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled={!report?.ready || backendLost}
+                  onClick={() => (role === "teacher" ? setSkipOpen(true) : requestTeacher())}
+                  title="Решение преподавателя: потребуется PIN"
+                >
+                  Без калибровки…
+                </Button>
+                <span className="spacer" />
+                <Button variant="danger" busy={busy === "abort"} disabled={backendLost} onClick={() => void abort()}>
+                  Отменить сессию
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+
+        <div className="stack">
+          <Card title="Компоненты" aside={health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}>
+            {!health && !loadErr && <Spinner label="Запрашиваем состояние…" />}
+            {!health && loadErr && <p className="muted">Нет данных о компонентах.</p>}
+            {health && (
+              <ul className="comp-list">
+                {health.components.map((c) => {
+                  const tone: Tone = c.status === "ok" ? "ok" : c.status === "degraded" || c.status === "starting" ? "warn" : "danger";
+                  return (
+                    <li key={c.component}>
+                      <Dot tone={tone} />
+                      <span className="comp-name">{COMPONENT[c.component]}</span>
+                      <span className="comp-status">{HEALTH[c.status]}</span>
+                      {c.message && <span className="comp-msg">{c.message}</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {health && <p className="small muted">Версия сервиса {health.backend_version} · контракт {health.contract_version}</p>}
+          </Card>
+
+          <Card title="Защита среды">
+            {caps === null && <Spinner label="Запрашиваем возможности оболочки…" />}
+            {caps === "none" && (
+              <Banner tone="warn" title="Оболочка не сообщила возможности защиты">
+                Для LIVE-сессии это обязательная проверка.
+              </Banner>
+            )}
+            {caps && caps !== "none" && (
+              <>
+                <p className="small muted">
+                  {caps.platform} · оболочка {caps.shell_version} · режим экзамена {caps.exam_mode_supported ? "поддерживается" : "не поддерживается"}
+                </p>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Действие</th>
+                      <th scope="col">Статус</th>
+                      <th scope="col">Примечание</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {caps.items.map((it) => (
+                      <tr key={it.action}>
+                        <td>{ENV_ACTION[it.action]}</td>
+                        <td>
+                          <Badge tone={it.status === "blocked" ? "ok" : it.status === "detected_only" ? "info" : it.status === "unverified" ? "warn" : "neutral"}>
+                            {CAPABILITY[it.status]}
+                          </Badge>
+                        </td>
+                        <td className="small">{it.note_ru ?? "—"}{it.verified_on ? ` · проверено: ${it.verified_on}` : ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="small muted">Перечислено только то, что сообщила оболочка. Остальные действия не заявляются как защищённые.</p>
+              </>
+            )}
+          </Card>
+        </div>
+      </div>
+
+      {skipOpen && <SkipDialog busy={busy === "skip"} onClose={() => setSkipOpen(false)} onSkip={(r) => void skip(r)} />}
+    </div>
+  );
+}
+
+export function SkipDialog({ busy, onClose, onSkip }: { busy: boolean; onClose: () => void; onSkip: (reason: string) => void }) {
+  const [reason, setReason] = useState("");
+  return (
+    <Dialog
+      title="Начать без калибровки"
+      tone="warn"
+      onClose={onClose}
+      actions={
+        <>
+          <Button onClick={onClose}>Отмена</Button>
+          <Button variant="warn" busy={busy} disabled={reason.trim().length < 3} onClick={() => onSkip(reason.trim())}>
+            Пропустить калибровку
+          </Button>
+        </>
+      }
+    >
+      <p>Без калибровки оценки направления взгляда будут помечены как некалиброванные. Причина попадёт в отчёт.</p>
+      <label className="field">
+        <span>Причина</span>
+        <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={300} placeholder="например, студент в очках с бликами" />
+      </label>
+    </Dialog>
+  );
+}
