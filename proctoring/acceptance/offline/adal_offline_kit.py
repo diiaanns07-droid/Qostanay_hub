@@ -9,7 +9,7 @@ requirements/*.txt, pyproject.toml, desktop/package-lock.json and acceptance/off
 
 Commands:  plan | inventory | build | verify | check-pc        (python adal_offline_kit.py <command> -h)
 Exit codes: 0 ready; 1 required artifact missing/corrupt/incompatible; 2 blocked (unconfirmed pin, source
-or licence); 64 usage error. Optional artifacts never turn a failure into PASS and never fail the run.
+or licence, unreadable pin file); 64 usage error; 70 internal error of this tool. Optional artifacts never turn a failure into PASS and never fail the run.
 """
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ MARKER_ENV = {"sys_platform": "win32", "platform_machine": "AMD64", "platform_sy
 
 PASS, MISSING, CORRUPT, WRONG_PLATFORM, BLOCKED, WARN = "PASS", "MISSING", "CORRUPT", "WRONG_PLATFORM", "BLOCKED", "WARN"
 FAILING = (MISSING, CORRUPT, WRONG_PLATFORM)
-EXIT_READY, EXIT_NOT_READY, EXIT_BLOCKED, EXIT_USAGE = 0, 1, 2, 64
+EXIT_READY, EXIT_NOT_READY, EXIT_BLOCKED, EXIT_USAGE, EXIT_INTERNAL = 0, 1, 2, 64, 70
 
 # Which model module matters for the classroom CV demo (phone in frame / looking away on a student PC).
 # Evidence for each mark is in proctoring/handoffs/ADAL-OFFLINE-KIT/MODELS.md.
@@ -76,6 +76,10 @@ MESSAGE_START = re.compile(r"\b(?:throw|Write-(?:Host|Warning|Error|Output|Verbo
 
 class UsageError(Exception):
     pass
+
+
+class PinError(ValueError):
+    """A pin file of the checkout cannot be read unambiguously: report BLOCKED, never guess."""
 
 
 # ---------------------------------------------------------------------------------------------- utilities
@@ -381,12 +385,12 @@ def evaluate_marker(marker: str, env: dict[str, str] = MARKER_ENV) -> bool:
     while pos < len(text):
         match = _MARKER_TOKEN.match(text, pos)
         if not match or match.end() == pos:
-            raise ValueError(f"unsupported marker syntax near {text[pos:pos + 30]!r}")
+            raise PinError(f"unsupported marker syntax near {text[pos:pos + 30]!r}")
         pos = match.end()
         kind = match.lastgroup if match.lastgroup not in ("q", "val", "op") else "cmp"
         if match.group("var"):
             if match.group("var") not in env:
-                raise ValueError(f"unknown marker variable {match.group('var')!r}")
+                raise PinError(f"unknown marker variable {match.group('var')!r}")
             value = env[match.group("var")] == match.group("val")
             tokens.append(("bool", value if match.group("op") == "==" else not value))
         else:
@@ -414,7 +418,7 @@ def evaluate_marker(marker: str, env: dict[str, str] = MARKER_ENV) -> bool:
     def parse_atom() -> bool:
         nonlocal position
         if position >= len(tokens):
-            raise ValueError("incomplete marker")
+            raise PinError("incomplete marker")
         kind, value = tokens[position]
         position += 1
         if kind == "bool":
@@ -422,14 +426,14 @@ def evaluate_marker(marker: str, env: dict[str, str] = MARKER_ENV) -> bool:
         if kind == "open":
             inner = parse_or()
             if position >= len(tokens) or tokens[position][0] != "close":
-                raise ValueError("unbalanced parentheses in marker")
+                raise PinError("unbalanced parentheses in marker")
             position += 1
             return inner
-        raise ValueError(f"unexpected {kind!r} in marker")
+        raise PinError(f"unexpected {kind!r} in marker")
 
     result = parse_or()
     if position != len(tokens):
-        raise ValueError("trailing tokens in marker")
+        raise PinError("trailing tokens in marker")
     return result
 
 
@@ -449,7 +453,7 @@ def parse_requirements(path: Path) -> list[Requirement]:
         spec, _, marker = line.partition(";")
         match = re.fullmatch(r"([A-Za-z0-9][A-Za-z0-9._-]*)==([A-Za-z0-9.+!_-]+)", spec.strip())
         if not match:
-            raise ValueError(f"{path.name}: only pinned 'name==version' lines are supported: {spec.strip()!r}")
+            raise PinError(f"{path.name}: only pinned 'name==version' lines are supported: {spec.strip()!r}")
         reqs.append(Requirement(match.group(1), match.group(2), marker.strip(), hashes))
 
     for raw in lines:
@@ -707,7 +711,7 @@ def audio_manifest_items(inputs: Inputs, pins: list[ModelPin]) -> list[Item]:
 def wheel_items(inputs: Inputs) -> list[Item]:
     reqs = parse_requirements(inputs.requirements)
     classify_requirements(inputs.repo, reqs)
-    rel_req = inputs.requirements.relative_to(inputs.repo).as_posix() if is_within(inputs.requirements, inputs.repo) \
+    rel_req = resolved(inputs.requirements).relative_to(resolved(inputs.repo)).as_posix() if is_within(inputs.requirements, inputs.repo) \
         else inputs.requirements.name
     found: dict[str, list[tuple[Path, dict]]] = {}
     ignored = 0
@@ -1110,6 +1114,10 @@ def check_pc(repo: Path, role: str, python: Path | None, models_dir: Path | None
     classify_requirements(repo, reqs)
     wanted_groups = {"teacher": ("runtime",), "student": ("runtime", "cv")}[role]
     installed = installed_distributions(site) if site else {}
+    if site is None:
+        items.append(Item(id="package:*", kind="python", requirement="required", roles=[role],
+                          feature=f"Python-пакеты ({', '.join(wanted_groups)})", remedy=venv_hint).fail(
+            MISSING, "site_packages_missing", f"пакеты не проверены: нет site-packages в {venv}"))
     for req in reqs:
         if not req.applies:
             continue
@@ -1118,10 +1126,6 @@ def check_pc(repo: Path, role: str, python: Path | None, models_dir: Path | None
                     roles=[role], feature=f"Python {req.group}", expected_sha256=None,
                     pin_source="requirements/full.txt", remedy=venv_hint)
         if site is None:
-            if item.requirement == "required" and py_item.status == PASS:
-                items.append(item.fail(MISSING, "site_packages_missing", f"нет site-packages в {venv}"))
-            elif item.requirement == "required":
-                items.append(item.fail(MISSING, "python_not_ready", "интерпретатор не готов"))
             continue
         current = installed.get(key)
         if current is None:
@@ -1329,8 +1333,20 @@ LABEL = {PASS: "OK", MISSING: "НЕТ", CORRUPT: "БИТЫЙ", WRONG_PLATFORM: "
 def render(title: str, items: list[Item], status: str, code: int) -> str:
     lines = [title]
     order = {"required": 0, "optional": 1, "info": 2}
+    groups: dict[tuple, list[Item]] = {}
+    for item in items:  # many packages failing for one reason are shown as one line
+        if item.status != PASS and item.id.startswith(("wheel:", "package:")):
+            groups.setdefault((item.requirement, item.status, item.reason, item.remedy), []).append(item)
+    folded = {id(i) for group in groups.values() if len(group) > 3 for i in group}
+    for (requirement, status_, reason, remedy), group in sorted(groups.items(), key=lambda g: order.get(g[0][0], 3)):
+        if len(group) > 3:
+            tag = LABEL.get(status_, status_) + (", необяз." if requirement == "optional" else "")
+            names = ", ".join(i.id.split(":", 1)[1] for i in group)
+            lines.append(f"[{tag}] {len(group)} Python-пакетов/колёс ({reason}): {names}")
+            if remedy:
+                lines.append(f"       Как исправить: {remedy}")
     for item in sorted(items, key=lambda i: (order.get(i.requirement, 3), i.status == PASS, i.id)):
-        if item.status == PASS and item.id.startswith(("wheel:", "package:")):
+        if item.status == PASS and item.id.startswith(("wheel:", "package:")) or id(item) in folded:
             continue
         tag = LABEL.get(item.status, item.status)
         if item.requirement == "optional" and item.status != PASS:
@@ -1445,7 +1461,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command in ("inventory", "build"):
             roles = ROLES if args.role == "all" else (args.role,)
             inputs = Inputs(repo, roles, args.models_dir, args.audio_dir, args.wheelhouse, args.electron_zip,
-                            args.requirements or repo / "requirements" / "full.txt")
+                            resolved(args.requirements) if args.requirements else repo / "requirements" / "full.txt")
             if not inputs.requirements.is_file():
                 raise UsageError(f"нет файла требований {inputs.requirements}")
             items = inventory(inputs)
@@ -1473,9 +1489,12 @@ def main(argv: list[str] | None = None) -> int:
     except UsageError as exc:
         print(f"Ошибка: {exc}", file=sys.stderr)
         return EXIT_USAGE
-    except ValueError as exc:  # malformed pins/requirements: never guess
-        print(f"Ошибка входных данных: {exc}", file=sys.stderr)
+    except (PinError, tomllib.TOMLDecodeError) as exc:  # malformed pins/requirements: never guess
+        print(f"BLOCKED: файл пинов не читается однозначно: {exc}", file=sys.stderr)
         return EXIT_BLOCKED
+    except Exception as exc:  # noqa: BLE001 - never let a crash look like NOT_READY (1)
+        print(f"Внутренняя ошибка инструмента: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return EXIT_INTERNAL
     return EXIT_USAGE
 
 

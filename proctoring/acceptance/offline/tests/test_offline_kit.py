@@ -339,6 +339,29 @@ class OfflineKitTests(unittest.TestCase):
         self.assertEqual(by_id(report)[f"electron:electron-v{self.fx.electron_version}-win32-x64.zip"]["status"], "WRONG_PLATFORM")
         self.assertEqual(code, 0, "electron archive is an optional backup; the failure is listed, not hidden")
 
+    def test_relative_requirements_path_and_runtime_subset(self):
+        cwd = os.getcwd()
+        try:
+            os.chdir(self.fx.repo)
+            code, report = run_json(self.base + ["inventory", "--role", "teacher", "--wheelhouse", str(self.fx.wheels),
+                                                 "--requirements", "requirements/full.txt"])
+        finally:
+            os.chdir(cwd)
+        self.assertEqual(code, 0, report)
+        self.assertFalse(any(i.startswith(("model:", "electron:")) for i in by_id(report)))
+
+    def test_malformed_requirements_are_blocked_not_guessed(self):
+        req = self.fx.repo / "requirements" / "full.txt"
+        req.write_text("fastapi>=0.1 --hash=sha256:" + "0" * 64 + "\n", encoding="utf-8")
+        code, _, err = run_tool(self.base + ["inventory"] + self.fx.inputs_args())
+        self.assertEqual(code, 2)
+        self.assertIn("BLOCKED", err)
+
+    def test_missing_venv_is_reported_once(self):
+        code, out, _ = run_tool(self.base + ["check-pc", "--role", "teacher"])
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("Как исправить: py -3.12 -m venv"), 2, out)  # interpreter + one package line
+
     def test_only_windows_target_is_accepted(self):
         code, _, err = run_tool(self.base + ["inventory", "--target", "linux-x64"] + self.fx.inputs_args())
         self.assertEqual(code, 64)
