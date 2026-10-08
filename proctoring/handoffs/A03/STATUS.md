@@ -1,5 +1,7 @@
 # A03 — STATUS (обнаружение телефона и признаки возможной съёмки)
 
+> **2026-10-08, ветка `codex/proctor-objects`:** предметы book/laptop/tv (только для проверки) — см. `handoffs/A05/OBJECTS.md`.
+
 * Роль: A03, CV-инженер обнаружения телефона. Пути: `proctoring/backend/proctor/phone/`, `proctoring/handoffs/A03/`.
 * Ветка: `claude/focused-babbage-29mbea` (назначена платформой).
 * База (контракт/baseline): BOOTSTRAP A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` (`claude/nifty-ride-ux8e4j`),

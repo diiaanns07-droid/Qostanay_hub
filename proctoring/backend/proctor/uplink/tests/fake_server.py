@@ -73,7 +73,9 @@ class FakeClassServer:
             elif hello.get("join_code") == self.join_code:
                 sid = f"st-{len(self.tokens) + 1}"
             if hello.get("type") != "hello" or sid is None:
-                await ws.send_text(json.dumps(_env("error", code="join_rejected", message_ru="Неверный код")))
+                # like T01 (classroom/server/core.py): an unknown/old resume token is "resume_rejected"
+                code = "resume_rejected" if hello.get("resume_token") else "join_rejected"
+                await ws.send_text(json.dumps(_env("error", code=code, message_ru="Неверный код")))
                 await ws.close()
                 return
             token = secrets.token_hex(32)

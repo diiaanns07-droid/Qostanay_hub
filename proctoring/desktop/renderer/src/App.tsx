@@ -529,6 +529,7 @@ function FixturePanel({ fixture }: { fixture: FixtureBridge }) {
               ))}
             </select>
           </label>
+          <Button size="sm" onClick={() => fixture.emitContract11Incidents()}>Эпизоды 1.1 (FIXTURE)</Button>
           <p className="small muted">PIN преподавателя (только эта вкладка): {fixture.operatorPin}</p>
         </div>
       )}

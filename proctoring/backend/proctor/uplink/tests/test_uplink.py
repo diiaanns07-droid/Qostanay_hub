@@ -230,9 +230,14 @@ def test_lock_unlock_audio_publish_class_state_and_ack(server, run, tmp_path):
     assert wait_for(lambda: server.of_type("status")[-1]["locked"] is True)
     bad = server.send_command("lock", {"reason_ru": ""})
     assert wait_for(lambda: bad in server.acks()) and server.acks()[bad]["ok"] is False and server.acks()[bad]["error_ru"]
-    a = server.send_command("audio_start", {"direction": "listen"})
-    assert wait_for(lambda: a in server.acks()) and server.acks()[a]["ok"] is False
-    assert events[-1].mic_active is False and events[-1].audio_direction is None
+    # no WebRTC yet: audio_start / audio_update are refused and the microphone is never claimed (T05 semantics)
+    for kind in ("audio_start", "audio_update"):
+        a = server.send_command(kind, {"audio_session_id": "as-" + "0" * 32, "listen": True, "talk": False, "direction": "listen"})
+        assert wait_for(lambda: a in server.acks())
+        ack = server.acks()[a]
+        assert ack["ok"] is False and ack["error_code"] == "not_supported" and ack["code"] == "unsupported" and "Аудиосвязь" in ack["error_ru"]
+    assert up.mic_active is False and all(not e.mic_active for e in events)
+    assert server.of_type("status")[-1]["mic_active"] is False
     for kind in ("audio_stop", "unlock"):
         c = server.send_command(kind)
         assert wait_for(lambda: c in server.acks()) and server.acks()[c]["ok"]
@@ -290,6 +295,24 @@ def test_clip_exported_at_incident_open_and_uploaded_on_request(server, run, tmp
     assert wait_for(lambda: missing in server.acks()) and server.acks()[missing]["ok"] is False
 
 
+def test_mp4_clip_is_uploaded_as_video_mp4(server, run, tmp_path):
+    """A02 MP4 (H.264, codex/proctor-clips-mp4) must reach T03 as video/mp4 so the panel can play it in <video>."""
+    up, view = run(make_cfg(tmp_path, server.address))
+    assert wait_for(lambda: up.connection == "connected")
+
+    def export_mp4(t_start_ms, before_s, after_s):
+        path = tmp_path / "clip-1.mp4"
+        path.write_bytes(bytes.fromhex("00000018") + b"ftypisom" + b"x" * 3000)
+        return path
+
+    view.export_clip = export_mp4
+    view.add_incident("inc-mp4", t_start_ms=1_000.0)
+    assert wait_for(lambda: any(m["incident_id"] == "inc-mp4" and m["clip_available"] for m in server.accepted if m["type"] == "incident"))
+    cid = server.send_command("request_clip", {"incident_id": "inc-mp4"})
+    assert wait_for(lambda: cid in server.acks()) and server.acks()[cid]["ok"] is True
+    assert server.clips["inc-mp4"]["content_type"] == "video/mp4"
+
+
 def test_start_and_finish_exam_commands_use_the_lifecycle(server, run, tmp_path):
     up, view = run(make_cfg(tmp_path, server.address))
     view.exam_state = "preflight"
@@ -320,3 +343,86 @@ def test_redelivered_command_is_not_executed_twice_and_ack_has_code_and_result(s
     view.exam_state = "preflight"
     f = server.send_command("request_clip", {"incident_id": "none"})
     assert wait_for(lambda: f in server.acks()) and server.acks()[f]["code"] == "failed"
+
+
+def test_class_state_is_republished_with_computer_name(server, run, tmp_path, monkeypatch):
+    import proctor.uplink.client as client_mod
+
+    monkeypatch.setattr(client_mod, "CLASS_STATE_REPUBLISH_S", 0.3)
+    events: list[ClassStateMsg] = []
+    up, _ = run(make_cfg(tmp_path, server.address), events=events)
+    assert wait_for(lambda: up.connection == "connected")
+    n = len(events)
+    assert wait_for(lambda: len(events) >= n + 3, timeout=5)  # periodic, without any change
+    last = events[-1]
+    assert last.connection == "connected" and last.computer_name == "pc-1" and last.student_label == "Студент 1"
+
+
+def test_class_state_is_republished_while_offline(run, tmp_path, monkeypatch):
+    import proctor.uplink.client as client_mod
+
+    monkeypatch.setattr(client_mod, "CLASS_STATE_REPUBLISH_S", 0.3)
+    events: list[ClassStateMsg] = []
+    up, _ = run(make_cfg(tmp_path, f"127.0.0.1:{free_port()}"), events=events)
+    assert wait_for(lambda: len(events) >= 4, timeout=5)
+    assert events[-1].connection in ("connecting", "reconnecting") and events[-1].computer_name == "pc-1"
+
+
+def test_stale_resume_token_is_dropped_and_join_code_used(server, run, tmp_path):
+    """Found on the real T01 server: a token from an older server run answered "resume_rejected"; the uplink used
+    to retry the same token forever (only "join_rejected" fell back to the code)."""
+    cfg = make_cfg(tmp_path, server.address)
+    ob = Outbox(cfg.state_dir / "outbox.sqlite")
+    import hashlib
+
+    ob.set_meta("server", cfg.server)
+    ob.set_meta("code_key", hashlib.sha256(f"{cfg.server}|{cfg.join_code}".encode()).hexdigest()[:16])
+    ob.set_meta("resume_token", "ab" * 32)  # unknown to this server
+    ob.close()
+    up, _ = run(cfg)
+    assert wait_for(lambda: up.connection == "connected", timeout=10)
+    assert "resume_token" in server.hellos[0] and server.hellos[-1].get("join_code") == "123456"
+    assert len(server.hellos) == 2  # one refused resume, one join: no waiting, no loop
+
+
+def test_new_join_code_never_resumes_the_previous_session(server, tmp_path):
+    cfg = make_cfg(tmp_path, server.address)
+    up = Uplink(cfg, FakeView(tmp_path))
+    up.start()
+    assert wait_for(lambda: up.connection == "connected")
+    up.stop()
+    up2 = Uplink(replace(cfg, join_code="654321"), FakeView(tmp_path))  # teacher started a new session
+    assert up2.outbox.get_meta("resume_token") is None
+    up2.outbox.close()
+
+
+def test_queue_of_a_previous_class_session_is_dropped(tmp_path):
+    cfg = make_cfg(tmp_path, "127.0.0.1:9")
+    up = Uplink(cfg, FakeView(tmp_path))
+    up.outbox.put({"type": "incident", "incident_id": "old"})
+    up.outbox.close()
+    up2 = Uplink(replace(cfg, join_code="654321"), FakeView(tmp_path))
+    assert len(up2.outbox) == 0  # never delivered into the new session
+    up2.outbox.close()
+
+
+def test_replay_and_synthetic_are_marked_for_the_teacher():
+    from types import SimpleNamespace
+
+    import cv2
+    import numpy as np
+
+    from proctor.uplink.backend_view import _incident, shrink_jpeg
+
+    inc = SimpleNamespace(incident_id="i1", rule_id="phone_visible", category="phone", priority="medium", state="open",
+                          t_start_ms=1.0, t_end_ms=None, wall_start=__import__("datetime").datetime(2026, 10, 8, tzinfo=__import__("datetime").timezone.utc),
+                          duration_ms=1000.0, explanation=SimpleNamespace(summary_ru="Телефон виден 1,0 с."), source_mode="replay",
+                          session_id="s-test")
+    assert _incident(inc)["explanation_ru"].startswith("[REPLAY · запись] Телефон виден")
+    inc.source_mode = "live"
+    assert _incident(inc)["explanation_ru"] == "Телефон виден 1,0 с."
+    ok, buf = cv2.imencode(".jpg", np.full((480, 640, 3), 128, np.uint8))
+    out = shrink_jpeg(buf.tobytes(), "REPLAY · запись")
+    img = cv2.imdecode(np.frombuffer(out, np.uint8), cv2.IMREAD_COLOR)
+    assert img.shape[:2] == (240, 320) and len(out) <= 30_000
+    assert img[2, 300, 2] > 120 and img[2, 300, 0] < 80  # red band on top (BGR)

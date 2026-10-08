@@ -19,6 +19,9 @@ interface Frame {
   receivedAt: number;
 }
 
+/** A03 detections: phones + review-only objects (COCO class names). Text always accompanies the colour. */
+const DETECTION_RU: Record<string, string> = { "cell phone": "телефон", book: "книга", laptop: "ноутбук", tv: "экран" };
+
 export function PreviewPanel({ sessionId }: { sessionId: string }) {
   const { bridge, live } = useApp();
   useLive(live, "obs");
@@ -102,7 +105,7 @@ export function PreviewPanel({ sessionId }: { sessionId: string }) {
                       y={r.y}
                       width={r.w}
                       height={r.h}
-                      className={`ov ov-phone ${phoneRel.sync ? "" : "ov-lag"}`}
+                      className={`ov ${d.class_name === "cell phone" ? "ov-phone" : "ov-object"} ${phoneRel.sync ? "" : "ov-lag"}`}
                       vectorEffect="non-scaling-stroke"
                     />
                   );
@@ -123,8 +126,8 @@ export function PreviewPanel({ sessionId }: { sessionId: string }) {
                 phone?.detections.map((d, i) => {
                   const r = box(d.bbox);
                   return (
-                    <span key={`pl${i}`} className="ov-tag tag-phone" style={{ left: `${r.x * 100}%`, top: `${(r.y + r.h) * 100}%` }}>
-                      телефон {num(d.confidence, 2)}
+                    <span key={`pl${i}`} className={`ov-tag ${d.class_name === "cell phone" ? "tag-phone" : "tag-object"}`} style={{ left: `${r.x * 100}%`, top: `${(r.y + r.h) * 100}%` }}>
+                      {DETECTION_RU[d.class_name] ?? d.class_name} {num(d.confidence, 2)}
                       {phoneRel.sync ? "" : ` · −${Math.round(phoneRel.age ?? 0)} мс`}
                     </span>
                   );

@@ -60,6 +60,7 @@ import type {
 } from "@contracts/qorgau-v1.generated";
 import { CalibrationTargetValues } from "@contracts/qorgau-v1.generated";
 import { FRAME_H, FRAME_W, renderFixtureFrame } from "./fixtureFrames";
+import { RULE, CATEGORY, REVIEW_STATUS } from "../lib/labels";
 
 /** Mirrors A06 ipc/api.ts so the fixture rejects exactly what the real shell rejects. */
 type Gated = "listSessions" | "listIncidents" | "getIncident" | "addReview" | "getEvidence" | "getSummary" | "exportReport" | "deleteSession" | "pauseExam" | "resumeExam";
@@ -689,11 +690,22 @@ export class FixtureBridge implements QorgauBridge {
   }
 
   private category(rule: IncidentRule): Incident["category"] {
+    if (rule === "background_speech") return "audio";
+    if (rule === "identity_mismatch") return "identity";
+    if (["headphones_visible", "foreign_object_visible", "second_screen_visible"].includes(rule)) return "objects";
     if (rule.startsWith("phone") || rule === "possible_screen_capture") return "phone";
     if (rule.startsWith("gaze")) return "attention";
     if (rule === "face_missing" || rule === "multiple_faces") return "presence";
     if (rule.startsWith("environment")) return "environment";
     return "technical";
+  }
+
+  /** Explicit FIXTURE-only display test; it does not imply that 1.1 analyzers are present. */
+  emitContract11Incidents(): void {
+    if (!this.active) return;
+    for (const rule of ["background_speech", "headphones_visible", "identity_mismatch", "foreign_object_visible", "second_screen_visible"] as const) {
+      this.openIncident(this.active, rule, "low", true);
+    }
   }
 
   private openIncident(s: SessionInfo, rule: IncidentRule, priority: ReviewPriority, closed = false): Incident {
@@ -1259,7 +1271,7 @@ export class FixtureBridge implements QorgauBridge {
       if (format === "html") {
         const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
         const rows = incs
-          .map((i) => `<tr><td>${esc(i.rule_id)}</td><td>${(i.duration_ms / 1000).toFixed(1)} s</td><td>${esc(i.review_status)}</td></tr>`)
+          .map((i) => `<tr><td>${esc(RULE[i.rule_id])}</td><td>${esc(CATEGORY[i.category])}</td><td>${(i.duration_ms / 1000).toFixed(1)} с</td><td>${esc(REVIEW_STATUS[i.review_status])}</td></tr>`)
           .join("");
         const html = `<!doctype html><meta charset="utf-8"><title>FIXTURE ${esc(sessionId)}</title><h1>FIXTURE report — not an A08 report</h1><p>${esc(sessionId)} · synthetic</p><table>${rows}</table>`;
         return this.download(`${sessionId}.fixture.html`, html, "text/html");

@@ -1,4 +1,34 @@
-# A07 — STATUS (round 2: connect the UI to the real bridge/backend)
+# A07 — STATUS
+
+## Подготовка видео Adal, 2026-10-08, 18:10 +05:00
+
+Новая поставка поверх опубликованного A07 `e3ee57bb9f0dac544129f809af3911da9520ce7a`
+(включает интеграцию `eee2031`): [DEMO_VIDEO.md](DEMO_VIDEO.md).
+Зона и причины в итоге преподавателя, заметная маркировка REPLAY, сообщение конца записи;
+готовы PowerShell launcher и точная инструкция. Сборка/типы PASS, unit **17 PASS**,
+PowerShell **4 PASS**, настоящие три REPLAY через UI/CV/HTML **30/30 PASS**:
+`zone_a_green_01` → green, `zone_b_yellow_02` → yellow, `zone_c_red_01` → red.
+Проверены даже с дополнительными 8 секундами на ручной переход после preflight.
+Guard ОС и системный диалог сохранения в этом прогоне заменены тестовыми адаптерами;
+нового LIVE/enforce и записи видео не было. Backend этим этапом не менялся.
+Два новых demo-файла пока в handoffs/A07, ожидается согласование A10, запрошенное у капитана.
+
+## Текущая поставка A07-student, 2026-10-08
+
+Продолжение на базе `1f04f9ec23c16485ac310ae34ddace66a4013446`: **ADAL**, список фактической готовности
+проверок перед экзаменом и подписи 1.1 в renderer/HTML — см. [ADAL.md](ADAL.md).
+
+Ветка `codex/proctor-A07-student`, база `5c6a8e4e18bf29eedee4181cb6dd0c6d79eb72dc`.
+Описание экранов, минимального IPC и блокеров аудио: [STUDENT.md](STUDENT.md).
+Последующие исправления и актуальные результаты тестов: [RECHECK.md](RECHECK.md).
+Оставшаяся проверка с человеком перед камерой: [LIVE_STUDENT.md](LIVE_STUDENT.md).
+LIVE: все пять точек собраны, backend зарегистрировал `gaze_prolonged_down` на **4593 ms**.
+Капитан подтвердил намеренный взгляд вниз; LIVE «взгляд вниз после калибровки» — **PASS**.
+Доказательства и точный SHA запуска — в конце [RECHECK.md](RECHECK.md).
+
+Ниже сохранён исторический handoff предыдущего этапа.
+
+## Historical STATUS (round 2: connect the UI to the real bridge/backend)
 
 Role: product UI / renderer. Branch: `claude/upbeat-gauss-798nt9` (platform-assigned).
 Continuation SHA (previous A07 checkpoint): `3fef6fb80d4106b5faad1609e42f31981401da13`; original BOOTSTRAP
@@ -91,3 +121,15 @@ check for the candidate (needs `.venv` and a Playwright install).
 ## Next (A07)
 Run `run-real.mjs` on the A01 candidate SHA, then on LIVE/REPLAY once A02–A05 are merged; evidence images path;
 Electron manual pass on Windows with A09.
+
+## 2026-10-08 17:41 — A07-student (writer now A13 session), on top of integration eee2031
+Checked first: report labels for all five 1.1 rules + categories audio/identity/objects were already in
+`report.py` (338a9ef + eee2031), each exactly once — nothing added, no duplicates. The «Что проверяет Adal на этом
+экзамене» block (338a9ef) was already on the preparation screen. Added only:
+* identity row: honest description (same person as at the start, local, no face database, not identification);
+  in SYNTHETIC it shows «Не используется» — A01 wiring gives identity no pipeline part there (no faces), even though
+  `/v1/health` lists the loaded module.
+* category `identity` label «Личность» → «Сверка лица» (UI `labels.ts`) / «сверка лица» (report `CATEGORY_RU`):
+  «личность» suggests identification, which A13 does not do.
+Checks: renderer unit 14/14 (`node renderer/tests/run-unit.mjs`), typecheck PASS, `test_report_labels.py` +
+`backend/proctor/evidence` 63 passed / 2 skipped.

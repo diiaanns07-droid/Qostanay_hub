@@ -12,6 +12,7 @@ import type {
   AttentionObservation,
   CalibrationState,
   EnvironmentObservation,
+  Health,
   HealthReport,
   Incident,
   PhoneObservation,
@@ -37,6 +38,8 @@ export class LiveStore {
   private bodies = new Map<string, Incident>();
   private rest = new Map<string, RestMeta>();
   health: HealthReport | null = null;
+  /** Capture transitions are HealthObservations; they need not emit a full HealthReport. */
+  captureHealth: Health | null = null;
   metrics: RuntimeMetrics | null = null;
   calibration: CalibrationState | null = null;
   attention: AttentionObservation | null = null;
@@ -87,6 +90,7 @@ export class LiveStore {
     this.bodies.clear();
     this.rest.clear();
     this.metrics = null;
+    this.captureHealth = null;
     this.calibration = null;
     this.attention = null;
     this.phone = null;
@@ -260,6 +264,9 @@ export class LiveStore {
           this.phoneRing = [...this.phoneRing.slice(-(RING - 1)), o];
         } else if (o.kind === "environment") {
           this.envEvents = [...this.envEvents.slice(-49), o];
+          this.bump("main");
+        } else if (o.kind === "health" && o.health.component === "capture") {
+          this.captureHealth = o.health;
           this.bump("main");
         }
         this.bump("obs");

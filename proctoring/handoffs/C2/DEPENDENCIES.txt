@@ -10,3 +10,4 @@ D7 T04 | handoffs/T04/STUDENT_CLIENT.md — referenced as normative, missing in 
 D8 T04/T01 | teacher command path: protocol §5 POST /api/teacher/students/{id}/commands vs T04 /api/teacher/control/exams/{exam_id}/commands — the panel/T01 must map one to the other.
 D9 T04 | C2 sends no hello.capabilities (protocol frozen) -> treated as a v1 client; apply_policy -> ack ok:false code "unsupported".
 D10 T01/C1 | /ws/student wiring: call T04 ClassControl.handle_student_message and T03 ReviewStore.ingest_incident for C2 messages; tests/fake_server.py shows the expected message flow.
+D11 T05/A07 | audio: until C2+A01+A06 wire WebRTC (class-audio/STUDENT_INTEGRATION.md), audio_start/audio_update are refused with error_code "not_supported"; the teacher panel must show that instead of "Слушаю студента".

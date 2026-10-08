@@ -37,6 +37,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from proctor_contracts.v1 import (
+    AudioObservation,
     AttentionObservation,
     Direction,
     EnvironmentAction,
@@ -75,6 +76,8 @@ INTERVAL_RULES: dict[IncidentRule, str] = {
     R.GAZE_PROLONGED_SIDE: "attention",
     R.FACE_MISSING: "attention",
     R.MULTIPLE_FACES: "attention",
+    R.FOREIGN_OBJECT_VISIBLE: "phone",  # A03 detections (book)
+    R.SECOND_SCREEN_VISIBLE: "phone",  # A03 detections (laptop, tv)
 }
 CATEGORY: dict[IncidentRule, IncidentCategory] = {
     R.PHONE_VISIBLE: IncidentCategory.PHONE,
@@ -87,7 +90,18 @@ CATEGORY: dict[IncidentRule, IncidentCategory] = {
     R.ENVIRONMENT_BLOCKED_ACTION: IncidentCategory.ENVIRONMENT,
     R.ENVIRONMENT_ESCAPE: IncidentCategory.ENVIRONMENT,
     R.MONITORING_DEGRADED: IncidentCategory.TECHNICAL,
+    R.FOREIGN_OBJECT_VISIBLE: IncidentCategory.OBJECTS,
+    R.SECOND_SCREEN_VISIBLE: IncidentCategory.OBJECTS,
 }
+PHONE_CLASS = "cell phone"
+
+
+def _iou(a: Any, b: Any) -> float:
+    x1, y1 = max(a.x_min, b.x_min), max(a.y_min, b.y_min)
+    x2, y2 = min(a.x_max, b.x_max), min(a.y_max, b.y_max)
+    inter = max(0.0, x2 - x1) * max(0.0, y2 - y1)
+    union = (a.x_max - a.x_min) * (a.y_max - a.y_min) + (b.x_max - b.x_min) * (b.y_max - b.y_min) - inter
+    return inter / union if union > 0 else 0.0
 PHONE_FAMILY = frozenset({R.PHONE_VISIBLE, R.PHONE_RAISED, R.POSSIBLE_SCREEN_CAPTURE})
 A = EnvironmentAction
 BLOCKED_ACTIONS = frozenset(
@@ -300,6 +314,9 @@ class FusionEngine:
         self._indet_since: dict[str, float | None] = {}
         self._health_bad: dict[str, str] = {}
         self._series = {"phone_visible": _Series(self.cfg.sample_hold_ms), "gaze_down": _Series(self.cfg.sample_hold_ms)}
+        self._obj_t0: float | None = None  # first phone observation: start of the object scene baseline
+        self._obj_baseline: dict[str, list[Any]] = {}  # class_name -> boxes seen during the baseline window
+        self._face_seen_t: float | None = None  # last attention observation with a face (objects need the student)
         self._rules = {rule: _IntervalRule(self, rule, src) for rule, src in INTERVAL_RULES.items()}
         self._burst: Episode | None = None
         self._escape: Episode | None = None
@@ -314,6 +331,8 @@ class FusionEngine:
         for rule in self._partners:
             self._partners[rule] = sorted(set(self._partners[rule]), key=lambda r: r.value)
         self._stats: Counter[str] = Counter()
+        from proctor.audio.fusion import AudioFusion
+        self._audio = AudioFusion(session_id, self.source_mode, self._wall)
 
     # ------------------------------------------------------------------ IncidentEngine
     def consume(self, observation: Observation) -> list[IncidentChange]:
@@ -351,6 +370,7 @@ class FusionEngine:
         self._stats[f"accepted_{obs.kind}"] += 1
         self._w = t if self._w is None else max(self._w, t)
         out = self._expire(self._w)
+        out += self._identity_hook(obs, t)  # A05 1.3: identity (A13), kept separate from the kind dispatch below
         if isinstance(obs, PhoneObservation):
             out += self._on_phone(obs, t)
         elif isinstance(obs, AttentionObservation):
@@ -359,6 +379,11 @@ class FusionEngine:
             out += self._on_environment(obs, t)
         elif isinstance(obs, HealthObservation):
             out += self._on_health(obs, t)
+        elif isinstance(obs, AudioObservation):
+            if self._w - t <= self._audio.cfg.sample_hold_ms:
+                out += self._audio.feed(obs)
+            else:
+                self._stats["stale_on_arrival"] += 1
         return out
 
     def advance(self, t_session_ms: float) -> list[IncidentChange]:
@@ -458,24 +483,57 @@ class FusionEngine:
         visible, vis_conf, _ = value(PhoneSignalName.PHONE_VISIBLE)
         raised, raised_conf, _ = value(PhoneSignalName.PHONE_RAISED)
         capture, capture_conf, capture_state = value(PhoneSignalName.POSSIBLE_SCREEN_CAPTURE)
-        det_conf = max((d.confidence for d in obs.detections), default=None)
+        phones = [d for d in obs.detections if d.class_name == PHONE_CLASS]
+        det_conf = max((d.confidence for d in phones), default=None)
         out += self._determinacy("phone", t, visible is not None, self._undetermined_code(obs))
         self._series["phone_visible"].add(t, visible)
         vis_info: dict[str, Any] = {
             "confidence": vis_conf if vis_conf is not None else det_conf,
-            "max": {"max_phones": len(obs.detections)},
+            "max": {"max_phones": len(phones)},
         }
         if capture_state == SignalState.INSUFFICIENT_EVIDENCE:
             vis_info["bump"] = ("capture_unobservable",)
         out += self._rules[R.PHONE_VISIBLE].feed(t, visible, obs, vis_info)
         out += self._rules[R.PHONE_RAISED].feed(t, raised, obs, {"confidence": raised_conf})
         out += self._rules[R.POSSIBLE_SCREEN_CAPTURE].feed(t, capture, obs, {"confidence": capture_conf})
+        out += self._on_objects(obs, t, usable)
+        return out
+
+    def _on_objects(self, obs: PhoneObservation, t: float, usable: bool) -> list[IncidentChange]:
+        """Review-only objects from A03 detections: book -> foreign_object_visible, laptop/tv -> second_screen_visible.
+        Objects present during the scene baseline (first object_baseline_ms) are the room and never count."""
+        cfg = self.cfg
+        if self._obj_t0 is None:
+            self._obj_t0 = t
+        in_baseline = t - self._obj_t0 < cfg.object_baseline_ms
+        student_here = self._face_seen_t is not None and t - self._face_seen_t <= cfg.object_face_window_ms
+        found: dict[IncidentRule, list[float]] = {R.FOREIGN_OBJECT_VISIBLE: [], R.SECOND_SCREEN_VISIBLE: []}
+        for d in obs.detections if usable else []:
+            if d.confidence < cfg.object_min_confidence:
+                continue
+            rule = (R.FOREIGN_OBJECT_VISIBLE if d.class_name in cfg.foreign_object_classes
+                    else R.SECOND_SCREEN_VISIBLE if d.class_name in cfg.second_screen_classes else None)
+            if rule is None:
+                continue
+            if in_baseline:
+                self._obj_baseline.setdefault(d.class_name, []).append(d.bbox)
+                continue
+            if any(_iou(d.bbox, b) >= cfg.object_baseline_iou for b in self._obj_baseline.get(d.class_name, ())):
+                continue  # part of the room seen at the start
+            found[rule].append(d.confidence)
+        out: list[IncidentChange] = []
+        for rule, confs in found.items():
+            # student away: the room behind is visible -> no evidence either way (never opens, never clears)
+            value = None if not usable or (not in_baseline and not student_here) else (False if in_baseline else bool(confs))
+            out += self._rules[rule].feed(t, value, obs, {"confidence": max(confs) if confs else None})
         return out
 
     def _on_attention(self, obs: AttentionObservation, t: float) -> list[IncidentChange]:
         out = self._source_seen("attention", t)
         usable = self._usable(obs)
         face_count = obs.face_count if usable else None
+        if face_count:
+            self._face_seen_t = t
         out += self._determinacy("attention", t, face_count is not None, self._undetermined_code(obs))
 
         direction: Direction | None = None
@@ -684,9 +742,31 @@ class FusionEngine:
         return []
 
     # ------------------------------------------------------------------ time-driven expiry
+    # ------------------------------------------------------------------ identity (contracts 1.1, A13)
+    def _identity_rule(self) -> "_IntervalRule":
+        """Registered lazily so the engine's generic expiry/pause/finish handle it like any interval rule."""
+        rule = self._rules.get(R.IDENTITY_MISMATCH)
+        if rule is None:
+            rule = _IntervalRule(self, R.IDENTITY_MISMATCH, "attention")  # source only selects a TTL default...
+            rule.ttl = self.cfg.identity_ttl_ms  # ...replaced by the identity stream's own TTL
+            self._rules[R.IDENTITY_MISMATCH] = rule
+        return rule
+
+    def _identity_hook(self, obs: Observation, t: float) -> list[IncidentChange]:
+        """IdentityObservation: same_person = absent -> mismatch, present -> cleared, unknown / not enrolled /
+        unusable -> no evidence (never opens, never clears)."""
+        if getattr(obs, "kind", None) != "identity":
+            return []
+        state = obs.same_person
+        if not obs.enrolled or obs.status not in USABLE or state not in (SignalState.PRESENT, SignalState.ABSENT):
+            value = None
+        else:
+            value = state == SignalState.ABSENT
+        return self._identity_rule().feed(t, value, obs, {"confidence": None})
+
     def _expire(self, w: float) -> list[IncidentChange]:
         cfg = self.cfg
-        out: list[IncidentChange] = []
+        out: list[IncidentChange] = self._audio.expire(w)
         for tracker in self._rules.values():
             out += tracker.expire(w)
         for source in SOURCES:
@@ -722,7 +802,7 @@ class FusionEngine:
 
     def _close_everything(self, t: float, reason: IncidentEndReason) -> list[IncidentChange]:
         t_fin = t if self._w is None else max(t, self._w)
-        out: list[IncidentChange] = []
+        out: list[IncidentChange] = self._audio.close(reason)
         for tracker in self._rules.values():
             out += tracker.close_all(reason)
         if self._burst is not None:
@@ -844,3 +924,7 @@ class FusionEngine:
             update_seq=ep.update_seq,
         )
         return IncidentChange(change=change, incident=incident)
+
+
+# A05 1.3 (contracts 1.1): category of the identity rule, registered here to keep the shared tables untouched
+CATEGORY.setdefault(R.IDENTITY_MISMATCH, IncidentCategory.IDENTITY)

@@ -22,6 +22,13 @@ class KBDLLHOOKSTRUCT(C.Structure):
                 ("time", W.DWORD), ("dwExtraInfo", C.c_size_t)]
 
 
+class PROCESSENTRY32W(C.Structure):
+    _fields_ = [("dwSize", W.DWORD), ("cntUsage", W.DWORD), ("th32ProcessID", W.DWORD),
+        ("th32DefaultHeapID", C.c_size_t), ("th32ModuleID", W.DWORD), ("cntThreads", W.DWORD),
+        ("th32ParentProcessID", W.DWORD), ("pcPriClassBase", W.LONG), ("dwFlags", W.DWORD),
+        ("szExeFile", W.WCHAR * 260)]
+
+
 class Win32:
     def __init__(self):
         self.user = C.WinDLL("user32", use_last_error=True)
@@ -39,6 +46,10 @@ class Win32:
         self._sig(self.user.PostThreadMessageW, [W.DWORD, W.UINT, WPARAM, LPARAM], W.BOOL)
         self._sig(self.user.GetAsyncKeyState, [C.c_int], C.c_short)
         self._sig(self.user.GetForegroundWindow, [], W.HWND)
+        self._sig(self.user.GetSystemMetrics, [C.c_int], C.c_int)
+        self._sig(self.kernel.CreateToolhelp32Snapshot, [W.DWORD, W.DWORD], W.HANDLE)
+        self._sig(self.kernel.Process32FirstW, [W.HANDLE, C.POINTER(PROCESSENTRY32W)], W.BOOL)
+        self._sig(self.kernel.Process32NextW, [W.HANDLE, C.POINTER(PROCESSENTRY32W)], W.BOOL)
         self._sig(self.user.GetWindowThreadProcessId, [W.HWND, C.POINTER(W.DWORD)], W.DWORD)
         self._sig(self.kernel.GetCurrentThreadId, [], W.DWORD)
         self._sig(self.kernel.GetModuleHandleW, [W.LPCWSTR], W.HMODULE)
@@ -66,6 +77,27 @@ class Win32:
             size = W.DWORD(32768)
             name = C.create_unicode_buffer(size.value)
             return foreign, name.value if self.kernel.QueryFullProcessImageNameW(handle, 0, name, C.byref(size)) else None
+        finally:
+            self.kernel.CloseHandle(handle)
+
+    def remote_session(self):
+        return bool(self.user.GetSystemMetrics(0x1000))  # SM_REMOTESESSION
+
+    def process_names(self):
+        handle = self.kernel.CreateToolhelp32Snapshot(0x00000002, 0)  # TH32CS_SNAPPROCESS
+        if not handle or handle == C.c_void_p(-1).value:
+            raise OSError("process_snapshot_failed")
+        try:
+            entry = PROCESSENTRY32W()
+            entry.dwSize = C.sizeof(entry)
+            names = []
+            more = self.kernel.Process32FirstW(handle, C.byref(entry))
+            while more:
+                names.append(entry.szExeFile)  # basename only; no image path or command line
+                more = self.kernel.Process32NextW(handle, C.byref(entry))
+            if C.get_last_error() != 18:  # ERROR_NO_MORE_FILES, not a partial/failed enumeration
+                raise OSError("process_enumeration_failed")
+            return names
         finally:
             self.kernel.CloseHandle(handle)
 

@@ -10,6 +10,7 @@ import type {
 import { useApp } from "../lib/appContext";
 import { useLive } from "../lib/liveStore";
 import { ClassBlock } from "../components/ClassOverlays";
+import { ExamChecks } from "../components/ExamChecks";
 import { call } from "../lib/result";
 import { CAPABILITY, CHECK, CHECK_STATUS, COMPONENT, ENV_ACTION, HEALTH, HEALTH_CODE, SOURCE_MODE_RU } from "../lib/labels";
 import { Badge, Banner, Button, Card, Dialog, Dot, ErrorBanner, SourceModeBadge, Spinner, type Tone } from "../components/ui";
@@ -76,8 +77,9 @@ export function PreflightScreen() {
       setReport(r.data);
       const s = await call(bridge.getSession(sid));
       if (s.ok) setSession(s.data);
+      await loadEnv();
     },
-    [bridge, setSession, isCurrent],
+    [bridge, setSession, isCurrent, loadEnv],
   );
 
   // A session restored after reload/reconnect in created/preflight: re-run checks so the report is current.
@@ -154,6 +156,7 @@ export function PreflightScreen() {
   const shownMode = sessionActive ? session.source_mode : mode;
   const requiredFailed = report?.checks.filter((c) => c.required && c.status !== "pass") ?? [];
   const formValid = consent && examId.trim().length > 0 && (mode !== "replay" || replayId.trim().length > 0);
+  const latestHealth = live.health && (!health || Date.parse(live.health.server_time) > Date.parse(health.server_time)) ? live.health : health;
 
   return (
     <div className="screen preflight">
@@ -309,6 +312,8 @@ export function PreflightScreen() {
         </div>
 
         <div className="stack preflight-sidebar">
+          <ExamChecks health={loadErr ? null : latestHealth} caps={caps && !("error" in caps) ? caps : null}
+            mode={sessionActive ? session.source_mode : mode} report={sessionActive ? report : null} backendLost={backendLost} />
           <ClassBlock state={live.classState} health={health} />
           <details className="preflight-details preflight-diagnostics">
             <summary>Диагностика компьютера {health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}</summary>

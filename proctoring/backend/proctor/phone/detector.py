@@ -72,6 +72,7 @@ class DetectorInfo:
     rect: bool
     model_meta: dict[str, str] = field(default_factory=dict)  # selected ONNX metadata (version, license, date)
     warmup_ms: float | None = None
+    object_classes: dict[int, str] = field(default_factory=dict)  # review-only objects (book, laptop, tv)
 
 
 class Letterbox(NamedTuple):
@@ -242,6 +243,7 @@ class YoloOnnxDetector:
         if not phone:
             raise DetectorLoadError("model_invalid", f"model has no class named {list(cfg.phone_class_names)}")
 
+        objects = {i: n for i, n in sorted(names.items()) if n in cfg.object_class_names}
         self._session = session
         self.info = DetectorInfo(
             input_name=inputs[0].name,
@@ -253,6 +255,7 @@ class YoloOnnxDetector:
             input_size=static[1] if static else cfg.input_size,
             rect=False if static else cfg.rect,
             model_meta={k: str(meta[k])[:64] for k in ("version", "date", "license", "imgsz", "author") if k in meta},
+            object_classes=objects,
         )
         # Warm-up also validates the output layout against the number of classes.
         warm = np.full((480, 640, 3), PAD_VALUE, dtype=np.uint8)
@@ -272,6 +275,13 @@ class YoloOnnxDetector:
 
     # ---------------------------------------------------------------- detect
     def detect(self, image_bgr: np.ndarray) -> tuple[list[RawDetection], dict[str, float]]:
+        """Phones only (unchanged behaviour)."""
+        phones, _objects, timings = self.detect_with_objects(image_bgr)
+        return phones, timings
+
+    def detect_with_objects(self, image_bgr: np.ndarray) -> tuple[list[RawDetection], list[RawDetection], dict[str, float]]:
+        """One inference -> (phones, review-only objects, timings). Objects use object_conf_threshold and
+        per-class NMS, so a phone lying on a book never suppresses the book (or vice versa)."""
         if self._session is None or self.info is None:
             raise RuntimeError("detector not loaded")
         info, cfg = self.info, self.config
@@ -282,10 +292,11 @@ class YoloOnnxDetector:
         t1 = time.perf_counter()
         output = self._session.run(None, {info.input_name: tensor})[0]
         t2 = time.perf_counter()
-        boxes, scores, classes = decode(output, len(info.class_names), list(info.phone_classes), cfg.conf_threshold)
-        detections: list[RawDetection] = []
-        if scores.size:
-            for i in nms(boxes, scores, cfg.nms_iou):
+        n = len(info.class_names)
+
+        def to_dets(boxes: np.ndarray, scores: np.ndarray, classes: np.ndarray, limit: int) -> list[RawDetection]:
+            out: list[RawDetection] = []
+            for i in nms(boxes, scores, cfg.nms_iou) if scores.size else []:
                 x1, y1, x2, y2 = boxes[i]
                 nx1 = float(np.clip((x1 - lb.left) / lb.scale / w, 0.0, 1.0))
                 ny1 = float(np.clip((y1 - lb.top) / lb.scale / h, 0.0, 1.0))
@@ -294,11 +305,20 @@ class YoloOnnxDetector:
                 det = RawDetection(nx1, ny1, nx2, ny2, float(min(1.0, max(0.0, scores[i]))), int(classes[i]), info.class_names[int(classes[i])])
                 if det.area < cfg.min_box_area:
                     continue
-                detections.append(det)
-                if len(detections) >= cfg.max_detections:
+                out.append(det)
+                if len(out) >= limit:
                     break
+            return out
+
+        detections = to_dets(*decode(output, n, list(info.phone_classes), cfg.conf_threshold), cfg.max_detections)
+        objects: list[RawDetection] = []
+        for idx in info.object_classes:  # per-class NMS
+            room = cfg.max_detections - len(detections) - len(objects)
+            if room <= 0:
+                break
+            objects += to_dets(*decode(output, n, [idx], cfg.object_conf_threshold), room)
         t3 = time.perf_counter()
-        return detections, {"pre_ms": (t1 - t0) * 1e3, "infer_ms": (t2 - t1) * 1e3, "post_ms": (t3 - t2) * 1e3}
+        return detections, objects, {"pre_ms": (t1 - t0) * 1e3, "infer_ms": (t2 - t1) * 1e3, "post_ms": (t3 - t2) * 1e3}
 
     def close(self) -> None:
         self._session = None

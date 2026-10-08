@@ -64,7 +64,15 @@ def _val(x: Any) -> Any:
     return getattr(x, "value", x)
 
 
+#: what the teacher must see when the student's frames are NOT a live camera (the class protocol has no field)
+MODE_MARK_RU = {"replay": "REPLAY · запись", "synthetic": "СИНТЕТИКА · не камера"}
+
+
 def _incident(inc: Any) -> dict[str, Any]:
+    mark = MODE_MARK_RU.get(_val(getattr(inc, "source_mode", "live")))
+    text = (inc.explanation.summary_ru or "")
+    if mark:
+        text = f"[{mark}] {text}"
     return {
         "incident_id": inc.incident_id,
         "source_mode": _val(inc.source_mode),
@@ -77,7 +85,7 @@ def _incident(inc: Any) -> dict[str, Any]:
         "t_end_ms": None if inc.t_end_ms is None else float(inc.t_end_ms),
         "t_start_wall": inc.wall_start.isoformat(),
         "duration_ms": float(inc.duration_ms),
-        "explanation_ru": (inc.explanation.summary_ru or "")[:1000],
+        "explanation_ru": text[:1000],
     }
 
 
@@ -194,7 +202,7 @@ class BackendView:
         if latest is None:
             return None
         metadata, data = latest
-        jpeg = shrink_jpeg(data)
+        jpeg = shrink_jpeg(data, MODE_MARK_RU.get(_val(metadata.source_mode)))
         if jpeg is None:
             return None
         return jpeg, {"source_mode": _val(metadata.source_mode), "source_session_id": metadata.session_id,
@@ -241,8 +249,8 @@ class BackendView:
             return False, f"Не удалось завершить экзамен: {getattr(exc, 'message', type(exc).__name__)}"[:200]
 
 
-def shrink_jpeg(data: bytes, max_bytes: int = PREVIEW_MAX_BYTES) -> bytes | None:
-    """Decode a JPEG, fit into 320×240 (aspect kept), re-encode ≤ max_bytes (quality steps down)."""
+def shrink_jpeg(data: bytes, mark: str | None = None, max_bytes: int = PREVIEW_MAX_BYTES) -> bytes | None:
+    """Decode a JPEG, fit into 320×240 (aspect kept), optional watermark (REPLAY / SYNTHETIC), re-encode ≤ max_bytes."""
     try:
         import cv2
         import numpy as np
@@ -255,8 +263,37 @@ def shrink_jpeg(data: bytes, max_bytes: int = PREVIEW_MAX_BYTES) -> bytes | None
     scale = min(PREVIEW_W / w, PREVIEW_H / h, 1.0)
     if scale < 1.0:
         img = cv2.resize(img, (max(1, int(w * scale)), max(1, int(h * scale))), interpolation=cv2.INTER_AREA)
+    if mark:
+        _watermark(img, mark)
     for q in (70, 55, 40, 25):
         ok, buf = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), q])
         if ok and len(buf) <= max_bytes:
             return buf.tobytes()
     return None
+
+
+def _watermark(img: Any, mark: str) -> None:
+    """Burn the mode into the preview (Latin + Cyrillic need a TrueType font; fall back to ASCII via cv2)."""
+    import cv2
+
+    h, w = img.shape[:2]
+    cv2.rectangle(img, (0, 0), (w, 26), (0, 0, 160), -1)
+    try:
+        from PIL import Image, ImageDraw, ImageFont  # pillow is installed with mediapipe (cv extra)
+        import numpy as np
+
+        font = None
+        for path in ("C:/Windows/Fonts/segoeuib.ttf", "C:/Windows/Fonts/arialbd.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"):
+            try:
+                font = ImageFont.truetype(path, 16)
+                break
+            except OSError:
+                continue
+        if font is None:
+            raise OSError("no font")
+        pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        ImageDraw.Draw(pil).text((8, 3), mark, font=font, fill=(255, 255, 255))
+        img[:] = cv2.cvtColor(np.asarray(pil), cv2.COLOR_RGB2BGR)
+    except Exception:
+        ascii_mark = "REPLAY" if mark.startswith("REPLAY") else "SYNTHETIC"
+        cv2.putText(img, ascii_mark, (8, 19), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
