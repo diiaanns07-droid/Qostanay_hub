@@ -14,7 +14,7 @@ import json
 from dataclasses import asdict, dataclass, field, fields, replace
 from typing import Any
 
-RULE_VERSION = "a05-rules-1.3.0"
+RULE_VERSION = "a05-rules-1.4.0"
 CONFIG_NAME = "a05-default-1"
 
 
@@ -83,7 +83,9 @@ class FusionConfig:
 
     # --- continuous rules (phone: A03 signals, attention: A04 observations) ---
     phone_visible: IntervalParams = IntervalParams(1000.0, 3, 500.0, 2000.0, 10000.0)
-    phone_raised: IntervalParams = IntervalParams(0.0, 1, 500.0, 5000.0, None)
+    # phone raised (ТЗ 2.1): evidence must hold >= 1 s (>= 4 phone observations, gaps <= 0.6 s) — a single A03
+    # raise signal used to open an episode, and realtime frame sampling made it appear in some runs only
+    phone_raised: IntervalParams = IntervalParams(1000.0, 4, 600.0, 3000.0, None)
     possible_screen_capture: IntervalParams = IntervalParams(500.0, 2, 500.0, 5000.0, None)
     # gaze (zones spec, agreed with the captain): 3-8 s = low, > 8 s = medium; never higher by duration
     gaze_prolonged_down: IntervalParams = IntervalParams(3000.0, 3, 400.0, 1500.0, 8000.0)
@@ -98,6 +100,21 @@ class FusionConfig:
     # at ~1-2 Hz, so gaps up to 2 s are tolerated) -> high, no escalation
     identity_mismatch: IntervalParams = IntervalParams(3000.0, 2, 2000.0, 3000.0, None)
     identity_ttl_ms: float = 5000.0  # no identity observation this long -> an open episode closes source_lost
+
+    # --- phone raised / possible screen capture: geometry relative to the A04 face (A05 1.4) ---
+    # "raised" = a phone box whose TOP is above the line at phone_raise_face_frac of the primary face height
+    # (0 = top of the face, 1 = chin; 0.65 ~ mouth); the face must be fresher than phone_face_max_age_ms.
+    # Without a face (the phone may cover it): top in the upper part of the frame (<= phone_raise_fallback_top).
+    phone_raise_face_frac: float = 0.65
+    phone_raise_fallback_top: float = 0.35
+    phone_raise_min_confidence: float = 0.30
+    phone_face_max_age_ms: float = 600.0
+    # "possible screen capture" = raised AND almost still (centre within phone_capture_max_motion of the window
+    # mean) AND in the central band for >= phone_capture_steady_ms. A pattern, never "a photo was taken".
+    phone_capture_steady_ms: float = 1500.0
+    phone_capture_max_motion: float = 0.05
+    phone_capture_x_min: float = 0.20
+    phone_capture_x_max: float = 0.80
 
     # --- objects (A03 detections by class_name) ---
     object_min_confidence: float = 0.5

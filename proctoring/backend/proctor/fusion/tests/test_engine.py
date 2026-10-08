@@ -250,13 +250,13 @@ def test_correlation_overlap_boundary(down_from, expected):
     assert inc.priority == expected
 
 
-@pytest.mark.parametrize("capture_from,linked", [(3125.0, True), (3250.0, False)])
+@pytest.mark.parametrize("capture_from,linked", [(4125.0, True), (4250.0, False)])
 def test_link_gap_boundary(capture_from, linked):
-    """phone_raised [2000, 2125]; possible_screen_capture starting 1000 ms later -> linked; 1125 ms -> not."""
+    """phone_raised [2000, 3125] (>= 1 s, a05-rules-1.4.0); possible_screen_capture starting 1000 ms later -> linked; 1125 ms -> not."""
     b = ScenarioBuilder()
     segs = [{"from": 0, "to": 2000, "step": 125, "visible": "absent", "capture": "absent"},
-            {"from": 2000, "to": 2250, "step": 125, "visible": "absent", "raised": "present", "capture": "absent"},
-            {"from": 2250, "to": capture_from, "step": 125, "visible": "absent", "capture": "absent"},
+            {"from": 2000, "to": 3250, "step": 125, "visible": "absent", "raised": "present", "capture": "absent"},
+            {"from": 3250, "to": capture_from, "step": 125, "visible": "absent", "capture": "absent"},
             {"from": capture_from, "to": capture_from + 1000, "step": 125, "visible": "absent", "capture": "present"},
             {"from": capture_from + 1000, "to": 16000, "step": 125, "visible": "absent", "capture": "absent"}]
     final = final_incidents(run(engine(), merge(b.run("phone", segs), attention_center(b, end=16000)), finish=16000.0))

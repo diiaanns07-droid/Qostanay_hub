@@ -1,6 +1,11 @@
 # A03 — STATUS (обнаружение телефона и признаки возможной съёмки)
 
 > **2026-10-08, ветка `codex/proctor-objects`:** предметы book/laptop/tv (только для проверки) — см. `handoffs/A05/OBJECTS.md`.
+>
+> **2026-10-08, ветка `codex/proctor-phone-raised`:** ТЗ 2.1 — подъём телефона и возможная съёмка теперь устойчиво
+> собираются в A05 по рамкам A03 относительно лица A04 (≥ 1 с; съёмка — неподвижно ≥ 1,5 с). Код A03 не менялся.
+> Замер (5 прогонов, не точность): `zone_c_red_01` realtime 3/5 → 5/5, lockstep 5/5 → 5/5; ролики a и b2 — 0 ложных.
+> Таблица, пороги, трассировка — `handoffs/A03/PHONE_RAISED.md`.
 
 * Роль: A03, CV-инженер обнаружения телефона. Пути: `proctoring/backend/proctor/phone/`, `proctoring/handoffs/A03/`.
 * Ветка: `claude/focused-babbage-29mbea` (назначена платформой).
@@ -35,7 +40,7 @@
   Дубликаты/кадры не по порядку → `[]` (считаются), чужая сессия → `[]`. Неверный кадр (не ndarray, не uint8, не HxWx3,
   < 16 px) → одно наблюдение `status=error`, флаг `invalid_frame`, все сигналы `unknown`. Ошибка inference →
   `status=error`, `inference_error`. Нет модели → `status=error`, `model_unavailable`.
-* `detections[]`: bbox нормализован в НЕзеркальном кадре; `confidence` = score детектора (не вероятность списывания);
+* `detections[]`: bbox нормализован в НЕзеркальном кадре; `confidence` = score детектора (уверенность детектора, не вывод о человеке);
   `track_id` (`ph-N`, уникален в сессии), `track_quality` (качество ассоциации, независимо от confidence), `track_age_ms`.
 * Сигналы (точная семантика — docstring `signals.py`):
   * `phone_visible`: present (`detected_in_frame` | `detected_high_confidence` ≥0.5 | `track_coasting` ≤400 мс после
