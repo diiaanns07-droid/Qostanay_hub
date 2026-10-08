@@ -701,7 +701,8 @@ code,
   background: rgba(20, 26, 30, 0.45);
   display: grid;
   place-items: center;
-  z-index: 50;
+  /* Teacher PIN must cover calibration (900), but stay below class lock (1000). */
+  z-index: 950;
   padding: 16px;
 }
 .dialog {
