@@ -185,11 +185,12 @@ class Fixture:
             (info / "METADATA").write_text(f"Name: {name}\nVersion: {version_}\n", encoding="utf-8")
             module = site / name
             module.mkdir(exist_ok=True)
-            (module / "__init__.py").write_text("x = 1\n", encoding="utf-8")
-            digest = kit.hashlib.sha256(b"x = 1\n").digest()
+            payload = b"x = 1\n"
+            (module / "__init__.py").write_bytes(payload)
+            digest = kit.hashlib.sha256(payload).digest()
             import base64
             encoded = base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
-            (info / "RECORD").write_text(f"{name}/__init__.py,sha256={encoded},6\n{name}-{version_}.dist-info/RECORD,,\n",
+            (info / "RECORD").write_text(f"{name}/__init__.py,sha256={encoded},{len(payload)}\n{name}-{version_}.dist-info/RECORD,,\n",
                                          encoding="utf-8")
         electron = self.repo / "desktop" / "node_modules" / "electron"
         (electron / "dist").mkdir(parents=True, exist_ok=True)
@@ -622,7 +623,7 @@ class NoNetworkNoProcess(unittest.TestCase):
             """)
             env = {k: v for k, v in os.environ.items() if k not in ("QORGAU_MODELS_DIR", "LOCALAPPDATA")}
             env.update(HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9", PYTHONIOENCODING="utf-8")
-            result = subprocess.run([sys.executable, "-I", "-c", script], capture_output=True, text=True,
+            result = subprocess.run([sys.executable, "-I", "-X", "utf8", "-c", script], capture_output=True, text=True,
                                     encoding="utf-8", env=env, timeout=300)
             line = next((l for l in result.stdout.splitlines() if l.startswith("AUDIT ")), None)
             self.assertIsNotNone(line, result.stdout[-2000:] + result.stderr[-2000:])
@@ -652,8 +653,19 @@ class LauncherAudit(unittest.TestCase):
         self.assertEqual(student.status, "PASS", student.detail)  # messages that mention npm ci are not commands
         packaging = items.get("launcher:packaging/launch-windows.ps1")
         if packaging is not None:
-            self.assertEqual(packaging.status, "WARN")
-            self.assertIn("electron.cmd", packaging.detail)
+            self.assertEqual(packaging.status, "PASS", packaging.detail)
+
+    def test_electron_cmd_in_launcher_is_still_reported(self):
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            launcher = repo / "packaging" / "launch-windows.ps1"
+            launcher.parent.mkdir()
+            launcher.write_text("& electron.cmd .\n", encoding="utf-8")
+            items = {i.id: i for i in kit.launcher_audit(repo, "student")}
+            result = items["launcher:packaging/launch-windows.ps1"]
+            self.assertEqual(result.status, "WARN")
+            self.assertEqual(result.reason, "network_command")
+            self.assertIn("electron.cmd", result.detail)
 
 
 if __name__ == "__main__":

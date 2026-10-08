@@ -18,6 +18,7 @@ import json
 import os
 import re
 import socket
+import threading
 import urllib.request
 from pathlib import Path
 from urllib.parse import urlparse
@@ -65,7 +66,7 @@ def _schema_validator(name: str) -> jsonschema.Draft202012Validator:
 def _files_under(root: Path) -> list[str]:
     if not root.exists():
         return []
-    return sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file())
+    return sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file())
 
 
 def _sparse_zeros(path: Path, size: int) -> None:
@@ -99,11 +100,42 @@ def no_network(monkeypatch) -> list[str]:
 
         return _deny
 
+    # Windows builds asyncio's private wakeup socketpair via loopback TCP.
+    # Permit only that original implementation, in its own thread/scope;
+    # ordinary loopback and external connections are still forbidden.
+    pair_scope = threading.local()
+    original_pair, original_connect = socket.socketpair, socket.socket.connect
+
+    def internal_pair(*args, **kwargs):
+        previous = getattr(pair_scope, "active", False)
+        pair_scope.active = True
+        try:
+            return original_pair(*args, **kwargs)
+        finally:
+            pair_scope.active = previous
+
+    def guarded_connect(sock, *args, **kwargs):
+        if getattr(pair_scope, "active", False):
+            return original_connect(sock, *args, **kwargs)
+        return deny("socket.connect")(sock, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "socketpair", internal_pair)
     monkeypatch.setattr(urllib.request, "urlopen", deny("urllib.request.urlopen"))
-    monkeypatch.setattr(socket.socket, "connect", deny("socket.connect"))
+    monkeypatch.setattr(socket.socket, "connect", guarded_connect)
     monkeypatch.setattr(socket.socket, "connect_ex", deny("socket.connect_ex"))
     monkeypatch.setattr(socket, "create_connection", deny("socket.create_connection"))
     return calls
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "203.0.113.7"])
+def test_network_guard_allows_only_internal_socketpair(no_network, host):
+    first, second = socket.socketpair()
+    first.close()
+    second.close()
+    assert no_network == []
+    with socket.socket() as sock, pytest.raises(AssertionError, match="socket.connect"):
+        sock.connect((host, 9))
+    assert no_network == ["socket.connect"]
 
 
 @pytest.fixture()

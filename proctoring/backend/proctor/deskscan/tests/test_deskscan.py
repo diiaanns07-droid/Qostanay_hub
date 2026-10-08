@@ -256,6 +256,19 @@ def test_unknown_session_is_404(client):
     assert client.post("/v1/sessions/s-missing/desk-scan", json={"duration_s": 12}).status_code == 404
 
 
+def test_deleted_session_does_not_expose_cached_desk_scan(client):
+    sid = _create(client)
+    _preflight(client, sid)
+    url = f"/v1/sessions/{sid}/desk-scan"
+    assert client.post(url + "/skip", json={"reason": FIXED_CAMERA_REASON}).status_code == 200
+    assert client.post(f"/v1/sessions/{sid}/finish").status_code == 200
+    assert client.get(url).json()["state"] == "skipped"
+    assert client.delete(f"/v1/sessions/{sid}").status_code == 200
+    deleted = client.get(url)
+    assert deleted.status_code == 404
+    assert deleted.json()["error"]["code"] == "SESSION_NOT_FOUND"
+
+
 # ------------------------------------------------------------------- clip (real A02 capture module)
 def _real_capture_client(tmp_path):
     pytest.importorskip("cv2")
