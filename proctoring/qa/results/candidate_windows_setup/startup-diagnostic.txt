@@ -1,0 +1,17 @@
+
+
+[Qorgau DEMO] one-time operator PIN for this run: [REDACTED]
+
+2026-10-08T08:26:56.001Z INFO shell.main: self-test disabled (QORGAU_SHELL_SELFTEST=0); in-app items stay unverified
+2026-10-08T08:26:56.015Z INFO shell.main: native helper: не собран (desktop/native/bin/qorgau-guard.exe отсутствует)
+2026-10-08T08:26:56.095Z INFO shell.main: capability matrix: {"blocked":0,"detected_only":0,"unsupported":0,"unverified":15}
+2026-10-08T08:26:56.096Z INFO shell.main: backend starting: launch
+2026-10-08T08:26:56.097Z INFO shell.state: mode=normal exam=false backend=starting session=-
+2026-10-08T08:26:56.115Z INFO shell.backend: launch #1: C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\.venv\Scripts\python.exe -m proctor serve --token-stdin --port 0 (cwd C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring)
+2026-10-08T08:27:00.736Z WARN shell.backend: READY pid 9296 differs from child pid 25868
+2026-10-08T08:27:00.736Z INFO shell.backend: launch #1 ready: port 59033, backend 0.1.0
+2026-10-08T08:27:00.736Z INFO shell.main: backend ready: port 59033
+2026-10-08T08:27:00.736Z INFO shell.state: mode=normal exam=false backend=ready session=-
+2026-10-08T08:27:00.797Z INFO shell.main: capability matrix: {"blocked":0,"detected_only":0,"unsupported":0,"unverified":15}
+2026-10-08T08:27:00.805Z INFO shell.main: backend connected (launch #1)
+2026-10-08T08:27:00.810Z INFO shell.stream: stream connected

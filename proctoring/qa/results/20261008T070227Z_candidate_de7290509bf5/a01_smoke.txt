@@ -1,0 +1,40 @@
+$ C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\.venv\Scripts\python.exe -m proctor smoke
+PASS  ready_handshake                               QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.0.0", "backend_version": "0.1.0", "port": 58621, "pid": 25000}
+PASS  token_not_in_ready_line                       token absent from stdout
+PASS  rejects_missing_token                         401
+PASS  rejects_foreign_origin                        403
+PASS  health                                        {"backend": "ok", "capture": "idle", "phone": "model_missing", "attention": "model_missing", "fusion": "ok", "evidence": "ok", "environment": "shell_not_reported"}
+PASS  live_never_uses_bootstrap_and_needs_shell     backend=pass, camera=pass, lighting=warn, phone_model=fail, face_model=fail, fusion=pass, storage=pass, environment_protection=fail, offline_assets=not_run
+PASS  error_status_table_422                        422
+PASS  overlong_path_id_422_keeps_connection         422
+PASS  ws_token_in_query_rejected                    InvalidStatus
+PASS  create_synthetic_session                      201
+PASS  second_active_session_rejected                409
+PASS  preflight_ready_synthetic                     backend=pass, camera=pass, lighting=pass, phone_model=warn, face_model=warn, fusion=pass, storage=pass, environment_protection=not_run, offline_assets=not_run
+PASS  calibration_started                           collecting
+PASS  calibration_target_center                     samples collected from frames, not a timer
+PASS  calibration_target_left                       samples collected from frames, not a timer
+PASS  calibration_target_right                      samples collected from frames, not a timer
+PASS  calibration_target_up                         samples collected from frames, not a timer
+PASS  calibration_target_down                       samples collected from frames, not a timer
+PASS  calibration_completed                         completed
+PASS  exam_running                                  running
+PASS  answer_autosave                               200
+PASS  environment_event_dedup                       {'accepted': 1, 'duplicates': 0, 'observation_ids': ['env-s-20261008-120510-6d47bb56-1']} / {'accepted': 0, 'duplicates': 1, 'observation_ids': []}
+PASS  synthetic_phone_incident_on_stream            Телефон виден 1,1 с; требуется проверка преподавателем.
+PASS  incidents_api                                 2 incident(s)
+PASS  human_review                                  200
+PASS  preview_jpeg                                  200, 10845 bytes, meta=True
+PASS  metrics                                       capture_fps=15.0 frames=86
+PASS  finish                                        finished
+PASS  finish_idempotent                             200
+PASS  no_writes_after_finish                        409
+PASS  finished_state_on_stream
+PASS  restart_new_session_after_finish              201
+PASS  capture_reopens_for_new_session
+PASS  stream_envelopes_match_contract               172 messages, 0 invalid
+PASS  no_foreign_session_messages                   0 foreign
+PASS  exits_on_stdin_eof                            exit code 0
+PASS  token_not_in_logs                             17 stderr lines scanned
+
+SMOKE PASSED: 37/37 checks (SYNTHETIC data, not CV accuracy)

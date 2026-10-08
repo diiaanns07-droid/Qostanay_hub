@@ -1,0 +1,73 @@
+.........................ss..ssss                                        [100%]
+=================================== PASSES ====================================
+__________________ test_real_latency_p50_from_runtime_stats ___________________
+---------------------------- Captured stdout call -----------------------------
+
+[A03 real model] infer_ms p50=66.27 p95=70.17 process_ms p50=78.0 p95=78.0 over 10 frames 640x480 (onnxruntime 1.29.0 CPU, 2 intra-op threads)
+_______________ test_real_auto_execution_provider_on_this_build _______________
+---------------------------- Captured stdout call -----------------------------
+
+[A03 real model] onnxruntime 1.29.0 providers: ['AzureExecutionProvider', 'CPUExecutionProvider']
+___________________________ test_real_model_health ____________________________
+---------------------------- Captured stderr setup ----------------------------
+W0000 00:00:1791444259.834511    5932 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+
+W0000 00:00:1791444259.847624   30372 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+W0000 00:00:1791444259.867037   25916 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+_______________________ test_no_face_scenes_and_restart _______________________
+---------------------------- Captured stdout call -----------------------------
+W0000 00:00:1791444260.486136   23648 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+
+W0000 00:00:1791444260.497434   11556 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+W0000 00:00:1791444260.515148   10472 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+W0000 00:00:1791444260.699010    7020 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+
+W0000 00:00:1791444260.708621   13040 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+W0000 00:00:1791444260.731700   10828 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+W0000 00:00:1791444260.898531   17560 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+
+W0000 00:00:1791444260.906403   26556 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+W0000 00:00:1791444260.924390    1212 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+
+=========================== short test summary info ===========================
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_factory_load_reports_verified_model
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_model_metadata_names_and_dynamic_hw
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_uniform_frames_have_no_detections_and_are_unknown
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_textured_noise_frames_have_no_phone_detections
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_phone_only_config_does_not_report_other_objects
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_observation_producer_matches_manifest_and_contract
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_close_releases_the_model
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_inference_does_not_modify_the_frame
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_inference_is_deterministic
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_preprocessing_and_outputs_match_an_independent_reference
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-rect]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-square]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-rect]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_prepadded_frame_gives_identical_boxes
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_input_size_and_rect_variants_load_and_run[320-rect]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_input_size_and_rect_variants_load_and_run[320-square]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_input_size_and_rect_variants_load_and_run[480-rect]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_input_size_and_rect_variants_load_and_run[480-square]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_input_size_and_rect_variants_load_and_run[640-rect]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_input_size_and_rect_variants_load_and_run[640-square]
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_varied_frame_sizes_run_without_errors
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_latency_p50_from_runtime_stats
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_auto_execution_provider_on_this_build
+PASSED backend/proctor/phone/tests/test_real_model.py::test_real_env_input_size_override_reaches_the_session
+PASSED backend/proctor/attention/tests/test_mediapipe_real.py::test_real_model_health
+PASSED backend/proctor/attention/tests/test_mediapipe_real.py::test_no_face_scenes_and_restart
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:757: QORGAU_PHONE_EVAL_IMAGES not set (optional labelled-image pipeline check)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:833: QORGAU_PHONE_EVAL_IMAGES not set (optional labelled-image pipeline check)
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:76: public test image man-woman-okay.jpg not provided (QORGAU_A04_TEST_IMAGES)
+SKIPPED [3] backend\proctor\attention\tests\test_mediapipe_real.py:76: public test image portrait.jpg not provided (QORGAU_A04_TEST_IMAGES)
+27 passed, 6 skipped in 19.50s

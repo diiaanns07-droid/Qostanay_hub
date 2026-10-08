@@ -1,5 +1,29 @@
 # Reproducible findings for module owners (A09 does not patch other modules)
 
+## Актуально: кандидат de7290509bf558d6488be84d2e0730b2b9ab104a, Windows 11
+
+Исходный прогон: `results/20261008T070227Z_candidate_de7290509bf5/`.
+Повтор с исправленным только A09 harness: `results/20261008T072100Z_candidate_a09_reviewed_de7290509bf5/`.
+QA-BUG-001…005 **исправлены A01 и перепроверены**: 10 строгих XPASS в исходном прогоне,
+после снятия старых маркеров — PASS. Описания ниже сохранены как история, не список открытых багов.
+
+| ID / приоритет | Владелец | Факт и воспроизведение | Влияние / следующее действие |
+|---|---|---|---|
+| QA-WIN-007 / **P0, LIVE не запускается** | A06, интеграция A01 | Electron 43.7.5 / Windows 11: обычный запуск заканчивается с exit 0 через ~6 с. 12 startup self-test проверок PASS, затем сразу `shutdown: before-quit`. `probe-electron.ts:dispose()` уничтожает единственное окно; безусловный `app.on("window-all-closed", () => app.quit())` срабатывает до создания mainWindow. Лог: `results/candidate_windows_setup/startup-selftest-exit.txt`. | Предложен минимальный патч `fixes/QA-WIN-007-A06-startup.patch`, **не применён к кандидату**. A06/A01 должны интегрировать и дать новый SHA. Диагностика с self-test=0 позволяет открыть UI, но оставляет capabilities unverified и не проходит LIVE preflight; это не исправление. |
+| QA-WIN-001 / **P0 для показа всех требований кейса** | A06, интеграция A01 | В кандидате отсутствует `desktop/native/bin/qorgau-guard.exe`; `native/README.md` описывает интерфейс, а не поставленный помощник. Оболочка не подтверждает системную блокировку Alt+Tab/Win/чужих окон. | Частичный LIVE с камерой допустим, полную защиту Windows показывать как работающую нельзя. Нужна поставка A06 + отдельная проверка на этом ноутбуке. |
+| QA-WIN-002 / P1, безопасность тестового режима | A06 | `environment/guard.ts`: при `registered=false` у аварийного сочетания выдаётся `enforcement_error`, но режим экзамена всё равно включается. Unit-тест `emergency hotkey not registrable` подтверждает именно это поведение; конфликт реальной клавиши на ноутбуке ещё не проверен. | До ручного теста всегда иметь PID и путь через Ctrl+Alt+Del. Предложение: отказ от включения ограничений, если аварийная клавиша не зарегистрирована; не изображать регистрацию как PASS. |
+| QA-WIN-003 / P2, тесты Windows | A03 | Два `test_install_*` ожидают `phone/m.onnx` вместо Windows `phone\\m.onnx`. `test_app_health_lists_phone_model_missing`: `no_network` запрещает loopback `socket.socketpair()` Windows ProactorEventLoop; это также вызывает ошибку очистки `_ssock` в следующем lifecycle-тесте A01. | Исправить переносимость тестов и разрешить только loopback, сохранив запрет внешней сети. Блокировка запуска продукта этими сбоями не доказана. |
+| QA-WIN-004 / P2, тесты Windows | A08 | `test_full_synthetic_flow` ждёт `bootstrap-0`, получает `a05-rules-1.0.0`; symlink-тест падает WinError 1314 без привилегии; delete-тест пытается читать занятый `*.sqlite3.lock` как файл БД. | Обновить тесты для интегрированного A05 и Windows. Настройки Windows/права не менять ради теста. |
+| QA-WIN-005 / P2, устаревшее ожидание | A06 / A01 | `npm run test:shell`: 62 PASS, 1 FAIL, 1 SKIP. В `backend.integration.test.ts` после завершения ожидается `events.dropped === 1`, фактически 0. Кандидат A01 намеренно принимает поздние release/focus события в grace-интервале (`session.py:environment_events`). | Согласовать тест A06 с новым поведением A01; это не свидетельство провала включения/снятия ограничений. |
+| QA-WIN-006 / исправлено A09 | A09 | Статический offline-тест не исключал штатный CLI `phone/prepare.py`; prepare-скрипт вызывал для A03 неверный `model_tool fetch`. Electron 43.7.5 требует явного `node node_modules/electron/install.js` после `npm ci`. | Исправлены только A09 пути. Проверка runtime-сети остаётся включённой, веса и lockfile не изменены. |
+
+Ручные результаты CV/горячих клавиш/восстановления **не получены**. Не добавлять их как PASS.
+Подробности подготовки и исходные автоматические результаты: `results/CANDIDATE_WINDOWS.md`.
+
+---
+
+## Исторические находки на BOOTSTRAP
+
 Found on product SHA `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` (A01 BOOTSTRAP), Linux x86_64, Python 3.12.3.
 Order = priority for A01: QA-BUG-004, QA-BUG-005, QA-BUG-003, QA-BUG-002, QA-BUG-001.
 Each item has a minimal repro against a real `python -m proctor serve` process and a tracking test in `qa/tests`

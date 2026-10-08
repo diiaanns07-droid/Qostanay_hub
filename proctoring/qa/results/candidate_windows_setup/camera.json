@@ -1,0 +1,382 @@
+{
+  "kind": "qorgau.a02.verify_live.v1",
+  "created_at": "2026-10-08T07:13:02.776801+00:00",
+  "hardware": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "cpu": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+    "logical_cpus": 12,
+    "python": "3.12.14",
+    "opencv": "4.13.0",
+    "numpy": "2.4.6",
+    "capture_version": "0.2.0"
+  },
+  "requested": {
+    "camera": 0,
+    "width": 640,
+    "height": 480,
+    "fps": 30,
+    "backend": "auto"
+  },
+  "default_backends": [
+    "700",
+    "1400"
+  ],
+  "cameras": [
+    {
+      "index": 0,
+      "ok": true,
+      "open_ms": 2609.0,
+      "camera_index": 0,
+      "backend": "DSHOW",
+      "requested": "640x480@30",
+      "actual_width": 640,
+      "actual_height": 480,
+      "driver_fps": 30.0
+    }
+  ],
+  "soak": {
+    "kind": "qorgau.a02.soak.v1",
+    "created_at": "2026-10-08T07:13:25.740055+00:00",
+    "label": "LIVE source, SIMULATED consumers (not CV)",
+    "hardware": {
+      "platform": "Windows-11-10.0.26200-SP0",
+      "machine": "AMD64",
+      "cpu": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+      "logical_cpus": 12,
+      "python": "3.12.14",
+      "opencv": "4.13.0",
+      "numpy": "2.4.6",
+      "capture_version": "0.2.0"
+    },
+    "source": {
+      "mode": "live",
+      "camera_index": 0,
+      "replay_id": null,
+      "width": 640,
+      "height": 480,
+      "fps": 30
+    },
+    "requested_duration_s": 15.0,
+    "measured_duration_s": 15.0,
+    "open_ms": 1782.0,
+    "frames_captured": 450,
+    "frames_dropped": 0,
+    "capture_fps_mean": 30.0,
+    "capture_fps_samples": {
+      "n": 13,
+      "p50": 30.0,
+      "p95": 30.2,
+      "p99": 30.2,
+      "max": 30.2
+    },
+    "loadavg_1m_samples": {
+      "n": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    },
+    "consumers": {
+      "phone_sim": {
+        "max_fps": 8.0,
+        "simulated_work_ms": 60.0,
+        "work_mode": "cpu",
+        "processed": 116,
+        "processed_fps_mean": 7.73,
+        "ids_strictly_increasing": true,
+        "frame_age_ms": {
+          "n": 116,
+          "p50": 15.0,
+          "p95": 47.0,
+          "p99": 47.0,
+          "max": 47.0
+        },
+        "e2e_ms": {
+          "n": 116,
+          "p50": 78.0,
+          "p95": 110.0,
+          "p99": 110.0,
+          "max": 110.0
+        }
+      },
+      "attention_sim": {
+        "max_fps": 15.0,
+        "simulated_work_ms": 25.0,
+        "work_mode": "cpu",
+        "processed": 191,
+        "processed_fps_mean": 12.73,
+        "ids_strictly_increasing": true,
+        "frame_age_ms": {
+          "n": 191,
+          "p50": 16.0,
+          "p95": 47.0,
+          "p99": 47.0,
+          "max": 62.0
+        },
+        "e2e_ms": {
+          "n": 191,
+          "p50": 47.0,
+          "p95": 78.0,
+          "p99": 79.0,
+          "max": 93.0
+        }
+      }
+    },
+    "memory": {
+      "rss_before_mb": null,
+      "rss_after_mb": null,
+      "rss_max_mb": null,
+      "rss_growth_after_warmup_mb": null
+    },
+    "threads": {
+      "before": 1,
+      "after": 1
+    },
+    "leaked_runs": 0,
+    "health_events": [
+      {
+        "t_session_ms": 0.0,
+        "status": "starting",
+        "code": "opening"
+      },
+      {
+        "t_session_ms": 1782.0,
+        "status": "ok",
+        "code": "running"
+      },
+      {
+        "t_session_ms": 17204.0,
+        "status": "stopped",
+        "code": "closed"
+      }
+    ],
+    "service_metrics_final": {
+      "session_id": "soak-session",
+      "t_session_ms": 16782.0,
+      "window_s": 5.0,
+      "capture_fps": 30.0,
+      "frames_captured": 450,
+      "frames_dropped": 0,
+      "consumers": [
+        {
+          "name": "phone_sim",
+          "processed_fps": 7.8,
+          "frames_processed": 116,
+          "frames_skipped": 333,
+          "errors": 0,
+          "frame_age_ms_p50": 0.0,
+          "frame_age_ms_p95": 47.0,
+          "process_ms_p50": 63.0,
+          "process_ms_p95": 63.0
+        },
+        {
+          "name": "attention_sim",
+          "processed_fps": 12.8,
+          "frames_processed": 191,
+          "frames_skipped": 258,
+          "errors": 0,
+          "frame_age_ms_p50": 16.0,
+          "frame_age_ms_p95": 44.75,
+          "process_ms_p50": 31.0,
+          "process_ms_p95": 32.0
+        },
+        {
+          "name": "preview",
+          "processed_fps": 12.6,
+          "frames_processed": 191,
+          "frames_skipped": 258,
+          "errors": 0,
+          "frame_age_ms_p50": 16.0,
+          "frame_age_ms_p95": 45.5,
+          "process_ms_p50": 0.0,
+          "process_ms_p95": 13.5
+        }
+      ],
+      "e2e_latency_ms_p50": 63.0,
+      "e2e_latency_ms_p95": 107.5
+    },
+    "targets": {
+      "capture_fps_min_ratio": 0.8,
+      "preview_fps_min": 10.0,
+      "e2e_ms_p95_max": 250.0,
+      "rss_growth_mb_max_per_10min": 30.0
+    },
+    "notes": [
+      "frame_age/e2e measured by the harness at callback start/end vs t_capture_mono_ns (read() return time)",
+      "driver/sensor latency before cv2 read() returns is not observable and not included"
+    ],
+    "evaluation": {
+      "capture_fps": "PASS",
+      "preview_fps": "PASS",
+      "e2e_p95": "PASS",
+      "memory_growth": "NOT_RUN (run >= 1 min)",
+      "threads_released": "PASS",
+      "ids_monotonic": "PASS",
+      "mode": "LIVE"
+    }
+  },
+  "health_events": [
+    {
+      "dt_s": 0.0,
+      "status": "starting",
+      "code": "opening"
+    },
+    {
+      "dt_s": 1.766,
+      "status": "ok",
+      "code": "running"
+    },
+    {
+      "dt_s": 2.313,
+      "status": "stopped",
+      "code": "closed"
+    },
+    {
+      "dt_s": 19.735,
+      "status": "starting",
+      "code": "opening"
+    },
+    {
+      "dt_s": 21.422,
+      "status": "ok",
+      "code": "running"
+    },
+    {
+      "dt_s": 21.875,
+      "status": "stopped",
+      "code": "closed"
+    },
+    {
+      "dt_s": 21.875,
+      "status": "starting",
+      "code": "opening"
+    },
+    {
+      "dt_s": 23.578,
+      "status": "ok",
+      "code": "running"
+    },
+    {
+      "dt_s": 24.016,
+      "status": "stopped",
+      "code": "closed"
+    },
+    {
+      "dt_s": 24.016,
+      "status": "starting",
+      "code": "opening"
+    },
+    {
+      "dt_s": 25.703,
+      "status": "ok",
+      "code": "running"
+    },
+    {
+      "dt_s": 26.157,
+      "status": "stopped",
+      "code": "closed"
+    }
+  ],
+  "checks": [
+    {
+      "check": "camera_enumeration",
+      "status": "PASS",
+      "detail": "working indices: [0]",
+      "cameras": [
+        {
+          "index": 0,
+          "ok": true,
+          "open_ms": 2609.0,
+          "camera_index": 0,
+          "backend": "DSHOW",
+          "requested": "640x480@30",
+          "actual_width": 640,
+          "actual_height": 480,
+          "driver_fps": 30.0
+        }
+      ]
+    },
+    {
+      "check": "open",
+      "status": "PASS",
+      "detail": "1766 ms via DSHOW; actual 640x480 driver_fps=30.0",
+      "open_ms": 1766.0,
+      "health": {
+        "opencv": "4.13.0",
+        "camera_index": 0,
+        "backend": "DSHOW",
+        "requested": "640x480@30",
+        "actual_width": 640,
+        "actual_height": 480,
+        "driver_fps": 30.0,
+        "source_mode": "live",
+        "source_id": "camera:0",
+        "pacing": "realtime",
+        "frames": 0,
+        "reconnects": 0
+      }
+    },
+    {
+      "check": "frame_format",
+      "status": "PASS",
+      "detail": "(480, 640, 3) uint8 BGR read-only, mean brightness 157/255"
+    },
+    {
+      "check": "preview_jpeg",
+      "status": "PASS",
+      "detail": "640x480, 29017 bytes, frame 2"
+    },
+    {
+      "check": "capture_fps",
+      "status": "PASS",
+      "detail": "measured mean 30.0 FPS vs requested 30 (target >= 80% of requested)"
+    },
+    {
+      "check": "e2e_latency",
+      "status": "PASS",
+      "detail": "worst consumer e2e p95 110.0 ms (target <= 250 ms with simulated load)"
+    },
+    {
+      "check": "preview_fps",
+      "status": "PASS",
+      "detail": "preview encoder keeps >= 10 FPS under load"
+    },
+    {
+      "check": "threads_released",
+      "status": "PASS",
+      "detail": "threads {'before': 1, 'after': 1}"
+    },
+    {
+      "check": "restart_x3",
+      "status": "PASS",
+      "detail": "open+first frame ms: [1750.0, 1750.0, 1750.0]"
+    },
+    {
+      "check": "unmirrored_view",
+      "status": "NOT_RUN",
+      "detail": "run with --interactive on the target machine"
+    },
+    {
+      "check": "disconnect_detected",
+      "status": "NOT_RUN",
+      "detail": "run with --interactive on the target machine"
+    },
+    {
+      "check": "reconnected",
+      "status": "NOT_RUN",
+      "detail": "run with --interactive on the target machine"
+    },
+    {
+      "check": "busy_camera",
+      "status": "NOT_RUN",
+      "detail": "run with --interactive on the target machine"
+    },
+    {
+      "check": "privacy_denied",
+      "status": "NOT_RUN",
+      "detail": "run with --interactive on the target machine"
+    }
+  ],
+  "overall": "INCOMPLETE"
+}
