@@ -8,6 +8,7 @@ import { describeError } from "../lib/errors";
 import { useT } from "../lib/i18n";
 import { AnswerSync, type AnswerValue } from "../lib/autosave";
 import { Banner, Button, Dialog, ErrorBanner, Spinner } from "../components/ui";
+import { ExamWebsite, useExamWebsite } from "../components/ExamWebsite";
 
 const TEXT_DEBOUNCE_MS = 500;
 const CHOICE_DEBOUNCE_MS = 0;
@@ -19,6 +20,11 @@ function isAnswered(v: AnswerValue | undefined): boolean {
 }
 
 export function ExamScreen() {
+  const website = useExamWebsite();
+  return website && website.kind !== "none" ? <ExamWebsite status={website} /> : <LocalExamScreen />;
+}
+
+function LocalExamScreen() {
   const { bridge, session, setSession, isCurrent, live, backendLost } = useApp();
   useLive(live);
   const t = useT();
