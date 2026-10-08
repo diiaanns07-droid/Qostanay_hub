@@ -29,6 +29,9 @@ export function CalibrationScreen() {
   const autoRequested = useRef<string | null>(null);
   /** Full-screen calibration starts only after the student pressed "Начать" (positioned, window full screen). */
   const [armed, setArmed] = useState(false);
+  const [presented, setPresented] = useState<CalibrationTarget | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
   const sid = session?.session_id ?? "";
   const cal = newer(polled, live.calibration);
@@ -57,7 +60,13 @@ export function CalibrationScreen() {
     async (t: CalibrationTarget) => {
       setBusy("target");
       setError(null);
+      // Highlight the destination before asking A04 to collect its samples.
+      setPresented(t);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      await new Promise<void>((resolve) => setTimeout(resolve, 600));
+      if (!mounted.current) return;
       const r = await call(bridge.calibrationTarget(sid, t));
+      if (!mounted.current) return;
       setBusy(null);
       if (!r.ok) return setError({ ctx: `Точка «${TARGET[t]}»`, error: r.error });
       setPolled((p) => newer(p, r.data));
@@ -184,7 +193,7 @@ export function CalibrationScreen() {
     );
   }
 
-  const current = cal?.current_target ?? null;
+  const current = busy === "target" ? presented : cal?.current_target ?? null;
   const curStatus = cal?.targets.find((t) => t.target === current) ?? null;
   const failed = cal?.targets.filter((t) => t.state === "failed") ?? [];
   const upSkipped = !!cal && cal.targets.some((t) => t.target === "up" && t.state === "failed");
@@ -205,7 +214,7 @@ export function CalibrationScreen() {
       {CalibrationTargetValues.map((t) => {
         const st = cal?.targets.find((x) => x.target === t);
         const state = st?.state ?? "pending";
-        const active = armed && t === current && state === "collecting";
+        const active = armed && t === current && (state === "collecting" || busy === "target");
         return (
           <span
             key={t}
@@ -241,12 +250,13 @@ export function CalibrationScreen() {
         {cal && armed && (
           <>
             <div className="calfs-now" aria-live="polite">
-              {curStatus && curStatus.state === "collecting" && (
+              {busy === "target" && current && <>Приготовьтесь: смотрите <b>{TARGET[current]}</b> · сейчас начнётся сбор</>}
+              {busy !== "target" && curStatus && curStatus.state === "collecting" && (
                 <>
                   Смотрите <b>{TARGET[curStatus.target]}</b> — собрано {curStatus.samples} из {curStatus.required_samples}
                 </>
               )}
-              {curStatus && curStatus.state === "failed" && <>Точка {TARGET[curStatus.target]} не собрана</>}
+              {busy !== "target" && curStatus && curStatus.state === "failed" && <>Точка {TARGET[curStatus.target]} не собрана</>}
               {allOk && !upSkipped && <>Все точки собраны — нажмите «Завершить калибровку»</>}
               {allOk && upSkipped && <>Точка «вверх» необязательна: можно повторить её или нажать «Завершить калибровку»</>}
             </div>
@@ -290,7 +300,7 @@ export function CalibrationScreen() {
             </Button>
           ))}
           {armed && (
-            <Button variant="primary" disabled={!allOk || backendLost || cal?.phase !== "collecting"} busy={busy === "finish"} onClick={() => void finish()}>
+            <Button variant="primary" disabled={!allOk || backendLost || cal?.phase !== "collecting" || (busy !== null && busy !== "finish")} busy={busy === "finish"} onClick={() => void finish()}>
               Завершить калибровку
             </Button>
           )}
@@ -299,10 +309,10 @@ export function CalibrationScreen() {
               Начать заново
             </Button>
           )}
-          <Button variant="ghost" disabled={backendLost} onClick={() => (role === "teacher" ? setSkipOpen(true) : requestTeacher())} title="Решение преподавателя: потребуется PIN">
+          <Button variant="ghost" disabled={backendLost || busy !== null} onClick={() => (role === "teacher" ? setSkipOpen(true) : requestTeacher())} title="Решение преподавателя: потребуется PIN">
             Пропустить…
           </Button>
-          <Button variant="danger" busy={busy === "cancel"} disabled={backendLost || session.state !== "calibrating"} onClick={() => void cancel()}>
+          <Button variant="danger" busy={busy === "cancel"} disabled={backendLost || busy !== null || session.state !== "calibrating"} onClick={() => void cancel()}>
             Отменить
           </Button>
         </div>

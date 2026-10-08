@@ -3,19 +3,23 @@
 // screen or hide the microphone banner; camera and monitoring keep running underneath (nothing is stopped here).
 import { useEffect, useRef } from "react";
 import type { ClassState } from "../lib/classState";
-import { CONNECTION_RU } from "../lib/classState";
+import { CONNECTION_RU, parseClassHealth } from "../lib/classState";
 import { Badge, Card } from "./ui";
 
 export function LockScreen({ state }: { state: ClassState }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     ref.current?.focus();
     // keep keyboard focus inside the lock screen (the app underneath is also inert)
     const keep = (e: FocusEvent) => {
       if (ref.current && e.target instanceof Node && !ref.current.contains(e.target)) ref.current.focus();
     };
     document.addEventListener("focusin", keep);
-    return () => document.removeEventListener("focusin", keep);
+    return () => {
+      document.removeEventListener("focusin", keep);
+      if (previous?.isConnected && !previous.closest("[inert]")) previous.focus();
+    };
   }, []);
   return (
     <div className="lockscreen" role="alertdialog" aria-modal="true" aria-labelledby="lock-title" aria-describedby="lock-reason" tabIndex={-1} ref={ref}>
@@ -52,14 +56,18 @@ export function MicBanner({ state }: { state: ClassState }) {
 }
 
 /** "Класс" block for the preparation screen. Status only: the uplink is configured by QORGAU_CLASS_SERVER/CODE. */
-export function ClassBlock({ state }: { state: ClassState | null }) {
+export function ClassBlock({ state, health }: { state: ClassState | null; health?: unknown }) {
+  const local = parseClassHealth(health);
   if (!state) {
     return (
       <Card title="Класс" className="classblock">
         <p className="small">
-          <Badge tone="neutral">нет данных</Badge> Состояние подключения к классу ещё не получено. Если компьютер не
-          подключён к классу, экзамен проходит локально — это нормально.
+          <Badge tone="neutral">{local.configured === false ? "нет сервера" : "нет данных"}</Badge>{" "}
+          {local.configured === false
+            ? "Сервер класса не настроен. Экзамен проходит локально. Для подключения обратитесь к преподавателю."
+            : "Состояние подключения к классу ещё не получено. Ожидаем сведения от локального сервиса."}
         </p>
+        <p className="small">Компьютер: <b data-testid="class-computer">{local.computerName ?? "имя пока недоступно"}</b></p>
       </Card>
     );
   }
@@ -72,7 +80,7 @@ export function ClassBlock({ state }: { state: ClassState | null }) {
         <dt>Сервер класса</dt>
         <dd className="mono">{state.server || "—"}</dd>
         <dt>Компьютер</dt>
-        <dd>{state.computer_name ?? "—"}</dd>
+        <dd data-testid="class-computer">{state.computer_name ?? local.computerName ?? "имя пока недоступно"}</dd>
         {state.student_id && (
           <>
             <dt>Номер у преподавателя</dt>

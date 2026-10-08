@@ -38,7 +38,9 @@ async function run(viewport) {
 
     // 4. Class block: no data yet -> each connection state as text + badge
     await page.getByRole("heading", { name: "Класс" }).waitFor();
-    check(`[${tag}] class block without data says so`, await page.getByText("Состояние подключения к классу ещё не получено").isVisible());
+    await page.getByText("Сервер класса не настроен.", { exact: false }).waitFor();
+    check(`[${tag}] class block reports no server from health`, await page.getByText("нет сервера", { exact: true }).isVisible());
+    check(`[${tag}] computer name is available without uplink`, await page.getByTestId("class-computer").textContent() === "FIXTURE-PC");
     const states = { connected: "подключено", reconnecting: "переподключение: сервер класса не отвечает", rejected: "неверный код подключения", connecting: "подключение…" };
     for (const [value, text] of Object.entries(states)) {
       await panel(page, () => page.getByLabel("Связь с классом (FIXTURE)").selectOption(value));
@@ -51,6 +53,7 @@ async function run(viewport) {
     }
     await panel(page, () => page.getByLabel("Связь с классом (FIXTURE)").selectOption("connected"));
     check(`[${tag}] class block shows server`, await page.getByText("fixture-class:8765").isVisible());
+    check(`[${tag}] computer name remains after class_state without computer_name`, await page.getByTestId("class-computer").textContent() === "FIXTURE-PC");
     await shot("01-class-block");
 
     // 2. Lock screen

@@ -880,7 +880,7 @@ export class FixtureBridge implements QorgauBridge {
 
   // ================================================================== backend lifecycle
   health(): Promise<BridgeResult<HealthReport>> {
-    return this.respond(() => this.healthReport());
+    return this.respond(() => ({ ...this.healthReport(), computer_name: "FIXTURE-PC", class_configured: false }));
   }
 
   listSessions(): Promise<BridgeResult<SessionInfo[]>> {
@@ -993,7 +993,8 @@ export class FixtureBridge implements QorgauBridge {
     return this.respond(() => {
       const s = this.requireActive(sessionId, "завершить калибровку", "calibrating");
       if ("code" in s) return s;
-      const ok = this.cal.targets.every((t) => t.state === "ok");
+      // Mirrors A04 after f46565c: "up" is optional (missing/failed -> generic span), every other target must be ok.
+      const ok = this.cal.targets.every((t) => t.state === "ok" || (t.target === "up" && t.state !== "collecting"));
       this.cal.phase = ok ? "completed" : "failed";
       this.cal.message_code = ok ? "fixture_calibration" : "targets_incomplete";
       this.cal.current_target = null;
