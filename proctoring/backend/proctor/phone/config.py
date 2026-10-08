@@ -34,6 +34,10 @@ class PhoneConfig:
     max_detections: int = 16  # contract limit for PhoneObservation.detections
     min_box_area: float = 0.0001  # normalized area floor (1% x 1% of the frame); smaller boxes are dropped
     phone_class_names: tuple[str, ...] = ("cell phone",)  # looked up in the MODEL's own names, never by index
+    # Review-only objects (no automatic action anywhere): COCO "book" (notes/book) and "laptop"/"tv" (second screen).
+    # They are reported as plain detections with class_name; the phone tracker and signals never see them.
+    object_class_names: tuple[str, ...] = ("book", "laptop", "tv")  # () = off; names absent in the model are skipped
+    object_conf_threshold: float = 0.50  # per-box score floor for objects (stricter than phones)
     intra_op_threads: int = 2  # ORT CPU threads; leaves cores for capture/attention
     execution_provider: str = "cpu"  # "cpu" (verified) | "auto" (first provider ORT reports; GPU is optional/unverified)
     min_interval_ms: float = 0.0  # extra inference period on top of settings.phone_max_fps (0 = off)
@@ -88,7 +92,7 @@ class PhoneConfig:
                 problems.append(f"{f.name} must be a finite number")
         if self.input_size % 32 or not 160 <= self.input_size <= 1280:
             problems.append("input_size must be a multiple of 32 in [160, 1280]")
-        for name in ("conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
             if not 0.0 < getattr(self, name) <= 1.0:
                 problems.append(f"{name} must be in (0, 1]")
         for name in (
@@ -119,6 +123,8 @@ class PhoneConfig:
             problems.append("execution_provider must be 'cpu' or 'auto'")
         if not self.phone_class_names:
             problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
         for name in (
             "min_interval_ms",
             "stale_ms",
@@ -141,6 +147,7 @@ class PhoneConfig:
     def as_dict(self) -> dict[str, object]:
         data = asdict(self)
         data["phone_class_names"] = list(self.phone_class_names)
+        data["object_class_names"] = list(self.object_class_names)
         return data
 
     @property

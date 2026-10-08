@@ -58,6 +58,8 @@ RULE_LABELS_RU = {
     "monitoring_degraded": "Наблюдение было неполным",
     "background_speech": "Возможная речь или фоновый разговор",
     "headphones_visible": "Видны наушники",
+    "foreign_object_visible": "В кадре книга или посторонний предмет",
+    "second_screen_visible": "В кадре второй экран или ноутбук",
 }
 
 

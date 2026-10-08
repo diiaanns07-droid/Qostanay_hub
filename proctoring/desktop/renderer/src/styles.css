@@ -1970,3 +1970,7 @@ code,
 .classblock-list { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
 .classblock-list dt { color: var(--muted); }
 .classblock-list dd { margin: 0; }
+
+/* review-only objects from A03 (book / laptop / tv) */
+.ov-object { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 6 3; }
+.tag-object { background: #7c3aed; color: #fff; }

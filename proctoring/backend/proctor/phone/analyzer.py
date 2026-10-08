@@ -242,8 +242,12 @@ class PhoneAnalyzer:
         if meta.source_mode == SourceMode.SYNTHETIC:
             flags.append("synthetic")
 
-        detections, timings = self._detector.detect(image)
+        if hasattr(self._detector, "detect_with_objects"):
+            detections, objects, timings = self._detector.detect_with_objects(image)
+        else:  # injected test detectors may only know detect()
+            (detections, timings), objects = self._detector.detect(image), []
         detections = list(detections)[: cfg.max_detections]
+        objects = list(objects)[: max(0, cfg.max_detections - len(detections))]
         with self._lock:
             t = meta.t_session_ms
             assigned = self._tracker.update(detections, t)
@@ -252,6 +256,8 @@ class PhoneAnalyzer:
             ctx = sig.FrameContext(t=t, usable=fq.usable, detections=detections, assigned=assigned, tracks=list(self._tracker.tracks))
             signals = [sig.phone_visible(ctx, cfg), sig.phone_raised(ctx, cfg), sig.possible_screen_capture(ctx, cfg)]
             phone_dets = [self._to_contract(det, tr, t) for det, tr in zip(detections, assigned)]
+            # review-only objects: plain detections (class_name book/laptop/tv), no track, never in phone signals
+            phone_dets += [self._to_contract(det, None, t) for det in objects]
         if any(d.area < cfg.small_object_area for d in detections):
             flags.append("small_object")
         if any(min(d.x_min, d.y_min) <= cfg.edge_margin or max(d.x_max, d.y_max) >= 1 - cfg.edge_margin for d in detections):
