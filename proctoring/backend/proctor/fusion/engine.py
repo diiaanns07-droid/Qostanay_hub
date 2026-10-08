@@ -37,6 +37,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from proctor_contracts.v1 import (
+    AudioObservation,
     AttentionObservation,
     Direction,
     EnvironmentAction,
@@ -314,6 +315,8 @@ class FusionEngine:
         for rule in self._partners:
             self._partners[rule] = sorted(set(self._partners[rule]), key=lambda r: r.value)
         self._stats: Counter[str] = Counter()
+        from proctor.audio.fusion import AudioFusion
+        self._audio = AudioFusion(session_id, self.source_mode, self._wall)
 
     # ------------------------------------------------------------------ IncidentEngine
     def consume(self, observation: Observation) -> list[IncidentChange]:
@@ -359,6 +362,11 @@ class FusionEngine:
             out += self._on_environment(obs, t)
         elif isinstance(obs, HealthObservation):
             out += self._on_health(obs, t)
+        elif isinstance(obs, AudioObservation):
+            if self._w - t <= self._audio.cfg.sample_hold_ms:
+                out += self._audio.feed(obs)
+            else:
+                self._stats["stale_on_arrival"] += 1
         return out
 
     def advance(self, t_session_ms: float) -> list[IncidentChange]:
@@ -686,7 +694,7 @@ class FusionEngine:
     # ------------------------------------------------------------------ time-driven expiry
     def _expire(self, w: float) -> list[IncidentChange]:
         cfg = self.cfg
-        out: list[IncidentChange] = []
+        out: list[IncidentChange] = self._audio.expire(w)
         for tracker in self._rules.values():
             out += tracker.expire(w)
         for source in SOURCES:
@@ -722,7 +730,7 @@ class FusionEngine:
 
     def _close_everything(self, t: float, reason: IncidentEndReason) -> list[IncidentChange]:
         t_fin = t if self._w is None else max(t, self._w)
-        out: list[IncidentChange] = []
+        out: list[IncidentChange] = self._audio.close(reason)
         for tracker in self._rules.values():
             out += tracker.close_all(reason)
         if self._burst is not None:

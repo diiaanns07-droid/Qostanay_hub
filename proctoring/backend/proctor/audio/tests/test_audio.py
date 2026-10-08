@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
-import threading
+import json
+import time
 
 import numpy as np
 import pytest
@@ -93,3 +93,71 @@ def test_model_missing_and_invalid_input(tmp_path):
         detector.feed(np.zeros(100))
     with pytest.raises(ValueError):
         detector.feed(np.full(BLOCK, np.nan))
+
+
+def test_manifest_rejects_tampering(tmp_path):
+    from proctor.audio.assets import check, REVISION, MODEL_SHA256
+    (tmp_path / "manifest.json").write_text(json.dumps(dict(revision=REVISION, sha256=MODEL_SHA256)))
+    (tmp_path / "silero_vad.onnx").write_bytes(b"wrong weights")
+    with pytest.raises(ValueError, match="SHA256"):
+        check(tmp_path)
+    assert AudioDetector(tmp_path).vad is None
+
+
+def test_onnx_failure_selects_fallback(tmp_path):
+    detector = AudioDetector(tmp_path)
+    class BrokenVad:
+        def probability(self, block):
+            raise RuntimeError("inference failed")
+    detector.vad = BrokenVad()
+    results = [detector.feed(np.zeros(BLOCK)) for _ in range(150)]
+    determined = [r for r in results if r is not None and r.voice_like != "unknown"]
+    assert determined and all(r.reasons == ["energy_fallback"] for r in determined)
+    assert all(r.voice_like == "absent" for r in determined)
+
+
+def test_monitor_stop_restart_releases_owner(tmp_path):
+    opened = []
+    class Stream:
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+        def __enter__(self):
+            opened.append("open")
+            self.callback(np.zeros((BLOCK, 1), dtype=np.float32), BLOCK, None, False)
+            return self
+        def __exit__(self, *args):
+            opened.append("closed")
+    monitor = AudioMonitor("test", "live", Clock(), lambda o: None,
+                           stream_factory=Stream, detector_factory=lambda: AudioDetector(tmp_path))
+    for cycle in range(2):
+        monitor.start()
+        deadline = time.monotonic() + 2
+        while opened.count("open") < cycle + 1 and time.monotonic() < deadline:
+            time.sleep(0.01)
+        monitor.start()  # idempotent
+        monitor.stop()
+        assert monitor._thread is None
+    assert opened == ["open", "closed", "open", "closed"]
+    with MicrophoneLease():
+        pass
+
+
+def test_installed_official_model_synthetic():
+    from proctor.audio.assets import check
+    try:
+        path = check()
+    except (OSError, ValueError, RuntimeError):
+        pytest.skip("explicit prepare --download required for real-model test")
+    vad = SileroVad(path)
+    rng = np.random.default_rng(14)
+    t = np.arange(BLOCK * 125) / RATE
+    signals = [np.zeros(t.size), rng.normal(0, 0.1, t.size), 0.2 * np.sin(2 * np.pi * 1000 * t),
+               0.1 * (1 + 0.7 * np.sin(2 * np.pi * 4 * t)) * np.sin(2 * np.pi * 800 * t)]
+    for signal in signals:
+        vad.reset()
+        values = [vad.probability(b.astype(np.float32)) for b in signal.reshape(-1, BLOCK)]
+        assert all(0 <= p <= 1 for p in values)
+        assert vad.state.shape == (2, 1, 128)
+        # Synthetic AM is not human speech; no sensitivity claim is made from this fixture.
+    vad.reset()
+    assert vad.probability(np.zeros(BLOCK, dtype=np.float32)) < 0.5
