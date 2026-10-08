@@ -1,8 +1,13 @@
 A09 ? A01/A06. Candidate de7290509bf558d6488be84d2e0730b2b9ab104a, Windows 11, 2026-10-08.
 
+Historical handoff. Release 25ef868 already includes the QA-WIN-007 startup guard.
+QA-WIN-003 and the YAMNet offline audit were fixed in 6b3f0a9.
+Current verification: docs/STATUS.md at the repository root.
+
 1. P0 QA-WIN-007: real Electron exits after the successful startup probe closes its last window.
    main.ts has unconditional window-all-closed => app.quit() before mainWindow exists.
-   Proposed owner patch: proctoring/qa/fixes/QA-WIN-007-A06-startup.patch.
+   Original owner patch is preserved in Git history at 25ef868:
+   https://github.com/diiaanns07-droid/Qostanay_hub/blob/25ef868/proctoring/qa/fixes/QA-WIN-007-A06-startup.patch
    git apply --check PASS; NOT applied to product; not runtime-verified.
    Please integrate the lifecycle fix and send a NEW A01 candidate SHA.
    Latest fetched A06 7104aa8 still contains the unconditional handler; A01 still de72905.

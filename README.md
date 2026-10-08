@@ -2,7 +2,7 @@
 
 **Локальный прокторинг для компьютерного класса.** Студент проходит экзамен на своём ПК, преподаватель видит события и проверяет подозрительные эпизоды.
 
-[Запуск на Windows](proctoring/README.md) · [Сценарий демо](proctoring/docs/submission/ADAL_DEMO.md) · [Презентация](presentation/adal/index.html) · [Проверки и ограничения](docs/STATUS.md)
+[Открыть презентацию ↗](https://diiaanns07-droid.github.io/Qostanay_hub/) · [Запуск на Windows](proctoring/README.md) · [Сценарий демо](proctoring/docs/submission/ADAL_DEMO.md) · [Проверки и ограничения](docs/STATUS.md)
 
 ## Что делает Adal
 
@@ -45,7 +45,7 @@ cd Adal\proctoring
 
 ## Материалы для хакатона
 
-- [HTML-презентация](presentation/adal/index.html) — скачать и открыть в браузере. Интерактивные сцены используют синтетические данные.
+- [Интерактивная презентация](https://diiaanns07-droid.github.io/Qostanay_hub/) — открывается сразу в браузере. [HTML для скачивания](presentation/adal/index.html). Интерактивные сцены используют синтетические данные.
 - [Сценарий демонстрации и соответствие ТЗ](proctoring/docs/submission/ADAL_DEMO.md).
 - [Текст кейса на казахском](docs/case/CASE_SOURCE_KK.txt) и [происхождение исходного PDF](docs/case/CASE_PROVENANCE.json).
 - [Проверки объединённой версии](docs/STATUS.md), включая границы доказательств.
@@ -61,6 +61,8 @@ cd Adal\proctoring
 | [`proctoring/acceptance/`](proctoring/acceptance/) и [`qa/`](proctoring/qa/) | Интеграционные проверки, тесты и результаты |
 | [`presentation/`](presentation/) | Презентация Adal |
 
-Технические протоколы и доказательства разработки сохранены рядом с модулями. Старые задания агентам, дубли презентаций и ранние материалы подачи доступны в истории Git до `ac71d19`.
+Технические протоколы и доказательства разработки сохранены рядом с модулями. Старые задания агентам, дубли презентаций и ранние материалы подачи доступны в истории Git.
+
+Презентация автоматически публикуется из `presentation/adal/` после изменений в `main`. [Статус публикации](https://github.com/diiaanns07-droid/Qostanay_hub/actions/workflows/presentation.yml).
 
 Название продукта — **Adal**. Идентификаторы протоколов `qorgau.*` сохранены для совместимости. Модели, записи, PIN, токены и локальные настройки в Git не добавляются.
