@@ -126,6 +126,7 @@ class Pipeline:
     engine_factory: Callable[[str, SourceMode], IncidentEngine] | None
     engine_label: str
     engine_health: Health
+    identity: PipelinePart | None = None  # A13 (contract 1.1); None = not part of this pipeline
 
 
 class PipelineProvider(Protocol):
@@ -363,9 +364,15 @@ class SessionRuntime:
         except Exception:
             log.exception("health report failed")
 
+    def _frame_analyzers(self) -> list[tuple[PipelinePart, Component]]:
+        parts = [(self.pipeline.phone, Component.PHONE), (self.pipeline.attention, Component.ATTENTION)]
+        if self.pipeline.identity is not None:
+            parts.append((self.pipeline.identity, Component.IDENTITY))
+        return parts
+
     def _poll_analyzer_health(self) -> None:
         """Analyzer health changes during a running session become HealthObservations (A05 A01-4)."""
-        for part, component in ((self.pipeline.phone, Component.PHONE), (self.pipeline.attention, Component.ATTENTION)):
+        for part, component in self._frame_analyzers():
             analyzer = part.impl
             if analyzer is None:
                 continue
@@ -440,7 +447,7 @@ class SessionRuntime:
             )
         capture: CaptureService = cap.impl
         if not self._capture_open:
-            for comp in (self.pipeline.phone, self.pipeline.attention):
+            for comp, _ in self._frame_analyzers():
                 analyzer: FrameAnalyzer | None = comp.impl
                 if analyzer is None:
                     continue
@@ -572,11 +579,12 @@ class SessionRuntime:
         )
 
     def _max_fps(self, name: str) -> float | None:
-        return {"phone": self.settings.phone_max_fps, "attention": self.settings.attention_max_fps}.get(name)
+        # identity (A13) throttles itself to 1-2 Hz on session time; 4 fps keeps its consumer cheap
+        return {"phone": self.settings.phone_max_fps, "attention": self.settings.attention_max_fps, "identity": 4.0}.get(name)
 
     # ------------------------------------------------------- observation path
     def _consumer(self, analyzer: FrameAnalyzer) -> Callable[[FramePacket], None]:
-        component = Component.PHONE if analyzer.name == "phone" else Component.ATTENTION
+        component = {"phone": Component.PHONE, "identity": Component.IDENTITY}.get(analyzer.name, Component.ATTENTION)
 
         def on_frame(frame: FramePacket) -> None:
             if frame.session_id != self.session_id:
@@ -692,7 +700,18 @@ class SessionRuntime:
             self._fusion_thread.start()
             self._accepting = True
             t = self.clock.now_ms()
+            self._notify_exam_started(t)
             return self._update(state=SessionState.RUNNING, started_at=utc_now(), exam_started_t_ms=t)
+
+    def _notify_exam_started(self, t: float) -> None:
+        """Optional analyzer hook ``exam_started(t_session_ms)``: A13 takes the reference face right after RUNNING."""
+        for part, component in self._frame_analyzers():
+            hook = getattr(part.impl, "exam_started", None)
+            if callable(hook):
+                try:
+                    hook(t)
+                except Exception as exc:
+                    self._analyzer_failed(component, exc)
 
     def _record_session_config(self) -> None:
         """Hand loaded model manifests + the engine's effective thresholds to the store (A08 #2, A05 A01-2).
@@ -764,7 +783,7 @@ class SessionRuntime:
                     log.error("fusion thread did not finish in time")
                 self._fusion_thread.join(2.0)
                 self._fusion_thread = None
-            for comp in (self.pipeline.phone, self.pipeline.attention):
+            for comp, _ in self._frame_analyzers():
                 if comp.impl is not None:
                     try:
                         comp.impl.end_session()
