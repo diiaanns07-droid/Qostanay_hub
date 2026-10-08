@@ -13,6 +13,11 @@ This is a component LIVE, not a full camera/backend exam. No third-party process
 Remote snapshot still found `rustdesk.exe`, so combined environment gating correctly refused start
 with «Закройте rustdesk.exe, чтобы начать». Enforcement was not engaged by this read-only run.
 
+After the captain closed RustDesk, the 18:24 and 18:25 preflight snapshots both returned:
+`display_count=1`, remote processes `[]`, `remoteSession=false`, `environment_block_reason=null`.
+The combined display/remote condition passed and the LIVE guard engaged. This does not claim
+that every camera/model/storage check of a full backend exam was run.
+
 Second monitor is unavailable: multi-monitor LIVE remains **NOT TESTED**. To test later:
 
 1. Connect a second display, choose an extended desktop, and repeat application preflight.
@@ -25,8 +30,37 @@ Second monitor is unavailable: multi-monitor LIVE remains **NOT TESTED**. To tes
 
 ## Point 2 — focus
 
-PENDING: RustDesk closure / operator readiness. Enforce has not yet been launched in this check.
-Harness uses NativeHelper `maxMinutes: 2` and a 120 s Electron release timer; the launcher has
-an additional 130 s watchdog for only its own Electron child. Ctrl+Alt+Shift+F12 releases the test.
-Record actual blur/foreign process/focus events and operator observations; focus() calls alone
-are not proof that Windows returned focus. Secure desktop itself is outside enforcement scope.
+**PASS on this laptop, with captain confirmation.** The captain explicitly requested the repeat and
+then confirmed: Alt+Tab did not switch windows; after Ctrl+Alt+Del → Task Manager, focus returned
+automatically to the test window; after emergency exit, normal typing and Alt+Tab worked again.
+
+First run (`enforce/`), 18:24:21–18:24:36 Asia/Qyzylorda: enforce engaged, Win/Ctrl+C events observed,
+emergency hotkey released at t=15357 ms. No Alt+Tab/Taskmgr in this first run; it is NOT evidence for
+those cases. Captain confirmed normal input/focus was restored and requested another run.
+
+Repeat (`enforce-repeat/`), 18:25:46–18:26:18 Asia/Qyzylorda:
+
+| Observation | Evidence from events.jsonl |
+| --- | --- |
+| Native helper enforce + emergency shortcut ready | `engaged` t=615 ms, `native_helper_enforce=ok`, emergency registered |
+| Alt+Tab blocked twice | `shortcut_alt_tab`, `enforcement=blocked`, t=10554 / 10911 ms; captain confirmed no switch |
+| Task Manager became foreground | `foreign_window_foreground`, `process_name=Taskmgr.exe`, t=21577 ms |
+| Focus lost | `focus_lost` t=21428 ms |
+| Return attempt | `move_top_attempt` t=21838 ms, `focus_attempt` t=21839 ms (411 ms after loss) |
+| Actual focus returned | `window_focus focused=true` + `focus_regained` t=21860 ms, **432 ms** after loss |
+| Emergency exit | `released reason=emergency_hotkey`, t=31850 ms, `guard_active=false`, process exit 0 |
+| Normal keyboard/window switching restored | captain answered «Да, всё так» to the complete acceptance question |
+
+Another blur/regain in the repeat lasted 420 ms; the Taskmgr-specific pair is the 432 ms one above.
+The actual Electron focus event plus captain observation provide evidence beyond merely calling focus().
+No foreign process/window was closed or minimized, and no Windows setting was changed.
+
+NativeHelper was configured with `maxMinutes: 2`, with a 120 s Electron release timer and a separate
+130 s launcher watchdog for its own child only. Both runs ended via emergency exit before the limit;
+automatic timeout behavior was **configured, not timed out in this LIVE**. Secure desktop itself is
+outside enforcement scope; this test establishes return after opening Task Manager on this machine.
+No general claim is made for different privileges, Windows builds, or a second display.
+
+Production guard/native files remained byte-for-byte unchanged relative to integration
+`73d6b14b0de7f080931ce4c084c374ca38f5783e`. Changes after that base are harness and evidence only.
+Historical capability VERIFICATION.json was not automatically promoted or rewritten.

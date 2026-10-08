@@ -1,0 +1,24 @@
+{"type":"preflight","t_ms":206,"wall_time":"2026-10-08T13:25:46.567Z","source_sha":"73d6b14b0de7f080931ce4c084c374ca38f5783e","platform":"win32","os_release":"10.0.26200","electron":"43.7.5","mode":"enforce","max_minutes":2,"display_count":1,"remote":{"available":true,"processes":[],"remoteSession":false},"environment_block_reason":null,"display_condition_pass":true,"scope":"component LIVE: unchanged integration ExamGuard + NativeHelper, not full backend exam","acceptance":"pending operator observations; method calls alone do not prove focus return"}
+{"type":"window_focus","t_ms":264,"wall_time":"2026-10-08T13:25:46.624Z","focused":true}
+{"type":"move_top_attempt","t_ms":392,"wall_time":"2026-10-08T13:25:46.753Z"}
+{"type":"focus_attempt","t_ms":393,"wall_time":"2026-10-08T13:25:46.754Z","focused_before":true}
+{"type":"environment","t_ms":614,"wall_time":"2026-10-08T13:25:46.974Z","action":"exam_mode_engaged","enforcement":"allowed","mechanism":"electron.kiosk","scope":"window","detail":{}}
+{"type":"engaged","t_ms":615,"wall_time":"2026-10-08T13:25:46.975Z","max_minutes":2,"steps":{"steps":{"clipboard_clear":"ok","devtools_close":"ok","kiosk":"ok","always_on_top":"ok","content_protection":"ok","window_flags":"ok","focus":"ok","emergency_hotkey":"ok","print_screen_hotkey":"ok","display_watch":"ok","native_helper_enforce":"ok"},"registrations":[{"accelerator":"CommandOrControl+Alt+Shift+F12","purpose":"emergency_exit","registered":true},{"accelerator":"PrintScreen","purpose":"print_screen","registered":true}]}}
+{"type":"environment","t_ms":10554,"wall_time":"2026-10-08T13:25:56.914Z","action":"shortcut_alt_tab","enforcement":"blocked","mechanism":"native.ll_keyboard_hook","scope":"os_session","detail":{"shortcut":"Alt+Tab"}}
+{"type":"environment","t_ms":10911,"wall_time":"2026-10-08T13:25:57.272Z","action":"shortcut_alt_tab","enforcement":"blocked","mechanism":"native.ll_keyboard_hook","scope":"os_session","detail":{"shortcut":"Alt+Tab"}}
+{"type":"window_blur","t_ms":17884,"wall_time":"2026-10-08T13:26:04.244Z"}
+{"type":"environment","t_ms":17885,"wall_time":"2026-10-08T13:26:04.245Z","action":"focus_lost","enforcement":"detected_only","mechanism":"electron.browser_window_blur","scope":"window","detail":{}}
+{"type":"move_top_attempt","t_ms":18299,"wall_time":"2026-10-08T13:26:04.660Z"}
+{"type":"focus_attempt","t_ms":18300,"wall_time":"2026-10-08T13:26:04.661Z","focused_before":false}
+{"type":"window_focus","t_ms":18304,"wall_time":"2026-10-08T13:26:04.665Z","focused":true}
+{"type":"environment","t_ms":18305,"wall_time":"2026-10-08T13:26:04.665Z","action":"focus_regained","enforcement":"allowed","mechanism":"electron.browser_window_focus","scope":"window","detail":{"duration_ms":420}}
+{"type":"window_blur","t_ms":21427,"wall_time":"2026-10-08T13:26:07.788Z"}
+{"type":"environment","t_ms":21428,"wall_time":"2026-10-08T13:26:07.788Z","action":"focus_lost","enforcement":"detected_only","mechanism":"electron.browser_window_blur","scope":"window","detail":{}}
+{"type":"environment","t_ms":21577,"wall_time":"2026-10-08T13:26:07.937Z","action":"foreign_window_foreground","enforcement":"detected_only","mechanism":"native.foreground_watch","scope":"os_session","detail":{"process_name":"Taskmgr.exe"}}
+{"type":"move_top_attempt","t_ms":21838,"wall_time":"2026-10-08T13:26:08.199Z"}
+{"type":"focus_attempt","t_ms":21839,"wall_time":"2026-10-08T13:26:08.199Z","focused_before":false}
+{"type":"window_focus","t_ms":21860,"wall_time":"2026-10-08T13:26:08.220Z","focused":true}
+{"type":"environment","t_ms":21860,"wall_time":"2026-10-08T13:26:08.220Z","action":"focus_regained","enforcement":"allowed","mechanism":"electron.browser_window_focus","scope":"window","detail":{"duration_ms":432}}
+{"type":"environment","t_ms":30273,"wall_time":"2026-10-08T13:26:16.633Z","action":"devtools_blocked","enforcement":"blocked","mechanism":"electron.before_input_event","scope":"window","detail":{"shortcut":"F12"}}
+{"type":"environment","t_ms":31842,"wall_time":"2026-10-08T13:26:18.202Z","action":"exam_mode_released","enforcement":"allowed","mechanism":"electron.kiosk","scope":"window","detail":{"shortcut":"emergency_hotkey"}}
+{"type":"released","t_ms":31850,"wall_time":"2026-10-08T13:26:18.211Z","reason":"emergency_hotkey","guard_active":false}
