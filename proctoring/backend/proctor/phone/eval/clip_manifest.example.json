@@ -1,0 +1,29 @@
+{
+  "dataset_id": "EXAMPLE-ONLY (no such clips exist; copy, record, then fill in)",
+  "matching": {"merge_gap_ms": 500, "min_event_ms": 250, "min_overlap_ms": 200, "tolerance_ms": 500},
+  "clips": [
+    {
+      "clip_id": "p01-raise-01",
+      "split": "tune",
+      "subject_group": "p01-2026-10-10",
+      "frames_dir": "frames/p01-raise-01",
+      "fps": 8,
+      "conditions": ["phone_raise_from_lap", "normal_light"],
+      "consent": "volunteer form #1 (kept offline)",
+      "events": [
+        {"signal": "phone_visible", "t_start_ms": 1500, "t_end_ms": 5200},
+        {"signal": "phone_raised", "t_start_ms": 1800, "t_end_ms": 5200}
+      ]
+    },
+    {
+      "clip_id": "p02-calculator-01",
+      "split": "test",
+      "subject_group": "p02-2026-10-10",
+      "frames_dir": "frames/p02-calculator-01",
+      "fps": 8,
+      "conditions": ["hard_negative_calculator"],
+      "consent": "volunteer form #2 (kept offline)",
+      "events": []
+    }
+  ]
+}
