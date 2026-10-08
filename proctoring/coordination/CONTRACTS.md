@@ -36,7 +36,9 @@ frame. Backend frames are never mirrored (`mirrored: false`). The UI may mirror 
 draws overlays at `x' = 1 − x`. Overlays use the matching `frame_id` or show the age of the result.
 
 **Directions.** `left/right` are **subject-centric** (the student's own left/right). `HeadPose`: +yaw = turns to their
-right, +pitch = up, +roll = tilts toward their right shoulder (degrees).
+right, +pitch = up, +roll = tilts toward their right shoulder (degrees), relative to the line of sight from the face to
+the camera (not the camera optical axis). `FaceBox.confidence` is `null` with MediaPipe FaceLandmarker (no per-face
+score). Calibration targets are screen points; the UI never mirrors their positions.
 
 **Confidence vs quality vs priority.**
 * `confidence` ∈ [0,1] — the estimator's score for that specific claim (detector score, track quality…). NOT a
@@ -60,10 +62,13 @@ make live preflight fail instead of falling back. Bootstrap parts are labelled `
 **Identifiers.** `Id` = `^[A-Za-z0-9._:-]{1,128}$`, opaque, never a filesystem path. `observation_id` unique per
 session (re-delivery keeps the id); incidents are idempotent by `(incident_id, update_seq)`.
 
-**Errors.** Every non-2xx body is `ApiError{error:{code, message, retryable, details}}` with `ErrorCode`:
+**Errors.** Every non-2xx body is `ApiError{error:{code, message, retryable, details}}` with `ErrorCode`. The HTTP
+status is derived from the code by ONE table (`proctor.app.HTTP_STATUS_BY_CODE`, v1.0.1):
 401 UNAUTHORIZED · 403 FORBIDDEN_ORIGIN · 404 SESSION_NOT_FOUND/NOT_FOUND · 409 INVALID_STATE/SESSION_ACTIVE/
-PREFLIGHT_FAILED/SESSION_MISMATCH · 411/413 PAYLOAD_TOO_LARGE · 422 INVALID_ARGUMENT · 501 NOT_IMPLEMENTED ·
-503 CAMERA_*/MODEL_*/STORAGE_ERROR/MODULE_NOT_INTEGRATED · 500 INTERNAL (no stack traces in bodies).
+PREFLIGHT_FAILED/SESSION_MISMATCH/CALIBRATION_FAILED · 411/413 PAYLOAD_TOO_LARGE · 422 INVALID_ARGUMENT/REPLAY_INVALID
+(also any path id that is not an `Id`) · 501 NOT_IMPLEMENTED · 503 CAMERA_*/MODEL_*/STORAGE_ERROR/MODULE_NOT_INTEGRATED ·
+500 INTERNAL (no stack traces in bodies). Messages are clipped; echoed ids never make an error body invalid.
+A rejected WebSocket is seen by clients as an HTTP 403 handshake failure (not a close code).
 Python modules raise `proctor_contracts.interfaces.ProctorError` subclasses (`CaptureError`, `ModelError`, …).
 
 **Privacy.** Default = metadata only. Media (snapshots/clips) only when the session has `retain_media: true`.
@@ -79,6 +84,8 @@ created ──preflight──► preflight ──calibration/start──► cali
 ready ──start──► running ◄──pause/resume──► paused
 any non-terminal ──finish──► finished      any non-terminal ──abort──► aborted      (failed = internal fatal)
 ```
+* Re-entry is allowed: `preflight` may be re-run while `created|preflight`; `calibration/start` restarts calibration
+  from `preflight|calibrating|ready`; `finish` on `finished` and `abort` on `aborted` are idempotent.
 * **One non-terminal session per backend** (`SESSION_ACTIVE` otherwise) → one camera owner, no cross-session mixing.
 * Capture opens at `preflight`, closes at `finish/abort`. Analyzers get `start_session` before capture opens and
   `end_session` after it closes. A new `IncidentEngine` + fusion thread per session, created at `start`.
@@ -90,6 +97,16 @@ any non-terminal ──finish──► finished      any non-terminal ──abor
   (409), the shell releases restrictions until `resume`. Preview may continue for the operator.
 * `finish`: stop capture (joins consumer threads) → drain the fusion queue → `engine.finish()` closes every open
   incident → analyzers `end_session()` → `finished`. Idempotent. After finish no answers/observations are accepted.
+* **Pipeline faults are visible, never "no events"** (v1.0.1): an exception in an analyzer, the engine or the store
+  is counted per component and reported (rate-limited, ≤ 1 per 5 s per component) as `/health` component
+  `degraded` (`analyzer_error` / `fusion_error` / `fusion_queue_overflow` / `store_write_failed`, `details.errors`),
+  as `SessionInfo.last_error`, as a `health` stream message and — except for engine faults — as a
+  `HealthObservation` that fusion turns into a `monitoring_degraded` gap. A failing store never stops
+  `engine.consume()`; nothing is re-written to a store that just failed. Recovery emits `*_recovered` (status ok).
+  Analyzer health changes during `running` are published as `HealthObservation` with that component.
+* The deliberate capture close at finish/abort is NOT a coverage gap (listener detached before `close()`).
+* An `IncidentChange` with `change="updated"` may arrive for an already closed incident (only
+  `related_incident_ids` + `update_seq` change).
 * `abort` = guaranteed emergency exit with the same cleanup (`end_reason=session_aborted`). Backend shutdown aborts the
   active session. The shell treats `paused|finished|aborted|failed` (and backend loss) as "release all restrictions".
 

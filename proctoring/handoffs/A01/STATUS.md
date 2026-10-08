@@ -42,3 +42,23 @@ A02 → A03/A04 → A05 → A08 → (A06 shell in parallel, A07 on fixtures) →
 ## Next (A01)
 Integration checks for startup/shutdown, review incoming DEPENDENCIES requests, integrate delivered SHAs on an
 integration branch, keep REQUIREMENTS_MATRIX current.
+
+---
+## Round 2 — integration (continuation of 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49)
+
+### Checkpoint 1: shared fixes for A09 findings (before module merges)
+* QA-BUG-004: fusion loop calls `engine.consume()` independently of `store.record_observation()`; store errors in
+  `_emit`/snapshot/upsert never stop the stream.
+* QA-BUG-005: `PipelineFaults` per component (analyzer/fusion/evidence) → `/health` degraded with code + error
+  count, `SessionInfo.last_error`, `health` stream message, `HealthObservation` (→ monitoring_degraded) except for
+  engine faults; rate-limited (5 s), recovery events, no re-write to a failing store. Fusion queue overflow visible.
+* QA-BUG-003: `HTTP_STATUS_BY_CODE` table (all ErrorCodes) is authoritative in the error handler.
+* QA-BUG-002: router dependency validates every path id (also the A08/bootstrap router) → 422; error bodies clipped.
+* QA-BUG-001: log filter strips query strings from uvicorn/websockets records.
+* A02 R7: health listener detached before `capture.close()` (no gap at every finish).
+* QA-OBS-004 / A08 #3: `BackendContext.forget_session()`; bootstrap router calls it after DELETE.
+* A08 #2 / A05 A01-2: optional `store.record_session_config(session_id, models, engine_config)` at start.
+* A04 R2: CalibrationMsg pushed every 250 ms while calibrating when A04's `updated_at` changes.
+* A05 A01-4: analyzer health changes during running → HealthObservation.
+* Tests: A01 tests hide modules explicitly (`module_overrides={key: None}`) and use tmp models/data dirs;
+  new `backend/tests/test_qa_regressions.py` (in-process + real subprocess). Smoke now 37 checks.

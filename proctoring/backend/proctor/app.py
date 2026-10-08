@@ -13,6 +13,7 @@ import hmac
 import importlib
 import json
 import logging
+import re
 import struct
 import threading
 from contextlib import asynccontextmanager
@@ -23,6 +24,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request, WebSocket, WebSocketDi
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.requests import HTTPConnection
 
 from proctor_contracts.interfaces import ProctorError
 from proctor_contracts.v1 import (
@@ -101,6 +103,11 @@ class ModuleRegistry:
 
     def load(self) -> None:
         for key, (module_name, factory_name, component) in MODULES.items():
+            if key in self._overrides and self._overrides[key] is None:
+                self.import_health[key] = self._unavailable(
+                    component, "module_not_integrated", f"{module_name} hidden by module_overrides"
+                )
+                continue
             factory = self._overrides.get(key)
             if factory is None:
                 try:
@@ -326,9 +333,61 @@ WS_SUBPROTOCOL = "qorgau.v1"
 WS_TOKEN_PREFIX = "qorgau.bearer."
 
 
-def _api_error(code: ErrorCode, message: str, status: int, retryable: bool = False, **details: Any) -> JSONResponse:
-    body = ApiError(error=ApiErrorBody(code=code, message=message, retryable=retryable, details=details))
-    return JSONResponse(body.model_dump(mode="json"), status_code=status)
+# One table for every ErrorCode (CONTRACTS.md §1). Authoritative over ProctorError.http_status (QA-BUG-003).
+HTTP_STATUS_BY_CODE: dict[ErrorCode, int] = {
+    ErrorCode.UNAUTHORIZED: 401,
+    ErrorCode.FORBIDDEN_ORIGIN: 403,
+    ErrorCode.INVALID_ARGUMENT: 422,
+    ErrorCode.PAYLOAD_TOO_LARGE: 413,
+    ErrorCode.NOT_FOUND: 404,
+    ErrorCode.SESSION_NOT_FOUND: 404,
+    ErrorCode.SESSION_ACTIVE: 409,
+    ErrorCode.SESSION_MISMATCH: 409,
+    ErrorCode.INVALID_STATE: 409,
+    ErrorCode.PREFLIGHT_FAILED: 409,
+    ErrorCode.CALIBRATION_FAILED: 409,
+    ErrorCode.CAMERA_UNAVAILABLE: 503,
+    ErrorCode.CAMERA_BUSY: 503,
+    ErrorCode.CAMERA_DENIED: 503,
+    ErrorCode.REPLAY_INVALID: 422,
+    ErrorCode.MODEL_MISSING: 503,
+    ErrorCode.MODEL_INVALID: 503,
+    ErrorCode.MODULE_NOT_INTEGRATED: 503,
+    ErrorCode.STORAGE_ERROR: 503,
+    ErrorCode.NOT_IMPLEMENTED: 501,
+    ErrorCode.INTERNAL: 500,
+}
+assert set(HTTP_STATUS_BY_CODE) == set(ErrorCode), "every ErrorCode needs an HTTP status"
+ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+
+
+def _clip(value: Any, limit: int) -> Any:
+    return value[:limit] + "…" if isinstance(value, str) and len(value) > limit else value
+
+
+def _api_error(code: ErrorCode, message: str, status: int | None = None, retryable: bool = False, **details: Any) -> JSONResponse:
+    """Never fails: oversized messages/details are clipped so the error handler cannot raise (QA-BUG-002)."""
+    body = ApiError(
+        error=ApiErrorBody(
+            code=code,
+            message=_clip(str(message), 900),
+            retryable=retryable,
+            details={str(k)[:64]: _clip(v, 200) for k, v in details.items() if isinstance(v, (bool, int, float, str))},
+        )
+    )
+    return JSONResponse(body.model_dump(mode="json"), status_code=status or HTTP_STATUS_BY_CODE[code])
+
+
+def validate_path_ids(request: HTTPConnection) -> None:
+    """Router dependency: every path parameter must be a contract Id (422 instead of 500/connection reset)."""
+    for name, value in request.path_params.items():
+        if not isinstance(value, str) or not ID_RE.match(value):
+            raise ProctorError(
+                ErrorCode.INVALID_ARGUMENT,
+                f"path parameter {name!r} is not a valid id",
+                parameter=name,
+                length=len(value) if isinstance(value, str) else 0,
+            )
 
 
 class SecurityMiddleware:
@@ -414,13 +473,20 @@ def create_app(
         await asyncio.to_thread(registry.load)
         state["manager"] = SessionManager(settings, registry, hub, load_exam(settings))
         store = registry.router_store()
-        app.include_router(store.create_router(_Context(state["manager"], registry)), prefix="/v1")
+        state["manager"].health_reporter = health
+        app.include_router(
+            store.create_router(_Context(state["manager"], registry)),
+            prefix="/v1",
+            dependencies=[Depends(validate_path_ids)],
+        )
+        state["calibration_task"] = asyncio.create_task(_calibration_progress(state, hub))
         log.info("backend ready: %s", {h.component.value: h.code for h in registry.health_components()})
         if on_ready is not None:
             on_ready()
         try:
             yield
         finally:
+            state["calibration_task"].cancel()
             await asyncio.to_thread(state["manager"].shutdown)
             await asyncio.to_thread(registry.close)
 
@@ -447,7 +513,7 @@ def create_app(
 
     @app.exception_handler(ProctorError)
     async def proctor_error(_: Request, exc: ProctorError) -> JSONResponse:
-        return _api_error(exc.code, exc.message, exc.http_status, exc.retryable, **exc.details)
+        return _api_error(exc.code, exc.message, None, exc.retryable, **exc.details)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
@@ -473,11 +539,17 @@ def create_app(
     def manager() -> SessionManager:
         return state["manager"]
 
-    api = APIRouter(prefix="/v1")
+    api = APIRouter(prefix="/v1", dependencies=[Depends(validate_path_ids)])
 
     @api.get("/health", response_model=HealthReport)
     def health() -> HealthReport:
         components = registry.health_components()
+        mgr = state.get("manager")
+        rt = mgr.active_runtime() if mgr else None
+        if rt is not None:  # QA-BUG-005: pipeline errors of the running session are not "ok"
+            faults = {h.component: h for h in rt.faults.health()}
+            components = [faults.pop(c.component, c) if c.status == HealthStatus.OK else c for c in components]
+            components += list(faults.values())
         statuses = {c.status for c in components}
         overall = (
             HealthStatus.ERROR
@@ -486,7 +558,6 @@ def create_app(
             if statuses & {HealthStatus.DEGRADED, HealthStatus.UNAVAILABLE}
             else HealthStatus.OK
         )
-        mgr = state.get("manager")
         return HealthReport(
             backend_version=BACKEND_VERSION,
             overall=overall,
@@ -639,3 +710,29 @@ class _Context:
     def capture(self):
         part = self._registry.loaded.get("capture")
         return part.impl if part is not None else None
+
+    def forget_session(self, session_id: str) -> None:
+        """Called by the A08 router after a successful DELETE: drop the terminal in-memory runtime."""
+        self._manager.forget(session_id)
+
+
+async def _calibration_progress(state: dict[str, Any], hub: StreamHub) -> None:
+    """While a session is calibrating, push CalibrationMsg when A04's state changes (A04 R2): no UI polling needed."""
+    from proctor_contracts.v1 import CalibrationMsg, SessionState
+
+    last: tuple[str, Any] | None = None
+    while True:
+        await asyncio.sleep(0.25)
+        try:
+            rt = state["manager"].active_runtime()
+            if rt is None or rt.state != SessionState.CALIBRATING:
+                continue
+            cal = await asyncio.to_thread(rt.calibration_state)
+            key = (rt.session_id, cal.updated_at)
+            if key != last:
+                last = key
+                hub.publish(CalibrationMsg(session_id=rt.session_id, calibration=cal), rt.session_id)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            log.exception("calibration progress publisher failed")

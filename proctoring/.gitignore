@@ -9,6 +9,8 @@ build/
 desktop/node_modules/
 desktop/dist/
 desktop/out/
+desktop/native/bin/
+desktop/native/build/
 # local data, weights, recordings, secrets: never commit
 models/**
 !models/README.md

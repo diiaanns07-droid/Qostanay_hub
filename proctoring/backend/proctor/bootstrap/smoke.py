@@ -51,7 +51,7 @@ def run_smoke(as_json: bool = False) -> int:
     env["PYTHONPATH"] = os.pathsep.join(
         [str(PROCTORING_ROOT / "backend"), str(PROCTORING_ROOT / "contracts" / "python"), env.get("PYTHONPATH", "")]
     )
-    env.setdefault("QORGAU_LOG_LEVEL", "WARNING")
+    env.setdefault("QORGAU_LOG_LEVEL", "INFO")  # INFO: the handshake log must stay token-free
     proc = subprocess.Popen(
         [sys.executable, "-m", "proctor", "serve", "--token-stdin", "--port", "0"],
         stdin=subprocess.PIPE,
@@ -113,15 +113,28 @@ def run_smoke(as_json: bool = False) -> int:
         live = r.json() if r.status_code == 201 else None
         if live:
             pf = http.post(f"/sessions/{live['session_id']}/preflight").json()
-            cam = next(c for c in pf["checks"] if c["check_id"] == "camera")
+            impls = {c["check_id"]: c["details"].get("impl") for c in pf["checks"]}
+            env_check = next(c for c in pf["checks"] if c["check_id"] == "environment_protection")
             res.check(
-                "live_without_capture_module_is_not_ready",
-                pf["ready"] is False and cam["status"] == "fail",
-                f"camera={cam['status']}:{cam['message_code']} (expected until A02 integrates)",
+                "live_never_uses_bootstrap_and_needs_shell",
+                pf["ready"] is False and "bootstrap" not in impls.values() and env_check["status"] == "fail",
+                ", ".join(f"{c['check_id']}={c['status']}" for c in pf["checks"]),
             )
             http.post(f"/sessions/{live['session_id']}/abort", json={"reason": "smoke: live not available"})
         else:
-            res.check("live_without_capture_module_is_not_ready", False, f"create failed: {r.status_code} {exam_probe}")
+            res.check("live_never_uses_bootstrap_and_needs_shell", False, f"create failed: {r.status_code} {exam_probe}")
+
+        r = http.post("/sessions", json={"source": {"mode": "synthetic"}, "exam_id": exam_id,
+                                         "consent": {**consent, "accepted": False}})
+        res.check("error_status_table_422", r.status_code == 422 and r.json()["error"]["code"] == "INVALID_ARGUMENT", str(r.status_code))
+        r = http.get("/sessions/" + "A" * 1000)
+        res.check("overlong_path_id_422_keeps_connection", r.status_code == 422 and http.get("/health").status_code == 200, str(r.status_code))
+        try:
+            with connect(f"ws://127.0.0.1:{ready['port']}/v1/stream?token={token}", open_timeout=5) as bad_ws:
+                bad_ws.recv(timeout=2)
+            res.check("ws_token_in_query_rejected", False, "connection accepted")
+        except Exception as exc:
+            res.check("ws_token_in_query_rejected", True, type(exc).__name__)
 
         r = http.post(
             "/sessions",

@@ -76,6 +76,8 @@ from proctor_contracts.v1 import (
     SessionInfo,
     SessionState,
     SessionStateMsg,
+    ApiErrorBody,
+    HealthMsg,
     SourceMode,
     utc_now,
 )
@@ -129,6 +131,80 @@ class PipelineProvider(Protocol):
     def environment_capabilities(self) -> EnvironmentCapabilities | None: ...
 
 
+FAULT_REPORT_INTERVAL_S = 5.0  # re-report an ongoing fault at most this often
+FAULT_RECOVERY_S = 2.0  # a component is "recovered" after a success this long after its last failure
+
+
+@dataclass
+class _Fault:
+    component: Component
+    code: str
+    message: str
+    count: int = 0
+    first_t_ms: float = 0.0
+    last_t_ms: float = 0.0
+    last_failure_mono: float = 0.0
+    reported_mono: float = 0.0
+    active: bool = False
+
+
+class PipelineFaults:
+    """Makes pipeline exceptions VISIBLE (QA-BUG-005) without feedback loops.
+
+    fail() returns True only when the caller should report now (first failure, or an ongoing fault
+    after FAULT_REPORT_INTERVAL_S); ok() returns True once when a failing component recovers.
+    Reporting never writes to the component that failed (no recursive error records).
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._faults: dict[Component, _Fault] = {}
+
+    def fail(self, component: Component, code: str, exc: BaseException, t_ms: float) -> bool:
+        now = time.monotonic()
+        message = f"{type(exc).__name__}: {exc}"[:300]
+        with self._lock:
+            f = self._faults.get(component)
+            if f is None or not f.active:
+                f = _Fault(component=component, code=code, message=message, first_t_ms=t_ms)
+                self._faults[component] = f
+            f.count += 1
+            f.code, f.message, f.last_t_ms, f.last_failure_mono = code, message, t_ms, now
+            report = not f.active or now - f.reported_mono >= FAULT_REPORT_INTERVAL_S
+            f.active = True
+            if report:
+                f.reported_mono = now
+            return report
+
+    def ok(self, component: Component) -> bool:
+        with self._lock:
+            f = self._faults.get(component)
+            if f is None or not f.active or time.monotonic() - f.last_failure_mono < FAULT_RECOVERY_S:
+                return False
+            f.active = False
+            return True
+
+    def health(self) -> list[Health]:
+        with self._lock:
+            return [
+                Health(
+                    component=f.component,
+                    status=HealthStatus.DEGRADED,
+                    code=f.code,
+                    message=f"Pipeline errors in this session: {f.message}"[:500],
+                    since_t_session_ms=f.first_t_ms,
+                    details={"errors": f.count, "last_t_session_ms": round(f.last_t_ms, 1)},
+                )
+                for f in self._faults.values()
+                if f.active
+            ]
+
+    def snapshot(self, component: Component) -> _Fault | None:
+        with self._lock:
+            f = self._faults.get(component)
+            return None if f is None else _Fault(**f.__dict__)
+
+
 @dataclass
 class _Control:
     kind: str  # "pause" | "resume" | "finish"
@@ -166,7 +242,11 @@ class SessionRuntime:
         self._env_seqs: set[int] = set()
         self._pause_started_ms: float | None = None
         self._timeline_max_ms = 0.0
-        self.counters = {"session_mismatch": 0, "fusion_dropped": 0, "fusion_errors": 0, "analyzer_errors": 0}
+        self.counters = {"session_mismatch": 0, "fusion_dropped": 0, "fusion_errors": 0, "analyzer_errors": 0, "store_errors": 0}
+        self.faults = PipelineFaults()
+        self._info_lock = threading.Lock()  # guards _info; never held while waiting on the fusion thread
+        self._analyzer_status: dict[Component, HealthStatus] = {}
+        self.health_reporter: Callable[[], Any] | None = None  # set by the app: builds a HealthReport
 
     # ------------------------------------------------------------------ info
     @property
@@ -178,15 +258,122 @@ class SessionRuntime:
         return self._info.state
 
     def _update(self, **changes: Any) -> SessionInfo:
-        self._info = self._info.model_copy(update=changes)
-        store = self.pipeline.store.impl
-        if store is not None:
+        with self._info_lock:
+            self._info = self._info.model_copy(update=changes)
+            info = self._info
+            store = self.pipeline.store.impl
+            if store is not None:
+                try:
+                    store.upsert_session(info)
+                except Exception as exc:
+                    # Report without re-entering _update (non-reentrant lock, no recursive store write).
+                    self._store_failed(exc, report_via_session=False)
+                    error = self._fault_error(Component.EVIDENCE, ErrorCode.STORAGE_ERROR)
+                    if error is not None:
+                        self._info = info = info.model_copy(update={"last_error": error})
+        self._bus.publish(SessionStateMsg(session=info), self.session_id)
+        return info
+
+    def _fault_error(self, component: Component, code: ErrorCode) -> ApiErrorBody | None:
+        fault = self.faults.snapshot(component)
+        if fault is None:
+            return None
+        return ApiErrorBody(
+            code=code,
+            message=f"{component.value}: {fault.code}: {fault.message}"[:1000],
+            retryable=True,
+            details={"component": component.value, "errors": fault.count},
+        )
+
+    # ---------------------------------------------------- pipeline faults
+    def _store_failed(self, exc: BaseException, *, report_via_session: bool = True) -> None:
+        """Store write failed: count, log (rate-limited), make visible. Never writes to the store again here."""
+        self.counters["store_errors"] += 1
+        if self.faults.fail(Component.EVIDENCE, "store_write_failed", exc, self.clock.now_ms()):
+            log.error("evidence store write failed (%s errors so far): %s", self.counters["store_errors"], exc)
+            self._report_fault(Component.EVIDENCE, ErrorCode.STORAGE_ERROR, report_via_session)
+
+    def _store_ok(self) -> None:
+        if self.faults.ok(Component.EVIDENCE):
+            self._inject_health(Health(component=Component.EVIDENCE, status=HealthStatus.OK, code="store_recovered"))
+            self._publish_health_report()
+
+    def _engine_failed(self, exc: BaseException) -> None:
+        self.counters["fusion_errors"] += 1
+        if self.faults.fail(Component.FUSION, "fusion_error", exc, self.clock.now_ms()):
+            log.exception("incident engine error (%s so far)", self.counters["fusion_errors"])
+            # The engine itself is failing: do not feed it a health observation (no feedback loop).
+            self._report_fault(Component.FUSION, ErrorCode.INTERNAL, True, inject=False)
+
+    def _engine_ok(self) -> None:
+        if self.faults.ok(Component.FUSION):
+            self._inject_health(Health(component=Component.FUSION, status=HealthStatus.OK, code="fusion_recovered"))
+            self._publish_health_report()
+
+    def _analyzer_failed(self, component: Component, exc: BaseException) -> None:
+        self.counters["analyzer_errors"] += 1
+        if self.faults.fail(component, "analyzer_error", exc, self.clock.now_ms()):
+            log.exception("%s analyzer error (%s so far)", component.value, self.counters["analyzer_errors"])
+            self._report_fault(component, ErrorCode.INTERNAL, True)
+
+    def _report_fault(self, component: Component, code: ErrorCode, via_session: bool, *, inject: bool = True) -> None:
+        fault = self.faults.snapshot(component)
+        if fault is None:
+            return
+        if inject:  # becomes a monitoring_degraded episode / coverage gap in fusion
+            self._inject_health(
+                Health(
+                    component=component,
+                    status=HealthStatus.DEGRADED,
+                    code=fault.code,
+                    message=fault.message,
+                    since_t_session_ms=fault.first_t_ms,
+                    details={"errors": fault.count},
+                )
+            )
+        if via_session:  # visible in GET /sessions/{id} and session_state on the stream
+            self._update(last_error=self._fault_error(component, code))
+        self._publish_health_report()
+
+    def _inject_health(self, health: Health) -> None:
+        t = self.clock.now_ms()
+        obs = HealthObservation(
+            observation_id=f"health-{self.session_id}-{uuid4().hex[:12]}",
+            session_id=self.session_id,
+            frame_id=None,
+            t_session_ms=t,
+            wall_time=self.clock.wall_at(t),
+            source_mode=self.mode,
+            producer=Producer(module="backend", version=BACKEND_VERSION),
+            status=ObservationStatus.OK if health.status == HealthStatus.OK else ObservationStatus.DEGRADED,
+            health=health,
+        )
+        self.publish_observation(obs)
+
+    def _publish_health_report(self) -> None:
+        reporter = self.health_reporter
+        if reporter is None:
+            return
+        try:
+            self._bus.publish(HealthMsg(report=reporter()), self.session_id)
+        except Exception:
+            log.exception("health report failed")
+
+    def _poll_analyzer_health(self) -> None:
+        """Analyzer health changes during a running session become HealthObservations (A05 A01-4)."""
+        for part, component in ((self.pipeline.phone, Component.PHONE), (self.pipeline.attention, Component.ATTENTION)):
+            analyzer = part.impl
+            if analyzer is None:
+                continue
             try:
-                store.upsert_session(self._info)
-            except Exception:
-                log.exception("store.upsert_session failed")
-        self._bus.publish(SessionStateMsg(session=self._info), self.session_id)
-        return self._info
+                health = analyzer.health()
+            except Exception as exc:
+                health = Health(component=component, status=HealthStatus.ERROR, code="health_error", message=str(exc)[:300])
+            previous = self._analyzer_status.get(component)
+            self._analyzer_status[component] = health.status
+            if previous is not None and previous != health.status:
+                self._inject_health(health)
+                self._publish_health_report()
 
     def _require(self, action: str, *allowed: SessionState) -> None:
         if self._info.state not in allowed:
@@ -385,11 +572,21 @@ class SessionRuntime:
 
     # ------------------------------------------------------- observation path
     def _consumer(self, analyzer: FrameAnalyzer) -> Callable[[FramePacket], None]:
+        component = Component.PHONE if analyzer.name == "phone" else Component.ATTENTION
+
         def on_frame(frame: FramePacket) -> None:
             if frame.session_id != self.session_id:
                 self.counters["session_mismatch"] += 1
                 return
-            for obs in analyzer.process(frame):
+            try:
+                observations = analyzer.process(frame)
+            except Exception as exc:
+                self._analyzer_failed(component, exc)
+                raise  # capture still counts it in ConsumerMetrics.errors
+            if self.faults.ok(component):
+                self._inject_health(Health(component=component, status=HealthStatus.OK, code="analyzer_recovered"))
+                self._publish_health_report()
+            for obs in observations:
                 self.publish_observation(obs)
 
         return on_frame
@@ -406,6 +603,9 @@ class SessionRuntime:
             self._queue.put_nowait(obs)
         except queue.Full:
             self.counters["fusion_dropped"] += 1
+            if self.faults.fail(Component.FUSION, "fusion_queue_overflow", RuntimeError("fusion queue full"), obs.t_session_ms):
+                log.error("fusion queue full: %s observations dropped", self.counters["fusion_dropped"])
+                self._publish_health_report()
 
     def _on_capture_health(self, health: Health) -> None:
         t = self.clock.now_ms()
@@ -482,11 +682,38 @@ class SessionRuntime:
             if self.pipeline.engine_factory is None:
                 raise ProctorError(ErrorCode.MODULE_NOT_INTEGRATED, "incident engine is not available")
             self._engine = self.pipeline.engine_factory(self.session_id, self.mode)
+            self._poll_analyzer_health()  # baseline; only later changes are reported
+            self._record_session_config()
             self._fusion_thread = threading.Thread(target=self._fusion_loop, name=f"fusion-{self.session_id}", daemon=True)
             self._fusion_thread.start()
             self._accepting = True
             t = self.clock.now_ms()
             return self._update(state=SessionState.RUNNING, started_at=utc_now(), exam_started_t_ms=t)
+
+    def _record_session_config(self) -> None:
+        """Hand loaded model manifests + the engine's effective thresholds to the store (A08 #2, A05 A01-2).
+        Optional store method; a failure is a visible store fault, never a reason to block the exam."""
+        store = self.pipeline.store.impl
+        record = getattr(store, "record_session_config", None)
+        if record is None or self._engine is None:
+            return
+        models = []
+        for part in (self.pipeline.phone, self.pipeline.attention):
+            analyzer = part.impl
+            manifests = getattr(analyzer, "model_manifests", None)
+            if callable(manifests):
+                models.extend(m for m in manifests() if m is not None)
+            elif getattr(analyzer, "manifest", None) is not None:
+                models.append(analyzer.manifest)
+        try:
+            config = self._engine.config_snapshot()
+        except Exception as exc:
+            self._engine_failed(exc)
+            config = {}
+        try:
+            record(self.session_id, models, config)
+        except Exception as exc:
+            self._store_failed(exc)
 
     def pause(self, body: PauseRequest) -> SessionInfo:
         with self._lock:
@@ -551,6 +778,8 @@ class SessionRuntime:
         capture: CaptureService | None = self.pipeline.capture.impl
         if capture is None:
             return
+        # Detach first (A02 R7): the deliberate close must not become a "monitoring_degraded" gap.
+        capture.set_health_listener(None)
         if self._capture_open:
             capture.close()
             self._capture_open = False
@@ -586,31 +815,42 @@ class SessionRuntime:
             except queue.Empty:
                 item = None
             changes: list[IncidentChange] = []
-            try:
-                if isinstance(item, _Control):
+            if isinstance(item, _Control):
+                try:
                     if item.kind == "finish":
                         changes = engine.finish(item.t_ms, item.reason or IncidentEndReason.SESSION_FINISHED)
-                        self._emit(changes)
-                        item.done.set()
-                        return
-                    changes = engine.set_paused(item.kind == "pause", item.t_ms)
-                    item.done.set()
-                elif item is not None:
-                    self._timeline_max_ms = max(self._timeline_max_ms, item.t_session_ms)
-                    store = self.pipeline.store.impl
-                    if store is not None:
-                        store.record_observation(item)
+                    else:
+                        changes = engine.set_paused(item.kind == "pause", item.t_ms)
+                    self._engine_ok()
+                except Exception as exc:
+                    self._engine_failed(exc)
+                self._emit(changes)
+                item.done.set()
+                if item.kind == "finish":
+                    return
+                continue
+            if item is not None:
+                self._timeline_max_ms = max(self._timeline_max_ms, item.t_session_ms)
+                # QA-BUG-004: the engine sees every observation even when the store is failing.
+                try:
                     changes = engine.consume(item)
-                if time.monotonic() >= next_tick:
+                    self._engine_ok()
+                except Exception as exc:
+                    self._engine_failed(exc)
+                store = self.pipeline.store.impl
+                if store is not None:
+                    try:
+                        store.record_observation(item)
+                        self._store_ok()
+                    except Exception as exc:
+                        self._store_failed(exc)
+            if time.monotonic() >= next_tick:
+                next_tick = time.monotonic() + tick_s
+                try:
                     changes = changes + engine.advance(self._timeline_now())
-                    next_tick = time.monotonic() + tick_s
-            except Exception:
-                self.counters["fusion_errors"] += 1
-                log.exception("fusion error")
-                if isinstance(item, _Control):
-                    item.done.set()
-                    if item.kind == "finish":
-                        return
+                except Exception as exc:
+                    self._engine_failed(exc)
+                self._poll_analyzer_health()
             self._emit(changes)
 
     def _emit(self, changes: list[IncidentChange]) -> None:
@@ -623,18 +863,22 @@ class SessionRuntime:
             if store is not None:
                 try:
                     store.record_incident_change(change)
-                    frame_id = change.incident.trigger_frame_id
-                    if (
-                        change.change == IncidentChangeType.OPENED
-                        and self._info.retain_media
-                        and frame_id is not None
-                        and capture is not None
-                    ):
+                    self._store_ok()
+                except Exception as exc:
+                    self._store_failed(exc)
+                frame_id = change.incident.trigger_frame_id
+                if (
+                    change.change == IncidentChangeType.OPENED
+                    and self._info.retain_media
+                    and frame_id is not None
+                    and capture is not None
+                ):
+                    try:
                         frame = capture.get_frame(frame_id)
                         if frame is not None and frame.session_id == self.session_id:
                             store.capture_snapshot(self.session_id, change.incident.incident_id, frame)
-                except Exception:
-                    log.exception("store failed to record incident change")
+                    except Exception as exc:
+                        self._store_failed(exc)
             self._bus.publish(IncidentMsg(change=change), self.session_id)
 
     # ----------------------------------------------------------- environment
@@ -699,6 +943,7 @@ class SessionManager:
         self.exam = exam
         self._lock = threading.Lock()
         self._sessions: dict[str, SessionRuntime] = {}
+        self.health_reporter: Callable[[], Any] | None = None
 
     def create(self, req: SessionCreate) -> SessionInfo:
         if not req.consent.accepted:
@@ -729,6 +974,7 @@ class SessionManager:
             )
             pipeline = self._provider.pipeline_for(req.source.mode)
             runtime = SessionRuntime(self.settings, info, clock, pipeline, self._bus, self._provider)
+            runtime.health_reporter = self.health_reporter
             self._sessions[session_id] = runtime
         runtime._update()  # persist + broadcast "created"
         return runtime.info
@@ -748,6 +994,14 @@ class SessionManager:
             if rt.state in ACTIVE_STATES:
                 return sid
         return None
+
+    def forget(self, session_id: str) -> None:
+        """Drop a TERMINAL runtime after its data was deleted (QA-OBS-004 / A08 #3)."""
+        with self._lock:
+            rt = self._sessions.get(session_id)
+            if rt is not None and rt.state in ACTIVE_STATES:
+                raise InvalidStateError(ErrorCode.SESSION_ACTIVE, "finish or abort the session before deleting it")
+            self._sessions.pop(session_id, None)
 
     def active_runtime(self) -> SessionRuntime | None:
         sid = self.active_session_id()

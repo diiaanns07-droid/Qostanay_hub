@@ -213,6 +213,9 @@ class MemoryEvidenceStore:
                 raise InvalidStateError(ErrorCode.SESSION_ACTIVE, "finish or abort the session before deleting it")
             known(session_id)
             store.delete_session(session_id)
+            forget = getattr(context, "forget_session", None)
+            if forget is not None:
+                forget(session_id)
             return {"deleted": True}
 
         return router

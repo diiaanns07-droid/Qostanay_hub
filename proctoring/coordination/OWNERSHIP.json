@@ -1,6 +1,6 @@
 {
   "contract": "qorgau.v1",
-  "contract_version": "1.0.0",
+  "contract_version": "1.0.1",
   "root": "proctoring/",
   "rules": [
     "Paths are relative to the repository root. Each path prefix has exactly one writer.",
@@ -221,6 +221,19 @@
       ],
       "consumes": [
         "the integration candidate SHA from A01"
+      ]
+    },
+    "A11": {
+      "role": "Read-only boundary review (round 2); no product paths",
+      "paths": [
+        "research/proctoring-review-r2/A11/",
+        "research/handoffs/shared/A11/proctoring-r2/"
+      ],
+      "provides": [
+        "review report only"
+      ],
+      "consumes": [
+        "the integration candidate SHA from A01 (read-only)"
       ]
     }
   },

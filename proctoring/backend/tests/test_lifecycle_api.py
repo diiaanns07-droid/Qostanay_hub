@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import pytest
 from fastapi.testclient import TestClient
 
-from proctor.app import create_app
+from proctor.app import MODULES, create_app
 from proctor.bootstrap.engine import BootstrapIncidentEngine
 from proctor.bootstrap.memory_store import MemoryEvidenceStore
 from proctor.bootstrap.synthetic import ScriptedAttentionAnalyzer, ScriptedPhoneAnalyzer, SyntheticCaptureService
@@ -38,14 +38,30 @@ AUTH = {"Authorization": f"Bearer {TOKEN}"}
 CONSENT = {"accepted": True, "text_version": "consent-ru-1", "accepted_at": "2026-10-08T09:00:00Z"}
 
 
+# A01 unit tests run against the bootstrap composition ONLY: real modules are hidden explicitly, and
+# models/data/replay dirs point into tmp, so results do not depend on which modules or weights exist on
+# the machine. Integrated-module behaviour is tested separately (test_integrated_*.py).
+HIDDEN = {key: None for key in MODULES}
+
+
 def _settings(tmp_path) -> Settings:
-    return Settings(data_dir=tmp_path / "data", exam_path=tmp_path / "missing_exam.json", synthetic_fps=30.0, fusion_tick_ms=50.0)
+    return Settings(
+        data_dir=tmp_path / "data",
+        models_dir=tmp_path / "models",
+        replay_dir=tmp_path / "replay",
+        exam_path=tmp_path / "missing_exam.json",
+        synthetic_fps=30.0,
+        fusion_tick_ms=50.0,
+    )
+
+
+def _app(tmp_path, overrides=None):
+    return create_app(_settings(tmp_path), TOKEN, module_overrides={**HIDDEN, **(overrides or {})})
 
 
 @pytest.fixture()
 def client(tmp_path):
-    app = create_app(_settings(tmp_path), TOKEN)
-    with TestClient(app, base_url="http://127.0.0.1", headers=AUTH) as c:
+    with TestClient(_app(tmp_path), base_url="http://127.0.0.1", headers=AUTH) as c:
         yield c
 
 
@@ -65,7 +81,7 @@ def _ready(client, sid: str) -> None:
 
 
 def test_requires_token(tmp_path):
-    app = create_app(_settings(tmp_path), TOKEN)
+    app = _app(tmp_path)
     with TestClient(app, base_url="http://127.0.0.1") as c:
         r = c.get("/v1/health")
         assert r.status_code == 401 and r.json()["error"]["code"] == "UNAUTHORIZED"
@@ -73,7 +89,7 @@ def test_requires_token(tmp_path):
 
 
 def test_rejects_non_loopback_host_and_foreign_origin(tmp_path):
-    app = create_app(_settings(tmp_path), TOKEN)
+    app = _app(tmp_path)
     with TestClient(app, base_url="http://evil.example", headers=AUTH) as c:
         assert c.get("/v1/health").status_code == 403  # DNS-rebinding style Host
     with TestClient(app, base_url="http://127.0.0.1", headers=AUTH) as c:
@@ -112,7 +128,7 @@ def test_consent_required(client):
         "/v1/sessions",
         json={"source": {"mode": "synthetic"}, "exam_id": "demo-exam-1", "consent": {**CONSENT, "accepted": False}},
     )
-    assert r.status_code >= 400 and r.json()["error"]["code"] == "INVALID_ARGUMENT"
+    assert r.status_code == 422 and r.json()["error"]["code"] == "INVALID_ARGUMENT"
 
 
 def test_invalid_transitions(client):
@@ -194,7 +210,7 @@ def test_stream_delivers_contract_envelopes(client):
 
 
 def test_websocket_requires_token(tmp_path):
-    app = create_app(_settings(tmp_path), TOKEN)
+    app = _app(tmp_path)
     with TestClient(app, base_url="http://127.0.0.1") as c:
         from starlette.websockets import WebSocketDisconnect
 
@@ -278,7 +294,7 @@ def test_registered_modules_are_used_for_live(tmp_path):
         "fusion": _RecordingEngine,
         "evidence": lambda s: store,
     }
-    app = create_app(_settings(tmp_path), TOKEN, module_overrides=overrides)
+    app = create_app(_settings(tmp_path), TOKEN, module_overrides=overrides)  # every module explicitly provided
     with TestClient(app, base_url="http://127.0.0.1", headers=AUTH) as c:
         caps = {
             "reported_at": "2026-10-08T09:00:00Z",

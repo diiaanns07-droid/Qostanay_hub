@@ -15,7 +15,9 @@
     "build:renderer": "vite build",
     "build": "npm run build:electron && npm run build:renderer",
     "dev:renderer": "vite",
-    "start": "npm run build && electron ."
+    "start": "npm run build && electron .",
+    "test:shell": "node main/tests/run.mjs",
+    "smoke:shell": "npm run build:electron && node main/tests/shell-smoke.mjs"
   },
   "dependencies": {
     "ws": "8.21.3"
