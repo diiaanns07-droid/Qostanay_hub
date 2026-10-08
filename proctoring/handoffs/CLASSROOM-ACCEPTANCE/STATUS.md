@@ -9,6 +9,8 @@ Separate worktree; active agents' branches and original files are not changed.
 - T01 `8c94f3a` (actual C1 server).
 - T04 `8f0b67c` (control UI).
 - A07-student `ae41e1e` (student overlays).
+- Latest captain `f46565c`: optional upward calibration target for laptop webcams; **19 calibration tests
+  PASS** on the integrated tree. Final desktop build/typecheck PASS after this merge.
 
 ## Teacher panel checkpoint
 
@@ -80,3 +82,7 @@ This is a verified integration checkpoint, not a Windows installer or a proven 1
 Next milestone: T01 mounts the supplied history/control/audio feature adapters; validate clips, explicit
 student audio indication and effective lock acknowledgements across the user's three physical PCs.
 The main teaching flow should then expose only capabilities those adapters actually confirm.
+
+Interactive teacher UI preview is running locally at `http://127.0.0.1:18790/?students=30` with the explicit
+DEMO adapter (synthetic cards). It is a visual preview, not the live class server or a camera test.
+The real startup regression ran separately against the built Electron and the actual current backend.
