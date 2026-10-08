@@ -37,8 +37,9 @@ require(resolve(desktop, "dist", "main", "main.cjs"));
 check("privileged scheme registered before ready", state.calls.includes("privileged qorgau"));
 check("sandbox enabled for all renderers", state.calls.includes("enableSandbox"));
 stub.start();
-await until(() => state.windows.length > 0);
-const win = state.windows[0];
+await until(() => state.windows.some((w) => !w.destroyed && w.opts.webPreferences.preload));
+const win = state.windows.find((w) => !w.destroyed && w.opts.webPreferences.preload);
+check("startup self-test ran before the exam window (hidden probe window used)", state.windows.length >= 1);
 const wp = win.opts.webPreferences;
 check(
   "window webPreferences hardened",

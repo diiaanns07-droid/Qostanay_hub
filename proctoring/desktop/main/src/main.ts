@@ -32,6 +32,9 @@ import { fail, shellError } from "./errors";
 import { buildCapabilities, parseVerificationRecords, summarize, type NativeHelperInfo, type PlatformInfo, type ProbeResults, type VerificationRecord } from "./environment/capabilities";
 import { EnvironmentEventQueue } from "./environment/events";
 import { ExamGuard, type GuardPlatform } from "./environment/guard";
+import { checkHelper, NativeHelper } from "./environment/native";
+import { createElectronProbeDriver } from "./environment/probe-electron";
+import { probeSummary, runSelfTest } from "./environment/probe";
 import { createApi } from "./ipc/api";
 import { INVOKE, PUSH, SEND, type InvokeName } from "./ipc/channels";
 import { logger } from "./log";
@@ -453,13 +456,51 @@ process.on("uncaughtException", (err) => {
 });
 process.on("unhandledRejection", (err) => log.error("unhandled rejection in main", err));
 
+/** Hidden-window self-test of the in-app restrictions (real input pipeline). Never during a session. */
+async function runStartupSelfTest(ses: Session): Promise<void> {
+  if (!cfg.selfTest) {
+    log.info("self-test disabled (QORGAU_SHELL_SELFTEST=0); in-app items stay unverified");
+    return;
+  }
+  const driver = createElectronProbeDriver(ses, cfg.allowDevTools);
+  try {
+    probeResults = await runSelfTest(driver);
+    probeRanAt = new Date().toISOString();
+    log.info(`self-test: ${probeSummary(probeResults)}`);
+  } catch (err) {
+    log.error("self-test failed to run", err);
+    probeResults = {};
+  } finally {
+    driver.dispose();
+  }
+}
+
+/** Detect the optional Windows helper (self-check only; never engaged outside a session). */
+async function detectNativeHelper(): Promise<void> {
+  if (process.platform !== "win32") return;
+  nativeInfo = await checkHelper({ command: cfg.nativeHelperPath }, process.platform, cfg.nativeEnforce);
+  log.info(`native helper: ${nativeInfo.detail}`);
+  if (!nativeInfo.available) return;
+  const helper = new NativeHelper(
+    { command: cfg.nativeHelperPath },
+    {
+      enforce: cfg.nativeEnforce,
+      maxMinutes: 240,
+      onObservation: (o) => guard.onNativeObservation(o.action, o.enforcement, o.mechanism, o.detail),
+    },
+  );
+  guard.setNative(helper);
+}
+
 void app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
   const ses = electronSession.fromPartition(PARTITION, { cache: false });
   hardenSession(ses);
   registerIpc();
   await loadVerification();
+  await runStartupSelfTest(ses); // before the exam window exists; feeds the capability matrix
+  await detectNativeHelper();
   mainWindow = createWindow(ses);
-  await reportCapabilities(); // initial matrix (self-test results are added when available)
+  await reportCapabilities(); // matrix now includes self-test + helper results
   await supervisor.start();
 });

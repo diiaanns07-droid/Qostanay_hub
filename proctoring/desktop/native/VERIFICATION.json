@@ -1,0 +1,26 @@
+{
+  "_comment": "Manual controlled-test records for OS-level environment protection (owner: A06). The shell reads this at startup and only promotes a capability above 'unverified' when a record's platform AND os_release match the machine exactly (and, for a native 'blocked' record, the helper is available with enforcement enabled). Fill it ONLY from a real controlled test on a target Windows machine/VM with the test mode explicitly on; never edit it to claim an unproven block. Allowed status: blocked | detected_only | unsupported. Example records below are DISABLED (in _examples) and are not read.",
+  "records": [],
+  "_examples": [
+    {
+      "action": "shortcut_alt_tab",
+      "status": "blocked",
+      "mechanism": "native.ll_keyboard_hook",
+      "platform": "win32",
+      "os_release": "10.0.22631",
+      "verified_on": "Windows 11 Pro 23H2 (22631.4317), standard user, helper --mode enforce, controlled test 2026-10-12",
+      "date": "2026-10-12",
+      "note_ru": "Alt+Tab и Alt+Esc подавлены low-level hook'ом; проверено ручным тестом на целевой машине."
+    },
+    {
+      "action": "shortcut_print_screen",
+      "status": "detected_only",
+      "mechanism": "native.ll_keyboard_hook",
+      "platform": "win32",
+      "os_release": "10.0.22631",
+      "verified_on": "Windows 11 Pro 23H2, standard user, helper --mode dry-run",
+      "date": "2026-10-12",
+      "note_ru": "Нажатие PrtScn фиксируется; содержимое буфера не читается, блокировка клавиши в dry-run не выполняется."
+    }
+  ]
+}

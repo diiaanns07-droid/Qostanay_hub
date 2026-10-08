@@ -42,6 +42,10 @@ class WebContents extends EventEmitter {
   closeDevTools() {
     this.devtools = false;
   }
+  focus() {}
+  getURL() {
+    return this.mainFrame.url;
+  }
 }
 
 class BrowserWindow extends EventEmitter {
@@ -72,6 +76,10 @@ class BrowserWindow extends EventEmitter {
     return true;
   }
   restore() {}
+  destroy() {
+    this.destroyed = true;
+    this.emit("closed");
+  }
   focus() {}
   show() {}
   moveTop() {}

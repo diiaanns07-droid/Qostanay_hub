@@ -92,6 +92,12 @@ export class ExamGuard implements Guard {
     return this.activeSession !== null;
   }
 
+  /** Attach the Windows helper once its availability is known (never while engaged). */
+  setNative(native: NativeHelperHandle | null): void {
+    if (this.active) throw new Error("cannot change the native helper while engaged");
+    this.opts.native = native;
+  }
+
   private emit(action: EnvironmentAction, enforcement: EnforcementResult, mechanism: string, scope: "renderer" | "window" | "app" | "os_session", detail: { shortcut?: string; duration_ms?: number; process_name?: string } = {}): void {
     try {
       this.sink.emit({ action, enforcement, mechanism, scope, detail });
