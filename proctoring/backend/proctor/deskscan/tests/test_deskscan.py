@@ -250,3 +250,31 @@ def test_operator_skip_with_reason(client):
 def test_unknown_session_is_404(client):
     assert client.get("/v1/sessions/s-missing/desk-scan").status_code == 404
     assert client.post("/v1/sessions/s-missing/desk-scan", json={"duration_s": 12}).status_code == 404
+
+
+# ------------------------------------------------------------------- clip (real A02 capture module)
+def _real_capture_client(tmp_path):
+    pytest.importorskip("cv2")
+    from proctor.capture import create_capture_service
+
+    StubAnalyzer.scenario = "empty"
+    overrides = {**HIDDEN, "capture": create_capture_service, "phone": StubAnalyzer, "evidence": create_evidence_store}
+    return TestClient(create_app(_settings(tmp_path), TOKEN, module_overrides=overrides), base_url="http://127.0.0.1", headers=AUTH)
+
+
+def test_clip_is_evidence_only_with_retain_media(tmp_path):
+    with _real_capture_client(tmp_path) as client:
+        sid = _create(client, retain_media=True)
+        _preflight(client, sid)
+        res = _scan(client, sid)
+        assert res["state"] == "clear", res
+        assert res["evidence_id"], "clip expected when retain_media is on"
+        r = client.get(f"/v1/sessions/{sid}/evidence/{res['evidence_id']}")
+        assert r.status_code == 200 and r.headers["content-type"].startswith("video/webm") and r.content[:4] == bytes.fromhex("1a45dfa3")
+        assert client.post(f"/v1/sessions/{sid}/finish").status_code == 200
+        html = client.get(f"/v1/sessions/{sid}/report.html").text
+        assert '<video controls' in html and "data:video/webm;base64," in html and "media-src data:" in html
+        sid2 = _create(client, retain_media=False)
+        _preflight(client, sid2)
+        res2 = _scan(client, sid2)
+        assert res2["state"] == "clear" and res2["evidence_id"] is None
