@@ -191,3 +191,28 @@ def test_reason_time_is_relative_to_class_session(make_store):
     s.ingest_incident("stu-a", incident(1, priority="high", state="closed", duration_ms=7000,
                                         t_start_wall=(start + timedelta(seconds=41)).isoformat()), class_session_id="cls-2")
     assert s.review_summary("stu-a", reported_zone="red", monitoring="ok")["reasons_ru"] == ["Телефон в кадре — 00:41, 7 с"]
+
+
+def test_concurrent_uploads_never_create_duplicates(store, clip, clip_b):
+    import threading
+
+    for iid, seq in (("inc-same", 1), ("inc-diff", 2)):
+        store.ingest_incident("stu-a", incident(seq, incident_id=iid), class_session_id="cls-1")
+        store.note_clip_requested("stu-a", iid, f"cmd-{iid}")
+    results: dict[str, list] = {"inc-same": [], "inc-diff": []}
+
+    def run(iid, data):
+        try:
+            results[iid].append(store.store_clip("stu-a", iid, "video/mp4", data)["status"])
+        except ReviewError as exc:
+            results[iid].append(exc.code)
+
+    threads = [threading.Thread(target=run, args=("inc-same", clip)) for _ in range(4)]
+    threads += [threading.Thread(target=run, args=("inc-diff", d)) for d in (clip, clip_b)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(30)
+    assert sorted(results["inc-same"]) == ["duplicate", "duplicate", "duplicate", "stored"]
+    assert sorted(results["inc-diff"]) == ["clip_already_stored", "stored"]
+    assert len(list(store.clips.root.iterdir())) == 2  # no orphan files from the lost races

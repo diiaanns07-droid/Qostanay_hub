@@ -179,10 +179,16 @@ class DevClassServer:
         async def command(student_id: str, request: Request) -> Response:
             if (denied := guarded(request)) is not None:
                 return denied
-            body = await request.json()
+            try:
+                body = await request.json()
+            except Exception:
+                return error(400, "invalid_json", "Тело запроса — не JSON")
             if not isinstance(body, dict) or body.get("kind") != "request_clip":
                 return error(501, "dev_harness_command", "DEV-стенд T03 поддерживает только request_clip")
-            incident_id = (body.get("payload") or {}).get("incident_id")
+            payload = body.get("payload")
+            incident_id = payload.get("incident_id") if isinstance(payload, dict) else None
+            if not isinstance(incident_id, str):
+                return error(422, "invalid_body", "payload.incident_id обязателен")
             ws = server.sockets.get(student_id)
             if ws is None:
                 return error(409, "student_offline", "Студент не подключён")
