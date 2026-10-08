@@ -4,6 +4,26 @@
 
 # A09 QA results
 
+## Current Adal integration alignment
+
+Full QA on committed source `361e2445153de5c3035234331a616ee6e5887fa4`:
+**380 PASS, 1 SKIP, 4 XFAIL, 0 FAIL, 0 XPASS** in 134.95 s, Windows 11 / Python 3.12.14.
+Both product tree and harness were clean. [Exact run record](results/20261008T140835Z_adal_alignment_361e2445153d/summary.json)
+includes source SHA, harness hashes and environment; its sibling pytest/JUnit logs preserve individual outcomes.
+
+This run validates the integrated HTTP/WS lifecycle, independent canonical 1.1.0 schema checks,
+labelled synthetic flows and fault doubles. Fault-injection LIVE sessions now always use a labelled
+fake audio monitor; no camera, microphone, native guard or audio model was activated. Offline static
+exceptions are exact reviewed function/call counts, while the unchanged runtime audit still blocks
+public network attempts, including the actual C2 uploader. Production LAN transport is unaffected.
+
+The skip is Linux network-namespace isolation. Four expected failures remain: three lax typed-value
+cases (QA-OBS-005) and uppercase LOCALHOST (QA-OBS-006). The unknown-question and deleted-session
+checks now pass and their obsolete xfail markers were removed. Separate targeted contract/harness/fault
+validation passed 124 tests, and generated contract artifacts pass `generate.py --check`.
+This automated result does not verify physical CV accuracy or product release readiness. Earlier
+candidate/release findings below retain their historical scope; they are not reassessed by this run.
+
 ## Latest Windows continuation
 
 Full result: **352 PASS, 16 XFAIL, 1 SKIP, 0 FAIL**, Windows 11 build 26200 / Python 3.12.14.
