@@ -1,0 +1,986 @@
+{
+  "format": "qorgau.report.v1",
+  "contract": "qorgau.v1",
+  "contract_version": "1.0.0",
+  "manifest": {
+    "contract": "qorgau.v1",
+    "contract_version": "1.0.0",
+    "exported_at": "2026-10-08T05:04:58.382870Z",
+    "session_id": "s-sample-synthetic-0001",
+    "source_mode": "synthetic",
+    "backend_version": "0.1.0",
+    "config_versions": {
+      "evidence_schema": "1",
+      "fusion.rule_version": "sample-rules-1",
+      "fusion.config_version": "sample-config-1",
+      "producer.bootstrap.attention.version": "sample-1",
+      "producer.bootstrap.attention.config_version": "script-v1",
+      "producer.bootstrap.phone.version": "sample-1",
+      "producer.bootstrap.phone.config_version": "script-v1",
+      "producer.capture.version": "sample-1",
+      "producer.environment.version": "sample-1"
+    },
+    "models": [],
+    "files": [
+      {
+        "name": "report.html",
+        "media_type": "text/html",
+        "sha256": "af3dc007d34c96b3270cf89ec3fa10a3fcaa535f9e0b84385f6b32ddb6847e7b",
+        "size_bytes": 41150
+      },
+      {
+        "name": "ev-12cc66e812a4a674484ecdac.jpg",
+        "media_type": "image/jpeg",
+        "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
+        "size_bytes": 11905
+      }
+    ],
+    "limitations_ru": [
+      "SHA-256 позволяет обнаружить случайное изменение файлов после экспорта. Это не защита от изменения владельцем компьютера и не криптографическое доказательство подлинности.",
+      "СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для проверки системы, а не результат работы камеры и CV.",
+      "Эпизоды — повод для проверки преподавателем, а не доказательство нарушения; решение принимает преподаватель.",
+      "Направление взгляда — приблизительная оценка, не eye-tracking; обнаружение телефона не доказывает съёмку экрана.",
+      "Интервалов без наблюдения или с неопределёнными результатами: 3. В них нарушения не определялись — это «неизвестно», а не «нарушений нет».",
+      "Эпизодов, не закрытых до конца сессии: 1 (длительность — до последнего обновления).",
+      "Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера."
+    ]
+  },
+  "session": {
+    "session_id": "s-sample-synthetic-0001",
+    "state": "finished",
+    "source": {
+      "mode": "synthetic",
+      "camera_index": 0,
+      "replay_id": null,
+      "width": 640,
+      "height": 480,
+      "fps": 30
+    },
+    "source_mode": "synthetic",
+    "exam_id": "demo-exam-1",
+    "student_label": "student-demo",
+    "retain_media": true,
+    "created_at": "2026-10-08T04:52:58Z",
+    "started_at": "2026-10-08T04:53:28Z",
+    "finished_at": "2026-10-08T05:03:28Z",
+    "exam_started_t_ms": 30000.0,
+    "paused_total_ms": 0.0,
+    "calibration": {
+      "calibration_id": "cal-sample",
+      "phase": "completed",
+      "targets": [],
+      "current_target": null,
+      "message_code": null,
+      "updated_at": "2026-10-08T04:53:18Z"
+    },
+    "contract_version": "1.0.0",
+    "backend_version": "0.1.0",
+    "last_error": null
+  },
+  "summary": {
+    "session": {
+      "session_id": "s-sample-synthetic-0001",
+      "state": "finished",
+      "source": {
+        "mode": "synthetic",
+        "camera_index": 0,
+        "replay_id": null,
+        "width": 640,
+        "height": 480,
+        "fps": 30
+      },
+      "source_mode": "synthetic",
+      "exam_id": "demo-exam-1",
+      "student_label": "student-demo",
+      "retain_media": true,
+      "created_at": "2026-10-08T04:52:58Z",
+      "started_at": "2026-10-08T04:53:28Z",
+      "finished_at": "2026-10-08T05:03:28Z",
+      "exam_started_t_ms": 30000.0,
+      "paused_total_ms": 0.0,
+      "calibration": {
+        "calibration_id": "cal-sample",
+        "phase": "completed",
+        "targets": [],
+        "current_target": null,
+        "message_code": null,
+        "updated_at": "2026-10-08T04:53:18Z"
+      },
+      "contract_version": "1.0.0",
+      "backend_version": "0.1.0",
+      "last_error": null
+    },
+    "observed_ms": 583250.0,
+    "paused_ms": 0.0,
+    "gaps": [
+      {
+        "t_start_ms": 299750.0,
+        "t_end_ms": 306250.0,
+        "component": "attention",
+        "reason": "no_observations"
+      },
+      {
+        "t_start_ms": 300000.0,
+        "t_end_ms": 306000.0,
+        "component": "capture",
+        "reason": "camera_disconnected"
+      },
+      {
+        "t_start_ms": 400000.0,
+        "t_end_ms": 410250.0,
+        "component": "attention",
+        "reason": "undetermined"
+      }
+    ],
+    "incidents_total": 6,
+    "incidents_by_rule": {
+      "environment_blocked_action": 1,
+      "environment_escape": 1,
+      "gaze_prolonged_down": 1,
+      "monitoring_degraded": 1,
+      "multiple_faces": 1,
+      "phone_visible": 1
+    },
+    "reviews_by_decision": {
+      "confirmed": 1,
+      "dismissed": 1,
+      "pending": 4
+    },
+    "limitations_ru": [
+      "СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для проверки системы, а не результат работы камеры и CV.",
+      "Эпизоды — повод для проверки преподавателем, а не доказательство нарушения; решение принимает преподаватель.",
+      "Направление взгляда — приблизительная оценка, не eye-tracking; обнаружение телефона не доказывает съёмку экрана.",
+      "Интервалов без наблюдения или с неопределёнными результатами: 3. В них нарушения не определялись — это «неизвестно», а не «нарушений нет».",
+      "Эпизодов, не закрытых до конца сессии: 1 (длительность — до последнего обновления).",
+      "Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера."
+    ]
+  },
+  "coverage": {
+    "window": {
+      "t_start_ms": 30000.0,
+      "t_end_ms": 630000.0,
+      "end_estimated": false
+    },
+    "exam_ms": 600000.0,
+    "active_ms": 600000.0,
+    "paused_ms": 0.0,
+    "pauses": [],
+    "observed_ms": 583250.0,
+    "components": {
+      "phone": {
+        "observed_ms": 600000.0,
+        "undetermined_ms": 0,
+        "unknown_ms": 0,
+        "observations": 2401
+      },
+      "attention": {
+        "observed_ms": 583250.0,
+        "undetermined_ms": 10250.0,
+        "unknown_ms": 6500.0,
+        "observations": 2376
+      }
+    },
+    "gaps": [
+      {
+        "t_start_ms": 299750.0,
+        "t_end_ms": 306250.0,
+        "component": "attention",
+        "reason": "no_observations"
+      },
+      {
+        "t_start_ms": 300000.0,
+        "t_end_ms": 306000.0,
+        "component": "capture",
+        "reason": "camera_disconnected"
+      },
+      {
+        "t_start_ms": 400000.0,
+        "t_end_ms": 410250.0,
+        "component": "attention",
+        "reason": "undetermined"
+      }
+    ],
+    "gaps_total": 3,
+    "gaps_truncated": false,
+    "definition_ru": "Наблюдаемое время — интервалы экзамена (без пауз), где и детектор телефона, и анализ лица/взгляда выдавали определённые результаты; разрыв дольше 2 с считается пропуском."
+  },
+  "incidents": [
+    {
+      "incident": {
+        "incident_id": "inc-phone-1",
+        "session_id": "s-sample-synthetic-0001",
+        "rule_id": "phone_visible",
+        "category": "phone",
+        "state": "closed",
+        "priority": "medium",
+        "t_start_ms": 95000.0,
+        "t_end_ms": 101000.0,
+        "wall_start": "2026-10-08T04:54:33Z",
+        "wall_end": "2026-10-08T04:54:39Z",
+        "duration_ms": 6000.0,
+        "source_mode": "synthetic",
+        "max_confidence": 0.71,
+        "mean_quality": 0.8,
+        "explanation": {
+          "summary_ru": "Телефон виден 6,0 с; требуется проверка преподавателем.",
+          "summary_kk": null,
+          "facts": [
+            {
+              "key": "phone_visible_ms",
+              "value": 6000.0,
+              "unit": "ms",
+              "label_ru": "Телефон виден"
+            }
+          ],
+          "caveats_ru": [
+            "Обнаружение телефона не доказывает фотографирование экрана.",
+            "СИНТЕТИКА: сценарные данные, не результат CV."
+          ]
+        },
+        "observation_ids": [
+          "ph-260",
+          "ph-264",
+          "ph-284"
+        ],
+        "observation_count": 3,
+        "trigger_frame_id": 264,
+        "related_incident_ids": [],
+        "evidence_ids": [
+          "ev-12cc66e812a4a674484ecdac"
+        ],
+        "rule_version": "sample-rules-1",
+        "config_version": "sample-config-1",
+        "end_reason": "condition_cleared",
+        "update_seq": 1,
+        "review_status": "dismissed"
+      },
+      "reviews": [
+        {
+          "review_id": "rev-9b2cb1c394cefa9290aa",
+          "session_id": "s-sample-synthetic-0001",
+          "incident_id": "inc-phone-1",
+          "decision": "inconclusive",
+          "comment": "Нужно пересмотреть снимок.",
+          "operator": "teacher-demo",
+          "created_at": "2026-10-08T05:04:58.379416Z",
+          "supersedes_review_id": null
+        },
+        {
+          "review_id": "rev-c72998c8488c98b97a1f",
+          "session_id": "s-sample-synthetic-0001",
+          "incident_id": "inc-phone-1",
+          "decision": "dismissed",
+          "comment": "Телефон лежал на столе экраном вниз.",
+          "operator": "teacher-demo",
+          "created_at": "2026-10-08T05:04:58.380025Z",
+          "supersedes_review_id": "rev-9b2cb1c394cefa9290aa"
+        }
+      ],
+      "evidence": [
+        {
+          "evidence_id": "ev-12cc66e812a4a674484ecdac",
+          "session_id": "s-sample-synthetic-0001",
+          "incident_id": "inc-phone-1",
+          "kind": "snapshot",
+          "frame_id": 264,
+          "t_session_ms": 96000.0,
+          "media_type": "image/jpeg",
+          "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
+          "size_bytes": 11905,
+          "created_at": "2026-10-08T05:04:58.211663Z"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "incident_id": "inc-env-1",
+        "session_id": "s-sample-synthetic-0001",
+        "rule_id": "environment_blocked_action",
+        "category": "environment",
+        "state": "closed",
+        "priority": "low",
+        "t_start_ms": 150000.0,
+        "t_end_ms": 150000.0,
+        "wall_start": "2026-10-08T04:55:28Z",
+        "wall_end": "2026-10-08T04:55:28Z",
+        "duration_ms": 0.0,
+        "source_mode": "synthetic",
+        "max_confidence": null,
+        "mean_quality": 0.8,
+        "explanation": {
+          "summary_ru": "Нажато Alt+Tab; действие заблокировано оболочкой.",
+          "summary_kk": null,
+          "facts": [
+            {
+              "key": "action",
+              "value": "shortcut_alt_tab",
+              "unit": "none",
+              "label_ru": "Действие"
+            }
+          ],
+          "caveats_ru": [
+            "СИНТЕТИКА: сценарные данные, не результат CV."
+          ]
+        },
+        "observation_ids": [
+          "env-sample-1"
+        ],
+        "observation_count": 1,
+        "trigger_frame_id": null,
+        "related_incident_ids": [],
+        "evidence_ids": [],
+        "rule_version": "sample-rules-1",
+        "config_version": "sample-config-1",
+        "end_reason": "condition_cleared",
+        "update_seq": 1,
+        "review_status": "pending"
+      },
+      "reviews": [],
+      "evidence": []
+    },
+    {
+      "incident": {
+        "incident_id": "inc-gaze-1",
+        "session_id": "s-sample-synthetic-0001",
+        "rule_id": "gaze_prolonged_down",
+        "category": "attention",
+        "state": "closed",
+        "priority": "low",
+        "t_start_ms": 200000.0,
+        "t_end_ms": 209000.0,
+        "wall_start": "2026-10-08T04:56:18Z",
+        "wall_end": "2026-10-08T04:56:27Z",
+        "duration_ms": 9000.0,
+        "source_mode": "synthetic",
+        "max_confidence": null,
+        "mean_quality": 0.8,
+        "explanation": {
+          "summary_ru": "Голова опущена вниз 9,0 с (приблизительная оценка).",
+          "summary_kk": null,
+          "facts": [
+            {
+              "key": "down_ms",
+              "value": 9000.0,
+              "unit": "ms",
+              "label_ru": "Взгляд вниз"
+            }
+          ],
+          "caveats_ru": [
+            "Направление взгляда — приблизительная оценка, не eye-tracking.",
+            "СИНТЕТИКА: сценарные данные, не результат CV."
+          ]
+        },
+        "observation_ids": [
+          "at-680",
+          "at-716"
+        ],
+        "observation_count": 2,
+        "trigger_frame_id": null,
+        "related_incident_ids": [],
+        "evidence_ids": [],
+        "rule_version": "sample-rules-1",
+        "config_version": "sample-config-1",
+        "end_reason": "condition_cleared",
+        "update_seq": 1,
+        "review_status": "pending"
+      },
+      "reviews": [],
+      "evidence": []
+    },
+    {
+      "incident": {
+        "incident_id": "inc-tech-1",
+        "session_id": "s-sample-synthetic-0001",
+        "rule_id": "monitoring_degraded",
+        "category": "technical",
+        "state": "closed",
+        "priority": "low",
+        "t_start_ms": 300000.0,
+        "t_end_ms": 306000.0,
+        "wall_start": "2026-10-08T04:57:58Z",
+        "wall_end": "2026-10-08T04:58:04Z",
+        "duration_ms": 6000.0,
+        "source_mode": "synthetic",
+        "max_confidence": null,
+        "mean_quality": 0.8,
+        "explanation": {
+          "summary_ru": "Камера не передавала кадры 6,0 с: интервал не наблюдался.",
+          "summary_kk": null,
+          "facts": [
+            {
+              "key": "gap_ms",
+              "value": 6000.0,
+              "unit": "ms",
+              "label_ru": "Пропуск"
+            }
+          ],
+          "caveats_ru": [
+            "СИНТЕТИКА: сценарные данные, не результат CV."
+          ]
+        },
+        "observation_ids": [
+          "hl-1",
+          "hl-2"
+        ],
+        "observation_count": 2,
+        "trigger_frame_id": null,
+        "related_incident_ids": [],
+        "evidence_ids": [],
+        "rule_version": "sample-rules-1",
+        "config_version": "sample-config-1",
+        "end_reason": "condition_cleared",
+        "update_seq": 1,
+        "review_status": "pending"
+      },
+      "reviews": [],
+      "evidence": []
+    },
+    {
+      "incident": {
+        "incident_id": "inc-env-2",
+        "session_id": "s-sample-synthetic-0001",
+        "rule_id": "environment_escape",
+        "category": "environment",
+        "state": "closed",
+        "priority": "high",
+        "t_start_ms": 480000.0,
+        "t_end_ms": 483200.0,
+        "wall_start": "2026-10-08T05:00:58Z",
+        "wall_end": "2026-10-08T05:01:01.200000Z",
+        "duration_ms": 3200.0,
+        "source_mode": "synthetic",
+        "max_confidence": null,
+        "mean_quality": 0.8,
+        "explanation": {
+          "summary_ru": "Окно экзамена потеряло фокус на 3,2 с; блокировка не сработала (только зафиксировано).",
+          "summary_kk": null,
+          "facts": [
+            {
+              "key": "focus_lost_ms",
+              "value": 3200.0,
+              "unit": "ms",
+              "label_ru": "Без фокуса"
+            }
+          ],
+          "caveats_ru": [
+            "СИНТЕТИКА: сценарные данные, не результат CV."
+          ]
+        },
+        "observation_ids": [
+          "env-sample-2"
+        ],
+        "observation_count": 1,
+        "trigger_frame_id": null,
+        "related_incident_ids": [],
+        "evidence_ids": [],
+        "rule_version": "sample-rules-1",
+        "config_version": "sample-config-1",
+        "end_reason": "condition_cleared",
+        "update_seq": 1,
+        "review_status": "confirmed"
+      },
+      "reviews": [
+        {
+          "review_id": "rev-ac34bfbf13e18255334c",
+          "session_id": "s-sample-synthetic-0001",
+          "incident_id": "inc-env-2",
+          "decision": "confirmed",
+          "comment": "Переключение на другое окно подтверждено.",
+          "operator": "teacher-demo",
+          "created_at": "2026-10-08T05:04:58.380438Z",
+          "supersedes_review_id": null
+        }
+      ],
+      "evidence": []
+    },
+    {
+      "incident": {
+        "incident_id": "inc-faces-1",
+        "session_id": "s-sample-synthetic-0001",
+        "rule_id": "multiple_faces",
+        "category": "presence",
+        "state": "open",
+        "priority": "medium",
+        "t_start_ms": 600000.0,
+        "t_end_ms": null,
+        "wall_start": "2026-10-08T05:02:58Z",
+        "wall_end": null,
+        "duration_ms": 30000.0,
+        "source_mode": "synthetic",
+        "max_confidence": null,
+        "mean_quality": 0.8,
+        "explanation": {
+          "summary_ru": "В кадре два лица; эпизод не закрыт до конца сессии.",
+          "summary_kk": null,
+          "facts": [
+            {
+              "key": "face_count",
+              "value": 2,
+              "unit": "count",
+              "label_ru": "Лиц в кадре"
+            }
+          ],
+          "caveats_ru": [
+            "СИНТЕТИКА: сценарные данные, не результат CV."
+          ]
+        },
+        "observation_ids": [
+          "at-2280"
+        ],
+        "observation_count": 1,
+        "trigger_frame_id": null,
+        "related_incident_ids": [],
+        "evidence_ids": [],
+        "rule_version": "sample-rules-1",
+        "config_version": "sample-config-1",
+        "end_reason": null,
+        "update_seq": 0,
+        "review_status": "pending"
+      },
+      "reviews": [],
+      "evidence": []
+    }
+  ],
+  "incidents_total": 6,
+  "incidents_truncated": false,
+  "observations": [
+    {
+      "observation_id": "ph-260",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": 260,
+      "t_session_ms": 95000.0,
+      "wall_time": "2026-10-08T04:54:33Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "bootstrap.phone",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": "script-v1"
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "phone",
+      "detections": [
+        {
+          "bbox": {
+            "x_min": 0.62,
+            "y_min": 0.5,
+            "x_max": 0.75,
+            "y_max": 0.83
+          },
+          "confidence": 0.71,
+          "class_name": "cell phone (scripted)",
+          "class_index": 67,
+          "track_id": null,
+          "track_quality": null,
+          "track_age_ms": null
+        }
+      ],
+      "signals": [
+        {
+          "name": "phone_visible",
+          "state": "present",
+          "confidence": null,
+          "track_id": null,
+          "reason": "scripted_synthetic",
+          "facts": {}
+        }
+      ]
+    },
+    {
+      "observation_id": "ph-264",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": 264,
+      "t_session_ms": 96000.0,
+      "wall_time": "2026-10-08T04:54:34Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "bootstrap.phone",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": "script-v1"
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "phone",
+      "detections": [
+        {
+          "bbox": {
+            "x_min": 0.62,
+            "y_min": 0.5,
+            "x_max": 0.75,
+            "y_max": 0.83
+          },
+          "confidence": 0.71,
+          "class_name": "cell phone (scripted)",
+          "class_index": 67,
+          "track_id": null,
+          "track_quality": null,
+          "track_age_ms": null
+        }
+      ],
+      "signals": [
+        {
+          "name": "phone_visible",
+          "state": "present",
+          "confidence": null,
+          "track_id": null,
+          "reason": "scripted_synthetic",
+          "facts": {}
+        }
+      ]
+    },
+    {
+      "observation_id": "ph-284",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": 284,
+      "t_session_ms": 101000.0,
+      "wall_time": "2026-10-08T04:54:39Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "bootstrap.phone",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": "script-v1"
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "phone",
+      "detections": [
+        {
+          "bbox": {
+            "x_min": 0.62,
+            "y_min": 0.5,
+            "x_max": 0.75,
+            "y_max": 0.83
+          },
+          "confidence": 0.71,
+          "class_name": "cell phone (scripted)",
+          "class_index": 67,
+          "track_id": null,
+          "track_quality": null,
+          "track_age_ms": null
+        }
+      ],
+      "signals": [
+        {
+          "name": "phone_visible",
+          "state": "present",
+          "confidence": null,
+          "track_id": null,
+          "reason": "scripted_synthetic",
+          "facts": {}
+        }
+      ]
+    },
+    {
+      "observation_id": "env-sample-1",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": null,
+      "t_session_ms": 150000.0,
+      "wall_time": "2026-10-08T04:55:28Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "environment",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "environment",
+      "action": "shortcut_alt_tab",
+      "enforcement": "blocked",
+      "mechanism": "electron.before_input_event",
+      "scope": "window",
+      "client_seq": 1,
+      "client_wall_time": "2026-10-08T04:55:27.990000Z",
+      "detail": {
+        "process_name": null,
+        "shortcut": "Alt+Tab",
+        "duration_ms": null
+      }
+    },
+    {
+      "observation_id": "at-680",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": 680,
+      "t_session_ms": 200000.0,
+      "wall_time": "2026-10-08T04:56:18Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "bootstrap.attention",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": "script-v1"
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "attention",
+      "face_count": 1,
+      "faces": [],
+      "primary_face_present": true,
+      "head_pose": null,
+      "head_direction": "down",
+      "gaze": {
+        "direction": "down",
+        "yaw_deg": null,
+        "pitch_deg": null,
+        "confidence": 0.6,
+        "method": "head_pose_only",
+        "calibrated": true
+      },
+      "calibration_id": null,
+      "reasons": []
+    },
+    {
+      "observation_id": "at-716",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": 716,
+      "t_session_ms": 209000.0,
+      "wall_time": "2026-10-08T04:56:27Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "bootstrap.attention",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": "script-v1"
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "attention",
+      "face_count": 1,
+      "faces": [],
+      "primary_face_present": true,
+      "head_pose": null,
+      "head_direction": "down",
+      "gaze": {
+        "direction": "down",
+        "yaw_deg": null,
+        "pitch_deg": null,
+        "confidence": 0.6,
+        "method": "head_pose_only",
+        "calibrated": true
+      },
+      "calibration_id": null,
+      "reasons": []
+    },
+    {
+      "observation_id": "hl-1",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": null,
+      "t_session_ms": 300000.0,
+      "wall_time": "2026-10-08T04:57:58Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "capture",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "error",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "health",
+      "health": {
+        "component": "capture",
+        "status": "error",
+        "code": "camera_disconnected",
+        "message": "",
+        "since_t_session_ms": null,
+        "details": {}
+      }
+    },
+    {
+      "observation_id": "hl-2",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": null,
+      "t_session_ms": 306000.0,
+      "wall_time": "2026-10-08T04:58:04Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "capture",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "health",
+      "health": {
+        "component": "capture",
+        "status": "ok",
+        "code": "ok",
+        "message": "",
+        "since_t_session_ms": null,
+        "details": {}
+      }
+    },
+    {
+      "observation_id": "env-sample-2",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": null,
+      "t_session_ms": 480000.0,
+      "wall_time": "2026-10-08T05:00:58Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "environment",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "environment",
+      "action": "focus_lost",
+      "enforcement": "detected_only",
+      "mechanism": "electron.blur",
+      "scope": "window",
+      "client_seq": 2,
+      "client_wall_time": "2026-10-08T05:00:57.990000Z",
+      "detail": {
+        "process_name": null,
+        "shortcut": null,
+        "duration_ms": 3200.0
+      }
+    },
+    {
+      "observation_id": "at-2280",
+      "session_id": "s-sample-synthetic-0001",
+      "frame_id": 2280,
+      "t_session_ms": 600000.0,
+      "wall_time": "2026-10-08T05:02:58Z",
+      "source_mode": "synthetic",
+      "producer": {
+        "module": "bootstrap.attention",
+        "version": "sample-1",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": "script-v1"
+      },
+      "status": "ok",
+      "quality": 0.8,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "attention",
+      "face_count": 2,
+      "faces": [],
+      "primary_face_present": true,
+      "head_pose": null,
+      "head_direction": "center",
+      "gaze": {
+        "direction": "center",
+        "yaw_deg": null,
+        "pitch_deg": null,
+        "confidence": 0.6,
+        "method": "head_pose_only",
+        "calibrated": true
+      },
+      "calibration_id": null,
+      "reasons": []
+    }
+  ],
+  "observations_total": 10,
+  "missing_observation_refs": 0,
+  "answers": [
+    {
+      "session_id": "s-sample-synthetic-0001",
+      "question_id": "q1",
+      "value": [
+        "b"
+      ],
+      "client_seq": 1,
+      "saved_at": "2026-10-08T05:04:58.157038Z"
+    },
+    {
+      "session_id": "s-sample-synthetic-0001",
+      "question_id": "q2",
+      "value": [
+        "a",
+        "c"
+      ],
+      "client_seq": 2,
+      "saved_at": "2026-10-08T05:04:58.227542Z"
+    },
+    {
+      "session_id": "s-sample-synthetic-0001",
+      "question_id": "q3",
+      "value": "Ответ текстом: 42",
+      "client_seq": 3,
+      "saved_at": "2026-10-08T05:04:58.249039Z"
+    }
+  ],
+  "producers": [
+    {
+      "module": "bootstrap.attention",
+      "version": "sample-1",
+      "model_id": null,
+      "model_sha256": null,
+      "config_version": "script-v1"
+    },
+    {
+      "module": "bootstrap.phone",
+      "version": "sample-1",
+      "model_id": null,
+      "model_sha256": null,
+      "config_version": "script-v1"
+    },
+    {
+      "module": "capture",
+      "version": "sample-1",
+      "model_id": null,
+      "model_sha256": null,
+      "config_version": null
+    },
+    {
+      "module": "environment",
+      "version": "sample-1",
+      "model_id": null,
+      "model_sha256": null,
+      "config_version": null
+    }
+  ],
+  "evidence_files": [
+    {
+      "evidence_id": "ev-12cc66e812a4a674484ecdac",
+      "status": "ok",
+      "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
+      "size_bytes": 11905
+    }
+  ],
+  "evidence_expired": 0,
+  "storage_counters": {},
+  "recovered_after_interruption": false,
+  "disclaimer_ru": [
+    "Эпизоды — это объяснимые сигналы для проверки преподавателем, а не доказательство нарушения и не «вероятность списывания».",
+    "Решение по каждому эпизоду принимает преподаватель; автоматических санкций нет.",
+    "Приоритет — очерёдность проверки по прозрачным правилам, а не степень вины.",
+    "Интервалы без наблюдения означают «неизвестно», а не «нарушений нет»."
+  ]
+}
