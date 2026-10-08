@@ -58,7 +58,11 @@ Recorded by the captain (consented: Дамир; in (в) also Танирберд�
 `%LOCALAPPDATA%\QorgauExam\replay`, consent fixed, labels added from A02's frame review. Every clip passes
 `replay-check` (900 / 1142 / 1202 frames, sha256 OK, 0 undecodable) and the full pipeline on REPLAY (scratch
 A02+A03+A04+A05): **(а) green ✓, (в) red ✓, (б) red ✗** — a real, unscripted second person enters at 32–34 s, and
-uncalibrated A04 does not report the look down (R14). (б) must be re-recorded: script v2 in `DEMO_CLIPS.md`.
+uncalibrated A04 does not report the look down (R14). (б) re-recorded as `zone_b_yellow_02` (script v2): replay-check
+OK (1052 frames, sha256 OK, written by the fixed recorder), full pipeline with A05 `a05-rules-1.1.0` @ `d9832a9` +
+`assess_session_zone`: **yellow** in 2 of 2 runs (2× face_missing medium: a near-profile head turn loses the face, then
+~12 s out of frame). With A05 1.1.0 the earlier clips give: (а) green, (б) v1 red (real second person), (в) red.
+Demo set: `zone_a_green_01`, `zone_b_yellow_02`, `zone_c_red_01`.
 
 **Fix 5 (found on the real clips): every recorded clip was rejected by replay** (`sidecar_invalid`). Python 3.12 on
 Windows: `time.monotonic` ticks every 15.6 ms (GetTickCount64, measured), so `record` wrote equal neighbouring
