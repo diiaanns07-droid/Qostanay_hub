@@ -64,7 +64,7 @@ Desktop (из `proctoring/desktop`, node_modules — junction на `A13-A07`, pa
 node scripts/typecheck.mjs                       # PASS contracts/main/renderer
 node renderer/tests/run-unit.mjs                 # 22/22 (4 логики шага + FIXTURE: start->recording->clear, phone->objects_found, skip без PIN — отказ)
 node main/tests/run.mjs access validate          # 16/16 (skipDeskScan — только оператор)
-$env:QORGAU_PYTHON=...; $env:PYTHONPATH="<clone>\proctoringackend;<clone>\proctoring\contracts\python"
+$env:QORGAU_PYTHON=...; $env:PYTHONPATH="<clone>\proctoring\backend;<clone>\proctoring\contracts\python"
 node main/tests/run.mjs backend.integration      # 11 pass, 1 skip (POSIX-only); настоящий backend через bridge
 ```
 Интеграция через bridge (настоящий процесс backend): старт осмотра `usb` → `recording` → итог с «Вариант: USB-камера.»; mode=phone — отказ валидации; skip без PIN → `operator_locked`; после PIN → `skipped`/`fixed_camera_teacher_check`; в `running` → `INVALID_STATE`. Без весов модели итог `failed` (мгновенно), с весами (`QORGAU_MODELS_DIR` → candidate) — полный 5-секундный осмотр.
