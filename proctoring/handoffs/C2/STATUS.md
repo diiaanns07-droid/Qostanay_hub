@@ -35,6 +35,11 @@ Nothing else in A01 code is touched. `state["uplink"]` is `None` when not config
 | reconnect | 1 → 2 → 4 → 8 → 15 s (max), with `resume_token`; the exam is never affected (own thread + own asyncio loop) |
 | clips (R16) | at the FIRST sight of an episode (not `monitoring_degraded`) while `running`: `capture.export_clip(t_start_ms, 5, 5)` in a background thread (A02), also while offline. `request_clip{incident_id}` → `POST http://<server>/api/student/clips/{incident_id}`, `Authorization: Bearer <resume_token>`, `Content-Type: video/x-msvideo`, waits ≤ 15 s if the clip is still being written; ack `ok:false` + `error_ru` if unavailable |
 
+Ack: `command_id`, `ok`, `error_ru` (when not ok) + additive `seq` (outbox), `code` (`unsupported` | `invalid` |
+`failed`, when not ok) and `result {locked, exam_state}` for lock/unlock/start/finish (requested by T04). A command
+re-delivered with the same `command_id` (T04 does this after a reconnect) is never executed twice: the same ack is
+repeated (or nothing, while the first copy is still running).
+
 Commands: `start_exam` → `SessionRuntime.start()` only if the local session is `ready` (otherwise `ok:false`,
 «Экзамен ещё не готов…»; `running` → ok); `finish_exam` → `SessionRuntime.finish()`; `lock {reason_ru 1–200}` /
 `unlock` / `audio_start {direction}` / `audio_stop` → uplink state + `class_state` event. **The microphone itself is
@@ -72,9 +77,36 @@ camera ≠ ok) is unchanged.
 ## Checks (Windows 11 demo laptop, Python 3.12.14, env from uv.lock)
 | Command (from `proctoring/`) | Result |
 |---|---|
-| `pytest backend/proctor/uplink` | **14 passed**: config; hello/welcome/status/preview/pong + token/code not in logs; wrong code → rejected, 1 attempt only; server down at start → connects later + queued incident delivered; drop + restart → resume_token, resend in seq order, seq keeps growing; duplicate seq (unconfirmed send) → same seq+msg_id, server keeps one; outbox seq survives restart + 1000 cap; lock/unlock/audio → class_state + ack, invalid lock / unknown command → ack ok:false; clip at OPEN (< 1 s) + upload on request_clip (Bearer, video/x-msvideo); start/finish commands; **create_app end-to-end** (synthetic): start_exam → running, lock → `class_state` on `/v1/stream`, A05/A08 incident → uplink → real A02 clip uploaded, finish_exam; no env → no uplink; server unavailable → exam runs locally, shutdown not blocked |
+| `pytest backend/proctor/uplink` | **14 passed** (11 with the fake server + 3 create_app): config; hello/welcome/status/preview/pong + token/code not in logs; wrong code → rejected, 1 attempt only; server down at start → connects later + queued incident delivered; drop + restart → resume_token, resend in seq order, seq keeps growing; duplicate seq (unconfirmed send) → same seq+msg_id, server keeps one; outbox seq survives restart + 1000 cap; lock/unlock/audio → class_state + ack, invalid lock / unknown command → ack ok:false; clip at OPEN (< 1 s) + upload on request_clip (Bearer, video/x-msvideo); start/finish commands; re-delivered command_id not executed twice + ack `code`/`result`; **create_app end-to-end** (synthetic): start_exam → running, lock → `class_state` on `/v1/stream`, A05/A08 incident → uplink → real A02 clip uploaded, finish_exam; no env → no uplink; server unavailable → exam runs locally, shutdown not blocked |
 | `pytest` (whole repo) | 1006 passed, 40 skipped; failures not in C2 code: 3 A03 phone tests (identical on the clean baseline, Windows path separator) and 1 A08 test (`test_purge_expired_media_keeps_metadata`) that passes alone (flaky under load) |
 Fake server for tests: `backend/proctor/uplink/tests/fake_server.py` (FastAPI+uvicorn, NOT the real class server).
+
+
+## Сверка с сервером друга (T03, T04) — протокол не менялся
+База `64354c0`. T01 (`/ws/student`) ещё нет: никто пока не связывает `ClassControl.handle_student_message` (T04) и
+`ReviewStore.ingest_incident` (T03) с WebSocket студента — это работа T01/C1.
+
+**T04 `proctoring/backend/proctor_classctl` (команды)**
+| # | Протокол v1 | T04 | Влияние на C2 |
+|---|---|---|---|
+| 1 | `POST /api/teacher/students/{id}/commands {kind,payload}` → `{command_id}` | `POST /api/teacher/control/exams/{exam_id}/commands` (весь T04 под `/api/teacher/control/*`) | нет (сторона преподавателя); панель T02/T01 должна знать путь |
+| 2 | `command {command_id, kind, payload}` | + `issued_at`, `expires_at`, `ttl_ms`, `attempt` | C2 их игнорирует; T04 не отправляет после `expires_at` |
+| 3 | «ровно один ack на команду» | повтор доставки с тем же `command_id` после переподключения | **исправлено в C2**: дедупликация по `command_id` |
+| 4 | `ack {command_id, ok, error_ru?}` | ждёт также `code`, `result`, `executed_at`; новый тип `command_progress` | C2 шлёт `code` и `result`; `command_progress` и `executed_at` не шлёт |
+| 5 | `hello` без `capabilities` | `hello.capabilities` (без него клиент = «v1»: только start/finish/lock/unlock) | C2 `capabilities` не шлёт (протокол заморожен) → T04 видит C2 как v1-клиент |
+| 6 | kinds: start/finish/lock/unlock/request_clip/audio_* | + `apply_policy` (нет в v1) | C2 отвечает `ok:false, code:"unsupported"`; политика придёт в `welcome` при переподключении |
+| 7 | `welcome.exam` 6 полей | + `policy_id`, `version`, `start_url`, `auth_domains`, `site_timer_control` | C2 передаёт `exam` в `class_state` без изменений |
+| 8 | — | `handoffs/T04/STUDENT_CLIENT.md` назван нормативным, но **в базе его нет** | правила взяты из `commands.py`/`capabilities.py` |
+
+**T03 `proctoring/classreview` (приём клипов, эпизоды)**
+| # | Что | T03 | C2 |
+|---|---|---|---|
+| 1 | `POST /api/student/clips/{incident_id}`, `Bearer <resume_token>`, `video/mp4`/`video/x-msvideo`, ≤ 8 МБ | совпадает (401/415/413) | совпадает (AVI MJPG) |
+| 2 | клип только по запросу | 404, если эпизод не пришёл; 409 `clip_not_requested` без запроса преподавателя | C2 шлёт `incident` при открытии и загружает только по `request_clip` |
+| 3 | повторная загрузка | тот же sha256 → 200 `duplicate`; другой клип → 409 `clip_already_stored` | C2 при повторном запросе грузит тот же файл → 200 |
+| 4 | поля `incident` | seq int ≥ 1, rule_id/category `^[a-z0-9_.]{1,64}$`, priority/state, `t_start_wall` со смещением, `explanation_ru` ≤ 1000, `clip_available` bool | соответствует (проверено: все IncidentRule/IncidentCategory A05 подходят) |
+| 5 | повтор `open` с `clip_available:true` | upsert по `incident_id`, новее по seq → `updated`; закрытый эпизод не открывается | совместимо |
+| 6 | — | необязательный заголовок `X-Qorgau-Clip-Source` | C2 шлёт `a02.export_clip` |
 
 ## NOT verified
 * Against the real class server (T01 `/ws/student` does not exist yet) and the real teacher panel; over a real LAN/Wi-Fi.

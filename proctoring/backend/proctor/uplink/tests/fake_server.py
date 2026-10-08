@@ -147,8 +147,8 @@ class FakeClassServer:
         assert self._loop is not None
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result(5)
 
-    def send_command(self, kind: str, payload: dict[str, Any] | None = None) -> str:
-        cid = str(uuid.uuid4())
+    def send_command(self, kind: str, payload: dict[str, Any] | None = None, command_id: str | None = None) -> str:
+        cid = command_id or str(uuid.uuid4())
         msg = json.dumps(_env("command", command_id=cid, kind=kind, payload=payload or {}))
         ws = self._sockets[-1][0]
         self._run(ws.send_text(msg))
@@ -168,6 +168,10 @@ class FakeClassServer:
     def of_type(self, type_: str) -> list[dict[str, Any]]:
         with self.lock:
             return [m for m in self.messages if m.get("type") == type_]
+
+    def all_acks(self, command_id: str) -> list[dict[str, Any]]:
+        with self.lock:
+            return [m for m in self.messages if m.get("type") == "ack" and m.get("command_id") == command_id]
 
     def acks(self) -> dict[str, dict[str, Any]]:
         with self.lock:

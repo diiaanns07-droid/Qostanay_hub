@@ -68,6 +68,7 @@ def http_post_file(url: str, path: Path, token: str, content_type: str, timeout_
     data = path.read_bytes()
     req = urllib.request.Request(url, data=data, method="POST", headers={
         "Authorization": f"Bearer {token}", "Content-Type": content_type, "Content-Length": str(len(data)),
+        "X-Qorgau-Clip-Source": "a02.export_clip",  # optional header understood by T03
     })
     try:
         with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310 (LAN class server, http by protocol)
@@ -105,6 +106,7 @@ class Uplink:
         self.last_command: dict[str, Any] | None = None
         self.connects = 0
         self.sent: list[dict[str, Any]] = []  # messages sent on the wire (tests/diagnostics, bounded)
+        self._done_commands: dict[str, dict[str, Any] | None] = {}  # command_id -> ack fields (T04 re-delivers by command_id)
         self._incident_sent: dict[str, tuple[str, bool]] = {}  # incident_id -> (state, clip_available)
         self._clips: dict[str, Any] = {}  # incident_id -> Path | "pending" | "failed"
         self._clip_events: dict[str, threading.Event] = {}
@@ -368,7 +370,15 @@ class Uplink:
         cid = str(msg.get("command_id", ""))
         kind = msg.get("kind")
         payload = msg.get("payload") or {}
-        ok, err = False, "Неизвестная команда"
+        if cid and cid in self._done_commands:  # re-delivery (T04 reuses command_id): never execute twice
+            prev = self._done_commands[cid]
+            if prev is not None:  # finished: repeat the same ack (the server keeps the first one)
+                self._queue("ack", **prev)
+                await self._flush_outbox(ws)
+            return  # still executing: the original will send the only ack
+        if cid:
+            self._done_commands[cid] = None
+        ok, err, code = False, "Неизвестная команда", "unsupported"
         try:
             if kind == "start_exam":
                 ok, err = await asyncio.to_thread(self.view.start_exam)
@@ -380,7 +390,7 @@ class Uplink:
                     self.locked, self.lock_reason_ru = True, reason.strip()
                     ok, err = True, None
                 else:
-                    err = "Причина блокировки должна содержать 1–200 символов"
+                    err, code = "Причина блокировки должна содержать 1–200 символов", "invalid"
             elif kind == "unlock":
                 self.locked, self.lock_reason_ru = False, None
                 ok, err = True, None
@@ -390,19 +400,31 @@ class Uplink:
                     self.mic_active, self.audio_direction = True, direction
                     ok, err = True, None
                 else:
-                    err = "direction должен быть listen, talk или both"
+                    err, code = "direction должен быть listen, talk или both", "invalid"
             elif kind == "audio_stop":
                 self.mic_active, self.audio_direction = False, None
                 ok, err = True, None
             elif kind == "request_clip":
                 ok, err = await self._upload_clip(str(payload.get("incident_id", "")))
+                code = "failed"
         except Exception as exc:  # a failing command must never break the session
             log.exception("uplink: command %s failed", kind)
             ok, err = False, f"Ошибка выполнения: {type(exc).__name__}"
+        if not ok and kind in ("start_exam", "finish_exam", "request_clip", "lock", "audio_start") and code == "unsupported":
+            code = "failed"
         self.last_command = {"command_id": cid, "kind": kind, "ok": ok}
         if kind in ("lock", "unlock", "audio_start", "audio_stop", "start_exam", "finish_exam"):
             self._publish_state()
-        self._queue("ack", command_id=cid, ok=ok, **({"error_ru": err[:200]} if (not ok and err) else {}))
+        ack: dict[str, Any] = {"command_id": cid, "ok": ok}
+        if not ok:
+            ack.update(error_ru=(err or "Ошибка")[:200], code=code)  # code: additive (T04 R2)
+        if kind in ("lock", "unlock", "start_exam", "finish_exam"):
+            ack["result"] = {"locked": self.locked, "exam_state": self._snap.exam_state}  # additive (T04 R2)
+        if cid:
+            self._done_commands[cid] = ack
+            if len(self._done_commands) > 500:
+                self._done_commands.pop(next(iter(self._done_commands)))
+        self._queue("ack", **ack)
         await self._flush_outbox(ws)
 
     async def _upload_clip(self, incident_id: str) -> tuple[bool, str | None]:

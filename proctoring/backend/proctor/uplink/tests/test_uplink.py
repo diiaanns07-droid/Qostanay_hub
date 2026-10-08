@@ -260,3 +260,25 @@ def test_start_and_finish_exam_commands_use_the_lifecycle(server, run, tmp_path)
     assert wait_for(lambda: cid in server.acks()) and view.exam_state == "finished"
     cid = server.send_command("start_exam")
     assert wait_for(lambda: cid in server.acks()) and server.acks()[cid]["ok"] and view.exam_state == "running"
+
+
+def test_redelivered_command_is_not_executed_twice_and_ack_has_code_and_result(server, run, tmp_path):
+    """T04 re-delivers a command with the same command_id after a reconnect; the client must de-duplicate."""
+    events: list[ClassStateMsg] = []
+    up, view = run(make_cfg(tmp_path, server.address), events=events)
+    assert wait_for(lambda: up.connection == "connected")
+    cid = server.send_command("lock", {"reason_ru": "Первая причина"})
+    assert wait_for(lambda: cid in server.acks())
+    first = server.acks()[cid]
+    assert first["ok"] is True and first["result"]["locked"] is True and "code" not in first
+    n_events = len([e for e in events if e.locked])
+    server.send_command("lock", {"reason_ru": "Другая причина"}, command_id=cid)  # same id, re-delivery
+    assert wait_for(lambda: len(server.all_acks(cid)) >= 2)
+    assert len([e for e in events if e.locked]) == n_events and up.lock_reason_ru == "Первая причина"
+    assert server.all_acks(cid)[1]["ok"] is True
+    u = server.send_command("apply_policy", {"policy_id": "p1"})  # T04 kind outside qorgau.class.v1
+    assert wait_for(lambda: u in server.acks())
+    assert server.acks()[u]["ok"] is False and server.acks()[u]["code"] == "unsupported"
+    view.exam_state = "preflight"
+    f = server.send_command("request_clip", {"incident_id": "none"})
+    assert wait_for(lambda: f in server.acks()) and server.acks()[f]["code"] == "failed"
