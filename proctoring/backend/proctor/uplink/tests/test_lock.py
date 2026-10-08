@@ -125,6 +125,20 @@ def test_timeout_preserves_previous_effective_state_and_rejects_late_receipt(gat
     assert not gate.confirm(receipt(unlock.request))["accepted"]
 
 
+def test_renderer_crash_invalidates_effective_state_and_old_receipt(gate):
+    pending = gate.begin(command())
+    gate.confirm(receipt(pending.request))
+    assert not gate.renderer_lost("old-backend")["accepted"]
+    assert gate.snapshot()["locked"] is True
+    assert gate.renderer_lost(gate.instance_id)["accepted"]
+    assert gate.snapshot()["locked"] is False
+    request = gate.snapshot()["lock_request"]
+    assert request["recovery"] and request["request_token"] != pending.request["request_token"]
+    assert not gate.confirm(receipt(pending.request))["accepted"]
+    gate.confirm(receipt(request))
+    assert gate.snapshot()["locked"] is True
+
+
 def test_local_ack_route_requires_auth_and_strict_scope(tmp_path, monkeypatch):
     from proctor.uplink.tests.test_uplink_app import _client
     monkeypatch.delenv("QORGAU_CLASS_SERVER", raising=False)

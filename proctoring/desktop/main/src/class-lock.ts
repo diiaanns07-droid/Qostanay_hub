@@ -7,6 +7,7 @@ export { LOCK_ACK_CHANNEL } from "../../shared/class-lock";
 export class ClassLockController {
   private request: LockRequest | null = null;
   private effective = false;
+  private backendInstanceId: string | null = null;
   private requestSerial = 0;
   constructor(private readonly deps: {
     client: Pick<BackendClient, "json">;
@@ -22,16 +23,24 @@ export class ClassLockController {
     if (msg.lock_request != null && !request) return; // malformed input never releases a lock
     if (request?.request_token !== this.request?.request_token) this.requestSerial++;
     this.request = request;
+    this.backendInstanceId = typeof msg.backend_instance_id === "string" ? msg.backend_instance_id : request?.backend_instance_id ?? null;
     this.effective = msg.locked;
     // A child web surface must be detached before the renderer sees a pending lock.
-    this.deps.setExamBlocked(msg.locked || request?.locked === true);
+    this.deps.setExamBlocked(msg.locked || request?.locked === true || msg.lock_requested === true);
   }
 
   reset(): void {
     this.requestSerial++;
     this.request = null;
     this.effective = false;
+    this.backendInstanceId = null;
     this.deps.setExamBlocked(true); // backend loss cannot reveal an unverified exam surface
+  }
+
+  async rendererLost(): Promise<void> {
+    const backendInstanceId = this.backendInstanceId;
+    this.reset();
+    if (backendInstanceId) await this.deps.client.json("POST", "/v1/class/lock/lost", { backend_instance_id: backendInstanceId }, 2500);
   }
 
   async confirmApplied(value: unknown): Promise<LockReceiptResult> {
@@ -62,7 +71,8 @@ export class ClassLockController {
         return overlay.getAttribute('data-lock-token') === r.request_token
           && document.querySelector('[data-lock-reason]')?.textContent === r.reason_ru
           && css.visibility === 'visible' && css.display !== 'none' && Number(css.opacity) === 1
-          && box.left <= 0 && box.top <= 0 && box.right >= innerWidth && box.bottom >= innerHeight
+          // Windows display scaling rounds innerHeight but preserves fractional DOM bounds.
+          && box.left <= 0 && box.top <= 0 && box.right >= innerWidth - 1 && box.bottom >= innerHeight - 1
           && overlay.contains(document.elementFromPoint(innerWidth / 2, innerHeight / 2));
       })()`) === true;
     } catch { /* renderer was destroyed or replaced */ }
