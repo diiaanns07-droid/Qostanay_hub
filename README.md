@@ -16,7 +16,7 @@
 
 **Локальный прокторинг для компьютерного класса.** Студент проходит экзамен на своём ПК, преподаватель видит события и проверяет подозрительные эпизоды.
 
-**[Презентация PDF](presentation/Adal_Presentation.pdf)** · [Интерактивная демо-панель ↗](https://diiaanns07-droid.github.io/Qostanay_hub/) · [Установка одной командой](proctoring/packaging/INSTALL_RU.md) · [Запуск на Windows](proctoring/README.md) · [Проверки и ограничения](docs/STATUS.md)
+**[Презентация PDF](presentation/Adal_Presentation.pdf)** · **[▶ Видео-демонстрация (6 мин)](https://drive.google.com/file/d/1KcQlKYHy9M95p43lcYfepvZ4ostWxgs3/view?usp=sharing)** · [Интерактивная демо-панель ↗](https://diiaanns07-droid.github.io/Qostanay_hub/) · [Установка одной командой](proctoring/packaging/INSTALL_RU.md) · [Запуск на Windows](proctoring/README.md) · [Проверки и ограничения](docs/STATUS.md)
 
 ## Что делает Adal
 
@@ -78,6 +78,7 @@ cd Adal\proctoring
 
 ## Материалы для хакатона
 
+- [Видео-демонстрация](https://drive.google.com/file/d/1KcQlKYHy9M95p43lcYfepvZ4ostWxgs3/view?usp=sharing): режим класса на двух ноутбуках — пульт преподавателя, превью камеры студента, эпизоды.
 - [Презентация PDF](presentation/Adal_Presentation.pdf) и [интерактивная демо-панель](https://diiaanns07-droid.github.io/Qostanay_hub/) — открывается сразу в браузере. [HTML для скачивания](presentation/adal/index.html). Интерактивные сцены используют синтетические данные.
 - [Сценарий демонстрации и соответствие ТЗ](proctoring/docs/submission/ADAL_DEMO.md).
 - [Текст кейса на казахском](docs/case/CASE_SOURCE_KK.txt) и [происхождение исходного PDF](docs/case/CASE_PROVENANCE.json).
