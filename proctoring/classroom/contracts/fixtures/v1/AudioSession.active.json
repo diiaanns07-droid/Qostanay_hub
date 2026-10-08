@@ -1,0 +1,13 @@
+{
+  "audio_session_id": "au-0001",
+  "student_id": "st-0001",
+  "direction": "listen",
+  "state": "active",
+  "started_by": "teacher",
+  "start_command_id": "cmd-0003",
+  "stop_command_id": null,
+  "requested_at": "2026-10-09T09:00:00Z",
+  "active_at": "2026-10-09T09:00:04.200000Z",
+  "ended_at": null,
+  "end_reason": null
+}

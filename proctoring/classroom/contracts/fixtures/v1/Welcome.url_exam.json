@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "welcome",
+  "student_id": "st-0001",
+  "resume_token": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+  "server_time": "2026-10-09T09:00:00Z",
+  "exam": {
+    "exam_id": "exam-cs-0001",
+    "title": "Математика, вариант 1 (пример)",
+    "mode": "url",
+    "allowed_urls": [
+      "https://exam.example.kz/*"
+    ],
+    "allowed_apps": [],
+    "instructions_ru": "Откройте только сайт экзамена."
+  },
+  "session_id": "cs-0001",
+  "resumed": false
+}

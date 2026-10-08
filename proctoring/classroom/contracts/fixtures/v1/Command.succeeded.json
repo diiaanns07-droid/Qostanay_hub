@@ -1,0 +1,46 @@
+{
+  "command_id": "cmd-0001",
+  "student_id": "st-0001",
+  "kind": "lock",
+  "payload": {
+    "reason_ru": "Уберите телефон со стола"
+  },
+  "issued_by": "teacher",
+  "issued_at": "2026-10-09T09:00:00Z",
+  "expires_at": "2026-10-09T09:02:00Z",
+  "status": "succeeded",
+  "status_at": "2026-10-09T09:00:04.200000Z",
+  "attempts": 1,
+  "sent_at": "2026-10-09T09:00:00.050000Z",
+  "ack_deadline_at": "2026-10-09T09:00:10.050000Z",
+  "unconfirmed": false,
+  "ack": {
+    "command_id": "cmd-0001",
+    "ok": true,
+    "code": null,
+    "error_ru": null,
+    "executed_at": "2026-10-09T09:00:00.400000Z",
+    "received_at": "2026-10-09T09:00:00.420000Z",
+    "late": false,
+    "result": {
+      "locked": true
+    }
+  },
+  "history": [
+    {
+      "status": "queued",
+      "at": "2026-10-09T09:00:00Z",
+      "note": null
+    },
+    {
+      "status": "sent",
+      "at": "2026-10-09T09:00:00.050000Z",
+      "note": "attempt 1"
+    },
+    {
+      "status": "succeeded",
+      "at": "2026-10-09T09:00:00.420000Z",
+      "note": null
+    }
+  ]
+}

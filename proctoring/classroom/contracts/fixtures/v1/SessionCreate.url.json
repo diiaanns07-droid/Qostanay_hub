@@ -1,0 +1,9 @@
+{
+  "title": "Математика, вариант 1 (пример)",
+  "mode": "url",
+  "allowed_urls": [
+    "https://exam.example.kz/*"
+  ],
+  "allowed_apps": [],
+  "instructions_ru": ""
+}
