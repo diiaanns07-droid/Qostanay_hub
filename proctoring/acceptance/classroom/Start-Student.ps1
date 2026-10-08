@@ -13,6 +13,7 @@ param(
     [string]$Python,
     [string]$DataDir,
     [string]$ModelsDir,
+    [ValidateRange(0.5,5.0)][double]$PreviewFps = 0.5,
     [switch]$CheckOnly,
     [switch]$BackendOnly,
     [switch]$Standalone,
@@ -23,7 +24,7 @@ param(
 )
 
 # Keep parameters before dot-sourcing the shared functions (the teacher script has its own defaults).
-$student = @{ Server=$Server; JoinCode=$JoinCode; Label=$Label; Python=$Python; DataDir=$DataDir; ModelsDir=$ModelsDir;
+$student = @{ Server=$Server; JoinCode=$JoinCode; Label=$Label; Python=$Python; DataDir=$DataDir; ModelsDir=$ModelsDir; PreviewFps=$PreviewFps;
     CheckOnly=[bool]$CheckOnly; BackendOnly=[bool]$BackendOnly; Standalone=[bool]$Standalone;
     Enforce=[bool]$Enforce; DemoOperator=[bool]$DemoOperator; Timeout=$ReadyTimeoutSeconds; StopAfter=$StopAfterSeconds }
 . (Join-Path $PSScriptRoot 'Start-Teacher.ps1') -Library
@@ -47,6 +48,7 @@ try {
     $environment.QORGAU_CLASS_SERVER = if ($student.Standalone) { $null } else { $student.Server }
     $environment.QORGAU_CLASS_CODE = if ($student.Standalone) { $null } else { $student.JoinCode }
     $environment.QORGAU_CLASS_LABEL = if ($student.Standalone) { $null } else { $student.Label.Trim() }
+    $environment.QORGAU_CLASS_PREVIEW_FPS = if ($student.Standalone) { $null } else { $student.PreviewFps.ToString([Globalization.CultureInfo]::InvariantCulture) }
     $environment.QORGAU_HOST = '127.0.0.1'
     $environment.QORGAU_PORT = '0'
     $environment.QORGAU_SHELL_NATIVE_ENFORCE = if ($student.Enforce) { '1' } else { '0' }
@@ -91,6 +93,7 @@ try {
     }
     Write-Host "Исходники студента: $root"
     if (-not $student.Standalone) { Write-Host "Сервер класса: $($student.Server); студент: $($student.Label). Код входа скрыт." }
+    if (-not $student.Standalone) { Write-Host "Превью для преподавателя: запрошено $($student.PreviewFps) кадр/с; фактическая частота зависит от камеры и лимита сервера." }
     $nativeMode = if ($student.Enforce) { 'ENFORCE запрошен явно; фактический blocked проверяется на этом ПК' } else { 'DRY-RUN: нативное подавление клавиш выключено' }
     Write-Host "Adal: $nativeMode."
     if ($student.CheckOnly) {

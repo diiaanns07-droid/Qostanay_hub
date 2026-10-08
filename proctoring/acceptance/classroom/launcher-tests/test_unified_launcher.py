@@ -35,7 +35,7 @@ if ($Library) {
             max_duration_seconds=$Payload.max_duration_seconds;
             path=$Environment.PYTHONPATH; selftest=$Environment.QORGAU_SHELL_SELFTEST;
             emergency=$Environment.QORGAU_SHELL_EMERGENCY_ACCELERATOR; demo=$Environment.QORGAU_SHELL_DEMO_OPERATOR;
-            server=$Environment.QORGAU_CLASS_SERVER; node=$Environment.ELECTRON_RUN_AS_NODE;
+            server=$Environment.QORGAU_CLASS_SERVER; preview_fps=$Environment.QORGAU_CLASS_PREVIEW_FPS; node=$Environment.ELECTRON_RUN_AS_NODE;
             dev=$Environment.QORGAU_SHELL_DEV_RENDERER_URL; models=$Environment.QORGAU_MODELS_DIR}
         Write-Host ('STUB_DESKTOP ' + ($safe | ConvertTo-Json -Compress))
         return @{Process=[pscustomobject]@{Id=73142}}
@@ -153,6 +153,16 @@ class UnifiedLauncher(unittest.TestCase):
         self.assertIsNone(data["server"])
         self.assertIn("STUB_ASSETS", output)
         self.assertIn("STUB_CLEANUP", output)
+
+    def test_preview_rate_is_explicit_bounded_and_student_only(self):
+        self.env["QORGAU_CLASS_PREVIEW_FPS"] = "999"
+        self.assertEqual(self.desktop(self.invoke(*self.student_args()))["preview_fps"], "0.5")
+        self.assertEqual(self.desktop(self.invoke(*self.student_args(), "-PreviewFps", "5"))["preview_fps"], "5")
+        self.assertEqual(self.desktop(self.invoke(*self.student_args(), "-PreviewFps", "2.5"))["preview_fps"], "2.5")
+        self.assertIsNone(self.desktop(self.invoke("-Role", "Standalone"))["preview_fps"])
+        for args in ((*self.student_args(), "-PreviewFps", "0"), (*self.student_args(), "-PreviewFps", "6"),
+                     ("-Role", "Teacher", "-PreviewFps", "5"), ("-Role", "Standalone", "-PreviewFps", "5")):
+            self.assertNotIn("STUB_DESKTOP", self.invoke(*args, success=False))
 
     def test_check_only_enforce_does_not_start_desktop_or_create_data(self):
         data = self.root / "never-created"

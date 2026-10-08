@@ -16,6 +16,7 @@ param(
     [string]$Label = $env:COMPUTERNAME,
     [string]$DataDir,
     [string]$ModelsDir,
+    [ValidateRange(0.5,5.0)][double]$PreviewFps = 0.5,
     [switch]$Lan,
     [ValidateRange(0,65535)][int]$Port = 8765,
     [switch]$CheckOnly,
@@ -29,6 +30,9 @@ param(
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
 try {
+    if ($Role -ne 'Student' -and $PSBoundParameters.ContainsKey('PreviewFps')) {
+        throw '-PreviewFps относится только к Student.'
+    }
     if ($BackendOnly -and $Enforce) { throw '-BackendOnly + -Enforce недопустимы: backend не включает системную защиту.' }
     if ($Role -eq 'Teacher' -and ($Enforce -or $BackendOnly -or $DemoOperator -or $Server -or $JoinCode -or $ModelsDir)) {
         throw 'Teacher запускает C1. -Enforce/-BackendOnly/-DemoOperator/-Server/-JoinCode/-ModelsDir относятся к студенту.'
@@ -63,6 +67,7 @@ try {
         $options.Enforce=$Enforce; $options.DemoOperator=$DemoOperator
         if ($Role -eq 'Student') {
             $options.Server=$Server; $options.JoinCode=$JoinCode; $options.Label=$Label
+            $options.PreviewFps=$PreviewFps
             & (Join-Path $PSScriptRoot 'acceptance\classroom\Start-Student.ps1') @options
         } else {
             & (Join-Path $PSScriptRoot 'packaging\launch-windows.ps1') @options
