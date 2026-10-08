@@ -52,6 +52,10 @@ def run_smoke(as_json: bool = False) -> int:
         [str(PROCTORING_ROOT / "backend"), str(PROCTORING_ROOT / "contracts" / "python"), env.get("PYTHONPATH", "")]
     )
     env.setdefault("QORGAU_LOG_LEVEL", "INFO")  # INFO: the handshake log must stay token-free
+    import tempfile
+
+    scratch = tempfile.TemporaryDirectory(prefix="qorgau-smoke-")
+    env.setdefault("QORGAU_DATA_DIR", scratch.name)  # never write smoke sessions into the user's data dir
     proc = subprocess.Popen(
         [sys.executable, "-m", "proctor", "serve", "--token-stdin", "--port", "0"],
         stdin=subprocess.PIPE,
@@ -262,6 +266,7 @@ def run_smoke(as_json: bool = False) -> int:
     leaked = [l for l in stderr_tail if token in l]
     res.check("token_not_in_logs", not leaked, f"{len(stderr_tail)} stderr lines scanned")
 
+    scratch.cleanup()
     passed = all(ok for _, ok, _ in res.rows)
     if as_json:
         print(json.dumps({"passed": passed, "checks": [{"name": n, "ok": o, "detail": d} for n, o, d in res.rows]}, ensure_ascii=False, indent=2))

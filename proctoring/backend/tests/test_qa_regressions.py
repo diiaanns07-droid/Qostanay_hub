@@ -266,3 +266,19 @@ def test_subprocess_token_in_ws_query_not_logged(served):
     time.sleep(0.5)
     assert any("WebSocket /v1/stream" in line for line in stderr), "handshake line expected at INFO"
     assert not [line for line in stderr if token in line], "token leaked into the backend log"
+
+
+# ------------------------------------------------------------------ A06 #6
+
+
+def test_release_event_shortly_after_finish_is_accepted(tmp_path):
+    with _client(tmp_path) as c:
+        sid = _running_synthetic(c)
+        assert c.post(f"/v1/sessions/{sid}/finish").json()["state"] == "finished"
+        base = {"enforcement": "allowed", "mechanism": "t", "scope": "app", "client_wall_time": "2026-10-08T09:00:05Z"}
+        r = c.post(f"/v1/sessions/{sid}/environment/events",
+                   json={"session_id": sid, "events": [{**base, "action": "exam_mode_released", "client_seq": 9}]})
+        assert r.status_code == 200 and r.json()["accepted"] == 1
+        r = c.post(f"/v1/sessions/{sid}/environment/events",
+                   json={"session_id": sid, "events": [{**base, "action": "shortcut_alt_tab", "enforcement": "detected_only", "client_seq": 10}]})
+        assert r.status_code == 409  # only release/focus bookkeeping is accepted after the end

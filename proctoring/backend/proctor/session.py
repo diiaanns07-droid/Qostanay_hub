@@ -51,6 +51,7 @@ from proctor_contracts.v1 import (
     Component,
     EnvironmentEventAck,
     EnvironmentEventBatch,
+    EnvironmentAction,
     EnvironmentCapabilities,
     EnvironmentObservation,
     ErrorCode,
@@ -95,7 +96,9 @@ ACTIVE_STATES = {
     SessionState.PAUSED,
 }
 TERMINAL_STATES = {SessionState.FINISHED, SessionState.ABORTED, SessionState.FAILED}
+LATE_ENV_ACTIONS = {EnvironmentAction.EXAM_MODE_RELEASED, EnvironmentAction.FOCUS_REGAINED, EnvironmentAction.FOCUS_LOST}
 FUSION_QUEUE_MAX = 2000
+LATE_ENV_GRACE_MS = 5000.0  # shell may report the final release shortly after finish/abort (A06 #6)
 FIRST_FRAME_TIMEOUT_S = 5.0
 
 
@@ -242,6 +245,7 @@ class SessionRuntime:
         self._env_seqs: set[int] = set()
         self._pause_started_ms: float | None = None
         self._timeline_max_ms = 0.0
+        self._ended_t_ms: float | None = None
         self.counters = {"session_mismatch": 0, "fusion_dropped": 0, "fusion_errors": 0, "analyzer_errors": 0, "store_errors": 0}
         self.faults = PipelineFaults()
         self._info_lock = threading.Lock()  # guards _info; never held while waiting on the fusion thread
@@ -766,6 +770,7 @@ class SessionRuntime:
                         comp.impl.end_session()
                     except Exception:
                         log.exception("end_session failed")
+            self._ended_t_ms = t
             paused_extra = (t - self._pause_started_ms) if self._pause_started_ms is not None else 0.0
             self._pause_started_ms = None
             return self._update(
@@ -886,8 +891,13 @@ class SessionRuntime:
         if batch.session_id != self.session_id:
             raise ProctorError(ErrorCode.SESSION_MISMATCH, "batch.session_id does not match the URL")
         with self._lock:
-            if self._info.state not in ACTIVE_STATES:
+            late = self._info.state in TERMINAL_STATES and self._ended_t_ms is not None and (
+                self.clock.now_ms() - self._ended_t_ms <= LATE_ENV_GRACE_MS
+            )
+            if self._info.state not in ACTIVE_STATES and not late:
                 raise InvalidStateError(ErrorCode.INVALID_STATE, "session is not active")
+            if late and any(ev.action not in LATE_ENV_ACTIONS for ev in batch.events):
+                raise InvalidStateError(ErrorCode.INVALID_STATE, "only release/focus events are accepted after the end")
             accepted, dups, ids = 0, 0, []
             for ev in batch.events:
                 if ev.client_seq in self._env_seqs:
@@ -913,6 +923,13 @@ class SessionRuntime:
                     detail=ev.detail,
                 )
                 self.publish_observation(obs)
+                if late:  # fusion already finished: keep the record for the report only (A06 #6)
+                    store = self.pipeline.store.impl
+                    if store is not None:
+                        try:
+                            store.record_observation(obs)
+                        except Exception as exc:
+                            self._store_failed(exc, report_via_session=False)
                 accepted += 1
                 ids.append(obs.observation_id)
             return EnvironmentEventAck(accepted=accepted, duplicates=dups, observation_ids=ids)
