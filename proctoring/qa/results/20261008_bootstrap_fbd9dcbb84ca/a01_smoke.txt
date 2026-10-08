@@ -26,9 +26,9 @@ PASS  metrics                                       capture_fps=15.02 frames=76
 PASS  finish                                        finished
 PASS  finish_idempotent                             200
 PASS  no_writes_after_finish                        409
-PASS  finished_state_on_stream                      
+PASS  finished_state_on_stream
 PASS  restart_new_session_after_finish              201
-PASS  capture_reopens_for_new_session               
+PASS  capture_reopens_for_new_session
 PASS  stream_envelopes_match_contract               156 messages, 0 invalid
 PASS  no_foreign_session_messages                   0 foreign
 PASS  exits_on_stdin_eof                            exit code 0
