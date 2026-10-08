@@ -60,6 +60,7 @@ RULE_LABELS_RU = {
     "headphones_visible": "Видны наушники",
     "foreign_object_visible": "В кадре книга или посторонний предмет",
     "second_screen_visible": "В кадре второй экран или ноутбук",
+    "identity_mismatch": "Лицо не совпадает с лицом в начале экзамена",
 }
 
 

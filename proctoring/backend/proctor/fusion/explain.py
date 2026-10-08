@@ -85,6 +85,8 @@ CAVEAT_UNCALIBRATED = "Калибровка взгляда не выполнен
 CAVEAT_CORRELATION = "Совпадение по времени повышает приоритет просмотра, но не доказывает использование телефона."
 CAVEAT_FACE_MISSING = "Лицо может не находиться из-за освещения, ракурса или перекрытия кадра."
 CAVEAT_MULTI = "Второе лицо может быть фото, отражением или ложным срабатыванием; личности не определяются."
+CAVEAT_IDENTITY = ("Сравнение лиц приблизительное (свет, ракурс, очки); личность не устанавливается, сравнивается "
+                   "только с лицом в начале экзамена.")
 CAVEAT_OBJECT = ("Предмет распознан моделью общего назначения (COCO) и может быть ошибкой; предметы, видимые с начала "
                  "экзамена, считаются обстановкой и не учитываются. Только для проверки преподавателем.")
 CAVEAT_ENV = "Учтено только то, что сообщила оболочка; возможности блокировки зависят от системы."
@@ -236,6 +238,12 @@ def build(
         text = f"Взгляд оценён как направленный в сторону {f.s('gaze_side_ms')} с"
         summary.append(text + (f" ({', '.join(sides)})" if sides else ""))
         caveats += [CAVEAT_GAZE, CAVEAT_SIDES]
+    elif rule == R.IDENTITY_MISMATCH:
+        from .zones import mmss
+
+        f.add("identity_mismatch_ms", duration_ms, "ms", "Лицо не совпадает с лицом в начале экзамена")
+        summary.append(f"Лицо не совпадает с лицом в начале экзамена — {mmss(ep.t_start)}, {int(round(duration_ms / 1000.0))} с")
+        caveats.append(CAVEAT_IDENTITY)
     elif rule == R.FACE_MISSING:
         f.add("face_missing_ms", duration_ms, "ms", "Лицо не обнаружено")
         f.add("appearances", ep.appearances, "count", "Отрезков без лица в эпизоде")
