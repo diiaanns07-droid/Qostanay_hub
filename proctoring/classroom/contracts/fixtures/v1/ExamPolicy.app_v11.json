@@ -1,0 +1,14 @@
+{
+  "exam_id": "exam-cs-0002",
+  "title": "Программирование (пример)",
+  "mode": "app",
+  "allowed_urls": [],
+  "allowed_apps": [
+    "code.exe"
+  ],
+  "instructions_ru": "",
+  "policy_id": "pol-1",
+  "version": 2,
+  "start_url": null,
+  "auth_domains": []
+}

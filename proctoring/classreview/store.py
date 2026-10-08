@@ -344,32 +344,34 @@ class ReviewStore:
             raise ReviewError(422, exc.code, exc.message_ru) from None
         file_name, _ = self.clips.write(CLIP_MEDIA_TYPES[media_type], data)
         now = now_utc()
-        try:
-            with self._lock, db.transaction(self.conn):
-                self.conn.execute(
-                    "INSERT INTO clips(student_id, incident_id, file_name, media_type, container, codec, duration_s,"
-                    " faststart, size_bytes, sha256, source, uploaded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                    (student_id, incident_id, file_name, media_type, info.container, info.codec, info.duration_s,
-                     None if info.faststart is None else int(info.faststart), len(data), sha, source, now.isoformat()),
-                )
-                self.conn.execute(
-                    "UPDATE clip_requests SET status='fulfilled', updated_at=? WHERE student_id=? AND incident_id=?"
-                    " AND status='pending'",
-                    (now.isoformat(), student_id, incident_id),
-                )
-        except sqlite3.IntegrityError:
-            self.clips.remove(file_name)  # a concurrent upload of the same clip won the race
-            existing = self.conn.execute(
-                "SELECT sha256 FROM clips WHERE student_id=? AND incident_id=?", (student_id, incident_id)
-            ).fetchone()
-            if existing is not None and existing["sha256"] == sha:
-                return {"status": "duplicate", **self._clip_meta(student_id, incident_id)}
-            raise ReviewError(409, "clip_already_stored", "Для этого эпизода уже сохранён другой клип; он не заменяется") from None
-        except BaseException:
-            self.clips.remove(file_name)
-            raise
+        with self._lock:  # every use of the shared connection happens under the lock
+            try:
+                with db.transaction(self.conn):
+                    self.conn.execute(
+                        "INSERT INTO clips(student_id, incident_id, file_name, media_type, container, codec, duration_s,"
+                        " faststart, size_bytes, sha256, source, uploaded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (student_id, incident_id, file_name, media_type, info.container, info.codec, info.duration_s,
+                         None if info.faststart is None else int(info.faststart), len(data), sha, source, now.isoformat()),
+                    )
+                    self.conn.execute(
+                        "UPDATE clip_requests SET status='fulfilled', updated_at=? WHERE student_id=? AND incident_id=?"
+                        " AND status='pending'",
+                        (now.isoformat(), student_id, incident_id),
+                    )
+            except sqlite3.IntegrityError:
+                self.clips.remove(file_name)  # a concurrent upload of this episode's clip won the race
+                existing = self.conn.execute(
+                    "SELECT sha256 FROM clips WHERE student_id=? AND incident_id=?", (student_id, incident_id)
+                ).fetchone()
+                if existing is not None and existing["sha256"] == sha:
+                    return {"status": "duplicate", **self._clip_meta(student_id, incident_id)}
+                raise ReviewError(409, "clip_already_stored", "Для этого эпизода уже сохранён другой клип; он не заменяется") from None
+            except BaseException:
+                self.clips.remove(file_name)
+                raise
+            result = {"status": "stored", **self._clip_meta(student_id, incident_id)}
         self._emit(student_id, incident_id)
-        return {"status": "stored", **self._clip_meta(student_id, incident_id)}
+        return result
 
     def _fail_request(self, student_id: str, incident_id: str, code: str, reason_ru: str) -> None:
         with self._lock, db.transaction(self.conn):
@@ -431,7 +433,8 @@ class ReviewStore:
         return meta, path
 
     def snapshot_file(self, student_id: str, incident_id: str) -> Path:
-        row = self._require_incident(student_id, incident_id)
+        with self._lock:
+            row = self._require_incident(student_id, incident_id)
         if not row["snapshot_file"]:
             raise ReviewError(404, "snapshot_not_found", "Снимок эпизода не получен")
         try:

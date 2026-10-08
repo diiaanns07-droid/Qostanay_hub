@@ -127,7 +127,8 @@ export async function startShell(o: HarnessOptions) {
     onShell: (l: (s: ShellState) => void) => shellListeners.add(l),
     onEnvelope: (l: (e: StreamEnvelope) => void) => envelopeListeners.add(l),
     onPreview: (l: (m: PreviewFrameMeta, jpeg: Buffer) => void) => previewListeners.add(l),
-    backendPid: () => supervisor?.pid ?? null,
+    // Windows venv python.exe is a launcher: crash-test only the backend PID from our own READY handshake.
+    backendPid: () => supervisor?.connection?.ready.pid ?? supervisor?.pid ?? null,
     stop: async () => {
       stream.close();
       preview.close();

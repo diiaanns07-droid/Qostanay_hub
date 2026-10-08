@@ -279,6 +279,29 @@ export class FixtureBridge implements QorgauBridge {
     this.eventListeners.forEach((l) => l(env));
   }
 
+  /** FIXTURE: class_state as the C2 uplink would publish it (handoffs/C2/STATUS.md). Not a class server. */
+  classState: Record<string, unknown> = {
+    type: "class_state",
+    connection: "connected",
+    server: "fixture-class:8765",
+    student_id: "st-fixture",
+    locked: false,
+    lock_reason_ru: null,
+    mic_active: false,
+    audio_direction: null,
+    exam: { title: "FIXTURE-экзамен" },
+    last_command: null,
+    message_ru: null,
+  };
+
+  emitClassState(patch: Record<string, unknown>): void {
+    this.classState = { ...this.classState, ...patch, type: "class_state" };
+    if (this.faults.backendDown) return;
+    this.seq += 1;
+    const env = { contract: "qorgau.v1", seq: this.seq, sent_at: nowIso(), session_id: null, message: clone(this.classState) } as unknown as StreamEnvelope;
+    this.eventListeners.forEach((l) => l(env));
+  }
+
   private find(sessionId: string): SessionInfo | ApiErrorBody {
     if (this.active?.session_id === sessionId) return this.active;
     const s = this.sessions.find((x) => x.session_id === sessionId);
@@ -857,7 +880,7 @@ export class FixtureBridge implements QorgauBridge {
 
   // ================================================================== backend lifecycle
   health(): Promise<BridgeResult<HealthReport>> {
-    return this.respond(() => this.healthReport());
+    return this.respond(() => ({ ...this.healthReport(), computer_name: "FIXTURE-PC", class_configured: false }));
   }
 
   listSessions(): Promise<BridgeResult<SessionInfo[]>> {
@@ -944,8 +967,14 @@ export class FixtureBridge implements QorgauBridge {
       const s = this.requireActive(sessionId, "выбрать точку калибровки", "calibrating");
       if ("code" in s) return s;
       if (this.cal.phase !== "collecting") return err("INVALID_STATE", "Калибровка не в фазе сбора");
+      // Mirrors A04 CalibrationSession.select(): a target interrupted while collecting goes back to pending.
+      const prev = this.cal.current_target;
       this.cal.targets = this.cal.targets.map((t) =>
-        t.target === target ? { ...t, state: "collecting", samples: 0, quality: null, message_code: null } : t,
+        t.target === target
+          ? { ...t, state: "collecting", samples: 0, quality: null, message_code: null }
+          : t.target === prev && t.state === "collecting"
+            ? { ...t, state: "pending", samples: 0, quality: null, message_code: "interrupted" }
+            : t,
       );
       this.cal.current_target = target;
       return this.calChanged();
@@ -964,7 +993,8 @@ export class FixtureBridge implements QorgauBridge {
     return this.respond(() => {
       const s = this.requireActive(sessionId, "завершить калибровку", "calibrating");
       if ("code" in s) return s;
-      const ok = this.cal.targets.every((t) => t.state === "ok");
+      // Mirrors A04 after f46565c: "up" is optional (missing/failed -> generic span), every other target must be ok.
+      const ok = this.cal.targets.every((t) => t.state === "ok" || (t.target === "up" && t.state !== "collecting"));
       this.cal.phase = ok ? "completed" : "failed";
       this.cal.message_code = ok ? "fixture_calibration" : "targets_incomplete";
       this.cal.current_target = null;

@@ -1,0 +1,7 @@
+{"type": "ready", "version": "python-prototype-1", "mode": "enforce", "hook": true, "foreground_watch": true}
+{"type": "foreground", "foreign": true, "process": "WindowsTerminal.exe"}
+{"type": "key", "key": "win", "swallowed": true}
+{"type": "key", "key": "alt_tab", "swallowed": true}
+{"type": "key", "key": "print_screen", "swallowed": true}
+{"type": "key", "key": "win", "swallowed": true}
+{"type": "bye", "reason": "emergency_hotkey"}

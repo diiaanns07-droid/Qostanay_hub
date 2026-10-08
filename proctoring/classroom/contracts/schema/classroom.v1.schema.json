@@ -1,0 +1,3577 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qorgau.local/classroom/classroom.v1.schema.json",
+  "title": "Qorgau Classroom contracts",
+  "x-contract-id": "qorgau.classroom",
+  "x-contract-version": "1.0.0",
+  "x-wire-protocol": "qorgau.class.v1",
+  "x-wire-extension": "1.1",
+  "$defs": {
+    "Ack": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "ack",
+          "title": "Type",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "error_ru": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Ru"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AckCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "executed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Executed At"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type",
+        "command_id",
+        "ok"
+      ],
+      "title": "Ack",
+      "type": "object"
+    },
+    "AckCode": {
+      "enum": [
+        "unsupported",
+        "invalid",
+        "expired",
+        "duplicate",
+        "failed",
+        "busy"
+      ],
+      "title": "AckCode",
+      "type": "string"
+    },
+    "ApiError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/ApiErrorBody"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "ApiError",
+      "type": "object"
+    },
+    "ApiErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[a-z0-9_]{1,64}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "message_ru": {
+          "maxLength": 500,
+          "title": "Message Ru",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message_ru"
+      ],
+      "title": "ApiErrorBody",
+      "type": "object"
+    },
+    "AudioDirection": {
+      "enum": [
+        "listen",
+        "talk",
+        "both"
+      ],
+      "title": "AudioDirection",
+      "type": "string"
+    },
+    "AudioSession": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Audio Session Id",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/AudioDirection"
+        },
+        "state": {
+          "$ref": "#/$defs/AudioState"
+        },
+        "started_by": {
+          "maxLength": 64,
+          "title": "Started By",
+          "type": "string"
+        },
+        "start_command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Start Command Id",
+          "type": "string"
+        },
+        "stop_command_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Command Id"
+        },
+        "requested_at": {
+          "format": "date-time",
+          "title": "Requested At",
+          "type": "string"
+        },
+        "active_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Active At"
+        },
+        "ended_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ended At"
+        },
+        "end_reason": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Reason"
+        }
+      },
+      "required": [
+        "audio_session_id",
+        "student_id",
+        "direction",
+        "state",
+        "started_by",
+        "start_command_id",
+        "requested_at"
+      ],
+      "title": "AudioSession",
+      "type": "object"
+    },
+    "AudioSignalIn": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "audio_signal",
+          "title": "Type",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "sdp": {
+          "anyOf": [
+            {
+              "maxLength": 16384,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sdp"
+        },
+        "ice": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ice"
+        },
+        "audio_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Session Id"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type",
+        "command_id"
+      ],
+      "title": "AudioSignalIn",
+      "type": "object"
+    },
+    "AudioSignalOut": {
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "audio_signal",
+          "default": "audio_signal",
+          "title": "Type",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "sdp": {
+          "anyOf": [
+            {
+              "maxLength": 16384,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sdp"
+        },
+        "ice": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ice"
+        },
+        "audio_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Session Id"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "command_id"
+      ],
+      "title": "AudioSignalOut",
+      "type": "object"
+    },
+    "AudioStartPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "$ref": "#/$defs/AudioDirection"
+        }
+      },
+      "required": [
+        "direction"
+      ],
+      "title": "AudioStartPayload",
+      "type": "object"
+    },
+    "AudioState": {
+      "enum": [
+        "requested",
+        "active",
+        "ended",
+        "failed"
+      ],
+      "title": "AudioState",
+      "type": "string"
+    },
+    "CameraState": {
+      "enum": [
+        "ok",
+        "busy",
+        "off",
+        "unknown"
+      ],
+      "title": "CameraState",
+      "type": "string"
+    },
+    "Capabilities": {
+      "description": "v1.1 hello.capabilities. Absent = plain v1 client: only the V1_COMMAND_KINDS are offered to it.",
+      "properties": {
+        "commands": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 32,
+          "title": "Commands",
+          "type": "array"
+        },
+        "modes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Modes",
+          "type": "array"
+        },
+        "command_progress": {
+          "default": false,
+          "title": "Command Progress",
+          "type": "boolean"
+        },
+        "command_expiry": {
+          "default": false,
+          "title": "Command Expiry",
+          "type": "boolean"
+        },
+        "site_timer_pause": {
+          "default": false,
+          "title": "Site Timer Pause",
+          "type": "boolean"
+        }
+      },
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "ClipMetadata": {
+      "additionalProperties": false,
+      "description": "A clip uploaded by a student (binary HTTP, never JSON/base64). Storage/playback: T03.",
+      "properties": {
+        "clip_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "incident_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Incident Id",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "media_type": {
+          "enum": [
+            "video/mp4",
+            "video/x-msvideo"
+          ],
+          "title": "Media Type",
+          "type": "string"
+        },
+        "size_bytes": {
+          "exclusiveMinimum": 0,
+          "maximum": 8388608,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uploaded_at": {
+          "format": "date-time",
+          "title": "Uploaded At",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/DataOrigin"
+        }
+      },
+      "required": [
+        "clip_id",
+        "incident_id",
+        "student_id",
+        "media_type",
+        "size_bytes",
+        "sha256",
+        "uploaded_at",
+        "url",
+        "origin"
+      ],
+      "title": "ClipMetadata",
+      "type": "object"
+    },
+    "Command": {
+      "additionalProperties": false,
+      "properties": {
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/CommandKind"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "issued_by": {
+          "maxLength": 64,
+          "title": "Issued By",
+          "type": "string"
+        },
+        "issued_at": {
+          "format": "date-time",
+          "title": "Issued At",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/CommandStatus"
+        },
+        "status_at": {
+          "format": "date-time",
+          "title": "Status At",
+          "type": "string"
+        },
+        "attempts": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "sent_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sent At"
+        },
+        "ack_deadline_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ack Deadline At"
+        },
+        "unconfirmed": {
+          "default": false,
+          "title": "Unconfirmed",
+          "type": "boolean"
+        },
+        "ack": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandAck"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/CommandStatusChange"
+          },
+          "title": "History",
+          "type": "array"
+        }
+      },
+      "required": [
+        "command_id",
+        "student_id",
+        "kind",
+        "payload",
+        "issued_by",
+        "issued_at",
+        "expires_at",
+        "status",
+        "status_at"
+      ],
+      "title": "Command",
+      "type": "object"
+    },
+    "CommandAck": {
+      "additionalProperties": false,
+      "properties": {
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AckCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "error_ru": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Ru"
+        },
+        "executed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Executed At"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "late": {
+          "default": false,
+          "title": "Late",
+          "type": "boolean"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result"
+        }
+      },
+      "required": [
+        "command_id",
+        "ok",
+        "received_at"
+      ],
+      "title": "CommandAck",
+      "type": "object"
+    },
+    "CommandCreate": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/CommandKind"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "ttl_ms": {
+          "anyOf": [
+            {
+              "maximum": 3600000,
+              "minimum": 1000,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ttl Ms"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "CommandCreate",
+      "type": "object"
+    },
+    "CommandKind": {
+      "enum": [
+        "start_exam",
+        "finish_exam",
+        "lock",
+        "unlock",
+        "request_clip",
+        "audio_start",
+        "audio_stop",
+        "apply_policy"
+      ],
+      "title": "CommandKind",
+      "type": "string"
+    },
+    "CommandMsg": {
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "command",
+          "default": "command",
+          "title": "Type",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/CommandKind"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "issued_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issued At"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expires At"
+        },
+        "ttl_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ttl Ms"
+        },
+        "attempt": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attempt"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "command_id",
+        "kind",
+        "payload"
+      ],
+      "title": "CommandMsg",
+      "type": "object"
+    },
+    "CommandProgress": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "command_progress",
+          "title": "Type",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "received",
+            "executing"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type",
+        "command_id",
+        "state"
+      ],
+      "title": "CommandProgress",
+      "type": "object"
+    },
+    "CommandStatus": {
+      "enum": [
+        "queued",
+        "sent",
+        "received",
+        "succeeded",
+        "failed",
+        "expired",
+        "cancelled"
+      ],
+      "title": "CommandStatus",
+      "type": "string"
+    },
+    "CommandStatusChange": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/CommandStatus"
+        },
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "status",
+        "at"
+      ],
+      "title": "CommandStatusChange",
+      "type": "object"
+    },
+    "ConnectionState": {
+      "enum": [
+        "online",
+        "offline"
+      ],
+      "title": "ConnectionState",
+      "type": "string"
+    },
+    "DataOrigin": {
+      "enum": [
+        "real",
+        "simulated"
+      ],
+      "title": "DataOrigin",
+      "type": "string"
+    },
+    "DeviceStatus": {
+      "additionalProperties": false,
+      "description": "Last `status` of a student + the server's view of it (v1 §4: server may force grey).",
+      "properties": {
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "received_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Received At"
+        },
+        "sent_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sent At"
+        },
+        "exam_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExamState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraState",
+          "default": "unknown"
+        },
+        "monitoring": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonitoringState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zone_reported": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Zone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zone": {
+          "$ref": "#/$defs/Zone",
+          "default": "grey"
+        },
+        "zone_source": {
+          "$ref": "#/$defs/ZoneSource",
+          "default": "none"
+        },
+        "zone_reasons_ru": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Zone Reasons Ru",
+          "type": "array"
+        },
+        "incidents_total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Incidents Total",
+          "type": "integer"
+        },
+        "incidents_by_priority": {
+          "$ref": "#/$defs/IncidentsByPriority"
+        },
+        "locked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Locked"
+        },
+        "mic_active": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mic Active"
+        },
+        "stale": {
+          "default": true,
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "student_id"
+      ],
+      "title": "DeviceStatus",
+      "type": "object"
+    },
+    "EmptyPayload": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "EmptyPayload",
+      "type": "object"
+    },
+    "ErrorMsg": {
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "error",
+          "default": "error",
+          "title": "Type",
+          "type": "string"
+        },
+        "code": {
+          "pattern": "^[a-z0-9_]{1,64}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "message_ru": {
+          "maxLength": 300,
+          "title": "Message Ru",
+          "type": "string"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "code",
+        "message_ru"
+      ],
+      "title": "ErrorMsg",
+      "type": "object"
+    },
+    "EventKind": {
+      "enum": [
+        "incident"
+      ],
+      "title": "EventKind",
+      "type": "string"
+    },
+    "ExamMode": {
+      "enum": [
+        "url",
+        "app"
+      ],
+      "title": "ExamMode",
+      "type": "string"
+    },
+    "ExamPolicy": {
+      "additionalProperties": false,
+      "description": "What the student app opens and allows. `welcome.exam` carries the v1 subset (exam_id, title, mode,\nallowed_urls, allowed_apps, instructions_ru); the rest is v1.1 / T04.",
+      "properties": {
+        "exam_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Exam Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/ExamMode"
+        },
+        "allowed_urls": {
+          "items": {
+            "maxLength": 500,
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Allowed Urls",
+          "type": "array"
+        },
+        "allowed_apps": {
+          "items": {
+            "maxLength": 128,
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Allowed Apps",
+          "type": "array"
+        },
+        "instructions_ru": {
+          "default": "",
+          "maxLength": 4000,
+          "title": "Instructions Ru",
+          "type": "string"
+        },
+        "policy_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Policy Id"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "start_url": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Url"
+        },
+        "auth_domains": {
+          "items": {
+            "maxLength": 253,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Auth Domains",
+          "type": "array"
+        }
+      },
+      "required": [
+        "exam_id",
+        "title",
+        "mode"
+      ],
+      "title": "ExamPolicy",
+      "type": "object"
+    },
+    "ExamState": {
+      "enum": [
+        "idle",
+        "preflight",
+        "calibrating",
+        "running",
+        "paused",
+        "finished"
+      ],
+      "title": "ExamState",
+      "type": "string"
+    },
+    "FeatureInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "owner": {
+          "maxLength": 8,
+          "title": "Owner",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "mounted",
+            "not_installed",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "detail": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "owner",
+        "status"
+      ],
+      "title": "FeatureInfo",
+      "type": "object"
+    },
+    "Hello": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "hello",
+          "title": "Type",
+          "type": "string"
+        },
+        "protocol": {
+          "const": "qorgau.class.v1",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "join_code": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Join Code"
+        },
+        "resume_token": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resume Token"
+        },
+        "computer_name": {
+          "default": "",
+          "maxLength": 64,
+          "title": "Computer Name",
+          "type": "string"
+        },
+        "student_label": {
+          "default": "",
+          "maxLength": 64,
+          "title": "Student Label",
+          "type": "string"
+        },
+        "app_version": {
+          "default": "",
+          "maxLength": 64,
+          "title": "App Version",
+          "type": "string"
+        },
+        "client_run_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Run Id"
+        },
+        "simulated": {
+          "default": false,
+          "title": "Simulated",
+          "type": "boolean"
+        },
+        "capabilities": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Capabilities"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type",
+        "protocol"
+      ],
+      "title": "Hello",
+      "type": "object"
+    },
+    "Incident": {
+      "additionalProperties": false,
+      "description": "Latest state of one episode as reported by the student app (A05 fusion on the student PC).",
+      "properties": {
+        "incident_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Incident Id",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "priority": {
+          "$ref": "#/$defs/Priority"
+        },
+        "state": {
+          "$ref": "#/$defs/IncidentState"
+        },
+        "t_start_wall": {
+          "format": "date-time",
+          "title": "T Start Wall",
+          "type": "string"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "number"
+        },
+        "explanation_ru": {
+          "title": "Explanation Ru",
+          "type": "string"
+        },
+        "clip_available": {
+          "title": "Clip Available",
+          "type": "boolean"
+        },
+        "has_snapshot": {
+          "title": "Has Snapshot",
+          "type": "boolean"
+        },
+        "origin": {
+          "$ref": "#/$defs/DataOrigin"
+        },
+        "first_received_at": {
+          "format": "date-time",
+          "title": "First Received At",
+          "type": "string"
+        },
+        "last_received_at": {
+          "format": "date-time",
+          "title": "Last Received At",
+          "type": "string"
+        },
+        "events": {
+          "minimum": 1,
+          "title": "Events",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "incident_id",
+        "student_id",
+        "session_id",
+        "rule_id",
+        "category",
+        "priority",
+        "state",
+        "t_start_wall",
+        "duration_ms",
+        "explanation_ru",
+        "clip_available",
+        "has_snapshot",
+        "origin",
+        "first_received_at",
+        "last_received_at",
+        "events"
+      ],
+      "title": "Incident",
+      "type": "object"
+    },
+    "IncidentMsg": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "incident",
+          "title": "Type",
+          "type": "string"
+        },
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "incident_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Incident Id",
+          "type": "string"
+        },
+        "rule_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "category": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "priority": {
+          "$ref": "#/$defs/Priority"
+        },
+        "state": {
+          "$ref": "#/$defs/IncidentState"
+        },
+        "t_start_wall": {
+          "format": "date-time",
+          "title": "T Start Wall",
+          "type": "string"
+        },
+        "duration_ms": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "number"
+        },
+        "explanation_ru": {
+          "default": "",
+          "maxLength": 1000,
+          "title": "Explanation Ru",
+          "type": "string"
+        },
+        "clip_available": {
+          "default": false,
+          "title": "Clip Available",
+          "type": "boolean"
+        },
+        "snapshot_jpeg_b64": {
+          "anyOf": [
+            {
+              "maxLength": 54616,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Jpeg B64"
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Event Id"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type",
+        "seq",
+        "incident_id",
+        "rule_id",
+        "category",
+        "priority",
+        "state",
+        "t_start_wall"
+      ],
+      "title": "IncidentMsg",
+      "type": "object"
+    },
+    "IncidentState": {
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "title": "IncidentState",
+      "type": "string"
+    },
+    "IncidentsByPriority": {
+      "additionalProperties": false,
+      "properties": {
+        "low": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Low",
+          "type": "integer"
+        },
+        "medium": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Medium",
+          "type": "integer"
+        },
+        "high": {
+          "default": 0,
+          "minimum": 0,
+          "title": "High",
+          "type": "integer"
+        }
+      },
+      "title": "IncidentsByPriority",
+      "type": "object"
+    },
+    "LockPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "reason_ru": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Reason Ru",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reason_ru"
+      ],
+      "title": "LockPayload",
+      "type": "object"
+    },
+    "LoginRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "pin": {
+          "pattern": "^[0-9]{6,10}$",
+          "title": "Pin",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pin"
+      ],
+      "title": "LoginRequest",
+      "type": "object"
+    },
+    "MonitoringState": {
+      "enum": [
+        "ok",
+        "degraded"
+      ],
+      "title": "MonitoringState",
+      "type": "string"
+    },
+    "ObservationEvent": {
+      "additionalProperties": false,
+      "description": "One event as received from a student (persisted, deduplicated).",
+      "properties": {
+        "event_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EventKind"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "client_run_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Run Id"
+        },
+        "event_time": {
+          "format": "date-time",
+          "title": "Event Time",
+          "type": "string"
+        },
+        "sent_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sent At"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/DataOrigin"
+        },
+        "seq_conflict": {
+          "default": false,
+          "title": "Seq Conflict",
+          "type": "boolean"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        }
+      },
+      "required": [
+        "event_id",
+        "student_id",
+        "session_id",
+        "kind",
+        "event_time",
+        "received_at",
+        "origin",
+        "payload"
+      ],
+      "title": "ObservationEvent",
+      "type": "object"
+    },
+    "Ping": {
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "ping",
+          "default": "ping",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at"
+      ],
+      "title": "Ping",
+      "type": "object"
+    },
+    "Pong": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "pong",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type"
+      ],
+      "title": "Pong",
+      "type": "object"
+    },
+    "Preview": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "preview",
+          "title": "Type",
+          "type": "string"
+        },
+        "jpeg_b64": {
+          "maxLength": 40960,
+          "minLength": 4,
+          "title": "Jpeg B64",
+          "type": "string"
+        },
+        "frame_wall": {
+          "format": "date-time",
+          "title": "Frame Wall",
+          "type": "string"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type",
+        "jpeg_b64",
+        "frame_wall"
+      ],
+      "title": "Preview",
+      "type": "object"
+    },
+    "Priority": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Priority",
+      "type": "string"
+    },
+    "RequestClipPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "incident_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Incident Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "incident_id"
+      ],
+      "title": "RequestClipPayload",
+      "type": "object"
+    },
+    "ServerInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "qorgau.classroom",
+          "default": "qorgau.classroom",
+          "title": "Contract",
+          "type": "string"
+        },
+        "contract_version": {
+          "default": "1.0.0",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "wire_protocol": {
+          "const": "qorgau.class.v1",
+          "default": "qorgau.class.v1",
+          "title": "Wire Protocol",
+          "type": "string"
+        },
+        "wire_extension": {
+          "default": "1.1",
+          "title": "Wire Extension",
+          "type": "string"
+        },
+        "server_version": {
+          "title": "Server Version",
+          "type": "string"
+        },
+        "server_time": {
+          "format": "date-time",
+          "title": "Server Time",
+          "type": "string"
+        },
+        "session": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Session"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "students_online": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Students Online",
+          "type": "integer"
+        },
+        "students_total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Students Total",
+          "type": "integer"
+        },
+        "simulated_students": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Simulated Students",
+          "type": "integer"
+        },
+        "features": {
+          "items": {
+            "$ref": "#/$defs/FeatureInfo"
+          },
+          "title": "Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "server_version",
+        "server_time"
+      ],
+      "title": "ServerInfo",
+      "type": "object"
+    },
+    "ServerToStudentMessage": {
+      "discriminator": {
+        "mapping": {
+          "audio_signal": "#/$defs/AudioSignalOut",
+          "command": "#/$defs/CommandMsg",
+          "error": "#/$defs/ErrorMsg",
+          "ping": "#/$defs/Ping",
+          "welcome": "#/$defs/Welcome"
+        },
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Welcome"
+        },
+        {
+          "$ref": "#/$defs/CommandMsg"
+        },
+        {
+          "$ref": "#/$defs/Ping"
+        },
+        {
+          "$ref": "#/$defs/ErrorMsg"
+        },
+        {
+          "$ref": "#/$defs/AudioSignalOut"
+        }
+      ]
+    },
+    "Session": {
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "open",
+            "closed"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "closed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Closed At"
+        },
+        "exam": {
+          "$ref": "#/$defs/ExamPolicy"
+        },
+        "join_code": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Join Code"
+        },
+        "students_total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Students Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "session_id",
+        "title",
+        "state",
+        "created_at",
+        "exam"
+      ],
+      "title": "Session",
+      "type": "object"
+    },
+    "SessionCreate": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/ExamMode"
+        },
+        "allowed_urls": {
+          "items": {
+            "maxLength": 500,
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Allowed Urls",
+          "type": "array"
+        },
+        "allowed_apps": {
+          "items": {
+            "maxLength": 128,
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Allowed Apps",
+          "type": "array"
+        },
+        "instructions_ru": {
+          "default": "",
+          "maxLength": 4000,
+          "title": "Instructions Ru",
+          "type": "string"
+        },
+        "start_url": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Url"
+        }
+      },
+      "required": [
+        "title",
+        "mode"
+      ],
+      "title": "SessionCreate",
+      "type": "object"
+    },
+    "SessionCreated": {
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "join_code": {
+          "pattern": "^[0-9]{6}$",
+          "title": "Join Code",
+          "type": "string"
+        },
+        "session": {
+          "$ref": "#/$defs/Session"
+        }
+      },
+      "required": [
+        "session_id",
+        "join_code",
+        "session"
+      ],
+      "title": "SessionCreated",
+      "type": "object"
+    },
+    "Status": {
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "status",
+          "title": "Type",
+          "type": "string"
+        },
+        "exam_state": {
+          "$ref": "#/$defs/ExamState"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraState"
+        },
+        "monitoring": {
+          "$ref": "#/$defs/MonitoringState"
+        },
+        "zone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Zone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zone_reasons_ru": {
+          "items": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Zone Reasons Ru",
+          "type": "array"
+        },
+        "incidents_total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Incidents Total",
+          "type": "integer"
+        },
+        "incidents_by_priority": {
+          "$ref": "#/$defs/IncidentsByPriority"
+        },
+        "locked": {
+          "default": false,
+          "title": "Locked",
+          "type": "boolean"
+        },
+        "mic_active": {
+          "default": false,
+          "title": "Mic Active",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "type",
+        "exam_state",
+        "camera",
+        "monitoring"
+      ],
+      "title": "Status",
+      "type": "object"
+    },
+    "Student": {
+      "additionalProperties": false,
+      "properties": {
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "student_label": {
+          "maxLength": 64,
+          "title": "Student Label",
+          "type": "string"
+        },
+        "computer_name": {
+          "maxLength": 64,
+          "title": "Computer Name",
+          "type": "string"
+        },
+        "app_version": {
+          "maxLength": 64,
+          "title": "App Version",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/DataOrigin"
+        },
+        "connection": {
+          "$ref": "#/$defs/ConnectionState"
+        },
+        "paired_at": {
+          "format": "date-time",
+          "title": "Paired At",
+          "type": "string"
+        },
+        "last_seen_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Seen At"
+        },
+        "connected_since": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connected Since"
+        },
+        "reconnects": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Reconnects",
+          "type": "integer"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        }
+      },
+      "required": [
+        "student_id",
+        "session_id",
+        "student_label",
+        "computer_name",
+        "app_version",
+        "origin",
+        "connection",
+        "paired_at"
+      ],
+      "title": "Student",
+      "type": "object"
+    },
+    "StudentCard": {
+      "additionalProperties": false,
+      "description": "One card of the class panel. FLAT, with the qorgau.class.v1 names (hello identity + status §3.1) that the T02\nREAL adapter reads, plus the server's view (answers T02 request 1). `zone` is the effective zone: the server forces\ngrey for offline / stale status / camera != ok (v1 §4); the student's own value stays in `zone_reported`.",
+      "properties": {
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "student_label": {
+          "maxLength": 64,
+          "title": "Student Label",
+          "type": "string"
+        },
+        "computer_name": {
+          "maxLength": 64,
+          "title": "Computer Name",
+          "type": "string"
+        },
+        "app_version": {
+          "maxLength": 64,
+          "title": "App Version",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/DataOrigin"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "connection": {
+          "$ref": "#/$defs/ConnectionState"
+        },
+        "connected": {
+          "title": "Connected",
+          "type": "boolean"
+        },
+        "connected_since": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connected Since"
+        },
+        "last_seen_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Seen At"
+        },
+        "reconnects": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Reconnects",
+          "type": "integer"
+        },
+        "exam_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExamState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraState",
+          "default": "unknown"
+        },
+        "monitoring": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonitoringState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zone": {
+          "$ref": "#/$defs/Zone",
+          "default": "grey"
+        },
+        "zone_reported": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Zone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zone_source": {
+          "$ref": "#/$defs/ZoneSource",
+          "default": "none"
+        },
+        "zone_reasons_ru": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Zone Reasons Ru",
+          "type": "array"
+        },
+        "incidents_total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Incidents Total",
+          "type": "integer"
+        },
+        "incidents_by_priority": {
+          "$ref": "#/$defs/IncidentsByPriority"
+        },
+        "locked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Locked"
+        },
+        "mic_active": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mic Active"
+        },
+        "stale": {
+          "default": true,
+          "title": "Stale",
+          "type": "boolean"
+        },
+        "last_status_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Status At"
+        },
+        "last_event_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Event At"
+        },
+        "incidents_open": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Incidents Open",
+          "type": "integer"
+        },
+        "incidents_unreviewed": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Incidents Unreviewed"
+        },
+        "preview_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preview Url"
+        },
+        "preview_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preview At"
+        }
+      },
+      "required": [
+        "student_id",
+        "session_id",
+        "student_label",
+        "computer_name",
+        "app_version",
+        "origin",
+        "connection",
+        "connected"
+      ],
+      "title": "StudentCard",
+      "type": "object"
+    },
+    "StudentMessage": {
+      "discriminator": {
+        "mapping": {
+          "ack": "#/$defs/Ack",
+          "audio_signal": "#/$defs/AudioSignalIn",
+          "command_progress": "#/$defs/CommandProgress",
+          "hello": "#/$defs/Hello",
+          "incident": "#/$defs/IncidentMsg",
+          "pong": "#/$defs/Pong",
+          "preview": "#/$defs/Preview",
+          "status": "#/$defs/Status"
+        },
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Hello"
+        },
+        {
+          "$ref": "#/$defs/Status"
+        },
+        {
+          "$ref": "#/$defs/IncidentMsg"
+        },
+        {
+          "$ref": "#/$defs/Preview"
+        },
+        {
+          "$ref": "#/$defs/Ack"
+        },
+        {
+          "$ref": "#/$defs/CommandProgress"
+        },
+        {
+          "$ref": "#/$defs/AudioSignalIn"
+        },
+        {
+          "$ref": "#/$defs/Pong"
+        }
+      ]
+    },
+    "TAck": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "ack",
+          "default": "ack",
+          "title": "Type",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "error_ru": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Ru"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "student_id",
+        "command_id",
+        "ok"
+      ],
+      "title": "TAck",
+      "type": "object"
+    },
+    "TAudioSignal": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "audio_signal",
+          "default": "audio_signal",
+          "title": "Type",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "audio_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Session Id"
+        },
+        "sdp": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sdp"
+        },
+        "ice": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ice"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "student_id",
+        "command_id"
+      ],
+      "title": "TAudioSignal",
+      "type": "object"
+    },
+    "TAudioUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "audio_session_update",
+          "default": "audio_session_update",
+          "title": "Type",
+          "type": "string"
+        },
+        "audio": {
+          "$ref": "#/$defs/AudioSession"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "audio"
+      ],
+      "title": "TAudioUpdate",
+      "type": "object"
+    },
+    "TCommandUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "command_update",
+          "default": "command_update",
+          "title": "Type",
+          "type": "string"
+        },
+        "command": {
+          "$ref": "#/$defs/Command"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "command"
+      ],
+      "title": "TCommandUpdate",
+      "type": "object"
+    },
+    "TError": {
+      "additionalProperties": false,
+      "description": "Answer to a rejected teacher->server message on /ws/teacher (the connection stays open).",
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "error",
+          "default": "error",
+          "title": "Type",
+          "type": "string"
+        },
+        "code": {
+          "pattern": "^[a-z0-9_]{1,64}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "message_ru": {
+          "maxLength": 300,
+          "title": "Message Ru",
+          "type": "string"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "code",
+        "message_ru"
+      ],
+      "title": "TError",
+      "type": "object"
+    },
+    "TFeatureEvent": {
+      "additionalProperties": false,
+      "description": "Generic channel for mounted features (T03 history changes, T04 exam/command views, T05 audio).",
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "feature_event",
+          "default": "feature_event",
+          "title": "Type",
+          "type": "string"
+        },
+        "feature": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Feature",
+          "type": "string"
+        },
+        "event": {
+          "pattern": "^[a-z0-9_.]{1,64}$",
+          "title": "Event",
+          "type": "string"
+        },
+        "data": {
+          "additionalProperties": true,
+          "title": "Data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "feature",
+        "event",
+        "data"
+      ],
+      "title": "TFeatureEvent",
+      "type": "object"
+    },
+    "THello": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "hello",
+          "default": "hello",
+          "title": "Type",
+          "type": "string"
+        },
+        "info": {
+          "$ref": "#/$defs/ServerInfo"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "info"
+      ],
+      "title": "THello",
+      "type": "object"
+    },
+    "TIncident": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "incident",
+          "default": "incident",
+          "title": "Type",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "incident": {
+          "$ref": "#/$defs/Incident"
+        },
+        "duplicate": {
+          "default": false,
+          "title": "Duplicate",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "student_id",
+        "incident"
+      ],
+      "title": "TIncident",
+      "type": "object"
+    },
+    "TPreview": {
+      "additionalProperties": false,
+      "description": "Preview METADATA; fetch the JPEG from `url`. `jpeg_b64` only with ?inline_previews=1 (legacy v1 panel).",
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "preview",
+          "default": "preview",
+          "title": "Type",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "preview_seq": {
+          "minimum": 1,
+          "title": "Preview Seq",
+          "type": "integer"
+        },
+        "frame_wall": {
+          "format": "date-time",
+          "title": "Frame Wall",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "byte_length": {
+          "exclusiveMinimum": 0,
+          "maximum": 30720,
+          "title": "Byte Length",
+          "type": "integer"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/DataOrigin"
+        },
+        "jpeg_b64": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Jpeg B64"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "student_id",
+        "preview_seq",
+        "frame_wall",
+        "received_at",
+        "byte_length",
+        "url",
+        "origin"
+      ],
+      "title": "TPreview",
+      "type": "object"
+    },
+    "TResync": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "resync_required",
+          "default": "resync_required",
+          "title": "Type",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "queue_overflow",
+            "server_restart"
+          ],
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "reason"
+      ],
+      "title": "TResync",
+      "type": "object"
+    },
+    "TSessionUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "session_update",
+          "default": "session_update",
+          "title": "Type",
+          "type": "string"
+        },
+        "session": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Session"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "session"
+      ],
+      "title": "TSessionUpdate",
+      "type": "object"
+    },
+    "TSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "snapshot",
+          "default": "snapshot",
+          "title": "Type",
+          "type": "string"
+        },
+        "students": {
+          "items": {
+            "$ref": "#/$defs/StudentCard"
+          },
+          "title": "Students",
+          "type": "array"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "students"
+      ],
+      "title": "TSnapshot",
+      "type": "object"
+    },
+    "TStudentUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "student_update",
+          "default": "student_update",
+          "title": "Type",
+          "type": "string"
+        },
+        "student": {
+          "$ref": "#/$defs/StudentCard"
+        }
+      },
+      "required": [
+        "seq",
+        "sent_at",
+        "student"
+      ],
+      "title": "TStudentUpdate",
+      "type": "object"
+    },
+    "TeacherAudioSignal": {
+      "additionalProperties": false,
+      "description": "Teacher -> server over /ws/teacher (relayed to exactly one student; v1 §6).",
+      "properties": {
+        "type": {
+          "const": "audio_signal",
+          "title": "Type",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "audio_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Session Id"
+        },
+        "sdp": {
+          "anyOf": [
+            {
+              "maxLength": 16384,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sdp"
+        },
+        "ice": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ice"
+        }
+      },
+      "required": [
+        "type",
+        "student_id",
+        "command_id"
+      ],
+      "title": "TeacherAudioSignal",
+      "type": "object"
+    },
+    "TeacherStreamMessage": {
+      "discriminator": {
+        "mapping": {
+          "ack": "#/$defs/TAck",
+          "audio_session_update": "#/$defs/TAudioUpdate",
+          "audio_signal": "#/$defs/TAudioSignal",
+          "command_update": "#/$defs/TCommandUpdate",
+          "error": "#/$defs/TError",
+          "feature_event": "#/$defs/TFeatureEvent",
+          "hello": "#/$defs/THello",
+          "incident": "#/$defs/TIncident",
+          "preview": "#/$defs/TPreview",
+          "resync_required": "#/$defs/TResync",
+          "session_update": "#/$defs/TSessionUpdate",
+          "snapshot": "#/$defs/TSnapshot",
+          "student_update": "#/$defs/TStudentUpdate"
+        },
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/THello"
+        },
+        {
+          "$ref": "#/$defs/TSnapshot"
+        },
+        {
+          "$ref": "#/$defs/TStudentUpdate"
+        },
+        {
+          "$ref": "#/$defs/TIncident"
+        },
+        {
+          "$ref": "#/$defs/TPreview"
+        },
+        {
+          "$ref": "#/$defs/TCommandUpdate"
+        },
+        {
+          "$ref": "#/$defs/TAck"
+        },
+        {
+          "$ref": "#/$defs/TAudioUpdate"
+        },
+        {
+          "$ref": "#/$defs/TAudioSignal"
+        },
+        {
+          "$ref": "#/$defs/TSessionUpdate"
+        },
+        {
+          "$ref": "#/$defs/TFeatureEvent"
+        },
+        {
+          "$ref": "#/$defs/TResync"
+        },
+        {
+          "$ref": "#/$defs/TError"
+        }
+      ]
+    },
+    "Welcome": {
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        },
+        "msg_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Msg Id",
+          "type": "string"
+        },
+        "sent_at": {
+          "format": "date-time",
+          "title": "Sent At",
+          "type": "string"
+        },
+        "type": {
+          "const": "welcome",
+          "default": "welcome",
+          "title": "Type",
+          "type": "string"
+        },
+        "student_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Student Id",
+          "type": "string"
+        },
+        "resume_token": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Resume Token",
+          "type": "string"
+        },
+        "server_time": {
+          "format": "date-time",
+          "title": "Server Time",
+          "type": "string"
+        },
+        "exam": {
+          "$ref": "#/$defs/ExamPolicy"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "resumed": {
+          "default": false,
+          "title": "Resumed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "msg_id",
+        "sent_at",
+        "student_id",
+        "resume_token",
+        "server_time",
+        "exam"
+      ],
+      "title": "Welcome",
+      "type": "object"
+    },
+    "Zone": {
+      "enum": [
+        "green",
+        "yellow",
+        "red",
+        "grey"
+      ],
+      "title": "Zone",
+      "type": "string"
+    },
+    "ZoneSource": {
+      "enum": [
+        "student",
+        "server_stale",
+        "server_camera",
+        "server_offline",
+        "none"
+      ],
+      "title": "ZoneSource",
+      "type": "string"
+    }
+  }
+}

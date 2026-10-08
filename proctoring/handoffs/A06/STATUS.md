@@ -1,4 +1,90 @@
-# A06 — STATUS (Electron shell, trusted IPC, backend process, exam-environment protection)
+# A06-native — checkpoint 3, controlled Windows LIVE passed
+
+Branch: `codex/proctor-A06-native`. Base: `64354c014c4ad51054e8bb67fe841580771d43e5`.
+Helper tested from pushed code `29778e9f23200132427c7a31d10098e044464c92`; this checkpoint changes
+verification/evidence/documentation only. No runtime changes after the LIVE test.
+
+Captain explicitly approved both modes in chat: «Да, готов проверить оба режима».
+Actual machine: Windows 11, `platform=win32`, `os_release=10.0.26200`, Python 3.12.14, standard user.
+Both runs used `live_console.py`, each with `--max-minutes 2`, separate from Electron.
+
+- Dry-run: real `ready` / hook; Win, Alt+Tab, PrtScn each emitted `swallowed=false`.
+  Foreground events showed SearchHost / explorer / Code / SnippingTool (basenames only).
+  Captain reported exit after Ctrl+Alt+Shift+F12; log ends with `bye:emergency_hotkey`.
+- Enforce: all three shortcuts emitted `swallowed=true`. Captain confirmed their Windows actions
+  were suppressed and that text input, Win, Alt+Tab and window focus worked after emergency exit.
+  Log ends with `bye:emergency_hotkey`; no helper error. Subsequent process check found no A06 test helper.
+- `VERIFICATION.json`: three `blocked` records and one `detected_only` foreground record for this exact
+  platform/release. No promotion from self-check/ready alone; native blocked records still require
+  available helper + explicit `QORGAU_SHELL_NATIVE_ENFORCE=1` in the shell.
+- Evidence and exact scope: [checks/live-2026-10-08/RESULTS.md](checks/live-2026-10-08/RESULTS.md).
+- After recording LIVE: `node main/tests/run.mjs capabilities native` → **21 PASS** (fakes only).
+  Actual VERIFICATION.json parsed as 4 valid records; exact platform/release and length limits PASS.
+  Capability checks PASS for matching enforce, dry-run, absent helper, other OS release and other platform.
+
+QA-WIN-001: **standalone native-helper LIVE PASS** for Win/Alt+Tab/PrtScn and emergency release.
+No P0 observed in these checks. A01/A09 still need acceptance from the actual integrated Electron exam;
+do not treat this helper test as a full application PASS or close the integrated acceptance item solely on it.
+Not LIVE-tested: Alt+Esc, Ctrl+Esc, individual LWin/RWin, `stop`, EOF, heartbeat loss, parent death,
+max-duration expiration, console-close cleanup, hook failure/queue overflow. Lifecycle and key mappings
+have automated fake-hook coverage (checkpoint 2: 41 Python PASS, 33 Node PASS; typecheck/build PASS).
+
+Limits unchanged: unsigned Python prototype; Ctrl+Alt+Del and UAC are not blocked; Windows may silently
+remove a slow hook. No SDK/compiler/packages installed, no Windows settings changed, no other processes killed.
+A01: integrate this branch and preserve the opt-in. A09: exercise actual Electron start/pause/finish/recovery.
+
+---
+## Historical checkpoint 2 — Python launch + controlled-test preparation
+
+Previous checkpoint pushed: `94b1c81042ea0ac13aa29c882411c5200e380ad4` (before 17:00).
+Same branch/base/scope as checkpoint 1 below; no foreign paths changed.
+
+- `environment/native.ts`: .py helpers launch as `QORGAU_PYTHON -u <script>`; default interpreter
+  matches the backend venv. Missing default exe falls back to native/qorgau_guard.py. Explicit exe preserved.
+  Existing default dry-run / QORGAU_SHELL_NATIVE_ENFORCE=1 opt-in and capability verification gates unchanged.
+- Added actual Python subprocess protocol-fake test (no Win32); existing controller tests retained.
+- Hardened Python stdin/stdout against daemon buffered-stdio shutdown deadlocks; actual pipe watchdog tests.
+  Python signal handler defers locking to the coordinator, avoiding reentrant signal/lock deadlock.
+- `LIVE_CHECK_RU.md` + `live_console.py`: heartbeat sender, max-minutes=2, stop command, local evidence logs;
+  no automatic VERIFICATION.json promotion. Both real dry-run and enforce await captain's explicit yes.
+
+Checked using existing candidate Python / existing Node dependencies (no packages, SDK or compiler installed):
+- `python -m pytest proctoring/desktop/native/tests -q -p no:cacheprovider` → **41 PASS**, 2.08 s;
+  fake Win32 only; includes real subprocess pipes left open for heartbeat/parent/duration exits.
+- `node main/tests/run.mjs native config capabilities guard` → **33 PASS**; native subset **11 PASS**.
+- `npm run typecheck` → PASS contracts/main/renderer; `npm run build:electron` → PASS.
+- Actual `--self-check` only → Windows `10.0.26200`, standard user, no hook installed.
+
+NOT checked: real keyboard hook, key suppression/detection, foreground watch, console-close cleanup,
+emergency chord and normal keyboard/focus after release. QA-WIN-001 remains OPEN pending controlled LIVE.
+`desktop/native/VERIFICATION.json` still unchanged with records []. No blocking claim from fake tests/selfcheck.
+
+---
+## Checkpoint 1 — Python helper + protocol/lifecycle tests
+
+Branch: `codex/proctor-A06-native`. Exact base: `64354c014c4ad51054e8bb67fe841580771d43e5`
+(`codex/proctor-integration`, fetched and verified). Separate checkout `worktrees/A06-native`.
+Scope for this continuation: native/, environment/native.ts + adjacent tests, handoffs/A06/ only.
+
+- Python 3.12 ctypes helper implements the existing JSON-line protocol; dry-run by default.
+- Dedicated WH_KEYBOARD_LL message thread, minimal callback, bounded output queue and separate writer.
+- Win L/R, Alt+Tab, Alt+Esc, Ctrl+Esc, PrintScreen; emergency Ctrl+Alt+Shift+F12 passes and requests release.
+- Stop/EOF/heartbeat loss/parent-handle death/time limit/error/console signal cleanup; no foreign process termination.
+- Foreground emits only sanitized basename + foreign flag. No typed text/window titles/clipboard data.
+- No SDK/compiler/packages installed. Uses existing candidate Python 3.12.14.
+
+Checks on Windows: `python -m pytest proctoring/desktop/native/tests -q -p no:cacheprovider`
+→ **36 PASS** (all hooks and Win32 lifecycle operations faked; no actual hook installed).
+`qorgau_guard.py --self-check` → PASS, os `10.0.26200`, standard user; no hook installed.
+
+At checkpoint 1: shell .py launch was pending; implemented in checkpoint 2 above.
+QA-WIN-001 is still OPEN; VERIFICATION.json unchanged (`records: []`). LIVE, real suppression/release,
+foreground observation and emergency chord have NOT been verified on hardware.
+Limitations: unsigned Python prototype; Ctrl+Alt+Del/UAC cannot be blocked; OS may silently remove slow hooks.
+No guarantee against Python/OS scheduling stalls. No registry/policy changes, service, autostart or installer.
+
+---
+# Historical A06 shell delivery (before A06-native)
 
 Role: A06. Branch: `claude/inspiring-feynman-h9n9v8` (platform-assigned).
 Contract/baseline: BOOTSTRAP A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`, contract `qorgau.v1` 1.0.0.

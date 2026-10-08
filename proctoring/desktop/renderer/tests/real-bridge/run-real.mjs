@@ -83,7 +83,7 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const BASE = `http://127.0.0.1:${server.address().port}/`;
 
 // ---------------------------------------------------------------- browser + bridge transport
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const ctx = await browser.newContext({ viewport: { width: 1366, height: 768 }, locale: "ru-RU", reducedMotion: "reduce" });
 const page = await ctx.newPage();
 const consoleErrors = [];
@@ -212,6 +212,7 @@ try {
   await shot("02-preflight-report");
   await page.getByRole("button", { name: "К калибровке" }).click();
   await page.getByText("Калибровка взгляда").waitFor();
+  await page.getByRole("button", { name: "Начать калибровку" }).click();  // A07-student: full-screen intro
   await until(() => page.evaluate(() => {
     const b = [...document.querySelectorAll("button")].find((x) => x.textContent?.includes("Завершить калибровку"));
     return b && !b.disabled;
@@ -289,9 +290,9 @@ try {
   await until(() => shell.shellState().exam_mode_active);
   const wp1 = Date.now();
 
-  // Back to student, finish with flush.
-  await page.getByRole("button", { name: /Преподаватель ✕/ }).click();
+  // Resume clears the operator unlock in A06: the UI must return to the student automatically.
   await page.locator(".question").waitFor();
+  check("resume automatically returns to student and clears operator access", !shell.shellState().operator_unlocked && (await page.getByRole("button", { name: /Преподаватель ✕/ }).count()) === 0);
   await page.waitForTimeout(1200);
   const t2 = await readTimer();
   const w2 = Date.now();

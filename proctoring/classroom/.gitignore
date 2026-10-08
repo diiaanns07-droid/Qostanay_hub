@@ -1,0 +1,8 @@
+# Qorgau Classroom (T01): local runtime data, build output and dependencies are never committed
+node_modules/
+dist/
+data/
+*.sqlite3
+*.sqlite
+__pycache__/
+.vite/

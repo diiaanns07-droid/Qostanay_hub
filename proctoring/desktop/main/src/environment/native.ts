@@ -1,5 +1,5 @@
 // Controller for the optional Windows helper desktop/native (owner: A06). Pure Node, tested with a
-// protocol-compatible fake helper; the real helper (C, Win32) is NOT RUN without Windows.
+// protocol-compatible fakes. Python/ctypes helper LIVE verification requires explicit approval.
 //
 // Protocol (one JSON object per line):
 //   helper -> main:  {"type":"selfcheck","version","os","elevated"}            (--self-check, then exit 0)
@@ -12,6 +12,7 @@
 // Never transmitted: other keys, typed text, window titles, clipboard.
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { existsSync } from "node:fs";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import type { EnforcementResult, EnvironmentAction } from "@contracts/qorgau-v1.generated";
 import { logger } from "../log";
@@ -84,10 +85,34 @@ export interface HelperCommand {
   prefixArgs?: string[];
 }
 
-/** Startup availability check: binary present + --self-check answered. Windows only. */
+/** Preserve injected commands. The bundled main/test-main live under desktop/dist/.
+ * Python selection matches backend config: QORGAU_PYTHON, otherwise the root's venv.
+ * An explicitly configured missing exe is an error, not a silent fallback.
+ */
+export function resolveHelperCommand(
+  cmd: HelperCommand,
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
+  present: (path: string) => boolean = existsSync,
+): HelperCommand {
+  if (cmd.prefixArgs) return cmd;
+  let helper = cmd.command;
+  if (!env.QORGAU_SHELL_NATIVE_HELPER && !present(helper) &&
+      basename(helper).toLowerCase() === "qorgau-guard.exe" && basename(dirname(helper)).toLowerCase() === "bin") {
+    const script = join(dirname(dirname(helper)), "qorgau_guard.py");
+    if (present(script)) helper = script;
+  }
+  if (extname(helper).toLowerCase() !== ".py") return { command: helper };
+  const root = resolve(env.QORGAU_PROCTORING_ROOT || resolve(__dirname, "..", "..", ".."));
+  const python = env.QORGAU_PYTHON || join(root, ".venv", platform === "win32" ? "Scripts/python.exe" : "bin/python");
+  return { command: python, prefixArgs: ["-u", helper] };
+}
+
+/** Startup availability check: executable/script + --self-check answered. No hook is installed. */
 export async function checkHelper(cmd: HelperCommand, platform: NodeJS.Platform, enforce: boolean, timeoutMs = 3_000): Promise<NativeHelperInfo> {
   if (platform !== "win32" && !cmd.prefixArgs) return { available: false, enforce: false, detail: "не Windows" };
-  if (!cmd.prefixArgs && !existsSync(cmd.command)) return { available: false, enforce: false, detail: "не собран (desktop/native/bin/qorgau-guard.exe отсутствует)" };
+  cmd = resolveHelperCommand(cmd, platform);
+  if (!cmd.prefixArgs && !existsSync(cmd.command)) return { available: false, enforce: false, detail: "helper не найден (exe или Python-скрипт)" };
   return new Promise((resolve) => {
     const child = spawn(cmd.command, [...(cmd.prefixArgs ?? []), "--self-check"], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
     let done = false;
@@ -123,7 +148,9 @@ export class NativeHelper implements NativeHelperHandle {
   constructor(
     private readonly cmd: HelperCommand,
     private readonly opts: { enforce: boolean; maxMinutes: number; onObservation(o: NativeObservation): void; readyTimeoutMs?: number },
-  ) {}
+  ) {
+    this.cmd = resolveHelperCommand(cmd);
+  }
 
   get running(): boolean {
     const c = this.child;

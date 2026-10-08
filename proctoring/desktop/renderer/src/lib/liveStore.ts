@@ -20,6 +20,7 @@ import type {
   SessionInfo,
   StreamEnvelope,
 } from "@contracts/qorgau-v1.generated";
+import { parseClassState, type ClassState } from "./classState";
 
 type Channel = "main" | "obs";
 
@@ -44,6 +45,8 @@ export class LiveStore {
   private phoneRing: PhoneObservation[] = [];
   envEvents: EnvironmentObservation[] = [];
   streamError: ApiErrorBody | null = null;
+  /** Class-mode state from the C2 uplink (not session-scoped; survives reset()). */
+  classState: ClassState | null = null;
   helloAt: number | null = null;
   lastMessageAt: number | null = null;
   seqGaps = 0;
@@ -202,11 +205,21 @@ export class LiveStore {
       if (reconnect) this.onResync?.();
       return;
     }
+    const isClassState = (m as { type: string }).type === "class_state";
+    if (isClassState && (!Number.isSafeInteger(env.seq) || env.seq <= this.lastSeq)) return;
     if (this.lastSeq > 0 && env.seq > this.lastSeq + 1) {
       this.seqGaps += 1;
       this.onResync?.();
     }
     this.lastSeq = env.seq;
+    if (isClassState) {
+      const cs = parseClassState(m);
+      if (cs) {
+        this.classState = cs;
+        this.bump("main");
+      }
+      return;
+    }
     const mine = (sid: string | null | undefined) => !!this.sessionId && sid === this.sessionId;
     switch (m.type) {
       case "session_state":

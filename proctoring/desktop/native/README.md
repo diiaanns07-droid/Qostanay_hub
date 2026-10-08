@@ -11,18 +11,43 @@ window cannot see or stop by itself (Alt+Tab, Win, PrintScreen, foreign-window f
 > `--mode enforce` opt-in, which is for a controlled test. It cannot block Ctrl+Alt+Del or the UAC
 > secure desktop — do not claim otherwise.
 
-## Status (round 2) — helper NOT delivered
+## Status (A06-native, 8 October 2026) — Python prototype; controlled helper LIVE passed
 
-The helper's **source and build are not in this repository** (round 2 did not produce them; see
-`handoffs/A06/STATUS.md`). `desktop/native/bin/qorgau-guard.exe` is absent, so the shell reports all
-OS-level items as `unverified` (Windows) / `unsupported` (other OS) and never claims them blocked. What
-exists and is tested on every OS: the shell-side controller, protocol parser and lifecycle in
-`main/src/environment/native.ts`, exercised against `main/tests/fake-helper.mjs` (a protocol-only fake
-that hooks nothing). The exam runs without the helper; OS-level shortcuts are then only detected
-in-window (focus loss) and the gap is visible in the capability matrix.
+`qorgau_guard.py` is a Python 3.12 / ctypes prototype with no third-party dependencies or compiler.
+`guard_win32.py` owns the Win32 resources; `guard_core.py` owns the bounded line protocol/lifecycle.
+It is **unsigned**, not a production kiosk solution. After the captain's explicit approval, the real
+helper passed dry-run/enforce on this Windows 11 laptop (`win32`, exact release `10.0.26200`, Python
+3.12.14). The captain confirmed Win/Alt+Tab/PrtScn suppression, emergency exit and restored keyboard/focus.
+`VERIFICATION.json` records those three shortcuts and observed foreground detection only. See the
+[evidence and remaining gaps](../../handoffs/A06/checks/live-2026-10-08/RESULTS.md).
+QA-WIN-001's standalone-helper test passes; full Electron integration still needs A01/A09 acceptance.
+Alt+Esc, Ctrl+Esc, separate LWin/RWin and non-emergency cleanup paths have not been tested LIVE.
+The shell now supports `.py` via `QORGAU_PYTHON` (same venv selection as the backend), and falls back to
+`native/qorgau_guard.py` when the default exe is absent. Explicitly configured missing exes do not fall back.
 
-Until a reviewed helper exists, the supported way to get OS-level lockdown on the demo machine is the
-**managed deployment** below (institution-administered, reversible), not code in this app.
+The hook runs on a dedicated message thread. Its callback only updates modifier/target-key state,
+decides pass/swallow, and enqueues an allow-listed event. A separate daemon writes stdout with `os.write`.
+A full event queue or output failure disables suppression and ends the helper; output cannot delay unhook.
+The parent is opened once with SYNCHRONIZE and checked through that retained handle. No TerminateProcess
+right, PID polling, window-title reads, clipboard reads, ordinary-key logging, or persistent OS changes.
+
+Ctrl+Alt+Shift+F12 is always passed through and also asks the helper itself to unhook/exit. Stop, EOF,
+5-second heartbeat gap, parent exit, duration limit, console signals, hook errors and exceptions all
+enter cleanup. Matching target-key releases are swallowed only if their presses were swallowed here.
+
+Unit tests use fake hooks/Win32 functions; `--self-check` installs no hook. Neither proves real suppression.
+Windows can silently remove a hook after a callback timeout; Python scheduling is not a real-time guarantee.
+See [Microsoft LowLevelKeyboardProc](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc).
+
+```powershell
+# Safe automated checks (no actual hook installed):
+<candidate-python> -m pytest desktop/native/tests -q -p no:cacheprovider
+<candidate-python> desktop/native/qorgau_guard.py --self-check
+```
+
+LIVE execution requires the captain's explicit **yes in chat**, for dry-run as well as enforce.
+Emergency exits: Ctrl+Alt+Shift+F12; close the helper console; or Ctrl+Alt+Del → Task Manager.
+Enforce acceptance must use `--max-minutes 2`. Ctrl+Alt+Del and UAC are never claimed blocked.
 
 ### Requirements for any future helper (acceptance, unchanged from the task)
 
@@ -68,8 +93,12 @@ disappears, or `--max-minutes` elapses. No restriction may survive a reboot.
 
 | Variable | Meaning |
 |---|---|
-| `QORGAU_SHELL_NATIVE_HELPER` | path to the helper exe (default `desktop/native/bin/qorgau-guard.exe`) |
+| `QORGAU_SHELL_NATIVE_HELPER` | helper `.exe` or `.py`; default exe, then `desktop/native/qorgau_guard.py` if exe absent |
+| `QORGAU_PYTHON` | Python executable for `.py` (otherwise the backend root's `.venv/Scripts/python.exe`) |
 | `QORGAU_SHELL_NATIVE_ENFORCE=1` | allow `--mode enforce` (swallow keys); **controlled test only**, default dry-run |
+
+Interactive test instructions: [LIVE_CHECK_RU.md](LIVE_CHECK_RU.md). `live_console.py` supplies heartbeat,
+caps each run at 2 minutes, writes protocol evidence locally and never edits `VERIFICATION.json`.
 
 ## Verifying OS-level items
 

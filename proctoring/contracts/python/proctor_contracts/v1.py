@@ -29,7 +29,7 @@ from typing import Annotated, Literal, Union
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 CONTRACT_ID = "qorgau.v1"
-CONTRACT_VERSION = "1.0.0"
+CONTRACT_VERSION = "1.1.0"
 
 # ---------------------------------------------------------------------------
 # Constrained primitives
@@ -84,6 +84,8 @@ class Component(StrEnum):
     FUSION = "fusion"
     EVIDENCE = "evidence"
     ENVIRONMENT = "environment"
+    AUDIO = "audio"  # 1.1
+    IDENTITY = "identity"  # 1.1
 
 
 class HealthStatus(StrEnum):
@@ -180,6 +182,12 @@ class IncidentRule(StrEnum):
     ENVIRONMENT_BLOCKED_ACTION = "environment_blocked_action"
     ENVIRONMENT_ESCAPE = "environment_escape"
     MONITORING_DEGRADED = "monitoring_degraded"
+    # 1.1 (additive)
+    BACKGROUND_SPEECH = "background_speech"  # possible speech/conversation near the student (levels only)
+    HEADPHONES_VISIBLE = "headphones_visible"
+    IDENTITY_MISMATCH = "identity_mismatch"  # face differs from the one enrolled at exam start
+    FOREIGN_OBJECT_VISIBLE = "foreign_object_visible"  # e.g. COCO "book"; review only
+    SECOND_SCREEN_VISIBLE = "second_screen_visible"  # e.g. COCO "laptop"/"tv"; review only
 
 
 class IncidentCategory(StrEnum):
@@ -188,6 +196,9 @@ class IncidentCategory(StrEnum):
     PRESENCE = "presence"
     ENVIRONMENT = "environment"
     TECHNICAL = "technical"
+    AUDIO = "audio"  # 1.1
+    IDENTITY = "identity"  # 1.1
+    OBJECTS = "objects"  # 1.1
 
 
 class ReviewPriority(StrEnum):
@@ -511,6 +522,27 @@ class EnvironmentObservation(ObservationBase):
     detail: EnvironmentDetail = Field(default_factory=EnvironmentDetail)
 
 
+class AudioObservation(ObservationBase):
+    """1.1. Microphone features only; audio is never recorded or transmitted. frame_id is None."""
+
+    kind: Literal["audio"] = "audio"
+    voice_like: SignalState  # present = speech-like sound near the student (VAD), not "who" or "what"
+    voice_probability: Unit | None = None
+    rms_dbfs: Annotated[float, Field(ge=-200, le=0)] | None = None
+    noise_floor_dbfs: Annotated[float, Field(ge=-200, le=0)] | None = None
+    reasons: list[Code] = Field(default_factory=list, max_length=16)
+
+
+class IdentityObservation(ObservationBase):
+    """1.1. Is the primary face the same person as enrolled at exam start? Embeddings stay in memory."""
+
+    kind: Literal["identity"] = "identity"
+    same_person: SignalState  # present = matches the enrolled face, absent = differs, unknown = cannot tell
+    similarity: Annotated[float, Field(ge=-1, le=1)] | None = None  # cosine similarity to the enrolled face
+    enrolled: bool = False
+    reasons: list[Code] = Field(default_factory=list, max_length=16)
+
+
 class HealthObservation(ObservationBase):
     """Health change as an observation so fusion can open technical incidents / coverage gaps."""
 
@@ -519,7 +551,7 @@ class HealthObservation(ObservationBase):
 
 
 Observation = Annotated[
-    Union[PhoneObservation, AttentionObservation, EnvironmentObservation, HealthObservation],
+    Union[PhoneObservation, AttentionObservation, EnvironmentObservation, HealthObservation, AudioObservation, IdentityObservation],
     Field(discriminator="kind"),
 ]
 

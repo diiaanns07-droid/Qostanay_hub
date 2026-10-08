@@ -104,10 +104,10 @@ export function isTrustedUrl(url: string, devOrigin: string | null): boolean {
 }
 
 export const FALLBACK_HTML = `<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><title>Qorgau Exam</title>
+<html lang="ru"><head><meta charset="utf-8"><title>ADAL</title>
 <style>body{font-family:system-ui,sans-serif;margin:3rem;max-width:44rem;color:#1b1b1b;background:#fff}
 code{background:#f1f1f1;padding:.1rem .3rem}</style></head>
-<body><h1>Qorgau Exam — оболочка запущена</h1>
+<body><h1>ADAL — оболочка запущена</h1>
 <p>Интерфейс (renderer, A07) ещё не собран: нет <code>desktop/dist/renderer/index.html</code>.</p>
 <p>Соберите его командой <code>npm run build</code>. Экзаменационный режим не включается без явного начала сессии.</p>
 </body></html>`;

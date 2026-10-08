@@ -15,6 +15,8 @@ import { CalibrationScreen } from "./screens/Calibration";
 import { ExamScreen } from "./screens/Exam";
 import { OperatorScreen } from "./screens/Operator";
 import { StudentDone, SummaryScreen } from "./screens/Summary";
+import { LockScreen, MicBanner } from "./components/ClassOverlays";
+import { useLive as useLiveVersion } from "./lib/liveStore";
 
 const HEALTH_POLL_MS = 5000;
 
@@ -227,13 +229,19 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
   }
 
   const examMode = !!shell?.exam_mode_active;
+  useLiveVersion(live);
+  const cls = live.classState;
+  const locked = !!cls?.locked;
+  const mic = !!cls?.mic_active;
   const t = (k: MsgKey) => translate(lang, k);
   const shellErr = shell?.last_error ?? null;
 
   return (
     <LangContext.Provider value={lang}>
       <AppContext.Provider value={api}>
-        <div className={`app ${examMode ? "app-exam" : ""} ${teacher ? "app-teacher" : ""}`}>
+        {mic && cls && <MicBanner state={cls} />}
+        {locked && cls && <LockScreen state={cls} />}
+        <div className={`app ${examMode ? "app-exam" : ""} ${teacher ? "app-teacher" : ""} ${mic ? "app-mic" : ""}`} inert={locked || undefined} aria-hidden={locked || undefined}>
           {fixture && (
             <div className="fixture-strip" role="note">
               FIXTURE-режим: данные из FixtureBridge (контрактные fixtures и сценарий в памяти) — не backend, не камера, не CV.
@@ -318,8 +326,8 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
               }}
             />
           )}
-          {fixture && <FixturePanel fixture={fixture} />}
         </div>
+        {fixture && <FixturePanel fixture={fixture} />}
       </AppContext.Provider>
     </LangContext.Provider>
   );
@@ -363,7 +371,7 @@ function Brand() {
         <path d="m10.5 16.2 3.8 3.8 7.4-7.6" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <span className="brand-name">
-        Qorgau <span>Exam</span>
+        ADAL
       </span>
     </div>
   );
@@ -479,6 +487,44 @@ function FixturePanel({ fixture }: { fixture: FixtureBridge }) {
               {FAULT_LABELS[k]}
             </label>
           ))}
+          <p className="small"><b>Класс (FIXTURE, не сервер класса)</b></p>
+          <label className="check small">
+            <input
+              type="checkbox"
+              checked={fixture.classState.locked === true}
+              onChange={(e) => {
+                fixture.emitClassState({ locked: e.target.checked, lock_reason_ru: e.target.checked ? "Телефон на столе (FIXTURE)" : null });
+                force((n) => n + 1);
+              }}
+            />
+            Заблокировать экзамен
+          </label>
+          <label className="check small">
+            <input
+              type="checkbox"
+              checked={fixture.classState.mic_active === true}
+              onChange={(e) => {
+                fixture.emitClassState({ mic_active: e.target.checked, audio_direction: e.target.checked ? "listen" : null });
+                force((n) => n + 1);
+              }}
+            />
+            Микрофон включён преподавателем
+          </label>
+          <label className="small">
+            Связь с классом{" "}
+            <select
+              aria-label="Связь с классом (FIXTURE)"
+              value={String(fixture.classState.connection)}
+              onChange={(e) => {
+                fixture.emitClassState({ connection: e.target.value, message_ru: e.target.value === "rejected" ? "Сервер класса отклонил код подключения. Экзамен продолжается локально." : null });
+                force((n) => n + 1);
+              }}
+            >
+              {["connected", "connecting", "reconnecting", "rejected", "stopped"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </label>
           <p className="small muted">PIN преподавателя (только эта вкладка): {fixture.operatorPin}</p>
         </div>
       )}
