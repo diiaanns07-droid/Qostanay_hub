@@ -190,3 +190,44 @@ to fusion/session wiring in the CV handoff for root to integrate. No private exa
 
 Current isolated workers: review production tests, external exam state preservation, and teacher
 controls plus C1 lock confirmation fields. Root owns production wiring/audio UI assets/real adapter.
+
+## Integrated acceptance checkpoint — 2026-10-08 (supersedes earlier resume queue)
+
+Integrated the exam resume, review adapter, teacher commands, QA alignment and unified Windows
+launcher branches through 6b2026a. Production main/preload wiring now connects lock paint receipts,
+transparent audio signaling and the external website surface. C1 advertises the mounted history,
+audio and exam modules. Teacher actions use the canonical class command API; lock confirmation
+requires a current student renderer receipt. Reload/new-session/backend-loss revokes operator access.
+
+The external website start_url is now honored only when allowed by the teacher policy. The policy
+identity includes this entry URL so changing an assignment cannot keep the previous page. Updated
+teacher copy describes the actual in-Adal URL scope; stale microphone status is shown as unknown.
+
+Verification at this integration boundary:
+- Root desktop typecheck and complete Electron/renderer production build passed.
+- Root shell suite: 105 PASS, one platform SKIP, zero failures (synthetic backend/mock guards).
+- Root C1 server/class contracts/exam tests: 211 PASS. A test-only WebSocket pong-close race emitted
+  a thread warning; this does not count as physical network acceptance.
+- Audio extension/hub: 19 PASS; updated legacy-audio/disconnect persistence checks: 7 PASS.
+- Integrated QA worker evidence on its recorded source 361e244: 380 PASS, one SKIP, four known XFAIL,
+  no FAIL/XPASS; evidence and exact source are in qa/results/20261008T140835Z_adal_alignment_361e2445153d.
+  This is a source-specific result, not a claim that subsequent A11 fixes were already covered.
+- Review worker: 78 checks, including actual C1, authorized clip upload, Chrome Range playback,
+  seeking, review decisions and restart. Exam worker: 21 actual Electron checks plus 32 related tests.
+- Teacher controls worker: 19 actual C1/Chrome checks and 66 JavaScript checks, with synthetic peers.
+- Canonical Start-Adal launcher: 11 stub checks on each of PowerShell 5.1 and 7 plus actual CheckOnly;
+  follow-up strengthens freshness checks for shared lock/audio sources. No real guards were engaged.
+
+Work still underway in separate checkouts: actual C1+C2+production Electron lock-chain acceptance,
+and bounded A11 persistence/paused-health/restart fixes. Neither is counted as completed here.
+
+Physical acceptance remains outstanding: three PCs over Ethernet/Wi-Fi; camera/phone/gaze accuracy;
+simultaneous physical A14 audio and teacher microphone monitoring; LIVE plus native Enforce and
+emergency recovery. Native Windows application allowlisting is not implemented. The teacher browser
+is local to the server PC; LAN students are supported. Existing WebSocket exam pages are destroyed on
+suspend to close their connections, so unsent answers on those pages can be lost. No claim of 100 real
+cameras, full case 2.3 completion, or a fully validated release is made.
+
+Parallel Claude tasks are the four ADAL-QUALITY prompts published at 8ae332f, using baseline
+2974f643d669afc3219eac44192025008bad1617. Phone and attention work remain isolated from integration;
+the other two tasks own offline acceptance and Kazakh localization respectively.
