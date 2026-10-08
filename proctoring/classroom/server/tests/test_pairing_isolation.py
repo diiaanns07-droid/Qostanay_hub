@@ -22,7 +22,7 @@ def test_join_with_code_gives_stable_identity_and_card(server, teacher, session,
     assert welcome.exam.mode == m.ExamMode.URL and welcome.exam.allowed_urls == ["https://exam.example/*"]
     cards = [m.StudentCard.model_validate(c) for c in teacher.get("/api/teacher/students").json()]
     card = next(c for c in cards if c.student_id == welcome.student_id)
-    assert card.connected and card.student_label == "Әлия" and card.origin == m.DataOrigin.REAL
+    assert card.connected and card.student_label == "Әлия" and card.origin == m.DataOrigin.UNKNOWN
     assert card.zone == m.Zone.GREY and card.stale  # no status yet = not enough data, not "all clear"
 
 

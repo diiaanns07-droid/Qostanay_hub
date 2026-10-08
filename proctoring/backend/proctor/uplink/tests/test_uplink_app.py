@@ -88,13 +88,16 @@ def test_end_to_end_commands_incident_clip_and_class_state_on_stream(tmp_path, m
             assert wait_for(lambda: any(m["type"] == "incident" and m["clip_available"] for m in server.accepted), timeout=60)
             inc = next(m for m in server.accepted if m["type"] == "incident" and m["clip_available"])
             assert inc["priority"] in ("low", "medium", "high") and inc["explanation_ru"] and inc["t_start_wall"]
+            assert inc["source_mode"] == "synthetic" and inc["source_session_id"] == sid
             req = server.send_command("request_clip", {"incident_id": inc["incident_id"]})
             assert wait_for(lambda: req in server.acks(), timeout=20) and server.acks()[req]["ok"], server.acks().get(req)
             clip = server.clips[inc["incident_id"]]
             assert 1000 < clip["bytes"] <= 8 * 1024 * 1024 and clip["content_type"] == "video/x-msvideo"
             st = server.of_type("status")[-1]
             assert st["exam_state"] == "running" and st["locked"] is True and st["zone"] in ("green", "yellow", "red", "grey")
+            assert st["source_mode"] == "synthetic" and st["source_session_id"] == sid
             assert server.of_type("preview")
+            assert all(p["source_mode"] == "synthetic" and p["source_session_id"] == sid for p in server.of_type("preview"))
             fin = server.send_command("finish_exam")
             assert wait_for(lambda: fin in server.acks(), timeout=15) and server.acks()[fin]["ok"]
             assert c.get(f"/v1/sessions/{sid}").json()["state"] == "finished"

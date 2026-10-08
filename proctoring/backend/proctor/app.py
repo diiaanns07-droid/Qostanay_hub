@@ -284,13 +284,19 @@ class StreamHub:
     def __init__(self) -> None:
         self._loop: asyncio.AbstractEventLoop | None = None
         self._clients: set[_StreamClient] = set()
+        # C2 can connect before Electron subscribes, or change state while the
+        # renderer refreshes. Retain only this global state, not session events.
+        # Written/read on the hub loop so snapshot + subscription are ordered.
+        self._class_state: dict | None = None
 
     def bind_loop(self, loop: asyncio.AbstractEventLoop) -> None:
         self._loop = loop
 
     def publish(self, message: Any, session_id: str | None) -> None:
         loop = self._loop
-        if loop is None or not self._clients:
+        if loop is None:
+            return
+        if not self._clients and not (session_id is None and getattr(message, "type", None) == "class_state"):
             return
         payload = message.model_dump(mode="json")
         try:
@@ -299,6 +305,8 @@ class StreamHub:
             pass  # loop closed during shutdown
 
     def _fanout(self, session_id: str | None, payload: dict) -> None:
+        if session_id is None and payload.get("type") == "class_state":
+            self._class_state = payload
         for client in list(self._clients):
             client.offer(session_id, payload)
 
@@ -308,6 +316,8 @@ class StreamHub:
         disconnected = asyncio.create_task(_wait_disconnect(ws))
         try:
             client.offer(None, HelloMsg(backend_version=BACKEND_VERSION, server_time=utc_now()).model_dump(mode="json"))
+            if self._class_state is not None:
+                client.offer(None, self._class_state)
             while True:
                 getter = asyncio.create_task(client.queue.get())
                 done, _ = await asyncio.wait({getter, disconnected}, return_when=asyncio.FIRST_COMPLETED)

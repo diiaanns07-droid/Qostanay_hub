@@ -36,6 +36,7 @@ BUSY_CODES = {"camera_no_frames", "previous_capture_releasing", "capture_closing
 @dataclass
 class Snapshot:
     session_id: str | None = None
+    source_mode: str = "unknown"
     exam_state: str = "idle"
     camera: str = "off"
     monitoring: str = "ok"
@@ -47,6 +48,8 @@ class Snapshot:
 
     def status_fields(self) -> dict[str, Any]:
         return {
+            "source_mode": self.source_mode,
+            "source_session_id": self.session_id,
             "exam_state": self.exam_state,
             "camera": self.camera,
             "monitoring": self.monitoring,
@@ -64,6 +67,8 @@ def _val(x: Any) -> Any:
 def _incident(inc: Any) -> dict[str, Any]:
     return {
         "incident_id": inc.incident_id,
+        "source_mode": _val(inc.source_mode),
+        "source_session_id": inc.session_id,
         "rule_id": _val(inc.rule_id),
         "category": _val(inc.category),
         "priority": _val(inc.priority),
@@ -104,6 +109,7 @@ class BackendView:
             return snap
         info = rt.info
         snap.session_id = info.session_id
+        snap.source_mode = _val(info.source.mode)
         snap.exam_state = EXAM_STATE.get(_val(info.state), "idle")
         snap.camera, snap.monitoring = self._camera_and_monitoring(rt, snap.exam_state)
         store = getattr(rt.pipeline.store, "impl", None)
@@ -176,13 +182,23 @@ class BackendView:
 
     # ------------------------------------------------------------------ preview / clips
     def preview_jpeg(self) -> bytes | None:
+        packet = self.preview_packet()
+        return packet[0] if packet else None
+
+    def preview_packet(self) -> tuple[bytes, dict[str, Any]] | None:
+        """Keep source and wall time attached to the exact frame across session transitions."""
         rt = self._runtime()
         if rt is None:
             return None
         latest = rt.preview()
         if latest is None:
             return None
-        return shrink_jpeg(latest[1])
+        metadata, data = latest
+        jpeg = shrink_jpeg(data)
+        if jpeg is None:
+            return None
+        return jpeg, {"source_mode": _val(metadata.source_mode), "source_session_id": metadata.session_id,
+                      "frame_wall": metadata.wall_time.isoformat()}
 
     def export_clip(self, t_start_ms: float, before_s: float, after_s: float) -> Path:
         rt = self._runtime()

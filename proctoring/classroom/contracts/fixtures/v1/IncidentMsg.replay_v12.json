@@ -1,0 +1,19 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "incident",
+  "seq": 2,
+  "incident_id": "inc-0001",
+  "rule_id": "phone_visible",
+  "category": "phone",
+  "priority": "medium",
+  "state": "closed",
+  "t_start_wall": "2026-10-09T09:00:00Z",
+  "duration_ms": 4200.0,
+  "explanation_ru": "Телефон виден 4,2 с",
+  "clip_available": true,
+  "event_id": "inc-0001:closed",
+  "source_mode": "replay",
+  "source_session_id": "local-replay-1"
+}

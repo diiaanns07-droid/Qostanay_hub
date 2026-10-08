@@ -4,7 +4,7 @@ Two surfaces, never mixed up with the per-student local API (proctor_contracts /
 
 * Student wire  — `qorgau.class.v1` (frozen 2026-10-08, proctoring/contracts/class/PROTOCOL_v1.md, owner A01).
                   Models here mirror it 1:1; every v1.1 addition is OPTIONAL so plain v1 clients keep working.
-* Teacher API   — `qorgau.classroom` contract 1.0.0: REST /api/teacher/* + WS /ws/teacher between the class
+* Teacher API   — `qorgau.classroom` contract 1.1.0: REST /api/teacher/* + WS /ws/teacher between the class
                   server and the teacher console (not specified in v1; defined here).
 
 Generated artifacts (never edit by hand): schema/classroom.v1.schema.json, ts/classroom-v1.generated.ts.

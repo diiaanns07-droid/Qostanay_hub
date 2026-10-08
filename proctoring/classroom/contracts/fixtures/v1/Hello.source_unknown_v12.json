@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "hello",
+  "protocol": "qorgau.class.v1",
+  "join_code": "482915",
+  "computer_name": "PC-07",
+  "student_label": "Студент 7",
+  "app_version": "qorgau-exam/0.1.0",
+  "source_mode": "unknown",
+  "source_session_id": null
+}
