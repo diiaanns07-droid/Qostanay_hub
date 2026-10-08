@@ -61,6 +61,8 @@ from .bootstrap.synthetic import ScriptedAttentionAnalyzer, ScriptedPhoneAnalyze
 from .session import Pipeline, PipelinePart, SessionManager
 from .settings import BACKEND_VERSION, PROCTORING_ROOT, Settings
 from .uplink import start_uplink  # C2: class-mode uplink (disabled unless QORGAU_CLASS_SERVER/CODE are set)
+from .uplink.lock import LockReceipt
+from .uplink.audio import install_audio_routes
 
 log = logging.getLogger("proctor.app")
 
@@ -563,6 +565,14 @@ def create_app(
         return state["manager"]
 
     api = APIRouter(prefix="/v1", dependencies=[Depends(validate_path_ids)])
+    install_audio_routes(api, lambda: state.get("uplink"))
+
+    @api.post("/class/lock/ack")
+    def confirm_class_lock(body: LockReceipt) -> dict[str, Any]:
+        uplink = state.get("uplink")
+        if uplink is None:
+            return {"accepted": False, "reason": "class_not_connected"}
+        return uplink.confirm_lock(body)
 
     @api.get("/health", response_model=HealthReport)
     def health() -> HealthReport:

@@ -642,6 +642,8 @@ class ClassroomCore:
     # ========================================================================================== commands
     def submit_command(self, student_id: str, kind: CommandKind, payload: dict[str, Any], *, issued_by: str, ttl_ms: int | None = None) -> Command:
         with self.lock:
+            if kind in (CommandKind.AUDIO_START, CommandKind.AUDIO_STOP):
+                raise ClassroomError("audio_extension_required", "Используйте проверенную аудиосвязь панели преподавателя", 422)
             st = self.students.get(student_id)
             if st is None:
                 raise ClassroomError("student_not_found", "Студент не найден", 404)

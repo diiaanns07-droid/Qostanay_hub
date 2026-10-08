@@ -29,7 +29,7 @@ class ServerConfig:
     ui: str = "auto"  # auto = teacher-ui/dist if built, else the T02 class panel; "teacher-ui" | "class-panel" | "none" | <dir>
     teacher_pin: str = ""  # empty = random 6-digit PIN printed to the console at start (v1 §2.6)
     dev_origin: str = ""  # extra allowed Origin for the teacher UI dev server, e.g. http://127.0.0.1:5173
-    features: str = ""  # comma list "module:factory" of feature plug-ins (see features.py)
+    features: str = "classroom.server.audio_feature:create_classroom_feature"
 
     ping_interval_s: float = 5.0  # v1 §3.2
     pong_timeout_s: float = 15.0  # v1 §3.2: no pong for 15 s -> "нет связи"

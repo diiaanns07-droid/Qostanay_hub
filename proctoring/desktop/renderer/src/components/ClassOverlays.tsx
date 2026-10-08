@@ -8,6 +8,9 @@ import { Badge, Card } from "./ui";
 
 export function LockScreen({ state }: { state: ClassState }) {
   const ref = useRef<HTMLDivElement>(null);
+  const request = state.lock_request;
+  const requested = request?.locked && Date.parse(request.expires_at) > Date.now();
+  const reason = requested ? request.reason_ru : state.lock_reason_ru;
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     ref.current?.focus();
@@ -22,22 +25,22 @@ export function LockScreen({ state }: { state: ClassState }) {
     };
   }, []);
   return (
-    <div className="lockscreen" role="alertdialog" aria-modal="true" aria-labelledby="lock-title" aria-describedby="lock-reason" tabIndex={-1} ref={ref}>
+    <div className="lockscreen" data-adal-lock data-lock-token={requested ? request.request_token : undefined} role="alertdialog" aria-modal="true" aria-labelledby="lock-title" aria-describedby="lock-reason" tabIndex={-1} ref={ref}>
       <div className="lockscreen-card">
         <div className="lockscreen-icon" aria-hidden="true">⏸</div>
         <h1 id="lock-title">Преподаватель приостановил ваш экзамен</h1>
         <p id="lock-reason" className="lockscreen-reason">
-          {state.lock_reason_ru ? (
+          {reason ? (
             <>
-              Причина: <b>{state.lock_reason_ru}</b>
+              Причина: <b data-lock-reason>{reason}</b>
             </>
           ) : (
             "Причина не указана."
           )}
         </p>
         <p className="lockscreen-note">
-          Оставайтесь на месте. Камера и наблюдение продолжают работать. Экран снимет преподаватель — закрыть его
-          самостоятельно нельзя.
+          Работа в Adal приостановлена до команды преподавателя. Эта команда ограничивает экран приложения;
+          состояние камеры и наблюдения не меняется.
         </p>
       </div>
     </div>
