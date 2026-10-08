@@ -5,9 +5,9 @@ import { useApp } from "../lib/appContext";
 import { useLive } from "../lib/liveStore";
 import { call } from "../lib/result";
 import { CAL_MESSAGE, CAL_PHASE, SOURCE_MODE_RU, TARGET } from "../lib/labels";
-import { ratio } from "../lib/format";
-import { Badge, Banner, Button, Card, ErrorBanner, Progress, Spinner } from "../components/ui";
+import { Badge, Banner, Button, ErrorBanner, Spinner } from "../components/ui";
 import { SkipDialog } from "./Preflight";
+import { setWindowFullscreen } from "../lib/windowControl";
 
 const POLL_MS = 600;
 
@@ -27,6 +27,8 @@ export function CalibrationScreen() {
   const [error, setError] = useState<{ ctx: string; error: ApiErrorBody } | null>(null);
   const [skipOpen, setSkipOpen] = useState(false);
   const autoRequested = useRef<string | null>(null);
+  /** Full-screen calibration starts only after the student pressed "Начать" (positioned, window full screen). */
+  const [armed, setArmed] = useState(false);
 
   const sid = session?.session_id ?? "";
   const cal = newer(polled, live.calibration);
@@ -63,9 +65,20 @@ export function CalibrationScreen() {
     [bridge, sid],
   );
 
+  // A calibration already in progress (renderer reload) continues without the intro.
+  useEffect(() => {
+    if (cal && cal.targets.some((t) => t.state !== "pending")) setArmed(true);
+  }, [cal]);
+
+  // Leave full screen when calibration is over or the screen is left (exam mode keeps its own full screen).
+  useEffect(() => {
+    if (ready) setWindowFullscreen(false);
+  }, [ready]);
+  useEffect(() => () => setWindowFullscreen(false), []);
+
   // Auto-advance: when no target is collecting, request the next pending one (order center→down).
   useEffect(() => {
-    if (!cal || cal.phase !== "collecting" || busy || backendLost) return;
+    if (!armed || !cal || cal.phase !== "collecting" || busy || backendLost) return;
     if (cal.targets.some((t) => t.state === "collecting" || t.state === "failed")) return;
     const next = CalibrationTargetValues.find((t) => cal.targets.find((x) => x.target === t)?.state === "pending");
     if (!next) return;
@@ -73,7 +86,7 @@ export function CalibrationScreen() {
     if (autoRequested.current === key) return;
     autoRequested.current = key;
     void selectTarget(next);
-  }, [cal, busy, backendLost, selectTarget]);
+  }, [armed, cal, busy, backendLost, selectTarget]);
 
   const finish = async () => {
     setBusy("finish");
@@ -170,97 +183,113 @@ export function CalibrationScreen() {
   const allOk = !!cal && cal.targets.every((t) => t.state === "ok");
   const okCount = cal?.targets.filter((t) => t.state === "ok").length ?? 0;
 
+  const begin = () => {
+    setWindowFullscreen(true);
+    setArmed(true);
+  };
+  const progress = (t: CalibrationTarget) => {
+    const st = cal?.targets.find((x) => x.target === t);
+    return st && st.required_samples > 0 ? Math.min(1, st.samples / st.required_samples) : 0;
+  };
+
   return (
-    <div className="screen calibration">
-      <div className="screen-head">
-        <div>
-          <h1>Калибровка взгляда</h1>
-          <p className="lead">
-            Смотрите на светящуюся точку, не поворачивая корпус. Сбор завершается, когда сервис наберёт достаточно
-            качественных кадров — не по таймеру.
+    <div className="calfs" role="dialog" aria-modal="true" aria-label="Калибровка взгляда на весь экран">
+      {CalibrationTargetValues.map((t) => {
+        const st = cal?.targets.find((x) => x.target === t);
+        const state = st?.state ?? "pending";
+        const active = armed && t === current && state === "collecting";
+        return (
+          <span
+            key={t}
+            className={`calfs-dot calfs-${t} calfs-dot-${state} ${active ? "calfs-dot-active" : ""}`}
+            style={{ ["--p" as string]: String(progress(t)) }}
+            data-target={t}
+            data-state={state}
+            aria-hidden="true"
+          >
+            {state === "ok" && <span className="calfs-check">✓</span>}
+          </span>
+        );
+      })}
+
+      <div className="calfs-panel">
+        <h1>Калибровка взгляда</h1>
+        <p className="calfs-hint">Смотрите на точку глазами, голову держите прямо.</p>
+        {error && <ErrorBanner context={error.ctx} error={error.error} onDismiss={() => setError(null)} />}
+        {!cal && <Spinner label="Получаем состояние калибровки…" />}
+        {cal && !armed && cal.phase === "collecting" && (
+          <>
+            <p className="small">
+              Окно развернётся на весь экран, точки появятся у его краёв: в центре, слева, справа, сверху и снизу. Сядьте
+              как на экзамене, лицо — в кадре камеры.
+            </p>
+            <div className="actions calfs-actions">
+              <Button variant="primary" size="lg" disabled={backendLost} onClick={begin}>
+                Начать калибровку
+              </Button>
+            </div>
+          </>
+        )}
+        {cal && armed && (
+          <>
+            <div className="calfs-now" aria-live="polite">
+              {curStatus && curStatus.state === "collecting" && (
+                <>
+                  Смотрите <b>{TARGET[curStatus.target]}</b> — собрано {curStatus.samples} из {curStatus.required_samples}
+                </>
+              )}
+              {curStatus && curStatus.state === "failed" && <>Точка {TARGET[curStatus.target]} не собрана</>}
+              {allOk && <>Все точки собраны — нажмите «Завершить калибровку»</>}
+            </div>
+            <ul className="calfs-list">
+              {(cal.targets ?? []).map((t) => (
+                <li key={t.target} className={`state-${t.state}`}>
+                  <span className="calfs-list-name">{TARGET[t.target]}</span>
+                  <span className="calfs-list-state">{t.state === "ok" ? "собрано ✓" : t.state === "failed" ? "не собрано" : t.state === "collecting" ? `${t.samples}/${t.required_samples}` : "ждёт"}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {cal?.phase === "failed" && (
+          <Banner tone="danger" title="Калибровка не удалась">
+            {msg(cal.message_code) ?? "Сервис не принял результат."} Можно начать заново или пропустить с указанием причины.
+          </Banner>
+        )}
+        {(cal?.phase === "cancelled" || cal?.phase === "not_started") && <Banner tone="info" title="Калибровка не идёт">Нажмите «Начать заново».</Banner>}
+        {cal?.message_code && cal.phase === "collecting" && <p className="small muted">{msg(cal.message_code)}</p>}
+        {failed.map((t) => (
+          <p key={t.target} className="calfs-fail">
+            Точка «{TARGET[t.target]}» не собрана: {msg(t.message_code) ?? "сбор не удался"}
           </p>
-        </div>
-        {cal && <Badge tone={cal.phase === "failed" ? "danger" : cal.phase === "collecting" ? "accent" : "neutral"}>{CAL_PHASE[cal.phase]}</Badge>}
+        ))}
+        {failed.length > 0 && <p className="small">Проверьте освещение и что в кадре только ваше лицо, затем повторите точку.</p>}
       </div>
-
-      {error && <ErrorBanner context={error.ctx} error={error.error} onDismiss={() => setError(null)} />}
-
-      <div className="cal-layout">
-        <div className={`cal-stage ${curStatus?.state === "failed" ? "cal-stage-failed" : ""}`} aria-hidden="true">
-          {CalibrationTargetValues.map((t) => {
-            const st = cal?.targets.find((x) => x.target === t);
-            const active = t === current && st?.state === "collecting";
-            return <span key={t} className={`cal-dot cal-${t} cal-dot-${st?.state ?? "pending"} ${active ? "cal-dot-active" : ""}`} />;
-          })}
-          {!cal && <Spinner label="Получаем состояние калибровки…" />}
-        </div>
-
-        <Card title="Ход калибровки" aside={<span className="muted">{okCount} из {CalibrationTargetValues.length}</span>}>
-          <div className="sr-live" aria-live="polite">
-            {curStatus && curStatus.state === "collecting" && `Смотрите ${TARGET[curStatus.target]}`}
-            {curStatus && curStatus.state === "failed" && `Точка ${TARGET[curStatus.target]} не собрана`}
-          </div>
-          <ul className="cal-targets">
-            {(cal?.targets ?? []).map((t) => (
-              <li key={t.target} className={`cal-target state-${t.state}`}>
-                <div className="cal-target-head">
-                  <span className="cal-target-name">Взгляд {TARGET[t.target]}</span>
-                  <span className="small muted">
-                    {t.samples}/{t.required_samples} · качество {t.quality === null ? "—" : ratio(t.quality)}
-                  </span>
-                </div>
-                <Progress
-                  value={t.samples}
-                  max={t.required_samples}
-                  tone={t.state === "failed" ? "danger" : t.state === "ok" ? "ok" : "accent"}
-                  label={`Точка ${TARGET[t.target]}`}
-                />
-                {t.state === "failed" && (
-                  <div className="cal-fail">
-                    <span>{msg(t.message_code) ?? "Сбор не удался"}</span>
-                    <Button size="sm" disabled={busy !== null || backendLost} onClick={() => void selectTarget(t.target)}>
-                      Повторить точку
-                    </Button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-
-          {cal?.phase === "failed" && (
-            <Banner tone="danger" title="Калибровка не удалась">
-              {msg(cal.message_code) ?? "Сервис не принял результат."} Можно начать заново или пропустить с указанием причины.
-            </Banner>
-          )}
-          {(cal?.phase === "cancelled" || cal?.phase === "not_started") && (
-            <Banner tone="info" title="Калибровка не идёт">Нажмите «Начать заново».</Banner>
-          )}
-          {cal?.message_code && cal.phase === "collecting" && <p className="small muted">{msg(cal.message_code)}</p>}
-          {failed.length > 0 && <p className="small">Проверьте освещение и что в кадре только ваше лицо, затем повторите точку.</p>}
-
-          <div className="actions">
+      <div className="calfs-bar">
+        <div className="actions calfs-actions">
+          {failed.map((t) => (
+            <Button key={t.target} size="sm" disabled={busy !== null || backendLost} onClick={() => void selectTarget(t.target)}>
+              Повторить «{TARGET[t.target]}»
+            </Button>
+          ))}
+          {armed && (
             <Button variant="primary" disabled={!allOk || backendLost || cal?.phase !== "collecting"} busy={busy === "finish"} onClick={() => void finish()}>
               Завершить калибровку
             </Button>
-            {(cal?.phase === "failed" || cal?.phase === "cancelled" || cal?.phase === "not_started") && (
-              <Button busy={busy === "restart"} disabled={backendLost} onClick={() => void restart()}>
-                Начать заново
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              disabled={backendLost}
-              onClick={() => (role === "teacher" ? setSkipOpen(true) : requestTeacher())}
-              title="Решение преподавателя: потребуется PIN"
-            >
-              Пропустить…
+          )}
+          {(cal?.phase === "failed" || cal?.phase === "cancelled" || cal?.phase === "not_started") && (
+            <Button busy={busy === "restart"} disabled={backendLost} onClick={() => void restart()}>
+              Начать заново
             </Button>
-            <span className="spacer" />
-            <Button variant="danger" busy={busy === "cancel"} disabled={backendLost || session.state !== "calibrating"} onClick={() => void cancel()}>
-              Отменить калибровку
-            </Button>
-          </div>
-        </Card>
+          )}
+          <Button variant="ghost" disabled={backendLost} onClick={() => (role === "teacher" ? setSkipOpen(true) : requestTeacher())} title="Решение преподавателя: потребуется PIN">
+            Пропустить…
+          </Button>
+          <Button variant="danger" busy={busy === "cancel"} disabled={backendLost || session.state !== "calibrating"} onClick={() => void cancel()}>
+            Отменить
+          </Button>
+        </div>
+        <p className="small muted">{okCount} из {CalibrationTargetValues.length} точек · {cal ? CAL_PHASE[cal.phase] : "…"}</p>
       </div>
       {skipOpen && <SkipDialog busy={busy === "skip"} onClose={() => setSkipOpen(false)} onSkip={(r) => void skip(r)} />}
     </div>
