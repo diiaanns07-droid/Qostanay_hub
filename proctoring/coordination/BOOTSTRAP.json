@@ -1,9 +1,9 @@
 {
   "product": "Qorgau Exam",
   "contract": "qorgau.v1",
-  "contract_version": "1.0.0",
+  "contract_version": "1.0.1",
   "contracts_frozen": true,
-  "state": "bootstrap_published",
+  "state": "r2_candidate_integrated",
   "prepared_by": "A01",
   "prepared_on": "2026-10-08",
   "branch": "claude/nifty-ride-ux8e4j",
@@ -54,15 +54,15 @@
     ]
   },
   "module_status": {
-    "capture (A02)": "module_not_integrated",
-    "phone (A03)": "module_not_integrated",
-    "attention (A04)": "module_not_integrated",
-    "fusion (A05)": "module_not_integrated",
-    "shell main/preload/native (A06)": "not started",
-    "renderer (A07)": "not started",
-    "evidence (A08)": "module_not_integrated",
-    "qa/packaging (A09)": "not started",
-    "demo/pitch (A10)": "not started"
+    "capture (A02)": "integrated 7769f13b",
+    "phone (A03)": "integrated c0275a21",
+    "attention (A04)": "integrated 40144441",
+    "fusion (A05)": "integrated 8f763a1f",
+    "shell main/preload/native (A06)": "integrated 62a7fb1e (real Electron/Windows NOT RUN)",
+    "renderer (A07)": "integrated 3fef6fb8",
+    "evidence (A08)": "integrated 5509950e",
+    "qa/packaging (A09)": "integrated e01fff54",
+    "demo/pitch (A10)": "integrated de71342d"
   },
   "first_milestones": {
     "A02": "create_capture_service: live + replay + synthetic, fan-out with latest-frame mailboxes, clean close/restart",
@@ -74,5 +74,6 @@
     "A08": "create_evidence_store: SQLite + router for the A08 routes, review + HTML/JSON report on one test session",
     "A09": "contract/API integration tests + negative cases against `python -m proctor serve` (synthetic)",
     "A10": "demo/exams/demo_exam.json (ExamDefinition) + requirement-to-demo matrix + replay manifest plan"
-  }
+  },
+  "candidate_manifest": "proctoring/coordination/CANDIDATE.json"
 }
