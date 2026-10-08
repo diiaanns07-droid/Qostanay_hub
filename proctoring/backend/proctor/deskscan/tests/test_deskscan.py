@@ -130,6 +130,10 @@ def test_preflight_check_states():
     found = DeskScanResult(state=DeskScanState.OBJECTS_FOUND, objects=[{"class_name": "cell phone", "label_ru": "телефон", "max_confidence": 0.8, "seen_ms": 900}])
     check = preflight_check(found)
     assert check.status == CheckStatus.WARN and check.message_ru == "На столе замечено: телефон — уберите его"
+    book = DeskScanResult(state=DeskScanState.OBJECTS_FOUND, objects=[{"class_name": "book", "label_ru": "книга", "max_confidence": 0.6, "seen_ms": 700}])
+    assert preflight_check(book).message_ru == "На столе замечено: книга — уберите её"
+    two = DeskScanResult(state=DeskScanState.OBJECTS_FOUND, objects=[found.objects[0], book.objects[0]])
+    assert preflight_check(two).message_ru == "На столе замечено: телефон, книга — уберите их"
 
 
 # --------------------------------------------------------------------------------------- the API

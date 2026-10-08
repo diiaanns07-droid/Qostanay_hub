@@ -132,12 +132,18 @@ def objects_text_ru(objects: list[DeskScanObject]) -> str:
     return ", ".join(o.label_ru for o in objects)
 
 
+def pronoun_ru(objects: list[DeskScanObject]) -> str:
+    """«уберите его / её / их» (книга — женский род)."""
+    if len(objects) != 1:
+        return "их"
+    return "её" if objects[0].class_name == "book" else "его"
+
+
 def outcome_ru(state: DeskScanState, objects: list[DeskScanObject], problem: str | None = None) -> str:
     if state == DeskScanState.CLEAR:
         return "Стол осмотрен: посторонних предметов не замечено."
     if state == DeskScanState.OBJECTS_FOUND:
-        them = "его" if len(objects) == 1 else "их"
-        return f"Замечено: {objects_text_ru(objects)} — уберите {them} и повторите осмотр."
+        return f"Замечено: {objects_text_ru(objects)} — уберите {pronoun_ru(objects)} и повторите осмотр."
     if state == DeskScanState.FAILED:
         return f"Осмотр не выполнен: {problem or 'неизвестная ошибка'}. Это не означает «чисто»."
     return problem or ""
@@ -156,9 +162,8 @@ def preflight_check(result: DeskScanResult | None) -> PreflightCheck:
                               message_ru="Стол осмотрен: посторонних предметов не замечено")
     if state == DeskScanState.OBJECTS_FOUND:
         objs = result.objects if result is not None else []
-        them = "его" if len(objs) == 1 else "их"
         return PreflightCheck(**base, status=CheckStatus.WARN, message_code="desk_scan_objects_found",
-                              message_ru=f"На столе замечено: {objects_text_ru(objs)} — уберите {them}",
+                              message_ru=f"На столе замечено: {objects_text_ru(objs)} — уберите {pronoun_ru(objs)}",
                               details={"objects": ",".join(o.class_name for o in objs)})
     if state == DeskScanState.FAILED:
         return PreflightCheck(**base, status=CheckStatus.WARN, message_code="desk_scan_failed",
