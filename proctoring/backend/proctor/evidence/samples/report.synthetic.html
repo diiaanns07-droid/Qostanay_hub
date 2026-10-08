@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; img-src data:; style-src &#x27;unsafe-inline&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Qorgau Exam — отчёт s-sample-synthetic-0001</title>
+<style>
+:root { --ink:#1b1f24; --muted:#5b6470; --line:#c9cfd6; --bg:#ffffff; --warn:#8a5a00; --warnbg:#fff4d6;
+        --syn:#6b2fa3; --synbg:#f1e8fb; --live:#1f6f43; --livebg:#e6f4ec; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { font: 14px/1.45 "Segoe UI", Arial, sans-serif; color: var(--ink); background: var(--bg); margin: 0 auto;
+       max-width: 980px; padding: 24px 16px; overflow-wrap: anywhere; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 17px; margin: 28px 0 8px; border-bottom: 2px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 15px; margin: 0 0 6px; }
+.muted { color: var(--muted); }
+.banner { border: 3px solid; border-radius: 6px; padding: 10px 14px; margin: 14px 0; }
+.banner strong { display: block; font-size: 16px; letter-spacing: .02em; }
+.banner.synthetic { border-color: var(--syn); background: var(--synbg); color: var(--syn); }
+.banner.replay { border-color: var(--warn); background: var(--warnbg); color: var(--warn); }
+.banner.live { border-color: var(--live); background: var(--livebg); color: var(--live); }
+.banner.alert { border-color: var(--warn); background: var(--warnbg); color: var(--warn); }
+.note { border-left: 4px solid var(--line); padding: 6px 10px; margin: 8px 0; background: #f6f7f9; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; }
+th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+th { background: #eef1f4; font-weight: 600; }
+td.num { text-align: right; white-space: nowrap; }
+.kv th { width: 34%; overflow-wrap: break-word; }
+.incident { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin: 12px 0; }
+.tag { display: inline-block; border: 1px solid var(--line); border-radius: 10px; padding: 0 8px; font-size: 12px; margin-right: 4px; }
+.auto { background: #eef1f4; }
+.human { background: #e6f4ec; }
+.pending { background: #fff4d6; }
+.split { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media screen and (min-width: 900px) { .split { grid-template-columns: 1fr 1fr; } }
+.box { border: 1px dashed var(--line); padding: 6px 8px; border-radius: 4px; }
+figure { margin: 6px 0; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); }
+figcaption { font-size: 12px; color: var(--muted); }
+.mono { font-family: Consolas, "Courier New", monospace; font-size: 12px; }
+ul { margin: 4px 0 8px 20px; padding: 0; }
+@page { size: A4; margin: 14mm 12mm; }
+@media print {
+  body { max-width: none; padding: 0; font-size: 11pt; }
+  .box, tr, figure, .banner, .note { break-inside: avoid; }
+  .incident { break-inside: auto; }
+  h2 { break-after: avoid; }
+}
+</style></head><body>
+<header>
+<h1>Qorgau Exam — отчёт о сессии экзамена</h1>
+<div class="muted">Сессия <span class="mono">s-sample-synthetic-0001</span> · экспортировано 2026-10-08 05:04:58 UTC</div>
+<div class="banner synthetic"><strong>СИНТЕТИЧЕСКИЕ ДАННЫЕ</strong>Сценарные наблюдения для проверки системы. Это не результат работы камеры и не сведения об участнике.</div>
+</header>
+<section><h2>Как читать отчёт</h2><ul>
+<li>Эпизоды — это объяснимые сигналы для проверки преподавателем, а не доказательство нарушения и не «вероятность списывания».</li>
+<li>Решение по каждому эпизоду принимает преподаватель; автоматических санкций нет.</li>
+<li>Приоритет — очерёдность проверки по прозрачным правилам, а не степень вины.</li>
+<li>Интервалы без наблюдения означают «неизвестно», а не «нарушений нет».</li>
+</ul></section>
+<section><h2>Сессия</h2>
+<table class="kv"><tbody>
+<tr><th>Экзамен</th><td>demo-exam-1</td></tr>
+<tr><th>Участник (псевдоним)</th><td>student-demo</td></tr>
+<tr><th>Состояние</th><td>завершена</td></tr>
+<tr><th>Режим источника</th><td>synthetic</td></tr>
+<tr><th>Источник</th><td>синтетический генератор, 640×480 @ 30 fps</td></tr>
+<tr><th>Создана</th><td>2026-10-08 04:52:58 UTC</td></tr>
+<tr><th>Экзамен начат</th><td>2026-10-08 04:53:28 UTC</td></tr>
+<tr><th>Завершена</th><td>2026-10-08 05:03:28 UTC</td></tr>
+<tr><th>Калибровка взгляда</th><td>completed</td></tr>
+<tr><th>Сохранение снимков</th><td>включено</td></tr>
+<tr><th>Версия backend / контракта</th><td>0.1.0 / 1.0.0</td></tr>
+<tr><th>Последняя ошибка</th><td>—</td></tr>
+</tbody></table>
+</section>
+<section><h2>Покрытие наблюдения</h2>
+<p class="note">Наблюдаемое время — интервалы экзамена (без пауз), где и детектор телефона, и анализ лица/взгляда выдавали определённые результаты; разрыв дольше 2 с считается пропуском. Время указано от начала сессии (мин:сек).</p>
+<table class="kv"><tbody>
+<tr><th>Интервал экзамена (время сессии)</th><td>0:30.0 — 10:30.0</td></tr>
+<tr><th>Длительность экзамена</th><td>10 мин 00,0 с</td></tr>
+<tr><th>Пауза</th><td>0,0 с</td></tr>
+<tr><th>Наблюдаемое время (оба анализа)</th><td>9 мин 43,2 с</td></tr>
+</tbody></table>
+<table><thead><tr><th>Компонент</th><th>Определённые результаты</th><th>Не определено (unknown)</th><th>Нет наблюдений</th><th>Наблюдений</th></tr></thead><tbody>
+<tr><td>детектор телефона</td><td class="num">10 мин 00,0 с</td><td class="num">0,0 с</td><td class="num">0,0 с</td><td class="num">2401</td></tr>
+<tr><td>лицо и взгляд</td><td class="num">9 мин 43,2 с</td><td class="num">10,2 с</td><td class="num">6,5 с</td><td class="num">2376</td></tr>
+</tbody></table>
+<h3>Пропуски и неизвестные интервалы (3)</h3>
+<table><thead><tr><th>Начало</th><th>Конец</th><th>Длительность</th><th>Компонент</th><th>Причина</th></tr></thead><tbody>
+<tr><td class="num">4:59.8</td><td class="num">5:06.2</td><td class="num">6,5 с</td><td>лицо и взгляд</td><td>нет наблюдений</td></tr>
+<tr><td class="num">5:00.0</td><td class="num">5:06.0</td><td class="num">6,0 с</td><td>источник кадров</td><td>камера отключена</td></tr>
+<tr><td class="num">6:40.0</td><td class="num">6:50.2</td><td class="num">10,2 с</td><td>лицо и взгляд</td><td>результат не определён</td></tr>
+</tbody></table>
+</section>
+<section><h2>Эпизоды для проверки (6)</h2>
+<table><thead><tr><th>№</th><th>Время</th><th>Эпизод</th><th>Приоритет проверки</th><th>Длительность</th><th>Решение преподавателя</th></tr></thead><tbody>
+<tr><td class="num">1</td><td class="num">1:35.0</td><td>Телефон в кадре</td><td>средний</td><td class="num">6,0 с</td><td>отклонено преподавателем</td></tr>
+<tr><td class="num">2</td><td class="num">2:30.0</td><td>Заблокированное действие в среде экзамена</td><td>низкий</td><td class="num">0,0 с</td><td>не проверено</td></tr>
+<tr><td class="num">3</td><td class="num">3:20.0</td><td>Продолжительный взгляд вниз (приблизительно)</td><td>низкий</td><td class="num">9,0 с</td><td>не проверено</td></tr>
+<tr><td class="num">4</td><td class="num">5:00.0</td><td>Наблюдение ухудшено (технический эпизод)</td><td>низкий</td><td class="num">6,0 с</td><td>не проверено</td></tr>
+<tr><td class="num">5</td><td class="num">8:00.0</td><td>Выход из окна экзамена</td><td>высокий</td><td class="num">3,2 с</td><td>подтверждено преподавателем</td></tr>
+<tr><td class="num">6</td><td class="num">10:00.0</td><td>Больше одного лица в кадре</td><td>средний</td><td class="num">30,0 с</td><td>не проверено</td></tr>
+</tbody></table>
+<article class="incident">
+<h3>1. Телефон в кадре <span class="muted mono">inc-phone-1</span></h3>
+<div><span class="tag">телефон</span><span class="tag">приоритет проверки: средний</span><span class="tag">synthetic</span></div>
+<div class="split">
+<div class="box auto"><strong>Автоматический сигнал</strong>
+<p>Телефон виден 6,0 с; требуется проверка преподавателем.</p>
+<table class="kv"><tbody>
+<tr><th>Время сессии</th><td>1:35.0 — 1:41.0</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 04:54:33 UTC — 2026-10-08 04:54:39 UTC</td></tr>
+<tr><th>Длительность</th><td>6,0 с</td></tr>
+<tr><th>Завершение</th><td>условие прекратилось</td></tr>
+<tr><th>Макс. оценка модели (не вероятность)</th><td>0.71</td></tr>
+<tr><th>Среднее качество входа</th><td>0.80</td></tr>
+<tr><th>Наблюдений</th><td>3</td></tr>
+<tr><th>Правило / конфигурация</th><td>sample-rules-1 / sample-config-1</td></tr>
+</tbody></table>
+<table><thead><tr><th>Факт</th><th>Значение</th></tr></thead><tbody>
+<tr><td>Телефон виден</td><td>6000.0 мс</td></tr>
+</tbody></table>
+<ul><li>Обнаружение телефона не доказывает фотографирование экрана.</li><li>СИНТЕТИКА: сценарные данные, не результат CV.</li></ul>
+</div>
+<div class="box human"><strong>Решение преподавателя: отклонено преподавателем</strong>
+<table><thead><tr><th>Время (UTC)</th><th>Решение</th><th>Оператор</th><th>Комментарий</th></tr></thead><tbody>
+<tr><td>2026-10-08 05:04:58 UTC</td><td>не удалось определить</td><td>teacher-demo</td><td>Нужно пересмотреть снимок.</td></tr>
+<tr><td>2026-10-08 05:04:58 UTC</td><td>отклонено преподавателем</td><td>teacher-demo</td><td>Телефон лежал на столе экраном вниз.</td></tr>
+</tbody></table>
+<p class="muted">История решений сохраняется полностью; действует последнее.</p>
+</div></div>
+<figure><img alt="Снимок эпизода" src="data:image/jpeg;base64,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"><figcaption>Кадр 264 · 1:36.0 · SHA-256 787f9589077ae0da…</figcaption></figure>
+</article>
+<article class="incident">
+<h3>2. Заблокированное действие в среде экзамена <span class="muted mono">inc-env-1</span></h3>
+<div><span class="tag">среда</span><span class="tag">приоритет проверки: низкий</span><span class="tag">synthetic</span></div>
+<div class="split">
+<div class="box auto"><strong>Автоматический сигнал</strong>
+<p>Нажато Alt+Tab; действие заблокировано оболочкой.</p>
+<table class="kv"><tbody>
+<tr><th>Время сессии</th><td>2:30.0 — 2:30.0</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 04:55:28 UTC — 2026-10-08 04:55:28 UTC</td></tr>
+<tr><th>Длительность</th><td>0,0 с</td></tr>
+<tr><th>Завершение</th><td>условие прекратилось</td></tr>
+<tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
+<tr><th>Среднее качество входа</th><td>0.80</td></tr>
+<tr><th>Наблюдений</th><td>1</td></tr>
+<tr><th>Правило / конфигурация</th><td>sample-rules-1 / sample-config-1</td></tr>
+</tbody></table>
+<table><thead><tr><th>Факт</th><th>Значение</th></tr></thead><tbody>
+<tr><td>Действие</td><td>shortcut_alt_tab</td></tr>
+</tbody></table>
+<ul><li>СИНТЕТИКА: сценарные данные, не результат CV.</li></ul>
+</div>
+<div class="box pending"><strong>Решение преподавателя: не проверено</strong>
+<p class="muted">Эпизод ещё не проверен.</p>
+</div></div>
+<p class="muted">Снимок для эпизода отсутствует.</p>
+</article>
+<article class="incident">
+<h3>3. Продолжительный взгляд вниз (приблизительно) <span class="muted mono">inc-gaze-1</span></h3>
+<div><span class="tag">внимание</span><span class="tag">приоритет проверки: низкий</span><span class="tag">synthetic</span></div>
+<div class="split">
+<div class="box auto"><strong>Автоматический сигнал</strong>
+<p>Голова опущена вниз 9,0 с (приблизительная оценка).</p>
+<table class="kv"><tbody>
+<tr><th>Время сессии</th><td>3:20.0 — 3:29.0</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 04:56:18 UTC — 2026-10-08 04:56:27 UTC</td></tr>
+<tr><th>Длительность</th><td>9,0 с</td></tr>
+<tr><th>Завершение</th><td>условие прекратилось</td></tr>
+<tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
+<tr><th>Среднее качество входа</th><td>0.80</td></tr>
+<tr><th>Наблюдений</th><td>2</td></tr>
+<tr><th>Правило / конфигурация</th><td>sample-rules-1 / sample-config-1</td></tr>
+</tbody></table>
+<table><thead><tr><th>Факт</th><th>Значение</th></tr></thead><tbody>
+<tr><td>Взгляд вниз</td><td>9000.0 мс</td></tr>
+</tbody></table>
+<ul><li>Направление взгляда — приблизительная оценка, не eye-tracking.</li><li>СИНТЕТИКА: сценарные данные, не результат CV.</li></ul>
+</div>
+<div class="box pending"><strong>Решение преподавателя: не проверено</strong>
+<p class="muted">Эпизод ещё не проверен.</p>
+</div></div>
+<p class="muted">Снимок для эпизода отсутствует.</p>
+</article>
+<article class="incident">
+<h3>4. Наблюдение ухудшено (технический эпизод) <span class="muted mono">inc-tech-1</span></h3>
+<div><span class="tag">техника</span><span class="tag">приоритет проверки: низкий</span><span class="tag">synthetic</span></div>
+<div class="split">
+<div class="box auto"><strong>Автоматический сигнал</strong>
+<p>Камера не передавала кадры 6,0 с: интервал не наблюдался.</p>
+<table class="kv"><tbody>
+<tr><th>Время сессии</th><td>5:00.0 — 5:06.0</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 04:57:58 UTC — 2026-10-08 04:58:04 UTC</td></tr>
+<tr><th>Длительность</th><td>6,0 с</td></tr>
+<tr><th>Завершение</th><td>условие прекратилось</td></tr>
+<tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
+<tr><th>Среднее качество входа</th><td>0.80</td></tr>
+<tr><th>Наблюдений</th><td>2</td></tr>
+<tr><th>Правило / конфигурация</th><td>sample-rules-1 / sample-config-1</td></tr>
+</tbody></table>
+<table><thead><tr><th>Факт</th><th>Значение</th></tr></thead><tbody>
+<tr><td>Пропуск</td><td>6000.0 мс</td></tr>
+</tbody></table>
+<ul><li>СИНТЕТИКА: сценарные данные, не результат CV.</li></ul>
+</div>
+<div class="box pending"><strong>Решение преподавателя: не проверено</strong>
+<p class="muted">Эпизод ещё не проверен.</p>
+</div></div>
+<p class="muted">Снимок для эпизода отсутствует.</p>
+</article>
+<article class="incident">
+<h3>5. Выход из окна экзамена <span class="muted mono">inc-env-2</span></h3>
+<div><span class="tag">среда</span><span class="tag">приоритет проверки: высокий</span><span class="tag">synthetic</span></div>
+<div class="split">
+<div class="box auto"><strong>Автоматический сигнал</strong>
+<p>Окно экзамена потеряло фокус на 3,2 с; блокировка не сработала (только зафиксировано).</p>
+<table class="kv"><tbody>
+<tr><th>Время сессии</th><td>8:00.0 — 8:03.2</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 05:00:58 UTC — 2026-10-08 05:01:01 UTC</td></tr>
+<tr><th>Длительность</th><td>3,2 с</td></tr>
+<tr><th>Завершение</th><td>условие прекратилось</td></tr>
+<tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
+<tr><th>Среднее качество входа</th><td>0.80</td></tr>
+<tr><th>Наблюдений</th><td>1</td></tr>
+<tr><th>Правило / конфигурация</th><td>sample-rules-1 / sample-config-1</td></tr>
+</tbody></table>
+<table><thead><tr><th>Факт</th><th>Значение</th></tr></thead><tbody>
+<tr><td>Без фокуса</td><td>3200.0 мс</td></tr>
+</tbody></table>
+<ul><li>СИНТЕТИКА: сценарные данные, не результат CV.</li></ul>
+</div>
+<div class="box human"><strong>Решение преподавателя: подтверждено преподавателем</strong>
+<table><thead><tr><th>Время (UTC)</th><th>Решение</th><th>Оператор</th><th>Комментарий</th></tr></thead><tbody>
+<tr><td>2026-10-08 05:04:58 UTC</td><td>подтверждено преподавателем</td><td>teacher-demo</td><td>Переключение на другое окно подтверждено.</td></tr>
+</tbody></table>
+</div></div>
+<p class="muted">Снимок для эпизода отсутствует.</p>
+</article>
+<article class="incident">
+<h3>6. Больше одного лица в кадре <span class="muted mono">inc-faces-1</span></h3>
+<div><span class="tag">присутствие</span><span class="tag">приоритет проверки: средний</span><span class="tag">synthetic</span></div>
+<div class="split">
+<div class="box auto"><strong>Автоматический сигнал</strong>
+<p>В кадре два лица; эпизод не закрыт до конца сессии.</p>
+<table class="kv"><tbody>
+<tr><th>Время сессии</th><td>10:00.0 — не закрыт</td></tr>
+<tr><th>Время (UTC)</th><td>2026-10-08 05:02:58 UTC — —</td></tr>
+<tr><th>Длительность</th><td>30,0 с</td></tr>
+<tr><th>Завершение</th><td>—</td></tr>
+<tr><th>Макс. оценка модели (не вероятность)</th><td>—</td></tr>
+<tr><th>Среднее качество входа</th><td>0.80</td></tr>
+<tr><th>Наблюдений</th><td>1</td></tr>
+<tr><th>Правило / конфигурация</th><td>sample-rules-1 / sample-config-1</td></tr>
+</tbody></table>
+<table><thead><tr><th>Факт</th><th>Значение</th></tr></thead><tbody>
+<tr><td>Лиц в кадре</td><td>2 шт.</td></tr>
+</tbody></table>
+<ul><li>СИНТЕТИКА: сценарные данные, не результат CV.</li></ul>
+</div>
+<div class="box pending"><strong>Решение преподавателя: не проверено</strong>
+<p class="muted">Эпизод ещё не проверен.</p>
+</div></div>
+<p class="muted">Снимок для эпизода отсутствует.</p>
+</article>
+</section>
+<section><h2>События среды экзамена (2)</h2>
+<table><thead><tr><th>Время</th><th>Действие</th><th>Результат</th><th>Механизм</th><th>Подробности</th></tr></thead><tbody>
+<tr><td class="num">2:30.0</td><td>Alt+Tab</td><td>заблокировано</td><td class="mono">electron.before_input_event (window)</td><td>сочетание Alt+Tab</td></tr>
+<tr><td class="num">8:00.0</td><td>потеря фокуса окна</td><td>только зафиксировано</td><td class="mono">electron.blur (window)</td><td>длительность 3,2 с</td></tr>
+</tbody></table>
+<p class="muted">«Только зафиксировано» означает, что действие не было заблокировано. Блокировка системных сочетаний Windows не гарантируется.</p>
+</section>
+<section><h2>Ответы (3)</h2>
+<table><thead><tr><th>Вопрос</th><th>Ответ</th><th>Сохранён (UTC)</th></tr></thead><tbody>
+<tr><td class="mono">q1</td><td>b</td><td>2026-10-08 05:04:58 UTC</td></tr>
+<tr><td class="mono">q2</td><td>a, c</td><td>2026-10-08 05:04:58 UTC</td></tr>
+<tr><td class="mono">q3</td><td>Ответ текстом: 42</td><td>2026-10-08 05:04:58 UTC</td></tr>
+</tbody></table></section>
+<section><h2>Ограничения</h2><ul>
+<li>СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для проверки системы, а не результат работы камеры и CV.</li>
+<li>Эпизоды — повод для проверки преподавателем, а не доказательство нарушения; решение принимает преподаватель.</li>
+<li>Направление взгляда — приблизительная оценка, не eye-tracking; обнаружение телефона не доказывает съёмку экрана.</li>
+<li>Интервалов без наблюдения или с неопределёнными результатами: 3. В них нарушения не определялись — это «неизвестно», а не «нарушений нет».</li>
+<li>Эпизодов, не закрытых до конца сессии: 1 (длительность — до последнего обновления).</li>
+<li>Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера.</li>
+</ul></section>
+<section><h2>Целостность и версии</h2>
+<p class="note">SHA-256 позволяет обнаружить случайное изменение файлов после экспорта. Это не защита от изменения владельцем компьютера и не криптографическое доказательство подлинности.</p>
+<table><thead><tr><th>Файл</th><th>Состояние</th><th>Размер, байт</th><th>SHA-256</th></tr></thead><tbody>
+<tr><td class="mono">ev-12cc66e812a4a674484ecdac.jpg</td><td>встроен</td><td class="num">11905</td><td class="mono">787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768</td></tr>
+</tbody></table>
+<table><thead><tr><th>Компонент</th><th>Версия</th></tr></thead><tbody>
+<tr><td class="mono">evidence_schema</td><td class="mono">1</td></tr>
+<tr><td class="mono">fusion.rule_version</td><td class="mono">sample-rules-1</td></tr>
+<tr><td class="mono">fusion.config_version</td><td class="mono">sample-config-1</td></tr>
+<tr><td class="mono">producer.bootstrap.attention.version</td><td class="mono">sample-1</td></tr>
+<tr><td class="mono">producer.bootstrap.attention.config_version</td><td class="mono">script-v1</td></tr>
+<tr><td class="mono">producer.bootstrap.phone.version</td><td class="mono">sample-1</td></tr>
+<tr><td class="mono">producer.bootstrap.phone.config_version</td><td class="mono">script-v1</td></tr>
+<tr><td class="mono">producer.capture.version</td><td class="mono">sample-1</td></tr>
+<tr><td class="mono">producer.environment.version</td><td class="mono">sample-1</td></tr>
+</tbody></table>
+</section>
+<footer class="muted"><p>
+Qorgau Exam backend 0.1.0 · контракт qorgau.v1 1.0.0 · формат qorgau.report.v1. Локальный отчёт: без сетевых ресурсов и скриптов.
+</p></footer></body></html>
