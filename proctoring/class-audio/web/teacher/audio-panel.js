@@ -49,7 +49,7 @@ export function mountAudioPanel(root, o) {
   const bPlay = /** @type {HTMLButtonElement} */ (h("button", { type: "button", class: "qa-btn" }, ["Включить звук в браузере"]));
   const problem = h("div", { class: "qa-problem", role: "alert" });
   const bAgain = /** @type {HTMLButtonElement} */ (h("button", { type: "button", class: "qa-btn" }, ["Подключиться снова"]));
-  const note = h("p", { class: "qa-note" }, ["Звук не записывается. Пока включён микрофон студента, он видит индикатор на своём экране."]);
+  const note = h("p", { class: "qa-note" }, ["Звук не записывается. Студент видит, когда включён его микрофон. Закрытие карточки завершает связь."]);
   const box = h("section", { class: "qa-audio", "aria-label": "Аудиосвязь" }, [
     h("div", { class: "qa-head" }, [h("h3", {}, ["Аудиосвязь"]), who]),
     busy,
