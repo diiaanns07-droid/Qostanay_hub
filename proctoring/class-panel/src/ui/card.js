@@ -96,7 +96,7 @@ export function updateCard(c, x, now, o) {
   setIcon(c.zoneIcon, d.zone, ICON[d.zone], c, "iconKey");
   setText(c.zoneText, ZONE_LABEL[d.zone]);
 
-  const linkText = d.link === "online" ? "на связи" : d.link === "offline" ? `нет связи${d.ageMs !== null ? ` ${fmtAge(d.ageMs)}` : ""}` : "связь неизвестна";
+  const linkText = d.link === "online" ? "на связи" : d.link === "offline" ? `нет связи${d.ageMs !== null ? ` ${fmtAge(d.ageMs)}` : ""}` : "нет данных";
   setIcon(c.linkIcon, d.link, ICON[d.link], c, "linkKey");
   setText(c.linkText, linkText);
   setAttr(c.link, "data-link", d.link);
@@ -128,8 +128,9 @@ export function updateCard(c, x, now, o) {
   setText(c.computer, v.computerName ?? "компьютер —");
   const camKey = v.camera === null ? "unknown" : v.camera === "ok" ? "ok" : "bad";
   setIcon(c.camIcon, camKey, v.camera === "ok" ? ICON.camera : v.camera === null ? ICON.unknown : ICON.cameraOff, c, "camKey");
-  setText(c.camText, v.camera === null ? "камера: нет данных" : CAMERA_LABEL[v.camera]);
-  setAttr(c.cam, "data-cam", camKey);
+  // an old camera state is not presented as the current one
+  setText(c.camText, v.camera === null ? "камера: нет данных" : d.stale ? "камера: устарело" : CAMERA_LABEL[v.camera]);
+  setAttr(c.cam, "data-cam", d.stale && v.camera !== null ? "stale" : camKey);
   setText(c.exam, v.examState ? EXAM_STATE_LABEL[v.examState] : "этап: нет данных");
 
   const total = v.incidentsTotal;
@@ -154,8 +155,8 @@ export function updateCard(c, x, now, o) {
     v.computerName && v.computerName !== displayName(v) ? v.computerName : null,
     ZONE_LABEL[d.zone],
     d.zone === "grey" && d.reasons[0] ? d.reasons[0] : null,
-    linkText,
-    v.camera === null ? "камера: нет данных" : CAMERA_LABEL[v.camera],
+    d.link === "unknown" ? "связь неизвестна" : linkText,
+    v.camera === null ? "камера: нет данных" : d.stale ? "состояние камеры устарело" : CAMERA_LABEL[v.camera],
     total === null ? "эпизоды: нет данных" : `эпизодов ${total}${unrev !== null ? `, без решения ${unrev}` : ""}`,
     `последнее событие ${v.lastEventAt === null ? "нет" : ago(v.lastEventAt, now)}`,
     o.demo ? "демо-данные" : null,

@@ -255,7 +255,7 @@ export function normalizeIncident(raw) {
 export const PRIORITY_LABEL = { high: "высокий приоритет проверки", medium: "средний приоритет проверки", low: "низкий приоритет проверки" };
 export const DECISION_LABEL = { confirmed: "Преподаватель подтвердил", dismissed: "Отклонено преподавателем", needs_followup: "Нужна дополнительная проверка" };
 
-/** "12 с назад", "3 мин назад", "—" */
+/** "12 с назад", "3 мин назад", "—" @param {number|null} ms @param {number} now */
 export function ago(ms, now) {
   if (ms === null) return "—";
   const s = Math.max(0, Math.round((now - ms) / 1000));

@@ -210,14 +210,17 @@ export class PanelStore {
       if (x.d.link === "online") online += 1;
       else if (x.d.link === "offline") offline += 1;
       else unknown += 1;
-      if (x.inQueue) queue += 1;
+      if (x.inQueue && this.feedLive) queue += 1;
     }
     return { total: this.students.size, online, offline, unknown, zones, queue };
   }
 
-  /** Students currently in the attention queue, most urgent first (protocol zone order, then latest event). */
+  /** Students currently in the attention queue, most urgent first (protocol zone order, then latest event).
+   *  Without a live server feed nothing is current, so the queue is empty (the header explains why). */
   queue() {
+    /** @type {NonNullable<ReturnType<PanelStore["derived"]>>[]} */
     const items = [];
+    if (!this.feedLive) return items;
     for (const id of this.students.keys()) {
       const x = this.derived(id);
       if (x && x.inQueue) items.push(x);

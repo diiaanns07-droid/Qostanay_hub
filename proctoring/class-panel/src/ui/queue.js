@@ -39,7 +39,7 @@ export function createQueue(store, o) {
     const why = h("span", { class: "q-why" });
     const src = h("span", { class: "q-src" });
     const when = h("span", { class: "q-when" });
-    const open = h("button", { type: "button", class: "q-open" }, [icon, h("span", { class: "q-text" }, [name, why, src, when])]);
+    const open = h("button", { type: "button", class: "q-open" }, [icon, h("span", { class: "q-text" }, [name, why, src])]);
     const ack = h("button", { type: "button", class: "q-ack", title: "Убрать из очереди до нового события" }, ["Просмотрено"]);
     open.addEventListener("click", () => o.onOpen(id, open));
     ack.addEventListener("click", () => {
@@ -48,7 +48,7 @@ export function createQueue(store, o) {
       const next = /** @type {HTMLElement|null} */ (li?.nextElementSibling?.querySelector(".q-open") ?? li?.previousElementSibling?.querySelector(".q-open") ?? null);
       queueMicrotask(() => (next ?? /** @type {HTMLElement} */ (root.querySelector("h2"))).focus?.());
     });
-    li = h("li", { class: "q-item", "data-id": id }, [open, ack]);
+    li = h("li", { class: "q-item", "data-id": id }, [open, h("div", { class: "q-foot" }, [when, ack])]);
     items.set(id, li);
     return li;
   }
@@ -100,7 +100,16 @@ export function createQueue(store, o) {
     });
     setText(count, String(current.length));
     empty.hidden = current.length > 0;
-    setText(empty, !store.loaded ? "Загрузка…" : store.students.size === 0 ? "Студентов пока нет." : "Сейчас никто не требует внимания по полученным данным.");
+    setText(
+      empty,
+      !store.loaded
+        ? "Загрузка…"
+        : !store.feedLive
+          ? "Нет связи с сервером класса: очередь недоступна, пока данные не станут актуальными."
+          : store.students.size === 0
+            ? "Студентов пока нет."
+            : "Сейчас никто не требует внимания по полученным данным.",
+    );
     if (!first && added.length > 0 && store.feedLive) {
       const names = added.map((id) => byId.get(id)).filter(Boolean).map((x) => displayName(/** @type {any} */ (x).entry.view));
       o.announce(names.length === 1 ? `Требует внимания: ${names[0]}` : `В очереди внимания новых: ${names.length}`);

@@ -1,0 +1,17 @@
+{
+  // Type-check of the plain-JS panel (JSDoc). Dev only; the panel itself has no build step.
+  // node <repo>/proctoring/desktop/node_modules/typescript/bin/tsc -p proctoring/class-panel/tsconfig.json
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.js"]
+}

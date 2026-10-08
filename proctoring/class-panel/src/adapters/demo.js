@@ -105,7 +105,7 @@ export function createDemoAdapter(opts = {}) {
       };
       // some history so the class does not start uniformly green
       const pre = rand();
-      const k = pre < 0.55 ? 0 : pre < 0.8 ? 1 : pre < 0.93 ? 2 : 4;
+      const k = pre < 0.62 ? 0 : pre < 0.86 ? 1 : pre < 0.96 ? 2 : 4;
       for (let j = 0; j < k; j++) addIncident(s, t - Math.floor(rand() * 20 * 60_000), true);
       sims.push(s);
     }
@@ -115,7 +115,11 @@ export function createDemoAdapter(opts = {}) {
 
   /** @param {SimStudent} s @param {number} at @param {boolean} [closed] */
   function addIncident(s, at, closed = false) {
-    const def = RULES[Math.floor(rand() * RULES.length)] ?? RULES[0];
+    // a calmer, more realistic mix: low priority most often, high rarely (simulation only)
+    const r = rand();
+    const want = r < 0.55 ? "low" : r < 0.88 ? "medium" : "high";
+    const pool = RULES.filter((x) => x.priority === want);
+    const def = pool[Math.floor(rand() * pool.length)] ?? RULES[0];
     incSeq += 1;
     const decided = closed && rand() < 0.5;
     const inc = {

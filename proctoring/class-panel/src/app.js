@@ -50,12 +50,30 @@ async function main() {
   document.documentElement.dataset.mode = adapter.kind;
 
   const live = h("div", { class: "sr-only", role: "status", "aria-live": "polite" });
+  // At most one announcement per 3 s (100 students must not flood a screen reader). Messages that arrive
+  // inside the window are collected (≤ 3, newest kept) and read together when it ends — none is dropped silently.
   let lastAnnounce = 0;
+  /** @type {string[]} */
+  let pendingTexts = [];
+  /** @type {ReturnType<typeof setTimeout>|null} */
+  let announceTimer = null;
   const announce = (/** @type {string} */ text) => {
     const t = Date.now();
-    if (t - lastAnnounce < 3000) return; // never flood screen readers with 100 students
-    lastAnnounce = t;
-    live.textContent = text;
+    const wait = 3000 - (t - lastAnnounce);
+    if (wait <= 0 && !announceTimer) {
+      lastAnnounce = t;
+      live.textContent = text;
+      return;
+    }
+    if (!pendingTexts.includes(text)) pendingTexts = [...pendingTexts, text].slice(-3);
+    if (!announceTimer) {
+      announceTimer = setTimeout(() => {
+        announceTimer = null;
+        lastAnnounce = Date.now();
+        if (pendingTexts.length) live.textContent = pendingTexts.join(". ");
+        pendingTexts = [];
+      }, Math.max(0, wait));
+    }
   };
 
   const registry = new ModuleRegistry();
@@ -71,7 +89,8 @@ async function main() {
     onPreview: (on) => grid.setShowPreview(on),
   });
 
-  root.replaceChildren(
+  /** @type {Array<HTMLElement|null>} */
+  const nodes = [
     h("a", { class: "skip", href: "#grid-start" }, ["К карточкам студентов"]),
     adapter.kind === "demo" ? h("div", { class: "demo-strip", role: "note" }, ["DEMO-режим: все студенты, события и превью имитированы. Реальные данные в этом режиме не отображаются."]) : null,
     header.root,
@@ -79,12 +98,28 @@ async function main() {
     drawer.root,
     demo ? createDemoPanel(demo, announce) : null,
     live,
-  );
+  ];
+  root.replaceChildren(...nodes.filter((x) => x !== null));
 
+  /** @type {Record<string, number[]>} */
+  const parts = { header: [], grid: [], queue: [] };
   store.subscribe(() => {
+    if (!cfg.debug) {
+      header.render();
+      grid.render();
+      queue.render();
+      return;
+    }
+    let t = performance.now();
     header.render();
+    parts.header.push(performance.now() - t);
+    t = performance.now();
     grid.render();
+    parts.grid.push(performance.now() - t);
+    t = performance.now();
     queue.render();
+    parts.queue.push(performance.now() - t);
+    for (const k of Object.keys(parts)) if ((parts[k]?.length ?? 0) > 200) parts[k]?.shift();
   });
 
   // Extension point for other roles (history / commands / audio modules)
@@ -120,6 +155,7 @@ async function main() {
     /** @type {any} */ (window).__classPanel = {
       store,
       adapter,
+      parts,
       metrics: () => ({
         cards: grid.count,
         flushCount: store.flushCount,

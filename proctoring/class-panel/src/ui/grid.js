@@ -93,34 +93,46 @@ export function createGrid(store, o) {
   /** @param {string[]} order */
   function applyOrder(order) {
     if (order.length === domOrder.length && order.every((id, i) => id === domOrder[i])) return;
-    const animate = !prefersReducedMotion() && domOrder.length > 0 && order.length <= 120;
+    // Animate (FLIP) only cards in the viewport: off-screen cards need no transition, and measuring 100
+    // cards was the main cost at 100 students (measured: grid render p95 ~47 ms → see HANDOFF.md).
+    const animate = !prefersReducedMotion() && domOrder.length > 0;
     /** @type {Map<string, DOMRect>} */
     const before = new Map();
-    if (animate) for (const id of order) {
-      const c = cards.get(id);
-      if (c && !c.root.hidden) before.set(id, c.root.getBoundingClientRect());
+    if (animate) {
+      for (const id of order) {
+        const c = cards.get(id);
+        if (c && !c.root.hidden && visible.has(id)) before.set(id, c.root.getBoundingClientRect());
+      }
     }
-    const frag = document.createDocumentFragment();
-    for (const id of order) {
-      const c = cards.get(id);
-      if (c) frag.append(c.root);
+    // minimal DOM moves: only nodes that are not already at their place are re-inserted
+    for (let i = 0; i < order.length; i++) {
+      const el = /** @type {CardEls} */ (cards.get(/** @type {string} */ (order[i]))).root;
+      const at = list.children[i];
+      if (at !== el) list.insertBefore(el, at ?? null);
     }
-    list.append(frag);
     domOrder = [...order];
-    if (!animate) return;
+    if (!animate || before.size === 0) return;
+    /** @type {Array<[HTMLElement, number, number]>} */
+    const moves = [];
     for (const [id, r0] of before) {
       const c = cards.get(id);
       if (!c) continue;
       const r1 = c.root.getBoundingClientRect();
       const dx = r0.left - r1.left;
       const dy = r0.top - r1.top;
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
-      c.root.style.transition = "none";
-      c.root.style.transform = `translate(${dx}px, ${dy}px)`;
+      if (Math.abs(dx) >= 1 || Math.abs(dy) >= 1) moves.push([c.root, dx, dy]);
+    }
+    for (const [el, dx, dy] of moves) {
+      el.style.transition = "none";
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+    if (moves.length) {
       requestAnimationFrame(() => {
-        c.root.style.transition = "transform 320ms cubic-bezier(.2,.7,.2,1)";
-        c.root.style.transform = "";
-        c.root.addEventListener("transitionend", () => (c.root.style.transition = ""), { once: true });
+        for (const [el] of moves) {
+          el.style.transition = "transform 320ms cubic-bezier(.2,.7,.2,1)";
+          el.style.transform = "";
+          el.addEventListener("transitionend", () => (el.style.transition = ""), { once: true });
+        }
       });
     }
   }

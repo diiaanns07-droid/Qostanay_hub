@@ -115,7 +115,7 @@ export function createDrawer(store, registry, o) {
       kv.replaceChildren(
         row("Связь", h("span", {}, [d.link === "online" ? "на связи" : d.link === "offline" ? "нет связи" : "неизвестно (нет связи панели с сервером)"])),
         row("Последний статус", h("span", {}, [v.lastStatusAt === null ? "не получен" : ago(v.lastStatusAt, now)])),
-        row("Камера", h("span", {}, [v.camera === null ? "нет данных" : CAMERA_LABEL[v.camera]])),
+        row("Камера", h("span", {}, [v.camera === null ? "нет данных" : d.stale ? `${CAMERA_LABEL[v.camera]} — устарело (последний статус ${ago(v.lastStatusAt, now)})` : CAMERA_LABEL[v.camera]])),
         row("Наблюдение", h("span", {}, [v.monitoring === null ? "нет данных" : v.monitoring === "ok" ? "полное" : "неполное"])),
         row("Этап", h("span", {}, [v.examState ? EXAM_STATE_LABEL[v.examState] : "нет данных"])),
         row("Эпизоды", h("span", {}, [
@@ -175,12 +175,9 @@ export function createDrawer(store, registry, o) {
       return box;
     });
 
-    dialog.append(
-      h("header", { class: "dr-head" }, [h("div", {}, [title, sub]), closeBtn]),
-      o.mode === "demo" ? h("p", { class: "demo-note" }, ["DEMO: данные этой карточки имитированы."]) : null,
-      h("div", { class: "dr-grid" }, [h("div", { class: "dr-col" }, [zoneBox, media, ackBtn]), h("div", { class: "dr-col" }, [kv])]),
-      ...slots,
-    );
+    dialog.append(h("header", { class: "dr-head" }, [h("div", {}, [title, sub]), closeBtn]));
+    if (o.mode === "demo") dialog.append(h("p", { class: "demo-note" }, ["DEMO: данные этой карточки имитированы."]));
+    dialog.append(h("div", { class: "dr-grid" }, [h("div", { class: "dr-col" }, [zoneBox, media, ackBtn]), h("div", { class: "dr-col" }, [kv])]), ...slots);
     overlay.hidden = false;
     document.body.classList.add("modal-open");
     closeBtn.focus();
