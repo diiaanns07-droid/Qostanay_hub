@@ -15,3 +15,11 @@ Root integration requested: enable default feature spec with audio; map history 
 Known limits: historical C1 log retains snapshot presence but omits JPEG bytes; unavailable old snapshot bytes cannot be recovered. Live hook persists exact accepted-envelope snapshot bytes. Hardware camera/microphone and OS restrictions are not part of these checks.
 
 Next: real-process C1 auth/join/backfill/run-reset/decision/request/upload/range/provenance tests, then browser seek if feasible. Push status: not pushed (coordinator owns publication).
+
+## Checkpoint 2 — resumed production verification
+
+Added `classreview/tests/test_classroom_feature.py`: **4 real C1 subprocess tests passed** (9.32 s), covering authenticated join, accepted-event backfill, backend run sequence reuse and conflicts, immutable live/replay/synthetic/unknown provenance, request/upload/HTTP Range, snapshot persistence, decision audit history and restart, forged token/foreign student/path/oversize denial, allowlisted assets, and persisted upload expiry. No hardware or native guards were activated. Clips are burned-in synthetic fixtures.
+
+The previously untested startup defect in `expire_requests` and ignored command issue timestamp are fixed by upstream `a097ac1`; reuse that version through coordinator baseline `90ce179` rather than duplicate the correction. Initial sandbox execution could not launch child servers or access default temporary directories; scoped escalated localhost tests with TEMP/TMP and pytest basetemp inside task scratch worked. One existing harness shutdown ping race produced a `ConnectionClosedOK` thread warning after successful checks; no feature hook errors occurred.
+
+Next: merge coordinator baseline and test actual Chrome playback/seeking under production panel CSP and same-origin login, then rerun relevant review tests. Checkpoint is local; publication remains the coordinator's responsibility.
