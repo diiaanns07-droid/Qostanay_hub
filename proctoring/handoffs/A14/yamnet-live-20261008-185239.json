@@ -1,0 +1,6206 @@
+{
+  "created_at": "2026-10-08T13:52:51.924755+00:00",
+  "conditions": "Фоновый разговор рядом в calibration и silence подтверждён капитаном; контролируемой тишины не было. Калибровка шума загрязнена речью. Speech/whisper оцениваются с этой оговоркой.",
+  "platform": "Windows",
+  "os_release": "11",
+  "os_version": "10.0.26200",
+  "thresholds": {
+    "silero": 0.5,
+    "yamnet": 0.3
+  },
+  "audio_recorded": false,
+  "phases": [
+    {
+      "phase": "calibration",
+      "start_ms": 0.0,
+      "end_ms": 5000.0,
+      "observations": 8,
+      "states": {
+        "unknown": 6,
+        "present": 2
+      },
+      "present_fraction": 0.25,
+      "numeric_criterion_met": null,
+      "acoustic_conditions": "Фоновый разговор рядом подтверждён капитаном; калибровка шума загрязнена речью.",
+      "detectors": {
+        "silero": {
+          "present": 2,
+          "windows": 8,
+          "fraction": 0.25
+        },
+        "yamnet": {
+          "present": 2,
+          "windows": 8,
+          "fraction": 0.25
+        },
+        "energy": {
+          "present": 0,
+          "windows": 8,
+          "fraction": 0.0
+        },
+        "final": {
+          "present": 2,
+          "windows": 8,
+          "fraction": 0.25
+        }
+      },
+      "yamnet_only_present": 0,
+      "yamnet_classes": {
+        "Speech": 2
+      },
+      "probability_mean": 0.98828125,
+      "probability_max": 0.9921875,
+      "calibration_contaminated_by_speech": true
+    },
+    {
+      "phase": "silence",
+      "start_ms": 5000.0,
+      "end_ms": 25000.0,
+      "observations": 40,
+      "states": {
+        "present": 40
+      },
+      "present_fraction": 1.0,
+      "numeric_criterion_met": "not_applicable",
+      "acoustic_conditions": "фаза тишины не валидна: фоновый разговор рядом (подтверждено капитаном); детектор корректно отметил речь",
+      "detectors": {
+        "silero": {
+          "present": 33,
+          "windows": 40,
+          "fraction": 0.825
+        },
+        "yamnet": {
+          "present": 40,
+          "windows": 40,
+          "fraction": 1.0
+        },
+        "energy": {
+          "present": 0,
+          "windows": 40,
+          "fraction": 0.0
+        },
+        "final": {
+          "present": 40,
+          "windows": 40,
+          "fraction": 1.0
+        }
+      },
+      "yamnet_only_present": 7,
+      "yamnet_classes": {
+        "Speech": 40
+      },
+      "probability_mean": 0.9598122025094927,
+      "probability_max": 1.0,
+      "raw_numeric_criterion_met": false,
+      "acceptance_status": "NOT_APPLICABLE"
+    },
+    {
+      "phase": "prepare_speech",
+      "start_ms": 25000.0,
+      "end_ms": 30000.0,
+      "observations": 10,
+      "states": {
+        "present": 10
+      },
+      "present_fraction": 1.0,
+      "numeric_criterion_met": null,
+      "acoustic_conditions": "Подготовительный интервал; не приёмочная фаза.",
+      "detectors": {
+        "silero": {
+          "present": 8,
+          "windows": 10,
+          "fraction": 0.8
+        },
+        "yamnet": {
+          "present": 10,
+          "windows": 10,
+          "fraction": 1.0
+        },
+        "energy": {
+          "present": 0,
+          "windows": 10,
+          "fraction": 0.0
+        },
+        "final": {
+          "present": 10,
+          "windows": 10,
+          "fraction": 1.0
+        }
+      },
+      "yamnet_only_present": 2,
+      "yamnet_classes": {
+        "Speech": 10
+      },
+      "probability_mean": 0.9771574859321117,
+      "probability_max": 1.0
+    },
+    {
+      "phase": "speech_nearby",
+      "start_ms": 30000.0,
+      "end_ms": 50000.0,
+      "observations": 40,
+      "states": {
+        "present": 39,
+        "absent": 1
+      },
+      "present_fraction": 0.975,
+      "numeric_criterion_met": true,
+      "acoustic_conditions": "Доли относятся к окнам фаз по таймеру, при загрязнённой калибровке. Вклад фонового разговора в speech/whisper не изолирован; распознавание шёпота отдельно не доказано.",
+      "detectors": {
+        "silero": {
+          "present": 34,
+          "windows": 40,
+          "fraction": 0.85
+        },
+        "yamnet": {
+          "present": 39,
+          "windows": 40,
+          "fraction": 0.975
+        },
+        "energy": {
+          "present": 0,
+          "windows": 40,
+          "fraction": 0.0
+        },
+        "final": {
+          "present": 39,
+          "windows": 40,
+          "fraction": 0.975
+        }
+      },
+      "yamnet_only_present": 5,
+      "yamnet_classes": {
+        "Speech": 39
+      },
+      "probability_mean": 0.9658505521466335,
+      "probability_max": 1.0,
+      "acceptance_status": "PARTIAL"
+    },
+    {
+      "phase": "prepare_whisper_1m",
+      "start_ms": 50000.0,
+      "end_ms": 55000.0,
+      "observations": 10,
+      "states": {
+        "present": 10
+      },
+      "present_fraction": 1.0,
+      "numeric_criterion_met": null,
+      "acoustic_conditions": "Подготовительный интервал; не приёмочная фаза.",
+      "detectors": {
+        "silero": {
+          "present": 8,
+          "windows": 10,
+          "fraction": 0.8
+        },
+        "yamnet": {
+          "present": 10,
+          "windows": 10,
+          "fraction": 1.0
+        },
+        "energy": {
+          "present": 0,
+          "windows": 10,
+          "fraction": 0.0
+        },
+        "final": {
+          "present": 10,
+          "windows": 10,
+          "fraction": 1.0
+        }
+      },
+      "yamnet_only_present": 2,
+      "yamnet_classes": {
+        "Speech": 10
+      },
+      "probability_mean": 0.9900457488000394,
+      "probability_max": 1.0
+    },
+    {
+      "phase": "whisper_1m",
+      "start_ms": 55000.0,
+      "end_ms": 75000.0,
+      "observations": 40,
+      "states": {
+        "present": 36,
+        "absent": 4
+      },
+      "present_fraction": 0.9,
+      "numeric_criterion_met": null,
+      "acoustic_conditions": "Доли относятся к окнам фаз по таймеру, при загрязнённой калибровке. Вклад фонового разговора в speech/whisper не изолирован; распознавание шёпота отдельно не доказано.",
+      "detectors": {
+        "silero": {
+          "present": 26,
+          "windows": 40,
+          "fraction": 0.65
+        },
+        "yamnet": {
+          "present": 34,
+          "windows": 40,
+          "fraction": 0.85
+        },
+        "energy": {
+          "present": 0,
+          "windows": 40,
+          "fraction": 0.0
+        },
+        "final": {
+          "present": 36,
+          "windows": 40,
+          "fraction": 0.9
+        }
+      },
+      "yamnet_only_present": 10,
+      "yamnet_classes": {
+        "Speech": 34
+      },
+      "probability_mean": 0.8148358012673755,
+      "probability_max": 1.0,
+      "acceptance_status": "PARTIAL"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "audio-88c5248e007d4281935769d372e8c509",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 781.0000000008586,
+      "wall_time": "2026-10-08T13:52:52.705755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "degraded",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "health",
+      "health": {
+        "component": "audio",
+        "status": "degraded",
+        "code": "noise_calibration",
+        "message": "",
+        "since_t_session_ms": null,
+        "details": {}
+      }
+    },
+    {
+      "observation_id": "audio-bf08d67919304635b43a6cfd27ee7baa",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 1297.0000000004802,
+      "wall_time": "2026-10-08T13:52:53.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "degraded",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "unknown",
+      "voice_probability": null,
+      "rms_dbfs": -29.701863086648743,
+      "noise_floor_dbfs": -96.79471990541656,
+      "reasons": [
+        "noise_calibration"
+      ]
+    },
+    {
+      "observation_id": "audio-e63898c24c4641ac803723a59b1a135f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 1813.0000000001019,
+      "wall_time": "2026-10-08T13:52:53.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "degraded",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "unknown",
+      "voice_probability": null,
+      "rms_dbfs": -25.678795347131246,
+      "noise_floor_dbfs": -96.60350259179631,
+      "reasons": [
+        "noise_calibration"
+      ]
+    },
+    {
+      "observation_id": "audio-bc46b5cd837c4a9287024b7e5915c0bc",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 2297.00000000048,
+      "wall_time": "2026-10-08T13:52:54.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "degraded",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "unknown",
+      "voice_probability": null,
+      "rms_dbfs": -28.411369743298167,
+      "noise_floor_dbfs": -93.51925724857288,
+      "reasons": [
+        "noise_calibration"
+      ]
+    },
+    {
+      "observation_id": "audio-55143a78ce9c40d8bcbc56000671036b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 2797.00000000048,
+      "wall_time": "2026-10-08T13:52:54.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "degraded",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "unknown",
+      "voice_probability": null,
+      "rms_dbfs": -28.65135284638036,
+      "noise_floor_dbfs": -40.698605254757766,
+      "reasons": [
+        "noise_calibration"
+      ]
+    },
+    {
+      "observation_id": "audio-563325d3c0924937ba92eaa566fb909a",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 3313.000000000102,
+      "wall_time": "2026-10-08T13:52:55.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "degraded",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "unknown",
+      "voice_probability": null,
+      "rms_dbfs": -41.32811927589501,
+      "noise_floor_dbfs": -44.290786101821915,
+      "reasons": [
+        "noise_calibration"
+      ]
+    },
+    {
+      "observation_id": "audio-2de23c1fe57f458381683f4d015880a7",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 3797.00000000048,
+      "wall_time": "2026-10-08T13:52:55.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "degraded",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "unknown",
+      "voice_probability": null,
+      "rms_dbfs": -28.421726710961366,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "noise_calibration"
+      ]
+    },
+    {
+      "observation_id": "audio-1bf4bc0b08bf4dea8baf38f06d42feed",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 4313.000000000102,
+      "wall_time": "2026-10-08T13:52:56.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "health",
+      "health": {
+        "component": "audio",
+        "status": "ok",
+        "code": "audio_ok",
+        "message": "",
+        "since_t_session_ms": null,
+        "details": {}
+      }
+    },
+    {
+      "observation_id": "audio-4493c1a66e044ec9b99f86e09d259cf4",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 4313.000000000102,
+      "wall_time": "2026-10-08T13:52:56.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9921875,
+      "rms_dbfs": -25.992208559167224,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-ab8832d658b44d87a3251487109a6cce",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 4797.00000000048,
+      "wall_time": "2026-10-08T13:52:56.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -23.019717591434667,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-569d1d63c3324bf5adb656eb30dc816c",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 5297.00000000048,
+      "wall_time": "2026-10-08T13:52:57.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.99609375,
+      "rms_dbfs": -24.968564152112585,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-cad0a5aaa16c4bd5acc6d6891a93d4f2",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 5813.000000000102,
+      "wall_time": "2026-10-08T13:52:57.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -42.516510231684904,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-ff723a4fcca14657937235bf78f132a7",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 6297.00000000048,
+      "wall_time": "2026-10-08T13:52:58.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9453125,
+      "rms_dbfs": -29.674761507081655,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-31a0e6685f4846c487c28fc12700ce51",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 6797.00000000048,
+      "wall_time": "2026-10-08T13:52:58.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.994649201631546,
+      "rms_dbfs": -22.281343017431258,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-96d9a8445fc747d98e507c06c9533c80",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 7313.000000000102,
+      "wall_time": "2026-10-08T13:52:59.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9869724549353123,
+      "rms_dbfs": -24.634700120654852,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-42449eeacd8e4c55a7d8590d08b89eaf",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 7797.00000000048,
+      "wall_time": "2026-10-08T13:52:59.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9964271068572998,
+      "rms_dbfs": -20.63298349438293,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-8ee2179a21c1410c88460d59ff372fb9",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 8313.000000000102,
+      "wall_time": "2026-10-08T13:53:00.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.80078125,
+      "rms_dbfs": -25.049122726980862,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-ee667d2333d14e37b6470d6a886f6b2a",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 8797.00000000048,
+      "wall_time": "2026-10-08T13:53:00.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9609375,
+      "rms_dbfs": -32.073545468607236,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-59b5d3910b0d45719a3e679eabdf69a0",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 9297.00000000048,
+      "wall_time": "2026-10-08T13:53:01.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.92578125,
+      "rms_dbfs": -30.56226168444126,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-ae493ec9ffff4d4484e42ed3bf4a5963",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 9813.000000000102,
+      "wall_time": "2026-10-08T13:53:01.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.8950262442231178,
+      "rms_dbfs": -26.72138971149879,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-a5c9f9dcc3e241f1a79e44d2321820da",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 10297.00000000048,
+      "wall_time": "2026-10-08T13:53:02.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9979707360267639,
+      "rms_dbfs": -24.081626844120997,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-8a2d7c646dae4e7cb05237bea56777db",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 10797.00000000048,
+      "wall_time": "2026-10-08T13:53:02.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9940146692097187,
+      "rms_dbfs": -23.513951862949177,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1621a675b4344aa294c431db99b234c8",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 11313.000000000102,
+      "wall_time": "2026-10-08T13:53:03.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9908124841749668,
+      "rms_dbfs": -26.729489154938783,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-ac65ab1a8f414fec9a78551763fef37a",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 11797.00000000048,
+      "wall_time": "2026-10-08T13:53:03.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.953125,
+      "rms_dbfs": -36.39223535743492,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-53892273622a4310964753f7f27f4c00",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 12313.000000000102,
+      "wall_time": "2026-10-08T13:53:04.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.97265625,
+      "rms_dbfs": -46.2057044734609,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-96947add04554d9a9e1e3d74e6903928",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 12797.00000000048,
+      "wall_time": "2026-10-08T13:53:04.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.3809635122617086,
+      "rms_dbfs": -35.804358502845545,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-8794aef33a314c7497d4d01b7f04ea97",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 13297.00000000048,
+      "wall_time": "2026-10-08T13:53:05.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9786381907761097,
+      "rms_dbfs": -26.996141647674015,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7c9fb8b8cb984972a4b83db6af3fea14",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 13813.000000000102,
+      "wall_time": "2026-10-08T13:53:05.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9914110712707043,
+      "rms_dbfs": -31.915516752201952,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-e9046c2ee9144ab9a5105e59ea513224",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 14297.00000000048,
+      "wall_time": "2026-10-08T13:53:06.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.8500560283660888,
+      "rms_dbfs": -25.827870652897325,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-afa9c7bb72824a56ad9b3033ed8195d3",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 14797.00000000048,
+      "wall_time": "2026-10-08T13:53:06.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9916760139167309,
+      "rms_dbfs": -21.213575214326394,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-8926055f0c924260aa37f7edf95dff9c",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 15313.000000000102,
+      "wall_time": "2026-10-08T13:53:07.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9868112429976463,
+      "rms_dbfs": -28.021617071949553,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-2f864d19d1484421ac25d9532942fd20",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 15797.00000000048,
+      "wall_time": "2026-10-08T13:53:07.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9950688401858012,
+      "rms_dbfs": -25.11175713156994,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-25e6816868624360b4ac022b3f6327eb",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 16313.000000000102,
+      "wall_time": "2026-10-08T13:53:08.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -28.48000910283222,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-9c3d9f53711c4769a7d5d904b264325f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 16797.00000000048,
+      "wall_time": "2026-10-08T13:53:08.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -26.140316551020398,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-e6c4ec5082554cc5a882107181a3198a",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 17297.00000000048,
+      "wall_time": "2026-10-08T13:53:09.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -34.1754762868332,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-be371a9db2644587822458ac03ae6b8d",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 17813.000000000102,
+      "wall_time": "2026-10-08T13:53:09.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9766896329820156,
+      "rms_dbfs": -23.50009570656143,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-c10792c9ad484efe8ccf2204956cb790",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 18297.00000000048,
+      "wall_time": "2026-10-08T13:53:10.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9951083858807882,
+      "rms_dbfs": -26.551883667273852,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7810d8fc29fc46b7a7c36e98f74c5000",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 18797.00000000048,
+      "wall_time": "2026-10-08T13:53:10.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9909595251083374,
+      "rms_dbfs": -27.870112391156763,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-19475f4bb50043e584ef0a34b419aa8b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 19313.000000000102,
+      "wall_time": "2026-10-08T13:53:11.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9988858066499233,
+      "rms_dbfs": -24.61938979588031,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-9439f0093dc94f60a5ccf6efa5710945",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 19797.00000000048,
+      "wall_time": "2026-10-08T13:53:11.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9921875,
+      "rms_dbfs": -26.10977130217173,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-bff725ff30e742d28816e34931329fb9",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 20313.000000000102,
+      "wall_time": "2026-10-08T13:53:12.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -29.851994525156247,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-0dc5cc6128bb401baa0458376dfcc1c4",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 20797.00000000048,
+      "wall_time": "2026-10-08T13:53:12.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -47.877027964603116,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-e1a4f885d6a948d388bce032bb2ac64e",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 21297.00000000048,
+      "wall_time": "2026-10-08T13:53:13.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9296875,
+      "rms_dbfs": -31.153660082878403,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-5c6a3d2c944d4415a19eb75f449dcf33",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 21813.000000000102,
+      "wall_time": "2026-10-08T13:53:13.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.99609375,
+      "rms_dbfs": -36.73833943668318,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-b13f783f57d142babd175b90b23dbecd",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 22297.00000000048,
+      "wall_time": "2026-10-08T13:53:14.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -27.386452792486196,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-5472b1a2defe431aad56db9c46041b31",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 22797.00000000048,
+      "wall_time": "2026-10-08T13:53:14.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9989276342093945,
+      "rms_dbfs": -26.738177231648223,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-f473aa4a7c6c45ca8d0e4af722def80b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 23313.000000000102,
+      "wall_time": "2026-10-08T13:53:15.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.99465087428689,
+      "rms_dbfs": -25.29081708937095,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-82fb91a92b0d4e1d92e0666ca738f1d7",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 23797.00000000048,
+      "wall_time": "2026-10-08T13:53:15.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9979282140731811,
+      "rms_dbfs": -25.44467966315318,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-57153876db6c4c729beb71ad40d43d97",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 24313.000000000102,
+      "wall_time": "2026-10-08T13:53:16.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9903511516749859,
+      "rms_dbfs": -26.034137935515638,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-74f13e88b914417ca57ab2c229e28b3b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 24797.00000000048,
+      "wall_time": "2026-10-08T13:53:16.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9927078286806742,
+      "rms_dbfs": -24.953841433951695,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-06c3cf71dc494d29b1650c2040148a84",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 25297.00000000048,
+      "wall_time": "2026-10-08T13:53:17.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -32.53353766589796,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-485a74f3550c4eeda15357fc013b551c",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 25813.000000000102,
+      "wall_time": "2026-10-08T13:53:17.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -38.372915814984566,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-4f8f1353a91845148b7c7926d5f11b1f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 26297.00000000048,
+      "wall_time": "2026-10-08T13:53:18.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.8962456901868184,
+      "rms_dbfs": -22.436641218519135,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-8e8508e1cb174a6e9e06e3b334c13d36",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 26797.00000000048,
+      "wall_time": "2026-10-08T13:53:18.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -26.318452846435996,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-8037ff20ddce4f378f3688087e09ddc1",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 27313.000000000102,
+      "wall_time": "2026-10-08T13:53:19.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.92578125,
+      "rms_dbfs": -29.99998835289403,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7cc31288b89e497db3e37a208914e386",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 27797.00000000048,
+      "wall_time": "2026-10-08T13:53:19.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9875662088394165,
+      "rms_dbfs": -27.506634671406744,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-845b96a7c0e54b2fadd67871e10c55b4",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 28313.000000000102,
+      "wall_time": "2026-10-08T13:53:20.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -33.1788060630596,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-4c77dd268c4f4582ba94e788ed12305e",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 28797.00000000048,
+      "wall_time": "2026-10-08T13:53:20.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9975608627001444,
+      "rms_dbfs": -26.328345675179058,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-f8c9812ab3604474b71c4c860cf48f98",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 29297.00000000048,
+      "wall_time": "2026-10-08T13:53:21.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9978705383837223,
+      "rms_dbfs": -24.816037650775367,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-c314d0edfee64f37b27b8f54e67d1b04",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 29813.000000000102,
+      "wall_time": "2026-10-08T13:53:21.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9978003092110157,
+      "rms_dbfs": -26.403533382487602,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-021316f710064c2ab39967a8d1d473d1",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 30297.00000000048,
+      "wall_time": "2026-10-08T13:53:22.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9924888173739116,
+      "rms_dbfs": -29.085268890270374,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-f94b535505e2463ca914267cbc847e96",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 30797.00000000048,
+      "wall_time": "2026-10-08T13:53:22.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9935530759394169,
+      "rms_dbfs": -29.620119696499053,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1cadf04c0d1e4e4d9f6f64cf721d2ea9",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 31313.000000000102,
+      "wall_time": "2026-10-08T13:53:23.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9765625,
+      "rms_dbfs": -34.467196832346744,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-59bee3ae4ad44a8d95e0a8245ff3398b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 31797.00000000048,
+      "wall_time": "2026-10-08T13:53:23.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.97265625,
+      "rms_dbfs": -30.52315103553667,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-66aee4f489c248188558712e1f2061dd",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 32313.000000000102,
+      "wall_time": "2026-10-08T13:53:24.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.998512726277113,
+      "rms_dbfs": -27.428569823508155,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-28c74b9edb194178933e26a8ce523f77",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 32797.00000000048,
+      "wall_time": "2026-10-08T13:53:24.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9979666431744894,
+      "rms_dbfs": -24.367831613728388,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-0f85a1eaba4949079cd21d7d7af09f4b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 33297.00000000048,
+      "wall_time": "2026-10-08T13:53:25.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9919957742094994,
+      "rms_dbfs": -30.341015593789077,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-478265301bd84373915597fb8cad5f04",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 33813.0000000001,
+      "wall_time": "2026-10-08T13:53:25.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -30.015976356378886,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-8003f1d12d7642488cb7eb4a4c8d675f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 34297.00000000048,
+      "wall_time": "2026-10-08T13:53:26.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -37.82270097663844,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1ff607f39d7b4e00b9362d943d639f0f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 34797.00000000048,
+      "wall_time": "2026-10-08T13:53:26.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9921875,
+      "rms_dbfs": -49.91600901802115,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-a226815b3b3f47e2a28d67fb24c788ba",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 35313.0000000001,
+      "wall_time": "2026-10-08T13:53:27.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.85546875,
+      "rms_dbfs": -39.634472209397615,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7e1f595532ae4e47846751097d1556fc",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 35797.00000000048,
+      "wall_time": "2026-10-08T13:53:27.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "absent",
+      "voice_probability": 0.4404764473438263,
+      "rms_dbfs": -33.54696260788893,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": []
+    },
+    {
+      "observation_id": "audio-fefb616b32034307842c73a15705cdfc",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 36313.0000000001,
+      "wall_time": "2026-10-08T13:53:28.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.99609375,
+      "rms_dbfs": -31.832507402312874,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-996bec772b7446749792e2b24ac4d83e",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 36797.00000000048,
+      "wall_time": "2026-10-08T13:53:28.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9923173109690349,
+      "rms_dbfs": -21.460373814976293,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-20949b15a43146f9b1305a69e5efe4ea",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 37297.00000000048,
+      "wall_time": "2026-10-08T13:53:29.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9741516001522541,
+      "rms_dbfs": -25.471151831445475,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-119b55ef01b84fbbafe0aef8bb9d0f20",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 37813.0000000001,
+      "wall_time": "2026-10-08T13:53:29.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -30.381534587964502,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-76188604f7f44a88a653d3d0db071d32",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 38297.00000000048,
+      "wall_time": "2026-10-08T13:53:30.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -24.62861424851452,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-dd9f9c792c36440099341990623be5a5",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 38797.00000000048,
+      "wall_time": "2026-10-08T13:53:30.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -33.579753048073535,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-a8d036a72afb4184a64d78dcc5c77547",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 39313.0000000001,
+      "wall_time": "2026-10-08T13:53:31.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -23.129780680558834,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-d0249c6d82614b7cabb98f8011c3c667",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 39797.00000000048,
+      "wall_time": "2026-10-08T13:53:31.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9965347568194072,
+      "rms_dbfs": -25.9843427997248,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-95c47b4d878247b5bd6c7e4c86235bcd",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 40313.0000000001,
+      "wall_time": "2026-10-08T13:53:32.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.97265625,
+      "rms_dbfs": -24.957107007761316,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-0731e32448574438a9aa09cbbcd9e2de",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 40797.00000000048,
+      "wall_time": "2026-10-08T13:53:32.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.98828125,
+      "rms_dbfs": -26.878264609903,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-2059032f8ed24dfebfbf54bc59f22d1d",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 41297.00000000048,
+      "wall_time": "2026-10-08T13:53:33.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -23.73119887296527,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-dd0f2f1af78a44c3a6d97a54d5643a26",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 41813.0000000001,
+      "wall_time": "2026-10-08T13:53:33.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.997790452092886,
+      "rms_dbfs": -25.213225074563717,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-058a68266e3447ff9274bd936d3f7c38",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 42297.00000000048,
+      "wall_time": "2026-10-08T13:53:34.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9932039499282836,
+      "rms_dbfs": -25.73450543025009,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-da93ed22a3314cdf84d9685913019581",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 42797.00000000048,
+      "wall_time": "2026-10-08T13:53:34.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9970512986183167,
+      "rms_dbfs": -28.168744633144964,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-55b4d667d99d4558bbea26da478af3b7",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 43313.0000000001,
+      "wall_time": "2026-10-08T13:53:35.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.984375,
+      "rms_dbfs": -30.7116144597768,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1935a3e79f9842e489c2419f2b25f869",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 43797.00000000048,
+      "wall_time": "2026-10-08T13:53:35.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.98046875,
+      "rms_dbfs": -27.313843581069428,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-3f1b227834474a928b4ec793ab9463c5",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 44313.0000000001,
+      "wall_time": "2026-10-08T13:53:36.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9967990629374981,
+      "rms_dbfs": -24.695513402169826,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7e59613debe14324ba4d9f03f0f0796b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 44797.00000000048,
+      "wall_time": "2026-10-08T13:53:36.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.890625,
+      "rms_dbfs": -43.62825428926893,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-ed6ad99c61a847d185352fea72c61f07",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 45297.00000000048,
+      "wall_time": "2026-10-08T13:53:37.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.96875,
+      "rms_dbfs": -34.30263538248216,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-26a6edb63f594c778aef265044e4048b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 45813.0000000001,
+      "wall_time": "2026-10-08T13:53:37.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.997773602604866,
+      "rms_dbfs": -22.744689192932064,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-d64bdc59c0404ea186a5dacd3ea2ae78",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 46297.00000000048,
+      "wall_time": "2026-10-08T13:53:38.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9951753298441569,
+      "rms_dbfs": -25.51415891003511,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-5965053894f4493896fa709dbf9353bb",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 46797.00000000048,
+      "wall_time": "2026-10-08T13:53:38.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.97265625,
+      "rms_dbfs": -32.11101523020086,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-cc16edac948b48e185feaf42f2f95c52",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 47313.0000000001,
+      "wall_time": "2026-10-08T13:53:39.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.80078125,
+      "rms_dbfs": -33.40587349171871,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-0e769b97b3fa478186d8f5f410f5d944",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 47797.00000000048,
+      "wall_time": "2026-10-08T13:53:39.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.993592890103658,
+      "rms_dbfs": -27.18358577421066,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-11e3d97dde974cf39d36eb783f2251b1",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 48313.0000000001,
+      "wall_time": "2026-10-08T13:53:40.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9926520474255085,
+      "rms_dbfs": -24.097095148841664,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-55023038a5fa4497a8e0a97c713f50ab",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 48797.00000000048,
+      "wall_time": "2026-10-08T13:53:40.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9973517417907715,
+      "rms_dbfs": -24.69532665516015,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-054015c8dd684b29871c8aa5a3d656be",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 49297.00000000048,
+      "wall_time": "2026-10-08T13:53:41.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9977595582604408,
+      "rms_dbfs": -26.68494015281062,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-32d9c89d8d364ea0aac92be2f7fae9b3",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 49813.0000000001,
+      "wall_time": "2026-10-08T13:53:41.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9609375,
+      "rms_dbfs": -35.39721052745017,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-3821bdf79340445184f1238dbf733f84",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 50297.00000000048,
+      "wall_time": "2026-10-08T13:53:42.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -34.63766371325927,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-574dc8ebf41a498b9ac833fb0ff6df14",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 50797.00000000048,
+      "wall_time": "2026-10-08T13:53:42.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -27.96876082107603,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-a211e65cbd3e4a6cbedca36a08eb3c0d",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 51313.0000000001,
+      "wall_time": "2026-10-08T13:53:43.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9983203485608101,
+      "rms_dbfs": -24.578264143256924,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1571c08e2a684111bfe1e91f431252b1",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 51797.00000000048,
+      "wall_time": "2026-10-08T13:53:43.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9974270264307658,
+      "rms_dbfs": -24.987335291117738,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-9bcb86218676450686d981d4b4e19cf9",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 52313.0000000001,
+      "wall_time": "2026-10-08T13:53:44.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.921875,
+      "rms_dbfs": -35.79521070265436,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-30576e308a9947508e753495e8061a1f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 52797.00000000048,
+      "wall_time": "2026-10-08T13:53:44.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -23.253434849462703,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7913bcd16a904cde98a41463c82b191b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 53297.00000000048,
+      "wall_time": "2026-10-08T13:53:45.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9921875,
+      "rms_dbfs": -24.621312422894857,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-efca21ea1f6f47af892f5062405f87be",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 53813.0000000001,
+      "wall_time": "2026-10-08T13:53:45.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9987387992441654,
+      "rms_dbfs": -22.763979212270566,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-14c4f70255b2406fb0f2e7c6c3de8888",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 54297.00000000048,
+      "wall_time": "2026-10-08T13:53:46.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9955271323521931,
+      "rms_dbfs": -25.434583506113547,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-38ca12153d2347ea9f880eb5db3e075a",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 54797.00000000048,
+      "wall_time": "2026-10-08T13:53:46.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9963816814124584,
+      "rms_dbfs": -28.51838197102453,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-738374565f70451f8d326968a16aa971",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 55313.0000000001,
+      "wall_time": "2026-10-08T13:53:47.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9901611357927322,
+      "rms_dbfs": -27.471046237836873,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-f656b88f19e34e998269e71bf06db8e5",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 55797.00000000048,
+      "wall_time": "2026-10-08T13:53:47.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.95703125,
+      "rms_dbfs": -32.59667951356921,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1d393403ac024c5c8fbba2923f977df9",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 56313.0000000001,
+      "wall_time": "2026-10-08T13:53:48.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9765625,
+      "rms_dbfs": -48.1593751192651,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1c101eef3b6847758cde6daf450155b4",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 56797.00000000048,
+      "wall_time": "2026-10-08T13:53:48.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.68359375,
+      "rms_dbfs": -32.566067763647105,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-bdbe4002e9924267876773e7c2cfd87e",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 57297.00000000048,
+      "wall_time": "2026-10-08T13:53:49.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9940198101103306,
+      "rms_dbfs": -27.534106202730207,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-e335ba66c02b4aba835a07351df28396",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 57813.0000000001,
+      "wall_time": "2026-10-08T13:53:49.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9284571968019009,
+      "rms_dbfs": -29.79542811699638,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-67c65c04cabf43e4afb179210a8cf98c",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 58297.00000000048,
+      "wall_time": "2026-10-08T13:53:50.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.90234375,
+      "rms_dbfs": -38.50449166690129,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-0ffe2ad90beb49ba93756bf481a10411",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 58797.00000000048,
+      "wall_time": "2026-10-08T13:53:50.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.671875,
+      "rms_dbfs": -45.87423012696576,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-d62540de5ecc4dc3b23b6476f3a78cf3",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 59313.0000000001,
+      "wall_time": "2026-10-08T13:53:51.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "absent",
+      "voice_probability": 0.03195030800998211,
+      "rms_dbfs": -48.106301274372754,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": []
+    },
+    {
+      "observation_id": "audio-ed532db410b5465a8ee7c8f2b52e8d8f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 59797.00000000048,
+      "wall_time": "2026-10-08T13:53:51.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "absent",
+      "voice_probability": 0.10674980481465658,
+      "rms_dbfs": -39.32848714187864,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": []
+    },
+    {
+      "observation_id": "audio-42dc220d2af742ae8dfd027d9d967bb4",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 60313.0000000001,
+      "wall_time": "2026-10-08T13:53:52.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -25.319984205714444,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-aecc31a1b05c48cc89c16b154af0d350",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 60797.00000000048,
+      "wall_time": "2026-10-08T13:53:52.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.98828125,
+      "rms_dbfs": -25.311840040409344,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-f4286820161a4515b98d39cb13a535af",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 61297.00000000048,
+      "wall_time": "2026-10-08T13:53:53.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9939218796789646,
+      "rms_dbfs": -24.709948127706447,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-388ff71357ff4e01a1fe28dab61d0445",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 61813.0000000001,
+      "wall_time": "2026-10-08T13:53:53.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.96875,
+      "rms_dbfs": -31.43555696622535,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-e261436f3f84428eac9a3ef49de8e788",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 62297.00000000048,
+      "wall_time": "2026-10-08T13:53:54.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9957861185073853,
+      "rms_dbfs": -28.819506715953743,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-bf42007bf4684c229aff382941caa753",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 62797.00000000048,
+      "wall_time": "2026-10-08T13:53:54.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9971168152987957,
+      "rms_dbfs": -25.48866373377297,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-f5c2a64775e44638b040064f44b31e3b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 63313.0000000001,
+      "wall_time": "2026-10-08T13:53:55.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9932758808135986,
+      "rms_dbfs": -30.70141610687433,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7bfa8427f5a0422fb09895b568c80e8b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 63797.00000000048,
+      "wall_time": "2026-10-08T13:53:55.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9911415378252665,
+      "rms_dbfs": -28.818422468302135,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-7bbbb78f27ac4eb196911af561a46f5f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 64313.0000000001,
+      "wall_time": "2026-10-08T13:53:56.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.993778433650732,
+      "rms_dbfs": -30.200514502978315,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-eedba8ea2053446897500e2753f71b74",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 64797.00000000048,
+      "wall_time": "2026-10-08T13:53:56.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9948060393333436,
+      "rms_dbfs": -30.691072036945624,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1c92002f21eb4b4da00d6ae8159eaf07",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 65297.00000000048,
+      "wall_time": "2026-10-08T13:53:57.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.999207865446806,
+      "rms_dbfs": -30.934179615209963,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-bdae7eca7f5a4a6891ed2639d5b194f0",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 65813.0000000001,
+      "wall_time": "2026-10-08T13:53:57.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.8682909905910492,
+      "rms_dbfs": -34.3145615052556,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-524a4d933ba44f34bf3ee56b03dc0862",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 66297.00000000048,
+      "wall_time": "2026-10-08T13:53:58.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.5859375,
+      "rms_dbfs": -26.93132919496161,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-55dac09e365e48c49f8fa8d147e00f85",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 66797.00000000048,
+      "wall_time": "2026-10-08T13:53:58.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9857116341590881,
+      "rms_dbfs": -26.667793236779698,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-896eacc667444bcc881793341d25fe5f",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 67313.0000000001,
+      "wall_time": "2026-10-08T13:53:59.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.7135868947952986,
+      "rms_dbfs": -31.34009430874552,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-dee9605b43f54497947b4b900c70daaf",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 67797.00000000048,
+      "wall_time": "2026-10-08T13:53:59.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.73828125,
+      "rms_dbfs": -45.279207191173484,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-1092144eb5dc445b9482c5fa159e0704",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 68313.0000000001,
+      "wall_time": "2026-10-08T13:54:00.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "absent",
+      "voice_probability": 0.19921875,
+      "rms_dbfs": -44.836615980678445,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": []
+    },
+    {
+      "observation_id": "audio-daa34e1f843c484996a0038bb5be89d3",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 68797.00000000048,
+      "wall_time": "2026-10-08T13:54:00.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.8112506985664367,
+      "rms_dbfs": -22.800627441726185,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero"
+      ]
+    },
+    {
+      "observation_id": "audio-1c618725368d4616b24b46446fd844d3",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 69297.00000000048,
+      "wall_time": "2026-10-08T13:54:01.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 1.0,
+      "rms_dbfs": -25.780420933720002,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-d39345d732484baf9ab9492f032cd88b",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 69813.0000000001,
+      "wall_time": "2026-10-08T13:54:01.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9988810420036316,
+      "rms_dbfs": -26.45451739546975,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-4a5153e51baa4273b2d8c789a1bce679",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 70297.00000000048,
+      "wall_time": "2026-10-08T13:54:02.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9943581382433574,
+      "rms_dbfs": -26.36377247079649,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-a54a2b027f43436fac2c4a679e546e68",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 70797.00000000048,
+      "wall_time": "2026-10-08T13:54:02.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.96484375,
+      "rms_dbfs": -43.296308449178504,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-6363d6a8c08f480bb512240b6a8aa914",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 71313.0000000001,
+      "wall_time": "2026-10-08T13:54:03.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9921875,
+      "rms_dbfs": -45.85050755690824,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-85d4e36b009e4eb4a29508a7174eca33",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 71797.00000000048,
+      "wall_time": "2026-10-08T13:54:03.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.33203125,
+      "rms_dbfs": -38.872149308640445,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-5f879613680244c4be7fdaf0f17fd8ea",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 72313.0000000001,
+      "wall_time": "2026-10-08T13:54:04.237755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "absent",
+      "voice_probability": 0.11328125,
+      "rms_dbfs": -43.90483372635839,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": []
+    },
+    {
+      "observation_id": "audio-4c24857cf4e2408e8c368a4cbec5f842",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 72797.00000000048,
+      "wall_time": "2026-10-08T13:54:04.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.737190310160319,
+      "rms_dbfs": -30.3052204696024,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-86a1c7802f134faf920b8ce9693b2a5c",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 73297.00000000048,
+      "wall_time": "2026-10-08T13:54:05.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9921875,
+      "rms_dbfs": -42.672259378745565,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-080785d338694ff197bb3b7d96111422",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 73813.0000000001,
+      "wall_time": "2026-10-08T13:54:05.737755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.90625,
+      "rms_dbfs": -43.06347726816604,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "yamnet.speech"
+      ]
+    },
+    {
+      "observation_id": "audio-3c3178079a1b40bba9904aa680ee553a",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 74297.00000000048,
+      "wall_time": "2026-10-08T13:54:06.221755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.5031471729278565,
+      "rms_dbfs": -32.58404620976033,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero"
+      ]
+    },
+    {
+      "observation_id": "audio-66018b3e1a5846699538d2149922f762",
+      "session_id": "a14-live",
+      "frame_id": null,
+      "t_session_ms": 74797.00000000048,
+      "wall_time": "2026-10-08T13:54:06.721755Z",
+      "source_mode": "live",
+      "producer": {
+        "module": "audio",
+        "version": "a14-1.1.0",
+        "model_id": null,
+        "model_sha256": null,
+        "config_version": null
+      },
+      "status": "ok",
+      "quality": null,
+      "quality_flags": [],
+      "latency_ms": null,
+      "kind": "audio",
+      "voice_like": "present",
+      "voice_probability": 0.9979860931634903,
+      "rms_dbfs": -26.644634166521577,
+      "noise_floor_dbfs": -43.844210524982536,
+      "reasons": [
+        "silero",
+        "yamnet.speech"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "t_session_ms": 1297.0000000004802,
+      "silero_probability": null,
+      "yamnet_speech_sum": null,
+      "yamnet_class": null,
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": null,
+      "yamnet_age_ms": null,
+      "yamnet_inference_ms": null
+    },
+    {
+      "t_session_ms": 1813.0000000001019,
+      "silero_probability": null,
+      "yamnet_speech_sum": 0.96484375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": null,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 12.966599999344908
+    },
+    {
+      "t_session_ms": 2297.00000000048,
+      "silero_probability": null,
+      "yamnet_speech_sum": 0.96484375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": null,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 12.966599999344908
+    },
+    {
+      "t_session_ms": 2797.00000000048,
+      "silero_probability": null,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": null,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 3.81790000028559
+    },
+    {
+      "t_session_ms": 3313.000000000102,
+      "silero_probability": null,
+      "yamnet_speech_sum": 0.98828125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": null,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 3.778500000407803
+    },
+    {
+      "t_session_ms": 3797.00000000048,
+      "silero_probability": null,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": null,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.983900000093854
+    },
+    {
+      "t_session_ms": 4313.000000000102,
+      "silero_probability": 0.7279177792370319,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.6540999990393175
+    },
+    {
+      "t_session_ms": 4797.00000000048,
+      "silero_probability": 0.946306049823761,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 3.6811000009038253
+    },
+    {
+      "t_session_ms": 5297.00000000048,
+      "silero_probability": 0.9909552000463009,
+      "yamnet_speech_sum": 0.99609375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 4.573000000164029
+    },
+    {
+      "t_session_ms": 5813.000000000102,
+      "silero_probability": 0.2696040514856577,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 3.516999999192194
+    },
+    {
+      "t_session_ms": 6297.00000000048,
+      "silero_probability": 0.45143046776453655,
+      "yamnet_speech_sum": 0.9453125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 3.817299999354873
+    },
+    {
+      "t_session_ms": 6797.00000000048,
+      "silero_probability": 0.994649201631546,
+      "yamnet_speech_sum": 0.96484375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 3.330100000312086
+    },
+    {
+      "t_session_ms": 7313.000000000102,
+      "silero_probability": 0.9869724549353123,
+      "yamnet_speech_sum": 0.9609375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 4.090099999302765
+    },
+    {
+      "t_session_ms": 7797.00000000048,
+      "silero_probability": 0.9964271068572998,
+      "yamnet_speech_sum": 0.95703125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.7343999993026955
+    },
+    {
+      "t_session_ms": 8313.000000000102,
+      "silero_probability": 0.7470483388751745,
+      "yamnet_speech_sum": 0.80078125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.833900000245194
+    },
+    {
+      "t_session_ms": 8797.00000000048,
+      "silero_probability": 0.5498326222101847,
+      "yamnet_speech_sum": 0.9609375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 3.362199999173754
+    },
+    {
+      "t_session_ms": 9297.00000000048,
+      "silero_probability": 0.875597383826971,
+      "yamnet_speech_sum": 0.92578125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 4.689499999585678
+    },
+    {
+      "t_session_ms": 9813.000000000102,
+      "silero_probability": 0.8950262442231178,
+      "yamnet_speech_sum": 0.89453125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 6.022499999744468
+    },
+    {
+      "t_session_ms": 10297.00000000048,
+      "silero_probability": 0.9979707360267639,
+      "yamnet_speech_sum": 0.96875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 3.2308999998349464
+    },
+    {
+      "t_session_ms": 10797.00000000048,
+      "silero_probability": 0.9940146692097187,
+      "yamnet_speech_sum": 0.95703125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 3.6368000000948086
+    },
+    {
+      "t_session_ms": 11313.000000000102,
+      "silero_probability": 0.9908124841749668,
+      "yamnet_speech_sum": 0.95703125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 3.7062999999761814
+    },
+    {
+      "t_session_ms": 11797.00000000048,
+      "silero_probability": 0.5188528140385945,
+      "yamnet_speech_sum": 0.953125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 4.476299998714239
+    },
+    {
+      "t_session_ms": 12313.000000000102,
+      "silero_probability": 0.027605891227722168,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 4.375900000013644
+    },
+    {
+      "t_session_ms": 12797.00000000048,
+      "silero_probability": 0.3809635122617086,
+      "yamnet_speech_sum": 0.34375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 4.233300000123563
+    },
+    {
+      "t_session_ms": 13297.00000000048,
+      "silero_probability": 0.9786381907761097,
+      "yamnet_speech_sum": 0.90234375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 4.391699998450349
+    },
+    {
+      "t_session_ms": 13813.000000000102,
+      "silero_probability": 0.9914110712707043,
+      "yamnet_speech_sum": 0.9765625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 3.4185999993496807
+    },
+    {
+      "t_session_ms": 14297.00000000048,
+      "silero_probability": 0.8500560283660888,
+      "yamnet_speech_sum": 0.80078125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 4.295000000638538
+    },
+    {
+      "t_session_ms": 14797.00000000048,
+      "silero_probability": 0.9916760139167309,
+      "yamnet_speech_sum": 0.5,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 3.3588999995117774
+    },
+    {
+      "t_session_ms": 15313.000000000102,
+      "silero_probability": 0.9868112429976463,
+      "yamnet_speech_sum": 0.9453125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 3.64129999979923
+    },
+    {
+      "t_session_ms": 15797.00000000048,
+      "silero_probability": 0.9950688401858012,
+      "yamnet_speech_sum": 0.94140625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.6795000014535617
+    },
+    {
+      "t_session_ms": 16313.000000000102,
+      "silero_probability": 0.7290634643286467,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.6278999996284256
+    },
+    {
+      "t_session_ms": 16797.00000000048,
+      "silero_probability": 0.6808008670806884,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 3.651999999419786
+    },
+    {
+      "t_session_ms": 17297.00000000048,
+      "silero_probability": 0.42693511582911015,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 4.195800000161398
+    },
+    {
+      "t_session_ms": 17813.000000000102,
+      "silero_probability": 0.9766896329820156,
+      "yamnet_speech_sum": 0.67578125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 4.206599998724414
+    },
+    {
+      "t_session_ms": 18297.00000000048,
+      "silero_probability": 0.9951083858807882,
+      "yamnet_speech_sum": 0.80078125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 3.3142000011139316
+    },
+    {
+      "t_session_ms": 18797.00000000048,
+      "silero_probability": 0.9909595251083374,
+      "yamnet_speech_sum": 0.94140625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 4.069700000400189
+    },
+    {
+      "t_session_ms": 19313.000000000102,
+      "silero_probability": 0.9988858066499233,
+      "yamnet_speech_sum": 0.96875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 4.578699999910896
+    },
+    {
+      "t_session_ms": 19797.00000000048,
+      "silero_probability": 0.9750674446423848,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 4.016599999886239
+    },
+    {
+      "t_session_ms": 20313.000000000102,
+      "silero_probability": 0.9270755350589752,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 4.669199999625562
+    },
+    {
+      "t_session_ms": 20797.00000000048,
+      "silero_probability": 0.06524829864501953,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 3.923899999790592
+    },
+    {
+      "t_session_ms": 21297.00000000048,
+      "silero_probability": 0.7488189842551947,
+      "yamnet_speech_sum": 0.9296875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 3.763000000617467
+    },
+    {
+      "t_session_ms": 21813.000000000102,
+      "silero_probability": 0.48727891966700554,
+      "yamnet_speech_sum": 0.99609375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 6.121500000517699
+    },
+    {
+      "t_session_ms": 22297.00000000048,
+      "silero_probability": 0.9986599326133728,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 4.19799999872339
+    },
+    {
+      "t_session_ms": 22797.00000000048,
+      "silero_probability": 0.9989276342093945,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 3.422300000238465
+    },
+    {
+      "t_session_ms": 23313.000000000102,
+      "silero_probability": 0.99465087428689,
+      "yamnet_speech_sum": 0.98046875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 4.150999999183114
+    },
+    {
+      "t_session_ms": 23797.00000000048,
+      "silero_probability": 0.9979282140731811,
+      "yamnet_speech_sum": 0.98046875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 4.150999999183114
+    },
+    {
+      "t_session_ms": 24313.000000000102,
+      "silero_probability": 0.9903511516749859,
+      "yamnet_speech_sum": 0.94140625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 3.5516000007191906
+    },
+    {
+      "t_session_ms": 24797.00000000048,
+      "silero_probability": 0.9927078286806742,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.630900000644033
+    },
+    {
+      "t_session_ms": 25297.00000000048,
+      "silero_probability": 0.9743400551378727,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.696499999932712
+    },
+    {
+      "t_session_ms": 25813.000000000102,
+      "silero_probability": 0.23481488600373268,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 4.502100000536302
+    },
+    {
+      "t_session_ms": 26297.00000000048,
+      "silero_probability": 0.8962456901868184,
+      "yamnet_speech_sum": 0.6796875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 3.7415000006149057
+    },
+    {
+      "t_session_ms": 26797.00000000048,
+      "silero_probability": 0.7418153993785381,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 4.52180000138469
+    },
+    {
+      "t_session_ms": 27313.000000000102,
+      "silero_probability": 0.4984059650450945,
+      "yamnet_speech_sum": 0.92578125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 3.7326000001485227
+    },
+    {
+      "t_session_ms": 27797.00000000048,
+      "silero_probability": 0.9875662088394165,
+      "yamnet_speech_sum": 0.9453125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 4.676000000472413
+    },
+    {
+      "t_session_ms": 28313.000000000102,
+      "silero_probability": 0.6013242825865746,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 3.9735999998811167
+    },
+    {
+      "t_session_ms": 28797.00000000048,
+      "silero_probability": 0.9975608627001444,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.656599999885657
+    },
+    {
+      "t_session_ms": 29297.00000000048,
+      "silero_probability": 0.9978705383837223,
+      "yamnet_speech_sum": 0.98046875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.928799998902832
+    },
+    {
+      "t_session_ms": 29813.000000000102,
+      "silero_probability": 0.9978003092110157,
+      "yamnet_speech_sum": 0.91796875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 4.770900000949041
+    },
+    {
+      "t_session_ms": 30297.00000000048,
+      "silero_probability": 0.9924888173739116,
+      "yamnet_speech_sum": 0.98046875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 3.6610999995900784
+    },
+    {
+      "t_session_ms": 30797.00000000048,
+      "silero_probability": 0.9935530759394169,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 4.4476000002759974
+    },
+    {
+      "t_session_ms": 31313.000000000102,
+      "silero_probability": 0.686924297362566,
+      "yamnet_speech_sum": 0.9765625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 6.696500000543892
+    },
+    {
+      "t_session_ms": 31797.00000000048,
+      "silero_probability": 0.879202256600062,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 4.364499998700921
+    },
+    {
+      "t_session_ms": 32313.000000000102,
+      "silero_probability": 0.998512726277113,
+      "yamnet_speech_sum": 0.95703125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 4.531399999905261
+    },
+    {
+      "t_session_ms": 32797.00000000048,
+      "silero_probability": 0.9979666431744894,
+      "yamnet_speech_sum": 0.96875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 4.713799999080948
+    },
+    {
+      "t_session_ms": 33297.00000000048,
+      "silero_probability": 0.9919957742094994,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 3.7865000012970995
+    },
+    {
+      "t_session_ms": 33813.0000000001,
+      "silero_probability": 0.9986701495945454,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 3.513300000122399
+    },
+    {
+      "t_session_ms": 34297.00000000048,
+      "silero_probability": 0.8819627245267232,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 3.744100000403705
+    },
+    {
+      "t_session_ms": 34797.00000000048,
+      "silero_probability": 0.05538463220000267,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 4.718799998954637
+    },
+    {
+      "t_session_ms": 35313.0000000001,
+      "silero_probability": 0.09374888241291046,
+      "yamnet_speech_sum": 0.85546875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 4.578600000968436
+    },
+    {
+      "t_session_ms": 35797.00000000048,
+      "silero_probability": 0.4404764473438263,
+      "yamnet_speech_sum": 0.11328125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": false,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 6.247799999982817
+    },
+    {
+      "t_session_ms": 36313.0000000001,
+      "silero_probability": 0.9299108795821667,
+      "yamnet_speech_sum": 0.99609375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 3.9307999995799037
+    },
+    {
+      "t_session_ms": 36797.00000000048,
+      "silero_probability": 0.9923173109690349,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.6742999982379843
+    },
+    {
+      "t_session_ms": 37297.00000000048,
+      "silero_probability": 0.9741516001522541,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.5421000011410797
+    },
+    {
+      "t_session_ms": 37813.0000000001,
+      "silero_probability": 0.5414927881211042,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.38249999913387
+    },
+    {
+      "t_session_ms": 38297.00000000048,
+      "silero_probability": 0.9989324410756429,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 3.5337999997864245
+    },
+    {
+      "t_session_ms": 38797.00000000048,
+      "silero_probability": 0.5003289617598057,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 3.603699999075616
+    },
+    {
+      "t_session_ms": 39313.0000000001,
+      "silero_probability": 0.8749136682599783,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 3.9056000005075475
+    },
+    {
+      "t_session_ms": 39797.00000000048,
+      "silero_probability": 0.9965347568194072,
+      "yamnet_speech_sum": 0.99609375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 5.686800001058145
+    },
+    {
+      "t_session_ms": 40313.0000000001,
+      "silero_probability": 0.7231027018278837,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 4.472999999052263
+    },
+    {
+      "t_session_ms": 40797.00000000048,
+      "silero_probability": 0.5609669307867686,
+      "yamnet_speech_sum": 0.98828125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 3.222200000891462
+    },
+    {
+      "t_session_ms": 41297.00000000048,
+      "silero_probability": 0.9986541494727135,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 3.438300000198069
+    },
+    {
+      "t_session_ms": 41813.0000000001,
+      "silero_probability": 0.997790452092886,
+      "yamnet_speech_sum": 0.91796875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 3.264000000854139
+    },
+    {
+      "t_session_ms": 42297.00000000048,
+      "silero_probability": 0.9932039499282836,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 4.797600000529201
+    },
+    {
+      "t_session_ms": 42797.00000000048,
+      "silero_probability": 0.9970512986183167,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 3.9670999994996237
+    },
+    {
+      "t_session_ms": 43313.0000000001,
+      "silero_probability": 0.9766602069139481,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 4.037000000607804
+    },
+    {
+      "t_session_ms": 43797.00000000048,
+      "silero_probability": 0.5845552722613017,
+      "yamnet_speech_sum": 0.98046875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 5.4816000010760035
+    },
+    {
+      "t_session_ms": 44313.0000000001,
+      "silero_probability": 0.9967990629374981,
+      "yamnet_speech_sum": 0.890625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 4.586700000800192
+    },
+    {
+      "t_session_ms": 44797.00000000048,
+      "silero_probability": 0.27750664154688515,
+      "yamnet_speech_sum": 0.890625,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 4.586700000800192
+    },
+    {
+      "t_session_ms": 45297.00000000048,
+      "silero_probability": 0.1632913164794445,
+      "yamnet_speech_sum": 0.96875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 4.620600000635022
+    },
+    {
+      "t_session_ms": 45813.0000000001,
+      "silero_probability": 0.997773602604866,
+      "yamnet_speech_sum": 0.8515625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 3.3725000012054807
+    },
+    {
+      "t_session_ms": 46297.00000000048,
+      "silero_probability": 0.9951753298441569,
+      "yamnet_speech_sum": 0.85546875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.811499998846557
+    },
+    {
+      "t_session_ms": 46797.00000000048,
+      "silero_probability": 0.6481692027300596,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 4.090699998414493
+    },
+    {
+      "t_session_ms": 47313.0000000001,
+      "silero_probability": 0.4642263688147068,
+      "yamnet_speech_sum": 0.80078125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.63640000068699
+    },
+    {
+      "t_session_ms": 47797.00000000048,
+      "silero_probability": 0.993592890103658,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 3.807299999607494
+    },
+    {
+      "t_session_ms": 48313.0000000001,
+      "silero_probability": 0.9926520474255085,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 4.074299999047071
+    },
+    {
+      "t_session_ms": 48797.00000000048,
+      "silero_probability": 0.9973517417907715,
+      "yamnet_speech_sum": 0.9453125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 5.17770000078599
+    },
+    {
+      "t_session_ms": 49297.00000000048,
+      "silero_probability": 0.9977595582604408,
+      "yamnet_speech_sum": 0.91796875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 3.454800000326941
+    },
+    {
+      "t_session_ms": 49813.0000000001,
+      "silero_probability": 0.5358055625110865,
+      "yamnet_speech_sum": 0.9609375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 3.663399998913519
+    },
+    {
+      "t_session_ms": 50297.00000000048,
+      "silero_probability": 0.17470342914263406,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 5.03500000013446
+    },
+    {
+      "t_session_ms": 50797.00000000048,
+      "silero_probability": 0.9976536594331264,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.5504000006767455
+    },
+    {
+      "t_session_ms": 51313.0000000001,
+      "silero_probability": 0.9983203485608101,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.4943999999086373
+    },
+    {
+      "t_session_ms": 51797.00000000048,
+      "silero_probability": 0.9974270264307658,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 3.6237999993318226
+    },
+    {
+      "t_session_ms": 52313.0000000001,
+      "silero_probability": 0.4721629284322262,
+      "yamnet_speech_sum": 0.921875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 5.307499999616994
+    },
+    {
+      "t_session_ms": 52797.00000000048,
+      "silero_probability": 0.9884725371996562,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 3.5470999991957797
+    },
+    {
+      "t_session_ms": 53297.00000000048,
+      "silero_probability": 0.9905520491302013,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 3.934500000468688
+    },
+    {
+      "t_session_ms": 53813.0000000001,
+      "silero_probability": 0.9987387992441654,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 5.2187000001140404
+    },
+    {
+      "t_session_ms": 54297.00000000048,
+      "silero_probability": 0.9955271323521931,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 3.671099999337457
+    },
+    {
+      "t_session_ms": 54797.00000000048,
+      "silero_probability": 0.9963816814124584,
+      "yamnet_speech_sum": 0.98828125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 6.004499999107793
+    },
+    {
+      "t_session_ms": 55313.0000000001,
+      "silero_probability": 0.9901611357927322,
+      "yamnet_speech_sum": 0.94140625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 288.0,
+      "yamnet_inference_ms": 3.5985000013170065
+    },
+    {
+      "t_session_ms": 55797.00000000048,
+      "silero_probability": 0.9074325680732727,
+      "yamnet_speech_sum": 0.95703125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 4.4797000009566545
+    },
+    {
+      "t_session_ms": 56313.0000000001,
+      "silero_probability": 0.0705876350402832,
+      "yamnet_speech_sum": 0.9765625,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 256.0,
+      "yamnet_inference_ms": 3.511400000206777
+    },
+    {
+      "t_session_ms": 56797.00000000048,
+      "silero_probability": 0.2273948391278585,
+      "yamnet_speech_sum": 0.68359375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 3.501900000628666
+    },
+    {
+      "t_session_ms": 57297.00000000048,
+      "silero_probability": 0.9940198101103306,
+      "yamnet_speech_sum": 0.9453125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 3.451399999903515
+    },
+    {
+      "t_session_ms": 57813.0000000001,
+      "silero_probability": 0.9284571968019009,
+      "yamnet_speech_sum": 0.921875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 224.0,
+      "yamnet_inference_ms": 3.919000000678352
+    },
+    {
+      "t_session_ms": 58297.00000000048,
+      "silero_probability": 0.6739756643772126,
+      "yamnet_speech_sum": 0.90234375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.437100000155624
+    },
+    {
+      "t_session_ms": 58797.00000000048,
+      "silero_probability": 0.06608275882899761,
+      "yamnet_speech_sum": 0.671875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.7063999989186414
+    },
+    {
+      "t_session_ms": 59313.0000000001,
+      "silero_probability": 0.03195030800998211,
+      "yamnet_speech_sum": 0.01953125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": false,
+      "yamnet_age_ms": 192.0,
+      "yamnet_inference_ms": 3.3493999999336665
+    },
+    {
+      "t_session_ms": 59797.00000000048,
+      "silero_probability": 0.10674980481465658,
+      "yamnet_speech_sum": 0.03515625,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": false,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 4.554699999061995
+    },
+    {
+      "t_session_ms": 60313.0000000001,
+      "silero_probability": 0.9979672469198704,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 160.0,
+      "yamnet_inference_ms": 3.57359999907203
+    },
+    {
+      "t_session_ms": 60797.00000000048,
+      "silero_probability": 0.9850097894668579,
+      "yamnet_speech_sum": 0.98828125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 3.8490999995701713
+    },
+    {
+      "t_session_ms": 61297.00000000048,
+      "silero_probability": 0.9939218796789646,
+      "yamnet_speech_sum": 0.984375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 3.8800000002083834
+    },
+    {
+      "t_session_ms": 61813.0000000001,
+      "silero_probability": 0.7304606400430202,
+      "yamnet_speech_sum": 0.96875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 128.0,
+      "yamnet_inference_ms": 3.7111000001459615
+    },
+    {
+      "t_session_ms": 62297.00000000048,
+      "silero_probability": 0.9957861185073853,
+      "yamnet_speech_sum": 0.91796875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 3.510399999868241
+    },
+    {
+      "t_session_ms": 62797.00000000048,
+      "silero_probability": 0.9971168152987957,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 3.938600000765291
+    },
+    {
+      "t_session_ms": 63313.0000000001,
+      "silero_probability": 0.9932758808135986,
+      "yamnet_speech_sum": 0.890625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 96.0,
+      "yamnet_inference_ms": 3.5688999996636994
+    },
+    {
+      "t_session_ms": 63797.00000000048,
+      "silero_probability": 0.9911415378252665,
+      "yamnet_speech_sum": 0.94140625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 3.4773999996104976
+    },
+    {
+      "t_session_ms": 64313.0000000001,
+      "silero_probability": 0.993778433650732,
+      "yamnet_speech_sum": 0.8515625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 64.0,
+      "yamnet_inference_ms": 4.764100000102189
+    },
+    {
+      "t_session_ms": 64797.00000000048,
+      "silero_probability": 0.9948060393333436,
+      "yamnet_speech_sum": 0.5,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 3.3475999989605043
+    },
+    {
+      "t_session_ms": 65297.00000000048,
+      "silero_probability": 0.999207865446806,
+      "yamnet_speech_sum": 0.80078125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 3.541899999618181
+    },
+    {
+      "t_session_ms": 65813.0000000001,
+      "silero_probability": 0.8682909905910492,
+      "yamnet_speech_sum": 0.5859375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 32.0,
+      "yamnet_inference_ms": 3.4106000002793735
+    },
+    {
+      "t_session_ms": 66297.00000000048,
+      "silero_probability": 0.44389857053756715,
+      "yamnet_speech_sum": 0.5859375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 3.4106000002793735
+    },
+    {
+      "t_session_ms": 66797.00000000048,
+      "silero_probability": 0.9857116341590881,
+      "yamnet_speech_sum": 0.66796875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 3.602099999625352
+    },
+    {
+      "t_session_ms": 67313.0000000001,
+      "silero_probability": 0.7135868947952986,
+      "yamnet_speech_sum": 0.4140625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 512.0,
+      "yamnet_inference_ms": 3.4546000006230315
+    },
+    {
+      "t_session_ms": 67797.00000000048,
+      "silero_probability": 0.29110151131947837,
+      "yamnet_speech_sum": 0.73828125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.7687999993067933
+    },
+    {
+      "t_session_ms": 68313.0000000001,
+      "silero_probability": 0.05654406175017357,
+      "yamnet_speech_sum": 0.19921875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": false,
+      "yamnet_age_ms": 480.0,
+      "yamnet_inference_ms": 3.4921000005851965
+    },
+    {
+      "t_session_ms": 68797.00000000048,
+      "silero_probability": 0.8112506985664367,
+      "yamnet_speech_sum": 0.03515625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 4.026799999337527
+    },
+    {
+      "t_session_ms": 69297.00000000048,
+      "silero_probability": 0.997519675642252,
+      "yamnet_speech_sum": 1.0,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 3.440099999352242
+    },
+    {
+      "t_session_ms": 69813.0000000001,
+      "silero_probability": 0.9988810420036316,
+      "yamnet_speech_sum": 0.97265625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 448.0,
+      "yamnet_inference_ms": 4.994999999325955
+    },
+    {
+      "t_session_ms": 70297.00000000048,
+      "silero_probability": 0.9943581382433574,
+      "yamnet_speech_sum": 0.9453125,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 4.155100001298706
+    },
+    {
+      "t_session_ms": 70797.00000000048,
+      "silero_probability": 0.21940671652555466,
+      "yamnet_speech_sum": 0.96484375,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 3.659699999843724
+    },
+    {
+      "t_session_ms": 71313.0000000001,
+      "silero_probability": 0.04632161743938923,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 416.0,
+      "yamnet_inference_ms": 3.828099999736878
+    },
+    {
+      "t_session_ms": 71797.00000000048,
+      "silero_probability": 0.16357794602711995,
+      "yamnet_speech_sum": 0.33203125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.455799998846487
+    },
+    {
+      "t_session_ms": 72313.0000000001,
+      "silero_probability": 0.0475134551525116,
+      "yamnet_speech_sum": 0.11328125,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": false,
+      "yamnet_age_ms": 384.0,
+      "yamnet_inference_ms": 3.4861000003729714
+    },
+    {
+      "t_session_ms": 72797.00000000048,
+      "silero_probability": 0.737190310160319,
+      "yamnet_speech_sum": 0.50390625,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 3.8136999992275378
+    },
+    {
+      "t_session_ms": 73297.00000000048,
+      "silero_probability": 0.06030893698334694,
+      "yamnet_speech_sum": 0.9921875,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 3.4030999995593447
+    },
+    {
+      "t_session_ms": 73813.0000000001,
+      "silero_probability": 0.049141524359583855,
+      "yamnet_speech_sum": 0.90625,
+      "yamnet_class": "Speech",
+      "silero_present": false,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 352.0,
+      "yamnet_inference_ms": 3.777500000069267
+    },
+    {
+      "t_session_ms": 74297.00000000048,
+      "silero_probability": 0.5031471729278565,
+      "yamnet_speech_sum": 0.05859375,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": false,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 3.794700000071316
+    },
+    {
+      "t_session_ms": 74797.00000000048,
+      "silero_probability": 0.9979860931634903,
+      "yamnet_speech_sum": 0.98046875,
+      "yamnet_class": "Speech",
+      "silero_present": true,
+      "yamnet_present": true,
+      "energy_present": false,
+      "final_present": true,
+      "yamnet_age_ms": 320.0,
+      "yamnet_inference_ms": 4.159500000241678
+    }
+  ],
+  "operator_confirmation": {
+    "source": "captain_chat",
+    "recorded_at": "2026-10-08T13:56:34.847268+00:00",
+    "confirmed_background_speech_phases": [
+      "calibration",
+      "silence"
+    ],
+    "calibration_contaminated_by_speech": true,
+    "silence_assessment": "фаза тишины не валидна: фоновый разговор рядом (подтверждено капитаном); детектор корректно отметил речь",
+    "speech_whisper_limit": "Доли относятся к окнам фаз по таймеру, при загрязнённой калибровке. Вклад фонового разговора в speech/whisper не изолирован; распознавание шёпота отдельно не доказано.",
+    "controlled_silence_retest": "later_in_quiet_place_when_captain_ready"
+  },
+  "overall_acceptance": "PARTIAL"
+}

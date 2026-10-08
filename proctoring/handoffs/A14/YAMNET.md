@@ -97,7 +97,14 @@ python -m pytest backend/proctor/audio/tests backend/proctor/fusion/tests backen
 устаревание, сброс, освобождение worker и настоящий Silero + YAMNet на синтетической тишине с реальным темпом.
 Это не LIVE: микрофон при этих проверках не открывался.
 
-## LIVE: готов к запуску, акустические результаты пока не получены
+## LIVE: первый прогон PARTIAL, контролируемая тишина ожидает повтора
+
+Результат 2026-10-08: [YAMNET_LIVE.md](YAMNET_LIVE.md),
+[полные скалярные данные](yamnet-live-20261008-185239.json).
+Капитан подтвердил фоновый разговор в calibration/silence: детектор корректно отметил речь,
+но фаза тишины невалидна и получает `numeric_criterion_met="not_applicable"`.
+Калибровка загрязнена речью; speech/whisper приведены с этой оговоркой, без полного LIVE PASS.
+Повтор тишины — позже в тихом месте по готовности капитана.
 
 Из чистого PowerShell на этом ноутбуке:
 
@@ -105,7 +112,7 @@ python -m pytest backend/proctor/audio/tests backend/proctor/fusion/tests backen
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Qostanay_hub-codex-proctoring-prompts\worktrees\A14-yamnet\proctoring\handoffs\A14\Run-YamnetLive.ps1"
 ```
 
-Сначала завершить текущий экзамен Adal, чтобы освободить микрофон. Запуск только по готовности капитана.
+Перед повтором завершить текущий экзамен Adal, чтобы освободить микрофон. Запуск только по готовности капитана.
 Остановка **Ctrl+C**. Скрипт ничего не устанавливает; `-CheckOnly` проверяет модели без микрофона
 (проверено на ноутбуке: PASS). `-Python` позволяет явно указать существующий интерпретатор.
 
