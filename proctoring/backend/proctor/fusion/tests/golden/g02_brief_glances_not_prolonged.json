@@ -1,0 +1,20 @@
+{
+  "name": "g02_brief_glances_not_prolonged",
+  "requirement": "2.2b/2.2c: brief glances down/aside must not produce prolonged gaze incidents",
+  "mode": "synthetic",
+  "phone": [{"from": 0, "to": 15000, "step": 125, "visible": "absent"}],
+  "attention": [
+    {"from": 0, "to": 2000, "step": 100, "direction": "center"},
+    {"from": 2000, "to": 4500, "step": 100, "direction": "down"},
+    {"from": 4500, "to": 8000, "step": 100, "direction": "center"},
+    {"from": 8000, "to": 9500, "step": 100, "direction": "left"},
+    {"from": 9500, "to": 15000, "step": 100, "direction": "center"}
+  ],
+  "finish": 15000,
+  "derivation": [
+    "down samples 2000..4400: span 2400 < min_duration 3000; center from 4500 resets the pending run once t - 4400 > pending_gap 400 (at 4900)",
+    "left samples 8000..9400: span 1400 < 3000",
+    "no incident of any rule; both sources are fresh -> no monitoring incident"
+  ],
+  "expected": []
+}

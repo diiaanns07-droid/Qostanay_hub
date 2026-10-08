@@ -1,0 +1,29 @@
+{
+  "name": "g01_phone_long_single_episode",
+  "requirement": "2.1a phone in hand/in front of screen; one long sequence = one episode; a one-frame detector miss does not split it",
+  "mode": "synthetic",
+  "phone": [
+    {"from": 0, "to": 2000, "step": 125, "visible": "absent"},
+    {"from": 2000, "to": 3000, "step": 125, "visible": "present"},
+    {"from": 3000, "to": 3125, "step": 125, "visible": "absent"},
+    {"from": 3125, "to": 6000, "step": 125, "visible": "present"},
+    {"from": 6000, "to": 12000, "step": 125, "visible": "absent"}
+  ],
+  "attention": [{"from": 0, "to": 12000, "step": 100, "direction": "center"}],
+  "finish": 12000,
+  "derivation": [
+    "phone_visible pending from 2000; the absent sample at 3000 is 125 ms after the last present one (<= pending_gap 500) -> tolerated",
+    "open at 3125: span 1125 >= min_duration 1000, 9 present samples >= min_count 3; t_start = 2000",
+    "last present sample 5875; close at the first absent sample with t - 5875 >= merge_gap 2000 -> 7875; t_end = 5875 (condition_cleared)",
+    "duration 3875 ms -> '3,9 с'; present samples: 8 (2000..2875) + 23 (3125..5875) = 31",
+    "priority: base medium, 3875 < long_ms 10000, no gaze down -> medium"
+  ],
+  "expected": [
+    {
+      "rule_id": "phone_visible", "t_start_ms": 2000, "t_end_ms": 5875, "end_reason": "condition_cleared",
+      "priority": "medium", "observation_count": 31, "related_rules": [],
+      "facts": {"phone_visible_ms": 3875.0, "appearances": 1, "gaze_down_overlap_ms": 0.0, "priority_basis": "base_medium"},
+      "summary_contains": ["Телефон виден 3,9 с", "требуется проверка преподавателем"]
+    }
+  ]
+}
