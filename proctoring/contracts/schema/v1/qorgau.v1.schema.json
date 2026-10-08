@@ -3,7 +3,7 @@
   "$id": "https://qorgau.local/contracts/qorgau.v1.schema.json",
   "title": "Qorgau Exam contracts v1",
   "x-contract-id": "qorgau.v1",
-  "x-contract-version": "1.0.0",
+  "x-contract-version": "1.1.0",
   "$defs": {
     "AbortRequest": {
       "additionalProperties": false,
@@ -342,6 +342,162 @@
       "title": "AttentionObservation",
       "type": "object"
     },
+    "AudioObservation": {
+      "additionalProperties": false,
+      "description": "1.1. Microphone features only; audio is never recorded or transmitted. frame_id is None.",
+      "properties": {
+        "observation_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "frame_id": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Frame Id"
+        },
+        "t_session_ms": {
+          "minimum": 0.0,
+          "title": "T Session Ms",
+          "type": "number"
+        },
+        "wall_time": {
+          "format": "date-time",
+          "title": "Wall Time",
+          "type": "string"
+        },
+        "source_mode": {
+          "$ref": "#/$defs/SourceMode"
+        },
+        "producer": {
+          "$ref": "#/$defs/Producer"
+        },
+        "status": {
+          "$ref": "#/$defs/ObservationStatus"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quality"
+        },
+        "quality_flags": {
+          "items": {
+            "pattern": "^[a-z0-9_.]{1,64}$",
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Quality Flags",
+          "type": "array"
+        },
+        "latency_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latency Ms"
+        },
+        "kind": {
+          "const": "audio",
+          "default": "audio",
+          "title": "Kind",
+          "type": "string"
+        },
+        "voice_like": {
+          "$ref": "#/$defs/SignalState"
+        },
+        "voice_probability": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Voice Probability"
+        },
+        "rms_dbfs": {
+          "anyOf": [
+            {
+              "maximum": 0,
+              "minimum": -200,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rms Dbfs"
+        },
+        "noise_floor_dbfs": {
+          "anyOf": [
+            {
+              "maximum": 0,
+              "minimum": -200,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Noise Floor Dbfs"
+        },
+        "reasons": {
+          "items": {
+            "pattern": "^[a-z0-9_.]{1,64}$",
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "observation_id",
+        "session_id",
+        "frame_id",
+        "t_session_ms",
+        "wall_time",
+        "source_mode",
+        "producer",
+        "status",
+        "voice_like"
+      ],
+      "title": "AudioObservation",
+      "type": "object"
+    },
     "BBox": {
       "additionalProperties": false,
       "description": "Normalized box in the UNMIRRORED frame: x right, y down, origin top-left.",
@@ -615,7 +771,9 @@
         "attention",
         "fusion",
         "evidence",
-        "environment"
+        "environment",
+        "audio",
+        "identity"
       ],
       "title": "Component",
       "type": "string"
@@ -1518,7 +1676,7 @@
           "type": "string"
         },
         "contract_version": {
-          "default": "1.0.0",
+          "default": "1.1.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -1984,7 +2142,7 @@
           "type": "string"
         },
         "contract_version": {
-          "default": "1.0.0",
+          "default": "1.1.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -2054,7 +2212,7 @@
           "type": "string"
         },
         "contract_version": {
-          "default": "1.0.0",
+          "default": "1.1.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -2161,6 +2319,139 @@
         "operator"
       ],
       "title": "HumanReviewCreate",
+      "type": "object"
+    },
+    "IdentityObservation": {
+      "additionalProperties": false,
+      "description": "1.1. Is the primary face the same person as enrolled at exam start? Embeddings stay in memory.",
+      "properties": {
+        "observation_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "session_id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "frame_id": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Frame Id"
+        },
+        "t_session_ms": {
+          "minimum": 0.0,
+          "title": "T Session Ms",
+          "type": "number"
+        },
+        "wall_time": {
+          "format": "date-time",
+          "title": "Wall Time",
+          "type": "string"
+        },
+        "source_mode": {
+          "$ref": "#/$defs/SourceMode"
+        },
+        "producer": {
+          "$ref": "#/$defs/Producer"
+        },
+        "status": {
+          "$ref": "#/$defs/ObservationStatus"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quality"
+        },
+        "quality_flags": {
+          "items": {
+            "pattern": "^[a-z0-9_.]{1,64}$",
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Quality Flags",
+          "type": "array"
+        },
+        "latency_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latency Ms"
+        },
+        "kind": {
+          "const": "identity",
+          "default": "identity",
+          "title": "Kind",
+          "type": "string"
+        },
+        "same_person": {
+          "$ref": "#/$defs/SignalState"
+        },
+        "similarity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": -1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Similarity"
+        },
+        "enrolled": {
+          "default": false,
+          "title": "Enrolled",
+          "type": "boolean"
+        },
+        "reasons": {
+          "items": {
+            "pattern": "^[a-z0-9_.]{1,64}$",
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "observation_id",
+        "session_id",
+        "frame_id",
+        "t_session_ms",
+        "wall_time",
+        "source_mode",
+        "producer",
+        "status",
+        "same_person"
+      ],
+      "title": "IdentityObservation",
       "type": "object"
     },
     "Incident": {
@@ -2367,7 +2658,10 @@
         "attention",
         "presence",
         "environment",
-        "technical"
+        "technical",
+        "audio",
+        "identity",
+        "objects"
       ],
       "title": "IncidentCategory",
       "type": "string"
@@ -2467,7 +2761,12 @@
         "multiple_faces",
         "environment_blocked_action",
         "environment_escape",
-        "monitoring_degraded"
+        "monitoring_degraded",
+        "background_speech",
+        "headphones_visible",
+        "identity_mismatch",
+        "foreign_object_visible",
+        "second_screen_visible"
       ],
       "title": "IncidentRule",
       "type": "string"
@@ -2626,8 +2925,10 @@
       "discriminator": {
         "mapping": {
           "attention": "#/$defs/AttentionObservation",
+          "audio": "#/$defs/AudioObservation",
           "environment": "#/$defs/EnvironmentObservation",
           "health": "#/$defs/HealthObservation",
+          "identity": "#/$defs/IdentityObservation",
           "phone": "#/$defs/PhoneObservation"
         },
         "propertyName": "kind"
@@ -2644,6 +2945,12 @@
         },
         {
           "$ref": "#/$defs/HealthObservation"
+        },
+        {
+          "$ref": "#/$defs/AudioObservation"
+        },
+        {
+          "$ref": "#/$defs/IdentityObservation"
         }
       ]
     },
@@ -2660,8 +2967,10 @@
           "discriminator": {
             "mapping": {
               "attention": "#/$defs/AttentionObservation",
+              "audio": "#/$defs/AudioObservation",
               "environment": "#/$defs/EnvironmentObservation",
               "health": "#/$defs/HealthObservation",
+              "identity": "#/$defs/IdentityObservation",
               "phone": "#/$defs/PhoneObservation"
             },
             "propertyName": "kind"
@@ -2678,6 +2987,12 @@
             },
             {
               "$ref": "#/$defs/HealthObservation"
+            },
+            {
+              "$ref": "#/$defs/AudioObservation"
+            },
+            {
+              "$ref": "#/$defs/IdentityObservation"
             }
           ],
           "title": "Observation"
@@ -3552,7 +3867,7 @@
           "$ref": "#/$defs/CalibrationState"
         },
         "contract_version": {
-          "default": "1.0.0",
+          "default": "1.1.0",
           "title": "Contract Version",
           "type": "string"
         },

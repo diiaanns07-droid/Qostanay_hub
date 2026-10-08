@@ -18,10 +18,18 @@ export interface ClassState {
 const CONNECTIONS: readonly string[] = ["connecting", "connected", "reconnecting", "rejected", "stopped"];
 const str = (v: unknown, max = 300): string | null => (typeof v === "string" && v.length > 0 ? v.slice(0, max) : null);
 
+/** Optional local metadata added by Electron to the existing health bridge result. */
+export function parseClassHealth(report: unknown): { computerName: string | null; configured: boolean | null } {
+  const o = report && typeof report === "object" ? report as Record<string, unknown> : {};
+  return { computerName: str(o.computer_name, 64), configured: typeof o.class_configured === "boolean" ? o.class_configured : null };
+}
+
 export function parseClassState(m: unknown): ClassState | null {
   if (typeof m !== "object" || m === null) return null;
   const o = m as Record<string, unknown>;
   if (o.type !== "class_state" || typeof o.connection !== "string" || !CONNECTIONS.includes(o.connection)) return null;
+  // Missing or mistyped flags must never turn a current lock/banner off.
+  if (typeof o.locked !== "boolean" || typeof o.mic_active !== "boolean" || typeof o.server !== "string") return null;
   const dir = o.audio_direction;
   return {
     connection: o.connection as ClassConnection,
