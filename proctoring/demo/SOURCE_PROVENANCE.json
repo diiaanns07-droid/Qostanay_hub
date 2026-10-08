@@ -1,0 +1,22 @@
+{
+  "checked_on": "2026-10-08",
+  "case": {
+    "filename": "Кейс №3 КРУ и Qostanai Hub рус (1).pdf",
+    "sha256": "c5179c4f42953d6e569b29135ca1885be7e16895f9e7fe5a0b047b5f8e7bc287",
+    "pages": 2,
+    "requirements_page": 2
+  },
+  "regulation": {
+    "filename": "Положение на русском языке.pdf",
+    "sha256": "f28132f00fe9861e92f8273eb37754994eb06f824c42370392e31d5adca29e3e",
+    "pages": 6,
+    "submission_and_pitch_page": 4,
+    "criteria_page": 5,
+    "submission_local": "2026-10-08 23:59",
+    "timezone_assumption": "Asia/Qyzylorda (event locality; the supplied regulation does not spell out a timezone)",
+    "presentation_plus_demo_minutes": 3,
+    "questions_minutes": 3,
+    "demoday_date": "2026-10-16"
+  },
+  "scope": "User-supplied documents are requirement sources. No original participant records or PDF binaries committed."
+}
