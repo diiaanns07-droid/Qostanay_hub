@@ -31,6 +31,7 @@ from proctor_contracts.v1 import (
 from proctor.settings import BACKEND_VERSION
 
 from .store import ExportSnapshot
+from .review_zones import ZONE_LABEL
 
 REPORT_FORMAT = "qorgau.report.v1"
 CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
@@ -124,7 +125,7 @@ MODE_BANNER = {
     SourceMode.LIVE: ("live", "ЖИВАЯ СЕССИЯ (камера)", "Наблюдения получены с камеры во время экзамена."),
 }
 DISCLAIMER_RU = [
-    "Эпизоды — это объяснимые сигналы для проверки преподавателем, а не доказательство нарушения и не «вероятность списывания».",
+    "Эпизоды — объяснимые сигналы, помогающие преподавателю выбрать порядок проверки.",
     "Решение по каждому эпизоду принимает преподаватель; автоматических санкций нет.",
     "Приоритет — очерёдность проверки по прозрачным правилам, а не степень вины.",
     "Интервалы без наблюдения означают «неизвестно», а не «нарушений нет».",
@@ -269,6 +270,12 @@ h3 { font-size: 15px; margin: 0 0 6px; }
 .banner.replay { border-color: var(--warn); background: var(--warnbg); color: var(--warn); }
 .banner.live { border-color: var(--live); background: var(--livebg); color: var(--live); }
 .banner.alert { border-color: var(--warn); background: var(--warnbg); color: var(--warn); }
+.zone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.zone-grid .banner { margin: 6px 0; }
+.zone-green { border-color: #236044; background: #e6f4ec; }
+.zone-yellow { border-color: #946000; background: #fff4d6; }
+.zone-red { border-color: #a52636; background: #fff0f1; }
+.zone-grey, .zone-none { border-color: #59616c; background: #f0f2f5; }
 .note { border-left: 4px solid var(--line); padding: 6px 10px; margin: 8px 0; background: #f6f7f9; }
 table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; }
 th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
@@ -314,6 +321,7 @@ def render_html(snap: ExportSnapshot) -> str:
     w(f'<div class="muted">Сессия <span class="mono">{esc(info.session_id)}</span> · экспортировано {esc(fmt_dt(snap.exported_at))}</div>')
     cls, title, text = MODE_BANNER[info.source_mode]
     w(f'<div class="banner {cls}"><strong>{esc(title)}</strong>{esc(text)}</div>')
+    _zone_section(w, snap)
     if snap.recovered:
         w('<div class="banner alert"><strong>СЕССИЯ ПРЕРВАНА СБОЕМ</strong>'
           "Локальный сервис был остановлен без завершения сессии. Данные после последней записи отсутствуют.</div>")
@@ -345,6 +353,28 @@ def render_html(snap: ExportSnapshot) -> str:
           "Локальный отчёт: без сетевых ресурсов и скриптов."))
     w("</p></footer></body></html>")
     return "\n".join(out)
+
+
+def _zone_section(w, snap: ExportSnapshot) -> None:
+    zone = snap.summary.review_zone
+    # All CSS/indicator values come from this closed mapping, never report input.
+    key = zone.value if zone is not None else "none"
+    icon = {"red": "!!", "yellow": "!", "grey": "?", "green": "✓", "none": "—"}[key]
+    w('<div class="zone-grid">')
+    w(f'<section class="banner zone-{key}"><strong>{icon} {esc(ZONE_LABEL[zone])}</strong>')
+    w('<div>Приоритет проверки преподавателем</div><ul>')
+    for reason in snap.summary.review_zone_reasons_ru[:3]:
+        w(f'<li>{esc(reason)}</li>')
+    w('</ul>')
+    if snap.summary.review_zone_rule_version:
+        w(f'<small>Правило: {esc(snap.summary.review_zone_rule_version)}</small>')
+    w('</section><section class="banner"><strong>Решения преподавателя</strong>')
+    decisions = snap.summary.reviews_by_decision
+    w('<ul>')
+    for code, label in REVIEW_RU.items():
+        if decisions.get(code, 0):
+            w(f'<li>{esc(label)}: {decisions[code]}</li>')
+    w('</ul><div>Решения показаны отдельно и не меняют зону.</div></section></div>')
 
 
 def _kv(w, rows: list[tuple[str, Any]]) -> None:

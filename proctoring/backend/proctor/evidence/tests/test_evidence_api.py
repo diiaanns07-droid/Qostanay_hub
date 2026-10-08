@@ -11,7 +11,8 @@ from fastapi.testclient import TestClient
 from proctor.app import create_app
 from proctor.evidence import EvidenceConfig, create_evidence_store
 from proctor.settings import Settings
-from proctor_contracts.v1 import ApiError, ExportManifest, HumanReview, Incident, IncidentDetail, SessionInfo, SessionSummary
+from proctor_contracts.v1 import ApiError, ExportManifest, HumanReview, Incident, IncidentDetail, SessionInfo
+from proctor.evidence.review_zones import SessionSummary
 
 TOKEN = "e" * 48
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
@@ -76,7 +77,7 @@ def test_module_is_discovered_by_composition_root(tmp_path):
 
 def test_full_synthetic_flow(api):
     sid = _running_session(api)
-    r = api.put(f"/v1/sessions/{sid}/answers/q1", json={"value": "<img src=x onerror=alert(1)>", "client_seq": 1})
+    r = api.put(f"/v1/sessions/{sid}/answers/q2", json={"value": "<img src=x onerror=alert(1)>", "client_seq": 1})
     assert r.status_code == 200 and r.json()["value"].startswith("<img")
     ev = {"action": "shortcut_alt_tab", "enforcement": "detected_only", "mechanism": "test.shell", "scope": "window",
           "client_seq": 1, "client_wall_time": "2026-10-08T09:00:05Z", "detail": {"shortcut": "<b>Alt+Tab</b>"}}
@@ -125,7 +126,7 @@ def test_full_synthetic_flow(api):
     names = {f.name for f in manifest.files}
     assert "report.html" in names and f"{detail.evidence[0].evidence_id}.jpg" in names
     assert payload["session"]["student_label"] == EVIL_LABEL  # JSON keeps raw text, HTML escapes it
-    assert manifest.config_versions["fusion.rule_version"] == "bootstrap-0"
+    assert manifest.config_versions["fusion.rule_version"] == phone.rule_version
 
     assert api.delete(f"/v1/sessions/{sid}").json() == {"deleted": True}
     r = api.get(f"/v1/sessions/{sid}/incidents")
