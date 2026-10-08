@@ -170,6 +170,7 @@ class FakeFaceBackend:
     def reset(self) -> None:
         self.resets += 1
         self.calls = []
+        self.closed = False
 
     def close(self) -> None:
         self.closed = True

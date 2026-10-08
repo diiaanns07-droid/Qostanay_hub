@@ -24,7 +24,7 @@ from typing import Callable, Sequence
 import cv2
 import numpy as np
 
-from proctor_contracts.interfaces import FramePacket, InvalidStateError, ProctorError
+from proctor_contracts.interfaces import FramePacket, InvalidStateError, ModelError
 from proctor_contracts.v1 import (
     AttentionObservation,
     BBox,
@@ -137,17 +137,18 @@ class MediaPipeAttentionAnalyzer:
         return d
 
     def health(self) -> Health:
-        with self._lock:
-            if self._backend is None:
-                return self._health
-            recent = self._recent_errors
-            if len(recent) >= 10 and sum(recent) > 0.2 * len(recent):
-                return Health(
-                    component=Component.ATTENTION, status=HealthStatus.DEGRADED, code="inference_errors",
-                    message=f"{sum(recent)} of the last {len(recent)} frames failed in the face model",
-                    details=self._details(),
-                )
-            return self._ok_health()
+        """Lock-free on purpose (API threads must not wait for a running inference): reads
+        counters/state that are replaced atomically."""
+        if self._backend is None:
+            return self._health
+        recent = list(self._recent_errors)
+        if len(recent) >= 10 and sum(recent) > 0.2 * len(recent):
+            return Health(
+                component=Component.ATTENTION, status=HealthStatus.DEGRADED, code="inference_errors",
+                message=f"{sum(recent)} of the last {len(recent)} frames failed in the face model",
+                details=self._details(),
+            )
+        return self._ok_health()
 
     def start_session(self, session_id: str, source_mode: SourceMode) -> None:
         with self._lock:
@@ -160,12 +161,13 @@ class MediaPipeAttentionAnalyzer:
             self._reset_backend()
 
     def end_session(self) -> None:
-        """Idempotent. Drops calibration (personal data), tracks, filters and model state."""
+        """Idempotent. Drops calibration (personal data), tracks, filters and the model's own
+        tracking state (the landmarker is closed; start_session creates a fresh one)."""
         with self._lock:
             self._calib.reset()
             self._reset_signal_state()
-            if self._session_id is not None:
-                self._reset_backend()
+            if self._session_id is not None and self._backend is not None:
+                self._backend.close()
             self._session_id = None
             self._mode = None
 
@@ -178,6 +180,7 @@ class MediaPipeAttentionAnalyzer:
             self._health = Health(component=Component.ATTENTION, status=HealthStatus.STOPPED, code="closed")
 
     def _reset_backend(self) -> None:
+        """Fresh tracking state for a new session (MediaPipe VIDEO timestamps restart)."""
         if self._backend is None:
             return
         try:
@@ -212,7 +215,7 @@ class MediaPipeAttentionAnalyzer:
         if self._session_id is None:
             raise InvalidStateError(ErrorCode.INVALID_STATE, "attention analyzer has no active session")
         if self._backend is None:
-            raise ProctorError(ErrorCode.MODEL_MISSING, "face model is not available", retryable=False)
+            raise ModelError(ErrorCode.MODEL_MISSING, "face model is not available", retryable=False)
 
     def calibration_start(self) -> CalibrationState:
         self._require_session()

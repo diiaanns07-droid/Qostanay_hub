@@ -219,8 +219,10 @@ def test_restart_between_sessions(analyzer, backend, feeder):
     feeder.feed([synthetic_face()], 5)
     resets = backend.resets
     analyzer.end_session()
-    assert backend.resets == resets + 1  # tracking state of the model dropped
+    assert backend.closed  # the model's tracking state is dropped with the session
+    analyzer.end_session()  # idempotent
     analyzer.start_session("sess-2", SourceMode.REPLAY)
+    assert backend.resets == resets + 1 and not backend.closed
     o = analyzer.process(make_frame("sess-2", 0, 0.0))  # timestamps restart at 0
     assert len(o) == 1 and o[0].session_id == "sess-2" and o[0].frame_id == 0
     assert analyzer.process(make_frame("sess-a04", 99, 9999.0)) == []
