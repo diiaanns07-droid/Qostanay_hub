@@ -21,6 +21,16 @@ Submission is due 8 October 2026 at 23:59 according to the supplied regulation; 
 | `results/` | Measured API rehearsal results; each states what was not tested |
 | `docs/pitch/` | 180-second script, 90-second speech, jury questions and claim rules |
 
+## Submission on 8 October
+
+The captain extended A10's scope to `proctoring/docs/submission/` explicitly for this delivery.
+See `docs/submission/CHECKLIST.md`: 10-slide PDF + editable Markdown, two-page description PDF +
+Markdown, 170-second video shot list, recording guidance, a 20:00 fallback and submission by 23:00
+Asia/Qyzylorda (official cutoff 23:59). `docs/pitch/PRESENTATION.md` is the slide source.
+Zones are a labelled mockup awaiting A01 1.1/A05/A08/A07/A09; no second runtime UI was added.
+Actual MP4 recording and full LIVE acceptance remain NOT_RUN. The old v1 API rehearsal does not
+validate the new session overview or zone fields.
+
 From `proctoring/`, with the pinned Python environment prepared:
 
 ```powershell

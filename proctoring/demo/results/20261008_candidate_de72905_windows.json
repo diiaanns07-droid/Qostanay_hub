@@ -1,0 +1,118 @@
+{
+  "tested_sha": "de7290509bf558d6488be84d2e0730b2b9ab104a",
+  "contract": "qorgau.v1",
+  "source_mode": "synthetic",
+  "started_at": "2026-10-08T06:49:16.415216+00:00",
+  "exam_sha256": "e62d421aa101df0322dfa417aa725ec316c31fbbf99ad1760609de4bf896f767",
+  "rehearsal_script_sha256": "6bbf1bd030d155d4b0d0121e55e8edfe7bd9a4ae85d4789129fcb9b1ad8df57b",
+  "product_tree_dirty": false,
+  "scope": "Backend API rehearsal. No Electron UI, real camera or OS protection is exercised.",
+  "checks": [
+    {
+      "check": "backend_ready",
+      "status": "PASS",
+      "elapsed_s": 4.03,
+      "detail": ""
+    },
+    {
+      "check": "session_mode",
+      "status": "PASS",
+      "elapsed_s": 4.31,
+      "detail": "synthetic"
+    },
+    {
+      "check": "demo_exam_served",
+      "status": "PASS",
+      "elapsed_s": 4.31,
+      "detail": "4 questions"
+    },
+    {
+      "check": "preflight",
+      "status": "PASS",
+      "elapsed_s": 4.45,
+      "detail": "Inspect source mode; synthetic readiness does not prove CV readiness"
+    },
+    {
+      "check": "calibration",
+      "status": "NOT_RUN",
+      "elapsed_s": 4.45,
+      "detail": "Explicitly skipped for automated rehearsal; do it during LIVE rehearsal"
+    },
+    {
+      "check": "start_and_save_answer",
+      "status": "PASS",
+      "elapsed_s": 4.48,
+      "detail": ""
+    },
+    {
+      "check": "phone_episode",
+      "status": "PASS",
+      "elapsed_s": 8.64,
+      "detail": "Synthetic signal"
+    },
+    {
+      "check": "finish",
+      "status": "PASS",
+      "elapsed_s": 8.66,
+      "detail": ""
+    },
+    {
+      "check": "human_review",
+      "status": "PASS",
+      "elapsed_s": 8.67,
+      "detail": ""
+    },
+    {
+      "check": "summary",
+      "status": "PASS",
+      "elapsed_s": 8.69,
+      "detail": ""
+    },
+    {
+      "check": "report_html",
+      "status": "PASS",
+      "elapsed_s": 8.7,
+      "detail": "Export endpoint responded"
+    },
+    {
+      "check": "report_json",
+      "status": "PASS",
+      "elapsed_s": 8.7,
+      "detail": "Export endpoint responded"
+    },
+    {
+      "check": "capture_stopped",
+      "status": "PASS",
+      "elapsed_s": 8.7,
+      "detail": "204"
+    },
+    {
+      "check": "backend_shutdown",
+      "status": "PASS",
+      "elapsed_s": 9.08,
+      "detail": "exit=0"
+    },
+    {
+      "check": "token_not_logged",
+      "status": "PASS",
+      "elapsed_s": 9.08,
+      "detail": ""
+    },
+    {
+      "check": "live_camera_and_gaze",
+      "status": "NOT_RUN",
+      "elapsed_s": 9.08,
+      "detail": "Requires voluntary LIVE rehearsal on A01 candidate"
+    },
+    {
+      "check": "windows_shortcuts_and_emergency_exit",
+      "status": "NOT_RUN",
+      "elapsed_s": 9.08,
+      "detail": "Requires A06 shell and controlled manual test"
+    }
+  ],
+  "product_release_verified": false,
+  "duration_s": 9.08,
+  "automated_rehearsal_status": "PASS",
+  "finished_at": "2026-10-08T06:49:25.502930+00:00"
+}
