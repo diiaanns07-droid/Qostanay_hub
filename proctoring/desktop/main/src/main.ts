@@ -331,7 +331,7 @@ function createWindow(ses: Session): BrowserWindow {
     minWidth: 960,
     minHeight: 640,
     show: false,
-    title: "Qorgau Exam",
+    title: "ADAL",
     backgroundColor: "#ffffff",
     autoHideMenuBar: true,
     webPreferences: {
