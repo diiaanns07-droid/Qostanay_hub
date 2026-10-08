@@ -245,3 +245,24 @@ expired-command and silent-client tests pass with thread exceptions promoted to 
 
 Published checkpoint426b9d958eaf39e44b14b5d2e2802948c634a705 was verified against the GitHub remote
 tip. Later fixes are committed/published separately; do not infer their availability from this entry.
+
+### A11 and final backend QA checkpoint
+
+Integrated A11 ee232707 (merge0f7405ff3dff32cfa4bf1c9828c3923bd0d58db8): store write failures now
+surface to session/health; bounded latest-incident retry protects transiently lost CLOSED updates;
+pre-start CV timestamps are filtered; paused metadata is retained; persisted sessions can be read
+after restart without recreating devices/runtime. Visible HTML reports now use Adal. Worker regression:
+123 PASS, two explicitly skipped media/browser checks. The 17-row disposition remains in
+handoffs/ADAL-A11-CLOSEOUT/STATUS.md; F04/F11/F12/F13 and F15 reason detail are still open/partial.
+
+Root full QA on clean committed source0f7405ff3dff32cfa4bf1c9828c3923bd0d58db8:
+380 PASS, one SKIP, four known XFAIL, zero FAIL/XPASS, 135.24 seconds; no token-like strings in logs.
+Evidence: qa/results/20261008T143608Z_adal_a11_integrated_r2_0f7405ff3dff/. The previous local attempt
+failed fixture setup because root passed a Windows backslash path through PYTEST_ADDOPTS; it did not
+exercise the product. Its original report is preserved under ignored desktop/out/qa-invalid-temp-path-
+20261008T143446Z. Corrected invocation uses forward slashes; no test expectation was changed.
+
+Also integrated e116626's test-only local FakeAudioMonitor: ordinary backend lifecycle pytest now
+needs no custom injection launcher, and 16 lifecycle tests passed in the worker. No physical audio,
+camera or native guard acceptance is implied. The renderer-reload lock recovery remains the active
+integration task; successful initial lock/unlock and process restart do not close that gap.
