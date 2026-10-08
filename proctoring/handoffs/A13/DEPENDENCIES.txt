@@ -1,0 +1,60 @@
+A13 -> other roles. Base: codex/proctor-integration @ 6263aef9aabdee678b96d44b11cfec9e565370f7, contract qorgau.v1 1.1 (unchanged).
+
+1. [A01, DONE in this branch, minimal edits allowed by A01]
+   backend/proctor/app.py
+     - MODULES["identity"] = ("proctor.identity", "create_identity_analyzer", Component.IDENTITY)
+     - ModuleRegistry.load(): "identity" is built and load()-ed like phone/attention.
+     - pipeline_for(): identity = module part for LIVE/REPLAY; None for SYNTHETIC (synthetic frames have no faces).
+       Pipeline(..., identity=identity).
+     - health_components() needs no change: it iterates MODULES, so /v1/health now lists component "identity".
+   backend/proctor/session.py
+     - Pipeline.identity: PipelinePart | None = None (last field, default => every other Pipeline(...) still works).
+     - _frame_analyzers() -> [(phone, PHONE), (attention, ATTENTION), (+identity, IDENTITY)], used for: consumers
+       (_open_capture), health polling (_poll_analyzer_health), end_session (_end). _record_session_config is
+       unchanged: contract ModelManifest.module allows only phone/attention, so identity adds no manifest there.
+     - _consumer(): analyzer name -> Component through a dict {"phone": PHONE, "identity": IDENTITY}, default
+       ATTENTION (was "phone else attention", which would have reported identity faults as ATTENTION).
+     - _max_fps(): "identity": 4.0 (the analyzer itself analyzes at 2 Hz while enrolling, then 1 Hz on session time).
+     - start(): new optional hook _notify_exam_started(t): calls analyzer.exam_started(t_session_ms) if it exists,
+       right after _accepting = True and before state RUNNING is published. An exception there is an analyzer
+       fault (_analyzer_failed), never blocks the start. Phone/attention don't have the method => no effect.
+   No preflight row was added (PreflightCheckId is contract). Missing identity models do NOT block an exam.
+
+2. [A05, rule NOT written by A13 — the fusion session adds it] Exact event for IncidentRule.IDENTITY_MISMATCH:
+   input   IdentityObservation (kind="identity", producer.module="identity"), ~1 per second.
+   open    when same_person == "absent" continuously for >= 3000 ms of session time
+           (first absent t_session_ms .. latest absent t_session_ms + one interval; A13 emits ~1/s, so 3-4 obs).
+   keep    while same_person == "absent".
+           "unknown" (no_face / multiple_faces / face_too_small / model_*) neither opens nor extends it; it
+           closes the episode (or use your usual merge_gap if you prefer) — those cases belong to
+           face_missing / multiple_faces (A04) and monitoring_degraded (health).
+   close   on "present" or "unknown", or at pause/finish (session_paused / session_finished).
+   fields  rule_id=identity_mismatch, category=identity, priority=HIGH (ReviewPriority.HIGH = priority of HUMAN
+           REVIEW, not a verdict).
+   explanation summary_ru (exact form):
+           «Лицо не совпадает с лицом в начале экзамена — 12:05, 6 с»
+           where 12:05 = local wall clock (HH:MM) of the episode start (wall_time of the first absent observation),
+           6 с = episode duration rounded to whole seconds.
+   facts (suggested ExplanationFact keys): similarity_min, similarity_median (over the episode's absent obs),
+           threshold=0.363, observations=N. Never anything else from A13 (there is nothing else: no embeddings).
+   ignore  observations with enrolled == false (no reference yet) — they are always "unknown" anyway.
+   Do NOT phrase it as "другой человек" or "подмена": the system only sees that the face differs from the one at
+   the start of the exam.
+
+3. [A07 / renderer, optional] Labels: component "identity" = «Сверка лица с началом экзамена»; while enrolled=false
+   show «Запоминаем лицо в начале экзамена…» (reasons "enrolling"), never «идентификация».
+   labels.ts already has identity_mismatch from contract 1.1 (6263aef).
+
+4. [A09 / packaging, required for LIVE] Before the exam on the demo laptop:
+     .venv\Scripts\python -m proctor.identity.prepare --download   (or copy the two files + run --check offline)
+   Backend env: QORGAU_MODELS_DIR=%LOCALAPPDATA%\QorgauExam\models (same dir as phone/attention). packaging/preflight.py
+   reads <module>/models.manifest.json as a contract ModelManifest; the identity manifest has its own schema
+   (two models) — do not feed it to that check; use `python -m proctor.identity.prepare --check` instead.
+
+5. [A08 / report, info] IdentityObservation holds only similarity (float) + enrolled + reasons; safe to store and to
+   show. Model provenance for the report: backend/proctor/identity/models.manifest.json (URL, license, sha256).
+
+6. [A10 / pitch, wording] Say: «контроль, что за компьютером тот же человек, что в начале экзамена; локально, без базы
+   лиц, признаки лица только в памяти». Do not say «биометрическая идентификация», «распознавание личности»,
+   «защита от подделки». Numbers: same person on A02 clips 0.56-0.97 (median 0.77-0.85) vs threshold 0.363 — a
+   factual record on one person, not accuracy. Person-swap LIVE: see STATUS.md (plan until measured).
