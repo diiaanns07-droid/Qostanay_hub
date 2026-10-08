@@ -8,6 +8,8 @@ import type {
   SourceMode,
 } from "@contracts/qorgau-v1.generated";
 import { useApp } from "../lib/appContext";
+import { useLive } from "../lib/liveStore";
+import { ClassBlock } from "../components/ClassOverlays";
 import { call } from "../lib/result";
 import { CAPABILITY, CHECK, CHECK_STATUS, COMPONENT, ENV_ACTION, HEALTH, HEALTH_CODE, SOURCE_MODE_RU } from "../lib/labels";
 import { Badge, Banner, Button, Card, Dialog, Dot, ErrorBanner, Spinner, type Tone } from "../components/ui";
@@ -19,7 +21,8 @@ const checkTone = (c: PreflightCheck): Tone =>
   c.status === "pass" ? "ok" : c.status === "fail" ? (c.required ? "danger" : "warn") : c.status === "warn" ? "warn" : "neutral";
 
 export function PreflightScreen() {
-  const { bridge, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher } = useApp();
+  const { bridge, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher, live } = useApp();
+  useLive(live);
   const [health, setHealth] = useState<HealthReport | null>(null);
   const [caps, setCaps] = useState<EnvironmentCapabilities | null | { error: ApiErrorBody }>(null);
   const capsTries = useRef(0);
@@ -302,6 +305,7 @@ export function PreflightScreen() {
         </div>
 
         <div className="stack">
+          <ClassBlock state={live.classState} />
           <Card title="Компоненты" aside={health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}>
             {!health && !loadErr && <Spinner label="Запрашиваем состояние…" />}
             {!health && loadErr && <p className="muted">Нет данных о компонентах.</p>}
