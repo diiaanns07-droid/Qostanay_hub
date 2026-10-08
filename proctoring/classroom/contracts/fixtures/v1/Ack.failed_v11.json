@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "ack",
+  "command_id": "cmd-0002",
+  "ok": false,
+  "error_ru": "Срок команды истёк",
+  "code": "expired",
+  "executed_at": null
+}

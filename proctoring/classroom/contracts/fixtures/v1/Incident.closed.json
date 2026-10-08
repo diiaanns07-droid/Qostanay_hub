@@ -1,0 +1,18 @@
+{
+  "incident_id": "inc-0001",
+  "student_id": "st-0001",
+  "session_id": "cs-0001",
+  "rule_id": "phone_visible",
+  "category": "phone",
+  "priority": "medium",
+  "state": "closed",
+  "t_start_wall": "2026-10-09T09:00:00Z",
+  "duration_ms": 4200.0,
+  "explanation_ru": "СИМУЛЯЦИЯ: телефон виден 4,2 с",
+  "clip_available": true,
+  "has_snapshot": false,
+  "origin": "simulated",
+  "first_received_at": "2026-10-09T09:00:00Z",
+  "last_received_at": "2026-10-09T09:00:04.200000Z",
+  "events": 2
+}

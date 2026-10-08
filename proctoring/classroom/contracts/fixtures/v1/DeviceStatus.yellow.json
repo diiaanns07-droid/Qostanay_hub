@@ -1,0 +1,23 @@
+{
+  "student_id": "st-0001",
+  "received_at": "2026-10-09T09:00:04.200000Z",
+  "sent_at": "2026-10-09T09:00:04.200000Z",
+  "exam_state": "running",
+  "camera": "ok",
+  "monitoring": "ok",
+  "zone_reported": "yellow",
+  "zone": "yellow",
+  "zone_source": "student",
+  "zone_reasons_ru": [
+    "СИМУЛЯЦИЯ: телефон виден"
+  ],
+  "incidents_total": 1,
+  "incidents_by_priority": {
+    "low": 0,
+    "medium": 1,
+    "high": 0
+  },
+  "locked": false,
+  "mic_active": false,
+  "stale": false
+}

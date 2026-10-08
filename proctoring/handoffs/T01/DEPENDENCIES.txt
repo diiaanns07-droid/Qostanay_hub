@@ -1,0 +1,8 @@
+T01 -> others. One line = what and where. T01 = global role C1 (proctoring/classroom/).
+
+D1 A01 | proctoring/coordination/OWNERSHIP.json: C1 = T01. Add proctoring/handoffs/T01/ to C1 and register the T-role paths of classroom/coordination/OWNERSHIP.json: T02 class-panel/, T03 classreview/, T04 backend/proctor_classctl/ + class-control-ui/, T05 class-audio/, handoffs/T02..T05/.
+D2 A01 | contracts/class/PROTOCOL_v1.md: document the additive v1.1 fields that T01 accepts and T04/C2 already use (hello.client_run_id|simulated|capabilities, incident.event_id, ack.seq|code|executed_at|result, command_progress, command.issued_at|expires_at|ttl_ms|attempt, apply_policy for capable clients, welcome.session_id|resumed); exact shapes in classroom/contracts/models.py + fixtures/v1.
+D3 A01/A09 | pyproject/pytest: classroom/ tests run with `pytest classroom/` from proctoring/ (own conftest adds proctoring/ to sys.path); optionally add classroom to testpaths.
+D4 C2 | none blocking. Plain v1 is fully supported (no capabilities -> start/finish/lock/unlock/request_clip/audio only). Dedup follows §3.1 (student_id, seq); a re-sent open episode with clip_available=true under a new seq is an update. Optional v1.1: incident.event_id, hello.client_run_id when the outbox seq counter is reset.
+D5 T02 | REAL adapter: use GET /api/teacher/students (StudentCard[]) and WS /ws/teacher (snapshot/student_update/incident/preview). Previews: switch from inline jpeg_b64 to preview.url (inline only with ?inline_previews=1).
+D6 T03/T04/T05 | write the feature factory in your own path (INTERFACES.md §3, template classroom/server/tests/sample_feature.py); until then T01 mounts your published modules through thin adapters.
