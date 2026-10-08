@@ -55,4 +55,4 @@ def assess_session_zone(incidents: list[Incident], summary: ContractSessionSumma
     Switch ONLY this adapter to the public A05 function on the confirmed SHA.
     Current captain-approved behavior: null zone; reports/overview remain usable.
     """
-    return ZoneAssessment(reasons_ru=["Зона не рассчитана: модуль зон A05 ещё не подключён."])
+    return ZoneAssessment(reasons_ru=["Зона не рассчитана. Просмотрите эпизоды вручную."])

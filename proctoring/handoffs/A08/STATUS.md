@@ -1,4 +1,4 @@
-# A08 ? continuation checkpoint, 8 ??????? 2026 / Windows 11
+# A08 — продолжение, 8 октября 2026 / Windows 11
 
 Branch: `claude/focused-mendel-4940jx`. Previous published SHA: `5509950e38c622ae544d40c75d4b8fdba7256b82`.
 Baseline unchanged: A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`, contract 1.0.0.
@@ -21,22 +21,45 @@ Current stage: QA fixes + temporary zone models/adapter + overview handler + rep
 - Report: zone text + symbol + color, reasons (max 3), teacher decision counts alongside; escaped HTML,
   LIVE/REPLAY/SYNTHETIC and limitations retained. Teacher reviews do not alter the incidents passed to assessor.
 
-Tests on Windows 11 / Python 3.12.14, environment from unchanged lockfile:
-`python -m pytest backend/proctor/evidence -q -p no:cacheprovider` ? **53 PASS, 2 SKIP**, 12.04 s.
-SKIP: symlink privilege (WinError 1314), optional Playwright/Chromium renderer unavailable to test harness.
+First checkpoint pushed: `c201443f215b58b14f9d79104d4dcc86f3a4b9fd` before 14:00 local.
+
+Final tests on Windows 11 / Python 3.12.14, environments from unchanged lockfile:
+`python -m pytest backend/proctor/evidence -q -p no:cacheprovider`
+- A08 branch: **55 PASS, 1 SKIP, 0 FAIL, 0 XFAIL, 0 XPASS**, 17.91 s.
+- Scratch A01 `de7290509bf558d6488be84d2e0730b2b9ab104a` + ONLY A08 overlay:
+  **55 PASS, 1 SKIP, 0 FAIL, 0 XFAIL, 0 XPASS**, 17.61 s.
+SKIP: symlink privilege (WinError 1314). Windows permissions/settings unchanged.
+The optional real Chromium render/print test now PASSES (installed Chrome + temporary Playwright 1.56.0).
+No dependency or lockfile changes. See `checks/README.md` for commands and evidence.
 Windows lock refusal/release, atomic media write/reopen/delete and Cyrillic path passed.
+QA-BUG-002 now also has a real backend subprocess + HTTP/1.1 TCP regression:
+15 invalid-id requests return 422/INVALID_ARGUMENT; the same socket serves every subsequent health request.
+Only the test's own subprocess is shut down, through the public stdin protocol.
 Zone plumbing/sorting uses labelled assessor doubles; NOT validation of unpublished A05 rules.
 Only A08-owned paths changed. No other modules merged. Logs: handoffs/A08/checks/.
+
+Candidate integration probe: after DELETE, A01 common GET/session and GET/metrics plus all checked A08
+reads return 404. QA-OBS-004 is verified across the public boundary on this candidate.
+**Integration blocker for the NEW overview screen:** candidate GET /v1/sessions/overview returns
+404 SESSION_NOT_FOUND ("session overview not found"). A01's generic route shadows the A08 handler.
+The standalone A08 handler passes. A01 must register the static route first; no foreign code was changed.
+
+SYNTHETIC HTML/JSON samples regenerated with current temporary zone fields and teacher review counts.
+Real Chrome: one local-file request, no network requests/scripts/links/console errors, embedded image loads,
+mobile width 390 has no horizontal overflow, print-to-A4 succeeds. Desktop zone + teacher decisions fit
+in the first screen (bottom 332 px of a 900 px viewport). Mobile screenshot visually reviewed too.
+This is report/layout verification, not a measured 20-second teacher usability study or LIVE CV validation.
 
 Dependencies: A01 must mount static /sessions/overview before /sessions/{id}; contract 1.1 SHA pending.
 A05 function SHA pending; today adapter returns None with reason, not a guessed green/grey.
 Current added summary fields are temporary local models, not a claim of released contract 1.1 compatibility.
 Answer validation reads the same settings.exam_path / demo_min fallback as A01; request a public get_exam view.
 
-Next today: compatibility on isolated A01 candidate, real renderer/print check, further relevant regressions.
-Optional JSON import is deferred until core integration checks pass.
+Ready for A01 to integrate the A08 branch. Captain explicitly instructed not to wait for the unpublished
+A01/A05 deliveries. Switch the local models and thin adapter only after receiving confirmed SHAs.
+Optional cross-laptop JSON import is deferred; overview currently includes local sessions only.
 
-## ????? 9 ???????
+## После 9 октября
 Cross-laptop JSON import (schema/version/hash, duplicate handling), long-session performance,
 precise monotonic coverage timing, video clips/encryption/new formats (not implemented today).
 
