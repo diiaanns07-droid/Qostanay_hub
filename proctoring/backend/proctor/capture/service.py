@@ -45,6 +45,7 @@ import threading
 import time
 import weakref
 from collections import OrderedDict, deque
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -63,6 +64,7 @@ from proctor_contracts.v1 import (
     SourceMode,
 )
 
+from .clips import CLIP_FPS, CLIP_JPEG_QUALITY, CLIP_MAX_BYTES, CLIP_RING_S, ClipBuffer, ClipError, ClipResult
 from .fanout import Consumer, ConsumerWorker
 from .replay import ReplaySource
 from .sources import CameraSource, FactDict, FrameSource, RawFrame, SourceDisconnected, SourceEnded, SyntheticSource, cv2
@@ -72,6 +74,7 @@ log = logging.getLogger("proctor.capture")
 
 CAPTURE_VERSION = "0.2.0"
 PREVIEW_CONSUMER = "preview"  # reserved name of the internal JPEG preview encoder
+CLIPS_CONSUMER = "clips"  # reserved name of the internal incident-clip buffer (class mode)
 PREVIEW_MAX_WIDTH = 960  # preview is downscaled above this width (normalized overlays unaffected)
 METRICS_WINDOW_S = 5.0
 OPEN_TIMEOUT_S = 6.0  # source budget: device open + first frame probe (CaptureService.open "< ~5 s")
@@ -169,6 +172,7 @@ class _Run:
         self.workers_lock = threading.Lock()
         self.ring = _Ring(ring_seconds)
         self.preview: tuple[PreviewFrameMeta, bytes] | None = None
+        self.clips: ClipBuffer | None = None  # class-mode incident clips (last CLIP_RING_S seconds)
         self.started_ns = time.monotonic_ns()
         self.frames_captured = 0
         self.frames_rejected = 0
@@ -211,6 +215,9 @@ class FrameCaptureService:
         open_timeout_s: float = OPEN_TIMEOUT_S,
         metrics_window_s: float = METRICS_WINDOW_S,
         replay_pacing: str | None = None,
+        clip_ring_s: float = CLIP_RING_S,
+        clip_fps: float = CLIP_FPS,
+        clip_max_bytes: int = CLIP_MAX_BYTES,
     ):
         self._settings = settings
         # test/diagnostic hooks for CameraSource (opener, backends, platform, probes, probe_timeout_s)
@@ -220,6 +227,8 @@ class FrameCaptureService:
         if replay_pacing not in (None, "realtime", "lockstep"):
             raise ValueError("replay_pacing must be None, 'realtime' or 'lockstep'")
         self._replay_pacing = replay_pacing
+        self._clip_cfg = (float(clip_ring_s), float(clip_fps), int(clip_max_bytes))  # ring_s <= 0 disables clips
+        self._last_clips: ClipBuffer | None = None  # buffer of the last run (export right after close)
         self._lock = threading.RLock()
         self._consumers: dict[str, Consumer] = {}
         self._callback_locks: dict[str, threading.Lock] = {}  # per consumer NAME, never dropped
@@ -278,6 +287,9 @@ class FrameCaptureService:
             preview = self._preview_consumer(run)
             if preview is not None:
                 self._start_worker_locked(run, preview)
+            clips = self._clips_consumer(run)
+            if clips is not None:
+                self._start_worker_locked(run, clips)
         self._flush_health()
         run.capture_thread.start()
         if not run.opened.wait(self._open_timeout_s + OPEN_WAIT_MARGIN_S):
@@ -341,8 +353,8 @@ class FrameCaptureService:
     def add_consumer(self, name: str, callback: FrameCallback, *, max_fps: float | None = None) -> None:
         if not isinstance(name, str) or not 0 < len(name) <= 64:
             raise ValueError("consumer name must be a non-empty string of at most 64 characters")
-        if name == PREVIEW_CONSUMER:
-            raise ValueError(f"consumer name {PREVIEW_CONSUMER!r} is reserved")
+        if name in (PREVIEW_CONSUMER, CLIPS_CONSUMER):
+            raise ValueError(f"consumer name {name!r} is reserved")
         if not callable(callback):
             raise ValueError("callback must be callable")
         if max_fps is not None and not (isinstance(max_fps, (int, float)) and np.isfinite(max_fps) and max_fps > 0):
@@ -483,6 +495,49 @@ class FrameCaptureService:
 
         return Consumer(name=PREVIEW_CONSUMER, callback=encode, max_fps=fps, internal=True)
 
+    def _clips_consumer(self, run: _Run) -> Consumer | None:
+        ring_s, fps, max_bytes = self._clip_cfg
+        if cv2 is None or ring_s <= 0 or fps <= 0:
+            return None
+        run.clips = ClipBuffer(ring_s=ring_s, jpeg_quality=CLIP_JPEG_QUALITY, max_bytes=max_bytes)
+        self._last_clips = run.clips
+        buf = run.clips
+
+        def keep(packet: FramePacket) -> None:
+            buf.add(packet.image, packet.t_session_ms, packet.frame_id)
+
+        return Consumer(name=CLIPS_CONSUMER, callback=keep, max_fps=fps, internal=True)
+
+    def export_clip(
+        self,
+        t_center_session_ms: float,
+        before_s: float = 5.0,
+        after_s: float = 5.0,
+        *,
+        out_dir: Any = None,
+        name: str | None = None,
+    ) -> Path:
+        """Write a clip [t - before_s, t + after_s] (session time) and return its path (see clips.py).
+
+        BLOCKS until frames up to t + after_s arrived (at most after_s + 3 s) — call it from a worker
+        thread, when the incident opens. Raises ClipError(code) on failure."""
+        return self.export_clip_result(t_center_session_ms, before_s, after_s, out_dir=out_dir, name=name).path
+
+    def export_clip_result(self, t_center_session_ms: float, before_s: float = 5.0, after_s: float = 5.0, *, out_dir: Any = None, name: str | None = None) -> ClipResult:
+        with self._lock:
+            run = self._run
+            buf = run.clips if run is not None else self._last_clips
+            sid = run.session_id if run is not None else "session"
+        if buf is None:
+            raise ClipError("no_frames", "no capture run with a clip buffer (camera not started or clips disabled)")
+        label = name or f"{sid}-t{int(max(0.0, t_center_session_ms))}"
+        return buf.export(float(t_center_session_ms), float(before_s), float(after_s), out_dir=Path(out_dir) if out_dir else None, name=label)
+
+    def clip_buffer_stats(self) -> dict[str, Any] | None:
+        run = self._run
+        buf = run.clips if run is not None else self._last_clips
+        return buf.stats() if buf is not None else None
+
     def _preview_quality(self) -> int:
         return int(min(95, max(10, int(self._settings.preview_jpeg_quality))))
 
@@ -526,6 +581,8 @@ class FrameCaptureService:
     def _stop_run(self, run: _Run, deadline: float) -> int:
         """Stop threads of ``run``; returns the number of threads still alive at the deadline."""
         run.stop.set()
+        if run.clips is not None:
+            run.clips.close()  # waiting exports return with what is buffered
         alive = 0
         try:
             with run.workers_lock:

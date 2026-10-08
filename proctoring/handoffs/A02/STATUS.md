@@ -9,7 +9,15 @@ Stage (2026-10-08): **checkpoint 4 — first LIVE run on the real Windows demo l
 Merged captain's baseline `codex/proctor-integration` @ `78798b7ca83f16552e43a4cf1ae29e81162db44c` (merge `--no-ff`, no
 conflicts; `capture/` identical to A02 `e389865`). Protocol `qorgau.class.v1` (contracts/class/PROTOCOL_v1.md).
 Capture tests after merge: 111 passed, 2 skipped (one earlier run under CPU load had 1 failure that did not reproduce
-in 2 reruns — timing-sensitive test, name not captured). Next: incident clips (`export_clip`) for C2.
+in 2 reruns — timing-sensitive test, name not captured). Incident clips for class mode — DONE (`capture/clips.py`, `FrameCaptureService.export_clip`), interface for C2:
+`CLIPS_FOR_C2.md`. Rolling 10 s JPEG buffer fitted into 640×360 (aspect kept), ~15 FPS, hard cap 24 MB / 600 frames;
+`export_clip(t_center_session_ms, before_s=5, after_s=5) -> Path` waits for after_s (bounded), writes MJPG `.avi`
+≤ 8 MB into `%TEMP%\qorgau-clips` (outside Git), explicit `ClipError(code)`. Measured: real camera frames 2.1–2.3 MB
+buffer per 10 s, `add()` 1.1–1.5 ms/frame, 10 s clip 3.8–4.3 MB; LIVE export waited 5.3 s, 127 frames, 2.8 MB.
+Tests: `tests/test_capture_clips.py` 11 (synthetic). Capture suite: 122 passed, 2 skipped. Whole repo on this laptop:
+918 passed, 4 failed — all in A03 phone tests and identical on the clean baseline `78798b7` (Windows path separator
+`phone\m.onnx`, ProactorEventLoop) → not caused by A02; for A01/A03.
+
 
 ## LIVE on the demo laptop (measured 2026-10-08, this machine only)
 Machine: ASUS TUF Gaming A15 FA507NU, **AMD Ryzen 5 7535HS** (6C/12T), 15.2 GB RAM, Windows 11 Home 10.0.26200,
