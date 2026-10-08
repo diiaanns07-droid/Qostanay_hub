@@ -880,7 +880,7 @@ export class FixtureBridge implements QorgauBridge {
 
   // ================================================================== backend lifecycle
   health(): Promise<BridgeResult<HealthReport>> {
-    return this.respond(() => this.healthReport());
+    return this.respond(() => ({ ...this.healthReport(), computer_name: "FIXTURE-PC", class_configured: false }));
   }
 
   listSessions(): Promise<BridgeResult<SessionInfo[]>> {

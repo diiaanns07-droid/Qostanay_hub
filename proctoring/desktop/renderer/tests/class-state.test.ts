@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseClassState } from "../src/lib/classState";
+import { parseClassHealth, parseClassState } from "../src/lib/classState";
 import { LiveStore } from "../src/lib/liveStore";
 import type { StreamEnvelope } from "../../../contracts/ts/qorgau-v1.generated";
 
 const state = { type: "class_state", connection: "connected", server: "test:8765", locked: true, lock_reason_ru: "Контрольная пауза", mic_active: true, audio_direction: "listen" };
 const env = (seq: number, message: unknown) => ({ contract: "qorgau.v1", seq, sent_at: new Date().toISOString(), session_id: null, message }) as StreamEnvelope;
+
+test("health metadata distinguishes absent server from unknown and configured", () => {
+  assert.deepEqual(parseClassHealth(null), { computerName: null, configured: null });
+  assert.deepEqual(parseClassHealth({ computer_name: "LOCAL-PC", class_configured: false }), { computerName: "LOCAL-PC", configured: false });
+  assert.deepEqual(parseClassHealth({ computer_name: "LOCAL-PC", class_configured: true }), { computerName: "LOCAL-PC", configured: true });
+  assert.equal(parseClassHealth({ class_configured: "false" }).configured, null);
+});
 
 test("class state accepts the C2 fields and explicit unlock", () => {
   assert.equal(parseClassState(state)?.locked, true);
