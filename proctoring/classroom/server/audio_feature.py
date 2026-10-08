@@ -76,7 +76,7 @@ class ClassroomAudioFeature:
         self.router.add_api_route("/api/teacher/audio/assets/{folder}/{name}", self.asset, methods=["GET"])
 
     async def asset(self, folder: str, name: str):
-        allowed = {"teacher": {"teacher-audio.js", "teacher-signaling.js", "audio-panel.js", "audio.css"},
+        allowed = {"teacher": {"class-panel-module.js", "teacher-audio.js", "teacher-signaling.js", "audio-panel.js", "audio.css"},
                    "shared": {"media-errors.js"}}
         if name not in allowed.get(folder, set()):
             from fastapi import HTTPException

@@ -45,6 +45,8 @@ import { OperatorAuth } from "./shell/operator";
 import { ShellStateMachine, TERMINAL_STATES } from "./shell/state";
 import { ExamSurface, isExamWebContents } from "./exam/surface";
 import { EXAM_CHANNEL } from "./exam/channels";
+import { ClassLockController, LOCK_ACK_CHANNEL } from "./class-lock";
+import { createClassAudio } from "./class-audio";
 
 const log = logger("main");
 
@@ -88,6 +90,7 @@ const supervisorTarget = () => {
   return c ? { port: c.port, token: c.token } : null;
 };
 const client = new BackendClient(supervisorTarget);
+const classAudio = createClassAudio(client, trustedSender, () => mainWindow?.webContents ?? null, devOrigin);
 const operator = new OperatorAuth(process.env);
 
 // session id used for environment events = the bound session
@@ -124,12 +127,23 @@ const guard = new ExamGuard(() => mainWindow, events, guardPlatform, {
 
 machine = new ShellStateMachine(guard, { shell_version: app.getVersion(), platform: platformInfo.label });
 const examSurface = new ExamSurface(() => mainWindow, (status) => push(EXAM_CHANNEL.status, status), (input) => guard.onBeforeInput(input));
+const classLock = new ClassLockController({
+  client, window: () => mainWindow,
+  setExamBlocked: (blocked) => examSurface.setBlocked("class-lock", blocked),
+});
 
 // ---------------------------------------------------------------- backend
 const stream = new BackendSocket("stream", supervisorTarget, {
-  onClose: () => examSurface.setBlocked("backend-stream", true),
+  onClose: () => {
+    examSurface.setBlocked("backend-stream", true);
+    classLock.reset();
+    classAudio.reset();
+  },
   onEnvelope: (env) => {
     const msg = env.message;
+    // Close the native website before forwarding a requested overlay to React.
+    classLock.consumeClassState(msg);
+    classAudio.observe(env);
     examSurface.consumeClassState(msg);
     if (msg.type === "session_state") void machine.observe(msg.session);
     push(PUSH.streamEvent, env);
@@ -150,6 +164,8 @@ const supervisor: BackendSupervisor = new BackendSupervisor(
     },
     onReady: (conn) => void onBackendReady(conn),
     onLost: (reason) => {
+      classLock.reset();
+      classAudio.reset();
       stream.close();
       preview.close();
       void machine.backendLost(reason);
@@ -232,6 +248,9 @@ function trustedSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
 }
 
 function registerIpc(): void {
+  classAudio.register(ipcMain);
+  ipcMain.handle(LOCK_ACK_CHANNEL, (event, body: unknown) => trustedSender(event)
+    ? classLock.confirmApplied(body) : { accepted: false, reason: "untrusted_sender" });
   ipcMain.handle(EXAM_CHANNEL.getStatus, (event) => trustedSender(event) ? examSurface.status : null);
   ipcMain.on(EXAM_CHANNEL.viewport, (event, rect: unknown) => { if (trustedSender(event)) examSurface.setViewport(rect); });
   ipcMain.on(EXAM_CHANNEL.reload, (event) => { if (trustedSender(event)) examSurface.reload(); });
@@ -284,8 +303,7 @@ function registerIpc(): void {
 
 // ---------------------------------------------------------------- web hardening
 function hardenSession(ses: Session): void {
-  ses.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
-  ses.setPermissionCheckHandler(() => false);
+  classAudio.installPermissions(ses);
   ses.setDevicePermissionHandler(() => false);
   ses.setDisplayMediaRequestHandler((_req, callback) => callback({}));
   ses.setSpellCheckerEnabled(false);
@@ -379,7 +397,12 @@ function createWindow(ses: Session): BrowserWindow {
   w.once("ready-to-show", () => w.show());
   w.on("resize", () => examSurface.resized());
   w.webContents.on("did-start-navigation", (_event, _url, inPlace, isMainFrame) => {
-    if (isMainFrame && !inPlace) { examSurface.setViewport(null); examSurface.setBlocked("renderer-loading", true); }
+    if (isMainFrame && !inPlace) {
+      examSurface.setViewport(null);
+      examSurface.setBlocked("renderer-loading", true);
+      classAudio.reset();
+      void classLock.rendererLost();
+    }
   });
   w.webContents.on("did-finish-load", () => examSurface.setBlocked("renderer-loading", false));
   w.webContents.on("before-input-event", (event, input) => {
@@ -412,6 +435,8 @@ function createWindow(ses: Session): BrowserWindow {
   const crashes: number[] = [];
   w.webContents.on("render-process-gone", (_e, details) => {
     examSurface.setBlocked("renderer-loading", true);
+    classAudio.reset();
+    void classLock.rendererLost();
     log.error(`renderer gone: ${details.reason} (exit ${details.exitCode})`);
     events.emit({ action: "enforcement_error", enforcement: "failed", mechanism: "electron.watchdog", scope: "app", detail: { shortcut: "renderer_gone" } });
     void machine.releaseTo("error", "renderer_gone", shellError("INTERNAL", "enforcement_error", `Renderer ${details.reason}: restrictions released`, true));
@@ -463,6 +488,8 @@ async function loadVerification(): Promise<void> {
 
 // ---------------------------------------------------------------- lifecycle
 async function shutdown(reason: string): Promise<void> {
+  classAudio.reset();
+  classLock.reset();
   examSurface.dispose();
   log.info(`shutdown: ${reason}`);
   await machine.releaseTo("normal", "app_quit", null);

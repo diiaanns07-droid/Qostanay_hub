@@ -27,7 +27,27 @@ export function createRealAdapter(opts = {}) {
   let attempts = 0;
   /** @type {ReturnType<typeof setTimeout>|null} */
   let retryTimer = null;
+  /** @type {ReturnType<typeof setTimeout>|null} */
+  let historyTimer = null;
+  let historyLoading = false;
+  let historyDirty = false;
   let stopped = false;
+
+  function refreshHistoryMetadata() {
+    historyDirty = true;
+    if (stopped || historyTimer || historyLoading) return;
+    historyTimer = setTimeout(async () => {
+      historyTimer = null;
+      if (stopped) return;
+      historyDirty = false;
+      historyLoading = true;
+      try { await loadSnapshot(); }
+      finally {
+        historyLoading = false;
+        if (historyDirty && !stopped) refreshHistoryMetadata();
+      }
+    }, 300);
+  }
 
   /** @param {Response} r */
   function httpProblem(r) {
@@ -71,6 +91,7 @@ export function createRealAdapter(opts = {}) {
       store.setConnection({ status: "error", detail: "Не удалось прочитать список студентов. Проверьте, что сервер и приложения обновлены." });
       return false;
     }
+    if (stopped) return false;
     store.snapshot(list);
     return true;
   }
@@ -152,6 +173,10 @@ export function createRealAdapter(opts = {}) {
       }
       case "ack":
         return; // commands are not part of T02; a commands module consumes acks (extension point)
+      case "feature_event":
+        // Review decisions/clip state alter metadata, not the immutable detector evidence.
+        if (msg.feature === "history" && msg.event === "history.changed") refreshHistoryMetadata();
+        return;
       default:
         // protocol §3: unknown types are ignored, the connection stays open
         store.diag.droppedMessages += 1;
@@ -197,6 +222,9 @@ export function createRealAdapter(opts = {}) {
     stop() {
       stopped = true;
       if (retryTimer) clearTimeout(retryTimer);
+      if (historyTimer) clearTimeout(historyTimer);
+      historyTimer = null;
+      historyDirty = false;
       if (ws) ws.close();
       ws = null;
     },
