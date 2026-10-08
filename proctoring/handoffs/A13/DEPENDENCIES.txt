@@ -20,7 +20,9 @@ A13 -> other roles. Base: codex/proctor-integration @ 6263aef9aabdee678b96d44b11
        fault (_analyzer_failed), never blocks the start. Phone/attention don't have the method => no effect.
    No preflight row was added (PreflightCheckId is contract). Missing identity models do NOT block an exam.
 
-2. [A05, rule NOT written by A13 — the fusion session adds it] Exact event for IncidentRule.IDENTITY_MISMATCH:
+2. [A05, DONE on branch codex/proctor-A13-fusion from integration eee2031: proctor/identity/fusion.py wired into
+   fusion/engine.py next to A14 audio + one label in fusion/zones.py; see STATUS.md] Event for IDENTITY_MISMATCH
+   (mm:ss is counted from the first observation the engine received after the exam started):
    input   IdentityObservation (kind="identity", producer.module="identity"), ~1 per second.
    open    when same_person == "absent" continuously for >= 3000 ms of session time
            (first absent t_session_ms .. latest absent t_session_ms + one interval; A13 emits ~1/s, so 3-4 obs).

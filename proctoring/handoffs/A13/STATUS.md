@@ -87,6 +87,36 @@ Health (`Component.IDENTITY`): `model_loaded` (OK) · `model_missing` / `model_i
 На `zone_c_red_01` YuNet не нашёл лицо второго человека в маске (по разметке 2 лица в 36.5–40 с). Поэтому там
 `present` по студенту, а не `multiple_faces`. Маска закрывает лицо, это ожидаемо и описано как ограничение.
 
+## Правило identity_mismatch в A05 — подключено (ветка `codex/proctor-A13-fusion` от integration `eee2031`)
+
+* Адаптер `backend/proctor/identity/fusion.py` (`IdentityFusion`), подключён в `fusion/engine.py` рядом с audio A14:
+  import, создание, `consume` → `feed`, `_expire` → `expire`, `_close_everything` (пауза/finish) → `close`.
+  В `fusion/zones.py` добавлена подпись `RULE_LABELS_RU["identity_mismatch"]`, чтобы `reason_ru` писал по-русски.
+* Эпизод: подряд `same_person=absent` (enrolled, status ok), от первого до последнего такого наблюдения ≥ 3 с
+  (≈4 сверки) → `Incident(rule=identity_mismatch, category=identity, priority=HIGH)`.
+  Текст: «Лицо не совпадает с лицом в начале экзамена — мм:сс, N с». мм:сс отсчитывается от первого наблюдения,
+  которое движок получил после старта экзамена. Все числа есть в facts: `start_from_exam_ms`, `duration_ms`,
+  `similarity_min`, `similarity_median`, `threshold` = 0.363, `observations`.
+* `unknown` (нет лица, несколько лиц, мелкое лицо, нет модели, эталон не набран) эпизодом **не** становится и
+  обрывает серию `absent`. `present` закрывает эпизод (`condition_cleared`). Тишина потока дольше 2.5 с закрывает его
+  как `source_lost`, пауза — как `session_paused`, finish — как `session_finished`.
+* Тесты `identity/tests/test_fusion_rule.py` (6): 3 с absent → HIGH с текстом и facts; unknown 10 с и серии,
+  разорванные unknown, не дают эпизода; enrolling и model_missing — не свидетельство; source_lost, finish, пауза;
+  2 минуты `present` — ни одного эпизода. `pytest backend/proctor/identity backend/proctor/fusion
+  backend/proctor/audio`: 183 passed (golden-сценарии A05 не изменились). Полный pytest: 1093 passed, 4 failed.
+  Это те же 3 phone-теста, что падают на базе, и классctl `test_permissions_over_http`, который отдельно проходит 9/9.
+* Прогон всего приложения на роликах A02 (`python -m proctor.evidence.tests.replay_zones_check`, REPLAY realtime,
+  реальные модели phone/attention/identity; отчёты в `%LOCALAPPDATA%\QorgauExam\a13-live\zones-174459\`):
+
+| Ролик | Зона (ожидалась) | identity_mismatch | Сверки identity | similarity min / медиана / max |
+|---|---|---|---|---|
+| `zone_a_green_01` | green (green) | **0** | 30: 26 present, 4 unknown (набор эталона) | 0.636 / 0.867 / 0.939 |
+| `zone_b_yellow_02` | yellow (yellow) | **0** | 36: 14 present, 22 unknown (18 `no_face`, 4 набор) | 0.619 / 0.698 / 0.875 |
+| `zone_c_red_01` | red (red) | **0** | 39: 22 present, 17 unknown (13 `no_face`, 4 набор) | 0.506 / 0.761 / 0.935 |
+
+  Consumer identity: ≈4 кадра/с на входе, 0 ошибок, process p95 ≤ 47 мс. `monitoring_degraded` во всех роликах —
+  `replay_ended` камеры в последние 0.03–0.1 с, к identity не относится.
+
 ## LIVE: смена человека — ПЛАН (не выполнено)
 
 Нужны два человека, второй только с устного согласия. Ничего не записывается, в отчёт идут только числа.
