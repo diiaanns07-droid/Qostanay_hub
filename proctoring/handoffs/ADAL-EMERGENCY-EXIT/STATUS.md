@@ -1,6 +1,6 @@
 # ADAL-EMERGENCY-EXIT
 
-Branch: `codex/adal-app-shell`. Only emergency-exit code was implemented; the application allowlist feasibility review produced no product changes.
+Integrated branch: `codex/adal-emergency-exit`. Source contributions: `3daf58f`, `ee81583`, `b1d7405`. This change implements emergency exit; the Windows application allowlist feasibility review produced no product changes or machine policy changes.
 
 Ctrl+Alt+Shift+F12 now exits Adal. Before waiting for any backend request or queued transition, main permanently prevents guard re-engagement, latches the current session, releases restrictions, resets class lock/audio/exam content and closes streams. Abort has a 1500 ms HTTP timeout; cleanup receives at most 2 seconds before graceful quit. A deadline at 6 seconds forces Electron exit if the normal shutdown path stalls. Repeated hotkeys/quit events share one shutdown path. A native helper completing its start after release is stopped again. In-app panic IPC retains its existing release/recovery-screen behavior, with synchronous guard release added.
 
@@ -8,4 +8,8 @@ Enforce now refuses an emergency shortcut whose registration fails, throws or ca
 
 Validation: 33 focused emergency/guard/state tests PASS; all three TypeScript configs PASS; production Electron and renderer build PASS. Tests use fake clocks/windows/platform/native helpers, including hung cleanup, failed diagnostics, late native startup and attempted re-engagement. No physical hooks, camera, microphone or app lockdown was activated.
 
-The main-thread deadline cannot run when Electron's event loop is frozen. The separately owned launcher watchdog must provide that independent fallback and must not compete for the Electron global shortcut registration. Root handles integration and push; this agent has not pushed.
+The launcher now supplies an independent watchdog, outside Electron's event loop. It reads only the fixed Ctrl/Alt/Shift/F12 down states, does not register a competing shortcut, refuses launch when its preflight fails and terminates only its retained Electron child after a two-second grace. The PowerShell owner closes its Windows Job immediately when the wrapper exits, before a bounded stdout/stderr drain, so inherited pipes cannot strand descendants. No synchronous watchdog output occurs after desktop launch. Start-Adal forwards an optional `-StopAfterSeconds` trial deadline and prints `ADAL_LAUNCHER_PID` for recovery.
+
+Integrated validation on Windows: shell suite 125 PASS, 1 SKIP; launchers 33 PASS, 1 SKIP (the missing-Electron case is inapplicable because Electron is installed); clean runtime-only Python environment launchers 8 PASS, 1 SKIP. TypeScript main/renderer/contracts and production build PASS. Standalone `-CheckOnly` with the actual local models PASS. Shared editable Python installations require `PYTHONPATH` to the current checkout's backend and contracts/python when running the shell test harness directly; production launchers already select the current source explicitly.
+
+Physical emergency chord, native restrictions and the two-laptop LIVE exam have not been exercised in this change. The teacher laptop needs only Python 3.12 and requirements/runtime.txt; its LAN address and class code are still needed for the real session. Pressing the emergency chord must be rehearsed before enabling native restrictions.
