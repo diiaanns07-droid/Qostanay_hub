@@ -138,6 +138,9 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
 
       const pf = (await api.runPreflight(sid)) as { ok: boolean; data: { ready: boolean } };
       assert.ok(pf.ok && pf.data.ready, JSON.stringify(pf));
+      const skipLocked = (await api.calibrationSkip(sid, { reason: "integration test" })) as { ok: boolean; error?: { details: Record<string, unknown> } };
+      assert.equal(skipLocked.error?.details.shell_code, "operator_locked", "skipping calibration is a teacher decision");
+      assert.ok(((await api.operatorUnlock("2468")) as { ok: boolean }).ok);
       const skip = (await api.calibrationSkip(sid, { reason: "integration test" })) as { ok: boolean };
       assert.ok(skip.ok, JSON.stringify(skip));
       assert.equal(guard.active, false, "nothing engaged before start");
@@ -151,6 +154,7 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
       assert.equal(machine.state.mode, "exam");
       assert.equal(machine.state.exam_mode_active, true);
       assert.equal(guard.active, true);
+      assert.equal(machine.state.operator_unlocked, false, "unlock from preflight is cleared when the exam starts");
 
       // environment events reach the session (accepted, client_seq increasing)
       events.emit({ action: "shortcut_ctrl_v", enforcement: "blocked", mechanism: "electron.before_input_event", scope: "window", detail: { shortcut: "Ctrl+V" } });
@@ -203,11 +207,76 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
     }
   });
 
+  test("teacher access: default closes review during the exam; opt-in live review is bound-session + PIN + expiring", async () => {
+    let now = 1_000_000;
+    const g2 = new FakeGuard();
+    const m2 = new ShellStateMachine(g2, { shell_version: "0.1.0", platform: "linux-test" });
+    const live = createApi({
+      client,
+      machine: m2,
+      operator,
+      capabilities: () => null,
+      emergencyExit: async () => undefined,
+      saveFile: async () => null,
+      accessPolicy: "operator_live_review",
+      operatorTimeouts: { idleMs: 60_000, maxMs: 600_000 },
+      now: () => now,
+    });
+    type R = { ok: boolean; data?: unknown; error?: { code: string; details: Record<string, unknown> } };
+    const created = (await live.createSession(structuredClone(fixtures["SessionCreate.synthetic"]))) as { ok: true; data: SessionInfo };
+    const sid = created.data.session_id;
+    await live.runPreflight(sid);
+    await live.operatorUnlock("2468");
+    await live.calibrationSkip(sid, { reason: "access test" });
+    assert.ok(((await live.startExam(sid)) as R).ok);
+    assert.equal(m2.state.exam_mode_active, true);
+
+    const lockedTry = (await live.listIncidents(sid)) as R;
+    assert.equal(lockedTry.error?.details.shell_code, "operator_locked", "exam start cleared the unlock");
+    assert.ok(((await live.operatorUnlock("2468")) as R).ok);
+    const inc = (await live.listIncidents(sid)) as R;
+    assert.ok(inc.ok, JSON.stringify(inc));
+    assert.ok(Array.isArray(inc.data));
+    const summary = (await live.getSummary(sid)) as R;
+    assert.ok(summary.ok, "summary of the running session is readable by the unlocked teacher");
+    const other = (await live.listIncidents("some-older-session")) as R;
+    assert.equal(other.error?.details.shell_code, "session_not_bound");
+    const hist = (await live.listSessions()) as R;
+    assert.equal(hist.error?.details.shell_code, "exam_mode_active", "history stays closed during the exam");
+    const exp = (await live.exportReport(sid, "json")) as R;
+    assert.equal(exp.error?.details.shell_code, "exam_mode_active", "export stays closed during the exam");
+    assert.equal(g2.active, true, "reading does not release restrictions");
+
+    now += 61_000; // teacher walked away
+    const expired = (await live.listIncidents(sid)) as R;
+    assert.equal(expired.error?.details.shell_code, "operator_locked");
+    assert.equal(m2.state.operator_unlocked, false, "expiry is visible in the shell state");
+
+    // the DEFAULT policy over the same running exam refuses the same call even when unlocked
+    const strict = createApi({ client, machine: m2, operator, capabilities: () => null, emergencyExit: async () => undefined, saveFile: async () => null, now: () => now });
+    assert.ok(((await strict.operatorUnlock("2468")) as R).ok);
+    const strictTry = (await strict.listIncidents(sid)) as R;
+    assert.equal(strictTry.error?.details.shell_code, "exam_mode_active");
+
+    assert.ok(((await live.finishExam(sid)) as R).ok);
+    assert.equal(g2.active, false);
+    assert.ok(((await live.operatorUnlock("2468")) as R).ok);
+    const exportAfter = (await live.exportReport(sid, "json")) as R;
+    // the shell no longer blocks it: the request reaches the backend (bootstrap store: report = 501)
+    assert.ok(exportAfter.ok || exportAfter.error?.code === "NOT_IMPLEMENTED", JSON.stringify(exportAfter));
+  });
+
   test("arity/size/untrusted values are rejected before reaching the backend", async () => {
     const r1 = (await api.getSession()) as { ok: boolean; error?: { code: string } };
     assert.equal(r1.error?.code, "INVALID_ARGUMENT");
-    const r2 = (await api.getSession("../../health")) as { ok: boolean; error?: { code: string } };
-    assert.equal(r2.error?.code, "INVALID_ARGUMENT");
+    // a foreign/garbage session id is refused by the access policy first (teacher-only) ...
+    const r2 = (await api.getSession("../../health")) as { ok: boolean; error?: { code: string; details: Record<string, unknown> } };
+    assert.equal(r2.error?.details.shell_code, "operator_locked");
+    // ... and, for the unlocked teacher, by argument validation — never by the backend
+    assert.ok(((await api.operatorUnlock("2468")) as { ok: boolean }).ok);
+    const r2b = (await api.getSession("../../health")) as { ok: boolean; error?: { code: string } };
+    assert.equal(r2b.error?.code, "INVALID_ARGUMENT");
+    await api.operatorLock();
     const r3 = (await api.saveAnswer("s", "q", { value: "x".repeat(70_000), client_seq: 1 })) as { ok: boolean; error?: { code: string } };
     assert.equal(r3.error?.code, "INVALID_ARGUMENT");
   });
@@ -216,6 +285,7 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
     const created = (await api.createSession(structuredClone(fixtures["SessionCreate.synthetic"]))) as { ok: true; data: SessionInfo };
     const sid = created.data.session_id;
     await api.runPreflight(sid);
+    await api.operatorUnlock("2468");
     await api.calibrationSkip(sid, { reason: "crash test" });
     await api.startExam(sid);
     assert.equal(guard.active, true);

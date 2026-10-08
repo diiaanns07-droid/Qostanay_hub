@@ -11,13 +11,29 @@ window cannot see or stop by itself (Alt+Tab, Win, PrintScreen, foreign-window f
 > `--mode enforce` opt-in, which is for a controlled test. It cannot block Ctrl+Alt+Del or the UAC
 > secure desktop — do not claim otherwise.
 
-## Status
+## Status (round 2) — helper NOT delivered
 
-Not built in this checkpoint. `desktop/native/bin/qorgau-guard.exe` is absent, so the shell reports
-all OS-level items as `unverified` (Windows) / `unsupported` (other OS). Building and running it is a
-later, Windows-only step (A06 checkpoint 2 / A09). The controller, protocol parser and lifecycle in
-`main/src/environment/native.ts` are implemented and tested on every OS against
-`main/tests/fake-helper.mjs` (a protocol-only fake that hooks nothing).
+The helper's **source and build are not in this repository** (round 2 did not produce them; see
+`handoffs/A06/STATUS.md`). `desktop/native/bin/qorgau-guard.exe` is absent, so the shell reports all
+OS-level items as `unverified` (Windows) / `unsupported` (other OS) and never claims them blocked. What
+exists and is tested on every OS: the shell-side controller, protocol parser and lifecycle in
+`main/src/environment/native.ts`, exercised against `main/tests/fake-helper.mjs` (a protocol-only fake
+that hooks nothing). The exam runs without the helper; OS-level shortcuts are then only detected
+in-window (focus loss) and the gap is visible in the capability matrix.
+
+Until a reviewed helper exists, the supported way to get OS-level lockdown on the demo machine is the
+**managed deployment** below (institution-administered, reversible), not code in this app.
+
+### Requirements for any future helper (acceptance, unchanged from the task)
+
+Default dry-run; enforcement only with the explicit controlled-test opt-in; only the agreed shortcuts;
+nothing typed/clipboard/window titles transmitted or stored. It must release and exit on: `stop`, stdin
+EOF, a missed heartbeat, the parent's death (checked through a process handle, not a PID number that
+can be reused), `--max-minutes`, a hook failure and a normal exit; the cleanup must run on every exit
+path; output must never block the input path (bounded queue, broken pipe tolerated); the shell's
+emergency combination must keep working. No registry/policy changes, no services, no autostart, no
+killing other processes. A `ready`/`selfcheck` line is never evidence of blocking — only a measured
+`VERIFICATION.json` record on the exact OS build promotes a capability.
 
 ## Line protocol (one JSON object per line)
 

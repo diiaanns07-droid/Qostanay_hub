@@ -142,7 +142,6 @@ export class ShellStateMachine {
   /** Any SessionInfo seen from the backend (responses or stream). Unbound sessions are ignored. */
   observe(info: SessionInfo): Promise<void> {
     if (info.session_id !== this.s.session_id) return Promise.resolve();
-    const prev = this.sessionState;
     this.sessionState = info.state;
     if (info.state === "running") {
       if (this.guard.active && this.s.mode === "exam") return Promise.resolve();
@@ -153,10 +152,11 @@ export class ShellStateMachine {
           this.patch({ mode: "error", exam_mode_active: false });
           return;
         }
-        if (prev !== "running" && prev !== "paused") this.patch({ operator_unlocked: false }); // new exam
         try {
           await this.guard.engage(info.session_id);
-          this.patch({ mode: "exam", exam_mode_active: true, last_error: null });
+          // every (re-)engage locks the teacher console: after start, resume or crash recovery the
+          // student is at the keyboard again; the teacher re-enters the PIN when needed
+          this.patch({ mode: "exam", exam_mode_active: true, last_error: null, operator_unlocked: false });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           log.error(`engage failed: ${message}`);
@@ -195,6 +195,10 @@ export class ShellStateMachine {
   /** After an emergency exit the session can never re-enter exam mode, even if it still runs. */
   forbidEngage(sessionId: string): void {
     this.noEngage.add(sessionId);
+  }
+
+  engageForbidden(sessionId: string): boolean {
+    return this.noEngage.has(sessionId);
   }
 
   setOperator(unlocked: boolean): void {
