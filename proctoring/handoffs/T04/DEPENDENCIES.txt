@@ -1,0 +1,48 @@
+T04 -> T01 requests (exam sessions, policies, teacher commands). No shared file was edited by T04.
+
+Base: T01 baseline is NOT published on the remote (checked 2026-10-08: no T01 branch/commit; T02's code
+also says "T01 not published"). T04 is based on 65c8c17 "Class protocol qorgau.class.v1 and owners for
+class server / student uplink" (the frozen class protocol, same base as codex/proctor-T02).
+Branch: codex/proctor-T04 (the platform branch of this session belongs to the A05 delivery).
+
+R1 OWNERSHIP (needed for verify_ownership): assign T04
+    proctoring/backend/proctor_classctl/      (Python: exams, policies, commands, journal, API router, simulator, dev server)
+    proctoring/class-control-ui/              (teacher UI for exams/policies/commands; T02 panel module)
+    proctoring/handoffs/T04/
+
+R2 Protocol qorgau.class.v1 -> additive fields/messages T04 relies on (all optional for old peers):
+    command (server->student):  issued_at, expires_at (UTC ISO), ttl_ms (time LEFT at this delivery), attempt
+    ack (student->server):      code: unsupported|invalid|expired|duplicate|failed|busy (machine reason),
+                                result: {locked, exam_state, policy_id, policy_version}, executed_at
+    command_progress (NEW type, student->server): {command_id, state: "received"|"executing"}
+                                (keeps the v1 rule "exactly one ack per command": progress is not an ack)
+    hello.capabilities:         {commands:[kinds], modes:["url","app"], command_progress:bool,
+                                 command_expiry:bool, site_timer_pause:bool}
+                                absent = plain v1 client -> only start_exam/finish_exam/lock/unlock are offered
+    command.kind "apply_policy" (NEW): payload {policy_id, version, name, mode, start_url, allowed_urls,
+                                auth_domains, allowed_apps, instructions_ru, site_timer_control:"none"}
+    welcome.exam:               + policy_id, version, start_url, auth_domains, site_timer_control
+    allowed_urls grammar:       v1 says "шаблоны" without a grammar; T04 proposes
+                                <scheme>://<host|*.domain>[:port]<path-prefix>* (policies.py, STUDENT_CLIENT.md §4)
+    Exact client rules: handoffs/T04/STUDENT_CLIENT.md.
+
+R3 Class server wiring (T01/C1 composition; T04 does not own the server):
+    control = ClassControl(transport=<send JSON to the student's /ws/student>, journal_path=<data_dir>/journal.jsonl)
+    on hello (after welcome):  exam_block = control.student_connected(student_id, hello, exam_id)  -> put into welcome.exam
+    on every student message:  control.handle_student_message(student_id, msg)   (ack, status, command_progress)
+    on socket close/ping loss: control.student_disconnected(student_id)
+    every ~500 ms:             control.tick()
+    teacher API:               app.include_router(create_teacher_router(control, get_principal), prefix="/api/teacher")
+                               (all T04 paths are under /api/teacher/control/*; loopback + PIN cookie stay T01's job)
+    The v1 POST /api/teacher/session (join code) must be linked to a T04 exam_id: either create the exam
+    through control.exams.create(...) or keep a session_id -> exam_id map in the server.
+
+R4 Teacher identity: v1 has one PIN teacher. T04 checks per-exam roles (owner / teacher / assistant /
+    observer). Until T01 defines multiple teacher accounts, map the PIN login to one Principal(teacher).
+
+R5 Live updates: T04 UI polls GET /api/teacher/control/exams/{id}/students every 1 s. An additive
+    /ws/teacher message {type:"command_update", command:<view>} would replace the polling.
+
+R6 Not T04 (stated so nobody assumes it): Windows restrictions and the student lock screen (student shell
+    developer), pausing an external site's timer (no site integration exists; the UI says so explicitly),
+    request_clip/audio commands (other roles).
