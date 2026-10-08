@@ -1,4 +1,17 @@
-CURRENT continuation (2026-10-08, supersedes resolved items below)
+CURRENT zones delivery (2026-10-08, supersedes historical items below)
+1. A01: integrate the new A08 commit (previous 9090b9a is already included).
+   Verified on codex/proctor-integration @ 78798b7ca83f16552e43a4cf1ae29e81162db44c + A08-only overlay.
+   /v1/sessions/overview route order is FIXED: A01 regression passes and all three REPLAY sessions return 200.
+2. A05 zones are CONNECTED via the public function from d9832a9042f817e560eef26dbad5c45882399a3c.
+   No A05 merge in A08. No copied rule. Three requested clips give green / yellow / red via real CV.
+3. A01: contract 1.1 is still pending by captain decision. Temporary local models/field names stay in evidence/.
+   Send the confirmed contract SHA when released; isolated A08 without fusion still returns zone=None explicitly.
+4. A07: overview and report zones/reasons use zone-rule-1, reviews remain separate. Green can include a pending
+   technical replay-end incident: A05 excludes monitoring_degraded from behavioral counts, A08 raw totals retain it.
+5. Earlier public get_exam request remains optional; no new integration blocker for the tested zones.
+   No LIVE/native-protection or accuracy claim; replay results and hashes are in handoffs/A08/checks/.
+
+HISTORICAL continuation before zones (resolved by the delivery above where stated)
 1. A01: mount A08 static GET /v1/sessions/overview BEFORE /v1/sessions/{session_id}.
    The current lifespan mount appends A08 routes after the generic GET; a correct handler alone is shadowed.
    CONFIRMED on scratch de7290509bf558d6488be84d2e0730b2b9ab104a + A08 overlay:

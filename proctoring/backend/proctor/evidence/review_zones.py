@@ -1,9 +1,10 @@
-"""Temporary A08 wire models and zone adapter, pending A01 contract 1.1 / A05 SHA.
+"""Temporary contract 1.1 models; thin adapter to the confirmed A05 zone assessor.
 
-No classification rule is implemented here. Until the captain confirms A05's
-delivery, a zone is explicitly uncalculated (None), never implicitly green.
+A05 d9832a9042f817e560eef26dbad5c45882399a3c owns all classification rules.
+An isolated A08 checkout without A05 explicitly reports an uncalculated zone.
 """
 from enum import StrEnum
+from importlib import import_module
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -50,9 +51,16 @@ ZONE_LABEL = {ReviewZone.RED: "Проверить в первую очередь
 
 def assess_session_zone(incidents: list[Incident], summary: ContractSessionSummary,
                         config: Any = None) -> ZoneAssessment:
-    """Same signature as proctor.fusion.zones.assess_session_zone; no local rule copy.
+    """Forward inputs unchanged to A05 and validate only the three wire fields.
 
-    Switch ONLY this adapter to the public A05 function on the confirmed SHA.
-    Current captain-approved behavior: null zone; reports/overview remain usable.
+    A05 is integrated by A01, not merged into the isolated A08 branch. Missing
+    A05 is explicit; dependency failures or assessor errors are not hidden.
     """
-    return ZoneAssessment(reasons_ru=["Зона не рассчитана. Просмотрите эпизоды вручную."])
+    try:
+        zones = import_module("proctor.fusion.zones")
+    except ModuleNotFoundError as exc:
+        if exc.name not in {"proctor.fusion", "proctor.fusion.zones"}:
+            raise
+        return ZoneAssessment(reasons_ru=["Зона не рассчитана. Просмотрите эпизоды вручную."])
+    result = zones.assess_session_zone(incidents, summary, config)
+    return ZoneAssessment(zone=result.zone, reasons_ru=result.reasons_ru, rule_version=result.rule_version)
