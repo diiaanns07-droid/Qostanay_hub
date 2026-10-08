@@ -8,6 +8,17 @@ Previous A05 checkpoint: `8f763a1` (in A01 candidate `de72905`).
 Stage (2026-10-08): **checkpoint 2 — zones (zone-rule-1), priorities per the zones spec (`a05-rules-1.1.0`),
 audio/headphones rules on plain values, head-pose fix from real A04 output.**
 
+## 2026-10-08: ТЗ 2.1 «поднятие телефона / возможная съёмка» — `a05-rules-1.4.0` (ветка `codex/proctor-phone-raised`)
+* `phone_raised`: верх рамки `cell phone` выше линии на 65 % высоты лица A04 (без лица — верхние 35 % кадра) **или**
+  сигнал A03; эпизод только если держится **≥ 1 с** (≥ 4 наблюдения, пропуск ≤ 0,6 с, слияние 3 с). Раньше открывался
+  по одному сигналу A03, поэтому в realtime то был, то нет.
+* `possible_screen_capture`: поднят **и** почти неподвижен (центр ±0,05 кадра, x 0,20–0,80) **≥ 1,5 с**, или сигнал
+  A03. Текст: «Возможная попытка направить телефон на экран… факт съёмки не установлен».
+* Пороги — `FusionConfig` (`phone_raise_*`, `phone_capture_*`, `phone_raised`). Код — отдельные функции
+  `_remember_face`, `_raised_phone`, `_raised_evidence`, `_capture_evidence` (2 строки вызова в `_on_phone`, 1 в
+  `_on_attention`). Тесты: `tests/test_phone_raised_geometry.py` (5); g09 / link-gap / priorities обновлены под ≥ 1 с.
+* Замер на роликах A02 (realtime и lockstep, 5 прогонов, малая выборка — не точность): `handoffs/A03/PHONE_RAISED.md`.
+
 ## 2026-10-08: LIVE PASS «взгляд вниз после калибровки» (проверка капитана)
 Сборка `codex/proctor-integration` @ `f46565c` (A04 «вверх» необязательна + полноэкранная калибровка A07), ноутбук
 демо, живая камера, сессия `s-20261008-163941-a7e05cd1`. Калибровка на весь экран: все 5 точек ok (включая «вверх»).
@@ -131,7 +142,7 @@ Continuous rules (hysteresis): open when the condition is observed from t_first 
 | Rule (source) | min_duration / min_count / pending_gap / merge_gap | base priority, escalation |
 |---|---|---|
 | phone_visible (A03 signal) | 1000 / 3 / 500 / 2000 ms | medium; ≥10 s +1; gaze «down» ≥1 s inside → high |
-| phone_raised (A03 signal) | 0 / 1 / 500 / 5000 | medium |
+| phone_raised (A03 signal; since 1.4.0 OR face-level geometry) | 0 / 1 / 500 / 5000 (1.4.0: 1000 / 4 / 600 / 3000) | medium (1.1.0+: high) |
 | possible_screen_capture (A03, `insufficient_evidence` = unknown) | 500 / 2 / 500 / 5000 | high |
 | gaze_prolonged_down (A04 gaze, head fallback) | 3000 / 3 / 400 / 1500 | low; ≥10 s +1; phone visible ≥1 s inside → high |
 | gaze_prolonged_side (left/right, subject-centric) | 3000 / 3 / 400 / 1500 | low; ≥10 s +1 |

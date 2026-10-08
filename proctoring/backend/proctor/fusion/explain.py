@@ -76,7 +76,8 @@ CAVEAT_MODE = {
     SourceMode.REPLAY: "ЗАПИСЬ (replay): анализ воспроизведённого видео, не живой камеры.",
 }
 CAVEAT_PHONE = "Обнаружение телефона не доказывает фотографирование экрана."
-CAVEAT_RAISED = "Подъём определён эвристикой по траектории рамки телефона."
+CAVEAT_RAISED = ("Подъём определён эвристикой: рамка телефона на уровне лица или выше (по лицу A04) и/или "
+                 "траектория рамки (A03); это положение телефона, а не действие.")
 CAVEAT_CAPTURE = "Направление камеры телефона по изображению может быть неразличимо; факт съёмки не установлен."
 CAVEAT_UNOBSERVABLE = "По кадру нельзя определить, направлена ли камера телефона на экран."
 CAVEAT_GAZE = "Направление взгляда — приблизительная оценка по голове/глазам, не трекинг глаз и не доказательство списывания."
@@ -204,6 +205,8 @@ def build(
         summary.append(head)
         if duration_ms > 0:
             summary.append(f"сигнал держался {f.s('phone_raised_ms')} с")
+        if c.get("face_level"):
+            f.add("face_level_observations", int(c["face_level"]), "count", "Наблюдений: телефон на уровне лица")
         caveats += [CAVEAT_RAISED, CAVEAT_PHONE]
     elif rule == R.POSSIBLE_SCREEN_CAPTURE:
         f.add("screen_capture_signal_ms", duration_ms, "ms", "Признак держался")
@@ -212,6 +215,8 @@ def build(
             f"Возможная попытка направить телефон на экран: признак держался {f.s('screen_capture_signal_ms')} с "
             f"(наблюдений: {ep.count}); факт съёмки не установлен"
         )
+        if c.get("steady_at_face"):
+            f.add("steady_at_face_observations", int(c["steady_at_face"]), "count", "Наблюдений: поднят и почти неподвижен")
         caveats += [CAVEAT_CAPTURE, CAVEAT_PHONE]
     elif rule == R.GAZE_PROLONGED_DOWN:
         f.add("gaze_down_ms", duration_ms, "ms", "Взгляд оценён как «вниз»")

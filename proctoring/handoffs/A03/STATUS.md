@@ -1,6 +1,10 @@
 # A03 — STATUS (обнаружение телефона и признаки возможной съёмки)
 
 > **2026-10-08, ветка `codex/proctor-objects`:** предметы book/laptop/tv (только для проверки) — см. `handoffs/A05/OBJECTS.md`.
+>
+> **2026-10-08, ветка `codex/proctor-phone-raised`:** ТЗ 2.1 — подъём телефона и возможная съёмка теперь устойчиво
+> собираются в A05 по рамкам A03 относительно лица A04 (≥ 1 с; съёмка — неподвижно ≥ 1,5 с). Код A03 не менялся.
+> Замер и пороги — `handoffs/A03/PHONE_RAISED.md`.
 
 * Роль: A03, CV-инженер обнаружения телефона. Пути: `proctoring/backend/proctor/phone/`, `proctoring/handoffs/A03/`.
 * Ветка: `claude/focused-babbage-29mbea` (назначена платформой).

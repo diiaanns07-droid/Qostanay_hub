@@ -106,8 +106,8 @@ def test_phone_raised_is_high():
     b = ScenarioBuilder()
     ph = b.run("phone", [
         {"from": 0, "to": 2000, "step": 125, "visible": "absent"},
-        {"from": 2000, "to": 3000, "step": 125, "visible": "present", "raised": "present"},
-        {"from": 3000, "to": 12000, "step": 125, "visible": "absent"},
+        {"from": 2000, "to": 3500, "step": 125, "visible": "present", "raised": "present"},  # >= 1 s (1.4.0)
+        {"from": 3500, "to": 12000, "step": 125, "visible": "absent"},
     ])
     att = b.run("attention", [{"from": 0, "to": 12000, "step": 100, "direction": "center"}])
     incs = _final(att, ph, finish=12000.0)

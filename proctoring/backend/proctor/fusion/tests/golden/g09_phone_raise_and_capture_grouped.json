@@ -5,9 +5,9 @@
   "phone": [
     {"from": 0, "to": 1000, "step": 125, "visible": "absent", "capture": "absent"},
     {"from": 1000, "to": 2000, "step": 125, "visible": "present", "capture": "absent"},
-    {"from": 2000, "to": 2250, "step": 125, "visible": "present", "raised": "present", "capture": "absent"},
-    {"from": 2250, "to": 3000, "step": 125, "visible": "present", "capture": "absent"},
-    {"from": 3000, "to": 4000, "step": 125, "visible": "present", "capture": "present"},
+    {"from": 2000, "to": 3000, "step": 125, "visible": "present", "raised": "present", "capture": "absent"},
+    {"from": 3000, "to": 3250, "step": 125, "visible": "present", "raised": "present", "capture": "present"},
+    {"from": 3250, "to": 4000, "step": 125, "visible": "present", "capture": "present"},
     {"from": 4000, "to": 6000, "step": 125, "visible": "present", "capture": "absent"},
     {"from": 6000, "to": 14000, "step": 125, "visible": "absent", "capture": "absent"}
   ],
@@ -15,9 +15,9 @@
   "finish": 14000,
   "derivation": [
     "phone_visible: present 1000..5875, opens at 2000 -> [1000, 5875], medium",
-    "phone_raised (min_duration 0, min_count 1): present 2000, 2125 -> opens at 2000; closes at 7125 (merge_gap 5000) -> [2000, 2125], high (a05-rules-1.1.0: phone raised = high)",
+    "phone_raised (a05-rules-1.4.0: min_duration 1000, min_count 4, merge_gap 3000): present 2000..3125 (10 obs) -> opens at 3000 -> [2000, 3125], high",
     "possible_screen_capture (min_duration 500, min_count 2): present 3000..3875 -> opens at 3500 -> closes at 8875 -> [3000, 3875], base high",
-    "links (overlap or gap <= 1000): visible-raised overlap, visible-capture overlap, raised-capture gap 3000 - 2125 = 875"
+    "links (overlap or gap <= 1000): visible-raised overlap, visible-capture overlap, raised-capture overlap 3000..3125"
   ],
   "expected": [
     {
@@ -26,10 +26,10 @@
       "facts": {"phone_visible_ms": 4875.0}
     },
     {
-      "rule_id": "phone_raised", "t_start_ms": 2000, "t_end_ms": 2125, "end_reason": "condition_cleared",
-      "priority": "high", "observation_count": 2, "related_rules": ["phone_visible", "possible_screen_capture"],
-      "facts": {"phone_raised_ms": 125.0, "raise_signals": 2},
-      "summary_contains": ["Эвристика зафиксировала подъём телефона (сигналов: 2)"],
+      "rule_id": "phone_raised", "t_start_ms": 2000, "t_end_ms": 3125, "end_reason": "condition_cleared",
+      "priority": "high", "observation_count": 10, "related_rules": ["phone_visible", "possible_screen_capture"],
+      "facts": {"phone_raised_ms": 1125.0, "raise_signals": 10},
+      "summary_contains": ["Эвристика зафиксировала подъём телефона (сигналов: 10)"],
       "caveats_contain": ["Подъём определён эвристикой"]
     },
     {
