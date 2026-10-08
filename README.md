@@ -1,8 +1,22 @@
+<p align="center">
+  <img src="docs/assets/adal-banner.png" alt="Adal — локальный прокторинг: телефон, взгляд и защита экзаменационной среды" width="100%">
+</p>
+
+<p align="center">
+  <img alt="Кейс №3" src="https://img.shields.io/badge/Qostanai%20Industry%20Hackathon%202026-%D0%BA%D0%B5%D0%B9%D1%81%20%E2%84%963-2d58e6">
+  <img alt="100% локально" src="https://img.shields.io/badge/%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7-100%25%20%D0%BB%D0%BE%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE-1f9d63">
+  <img alt="Windows 10 | 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-121418">
+  <img alt="YOLO11n" src="https://img.shields.io/badge/YOLO11n-ONNX%20Runtime%20%C2%B7%20CPU-5c6370">
+  <img alt="MediaPipe" src="https://img.shields.io/badge/MediaPipe-Face%20Landmarker-5c6370">
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-React-5c6370">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12%20%C2%B7%20FastAPI-5c6370">
+</p>
+
 # Adal
 
 **Локальный прокторинг для компьютерного класса.** Студент проходит экзамен на своём ПК, преподаватель видит события и проверяет подозрительные эпизоды.
 
-[Открыть презентацию ↗](https://diiaanns07-droid.github.io/Qostanay_hub/) · [Запуск на Windows](proctoring/README.md) · [Сценарий демо](proctoring/docs/submission/ADAL_DEMO.md) · [Проверки и ограничения](docs/STATUS.md)
+**[Открыть презентацию ↗](https://diiaanns07-droid.github.io/Qostanay_hub/)** · [Презентация PDF](presentation/Adal_Presentation.pdf) · [Запуск на Windows](proctoring/README.md) · [Сценарий демо](proctoring/docs/submission/ADAL_DEMO.md) · [Проверки и ограничения](docs/STATUS.md)
 
 ## Что делает Adal
 
@@ -18,6 +32,25 @@
 Дополнительно подключены осмотр стола, сверка лица с началом сессии, анализ речи Silero/YAMNet, предупреждение о виртуальной машине и инструмент подготовки офлайн-комплекта. Для дополнительных моделей нужна отдельная подготовка.
 
 **Статус: интегрированный прототип для пилота.** Работа приложения и управления классом проверяется автоматическими тестами; живую точность CV, блокировку Windows и совместную работу на нескольких физических ПК проверяют отдельно. [Подробный статус](docs/STATUS.md).
+
+## Как это работает
+
+<table>
+<tr>
+<td width="50%"><img src="docs/assets/adal-how-it-works.png" alt="Схема: от кадра до решения преподавателя"><br><sub><b>От кадра до решения.</b> Анализ идёт на ПК студента, наружу уходят только события.</sub></td>
+<td width="50%"><img src="docs/assets/adal-phone.png" alt="Телефон: в кадре, подъём, возможная съёмка"><br><sub><b>Телефон.</b> В кадре → поднят к лицу → неподвижен у экрана → возможная съёмка.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/assets/adal-gaze.png" alt="Взгляд с личной калибровкой"><br><sub><b>Взгляд.</b> Личная калибровка по 5 точкам; вниз и в стороны — отдельные события.</sub></td>
+<td><img src="docs/assets/adal-environment.png" alt="Защита экзаменационной среды"><br><sub><b>Среда.</b> Win, Alt+Tab и PrtScn подавляются на уровне Windows.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/assets/adal-episodes.png" alt="Объяснимые эпизоды"><br><sub><b>Эпизоды.</b> Сигнал — повод проверить; решение принимает преподаватель.</sub></td>
+<td><img src="docs/assets/adal-classroom.png" alt="Режим компьютерного класса"><br><sub><b>Класс.</b> Весь класс на одной панели, блокировка с видимой причиной.</sub></td>
+</tr>
+</table>
+
+<sub>Иллюстрации — слайды презентации, сцены на них синтетические. Поведение приложения показывает сценарий демонстрации.</sub>
 
 ## Запустить на одном ноутбуке
 
