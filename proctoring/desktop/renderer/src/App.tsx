@@ -371,7 +371,7 @@ function Brand() {
         <path d="m10.5 16.2 3.8 3.8 7.4-7.6" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <span className="brand-name">
-        Qorgau <span>Exam</span>
+        ADAL
       </span>
     </div>
   );

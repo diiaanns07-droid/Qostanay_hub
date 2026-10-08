@@ -6,7 +6,7 @@ import { createContext, useContext } from "react";
 export type Lang = "ru" | "kk";
 
 const ru = {
-  app_name: "Qorgau Exam",
+  app_name: "ADAL",
   step_preflight: "Подготовка",
   step_calibration: "Калибровка",
   step_exam: "Экзамен",
