@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-08T13:42:32.377475+00:00",
+  "base": "a7cf612068eb0b4732cfe87170ffc3204517de40",
+  "kind": "read_only_WMI_no_enforcement",
+  "wmi_fields": {
+    "bios_legacy_version": "_ASUS_ - 1072009",
+    "manufacturer": "ASUSTeK COMPUTER INC.",
+    "model": "ASUS TUF Gaming A15 FA507NU_FA507NU",
+    "bios_manufacturer": "American Megatrends International, LLC.",
+    "bios_version": "FA507NU.316"
+  },
+  "result": {
+    "type": "vm",
+    "state": "not_detected",
+    "platform": null
+  }
+}

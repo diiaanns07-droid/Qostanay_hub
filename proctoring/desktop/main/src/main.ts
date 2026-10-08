@@ -34,6 +34,7 @@ import { EnvironmentEventQueue } from "./environment/events";
 import { ExamGuard, type GuardPlatform } from "./environment/guard";
 import { withDisplayCheck, withRemoteCheck } from "./environment/preflight";
 import { checkRemoteEnvironment } from "./environment/remote";
+import { checkVm, unknownVm, withVmCheck } from "./environment/vm";
 import { checkHelper, NativeHelper } from "./environment/native";
 import { createElectronProbeDriver } from "./environment/probe-electron";
 import { probeSummary, runSelfTest } from "./environment/probe";
@@ -74,6 +75,7 @@ let quitting = false;
 let shutdownDone = false;
 let previewWanted = false;
 let capabilities: EnvironmentCapabilities | null = null;
+let vmSnapshot = unknownVm();
 let probeResults: ProbeResults = {};
 let probeRanAt: string | null = null;
 let verification: VerificationRecord[] = [];
@@ -117,6 +119,7 @@ const guardPlatform: GuardPlatform = {
 
 const guard = new ExamGuard(() => mainWindow, events, guardPlatform, {
   enforce: cfg.nativeEnforce,
+  vmSnapshot: process.platform === "win32" ? () => vmSnapshot : undefined,
   scanRemote: process.platform === "win32" ? () => checkRemoteEnvironment({ command: cfg.nativeHelperPath }) : undefined,
   emergencyAccelerator: cfg.emergencyAccelerator,
   onEmergencyHotkey: () => void emergencyExit("emergency_hotkey"),
@@ -180,6 +183,8 @@ async function reportCapabilities(strict = false): Promise<void> {
   capabilities = withDisplayCheck(capabilities, displayCount);
   if (process.platform === "win32") {
     capabilities = withRemoteCheck(capabilities, await checkRemoteEnvironment({ command: cfg.nativeHelperPath }));
+    vmSnapshot = await checkVm({ command: cfg.nativeHelperPath });
+    capabilities = withVmCheck(capabilities, vmSnapshot);
   }
   log.info(`capability matrix: ${JSON.stringify(summarize(capabilities))}`);
   if (!supervisor.connection) return;

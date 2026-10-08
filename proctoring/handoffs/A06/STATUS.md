@@ -1,5 +1,9 @@
 # A06 — current environment additions
 
+VM advisory preflight: branch `codex/proctor-A06-vm` from integration `a7cf612`.
+Read-only WMI; detected VM and unknown are nonblocking WARN; once-per-session informational event.
+Laptop LIVE: **not_detected** (ASUS TUF Gaming A15). See [VM handoff](VM-2026-10-08.md).
+
 New branch `codex/proctor-A06-env` from `eee203111a9dcb9274646bad643779206f7cd879` implements
 second-monitor preflight/polling, enforce focus return, remote-process/RDP checks and 1 s clipboard clear.
 See [current handoff and test results](ENV-2026-10-08.md).
