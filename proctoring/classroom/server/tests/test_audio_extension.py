@@ -53,3 +53,18 @@ def test_legacy_command_cannot_claim_live_audio(tmp_path):
         with pytest.raises(ClassroomError) as caught:
             app.state.core.submit_command("st-legacy", CommandKind.AUDIO_START, {"direction": "listen"}, issued_by="test")
         assert caught.value.code == "audio_extension_required"
+
+
+def test_panel_audio_module_is_served_as_javascript(tmp_path):
+    """T02 panel loads /api/teacher/audio/assets/teacher/class-panel-module.js (class-panel/src/liveModules.js)."""
+    app = create_app(ServerConfig(data_dir=tmp_path, teacher_pin="123456"))
+    with TestClient(app, base_url="http://127.0.0.1:8765", client=("127.0.0.1", 50000)) as client:
+        assert client.get("/api/teacher/audio/assets/teacher/class-panel-module.js").status_code in (401, 403)  # teacher only
+        client.post("/api/teacher/login", json={"pin": "123456"})
+        for folder, name in (("teacher", "class-panel-module.js"), ("teacher", "teacher-audio.js"), ("teacher", "teacher-signaling.js"),
+                             ("teacher", "audio-panel.js"), ("shared", "media-errors.js")):
+            r = client.get(f"/api/teacher/audio/assets/{folder}/{name}")
+            assert r.status_code == 200 and r.headers["content-type"].startswith("text/javascript"), (name, r.status_code, r.headers.get("content-type"))
+        assert client.get("/api/teacher/audio/assets/teacher/audio.css").headers["content-type"].startswith("text/css")
+        assert client.get("/api/teacher/audio/assets/teacher/index.html").status_code == 404  # still an allowlist
+        assert client.get("/api/teacher/audio/assets/shared/student-endpoint.js").status_code == 404

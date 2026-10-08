@@ -76,12 +76,15 @@ class ClassroomAudioFeature:
         self.router.add_api_route("/api/teacher/audio/assets/{folder}/{name}", self.asset, methods=["GET"])
 
     async def asset(self, folder: str, name: str):
-        allowed = {"teacher": {"teacher-audio.js", "teacher-signaling.js", "audio-panel.js", "audio.css"},
+        # class-panel-module.js: the T02 panel entry (class-panel/src/liveModules.js); it imports only the files below
+        allowed = {"teacher": {"class-panel-module.js", "teacher-audio.js", "teacher-signaling.js", "audio-panel.js", "audio.css"},
                    "shared": {"media-errors.js"}}
         if name not in allowed.get(folder, set()):
             from fastapi import HTTPException
             raise HTTPException(404)
-        return FileResponse(ROOT / "web" / folder / name)
+        # explicit types: Windows' registry may map .js to text/plain, and browsers refuse such module scripts
+        media_type = "text/css" if name.endswith(".css") else "text/javascript"
+        return FileResponse(ROOT / "web" / folder / name, media_type=media_type, headers={"Cache-Control": "no-store"})
 
     def spawn(self, coroutine):
         task = asyncio.create_task(coroutine)
