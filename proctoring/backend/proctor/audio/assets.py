@@ -12,6 +12,9 @@ LICENSE_URL = f"https://raw.githubusercontent.com/snakers4/silero-vad/{REVISION}
 
 
 def model_dir() -> Path:
+    configured = os.environ.get("QORGAU_MODELS_DIR")
+    if configured:
+        return Path(configured) / "audio"
     base = os.environ.get("LOCALAPPDATA")
     if not base:
         raise RuntimeError("LOCALAPPDATA is required; pass an explicit model directory on non-Windows hosts")
