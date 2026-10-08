@@ -153,7 +153,7 @@ def _backend_label(backend: int) -> str:
 
 
 def windows_camera_consent(winreg_module: Any = None, platform: str = sys.platform) -> str | None:
-    """Read-only diagnosis of the Windows camera privacy switches ("Allow"/"Deny"/None).
+    r"""Read-only diagnosis of the Windows camera privacy switches ("Allow"/"Deny"/None).
 
     Only READS ...\CapabilityAccessManager\ConsentStore\webcam ``Value`` under HKLM ("camera access
     for this device") and HKCU ("let apps access your camera"), plus their ``NonPackaged`` subkey
@@ -198,6 +198,14 @@ class CameraSource:
     FAILS_TO_DISCONNECT = 3
     #: ... or this long without a successful read
     FAIL_WINDOW_S = 1.0
+    #: DirectShow while another app holds the camera (measured: Windows 11, OpenCV 4.13, UVC webcam):
+    #: isOpened() is True, read() blocks ~1000 ms, then returns ok=True with an all-black frame.
+    #: A near-black frame that took this long is that placeholder, not a picture (a real camera,
+    #: even with a closed privacy shutter, delivers frames every ~33 ms).
+    BUSY_READ_S = 0.5
+    BUSY_MAX_MEAN = 1.0
+    #: placeholders in a row that prove the device is busy (other backends are then not tried)
+    BUSY_PLACEHOLDERS = 2
 
     def __init__(
         self,
@@ -230,6 +238,7 @@ class CameraSource:
         self._actual: FactDict = {}
         self._last_ok = 0.0
         self.opens = 0
+        self.busy_placeholders = 0  # black "camera busy" frames seen (never delivered)
 
     # -------------------------------------------------------------- probing
     def _linux_device_probe(self, index: int) -> tuple[bool, bool] | None:
@@ -279,11 +288,13 @@ class CameraSource:
                 self._safe_release(cap)
                 continue
             budget = min(self._probe_timeout_s, left / (len(backends) - i))
-            first = self._probe_first_frame(cap, time.monotonic() + budget)
+            first, busy = self._probe_first_frame(cap, time.monotonic() + budget)
             if first is None:
-                tried.append(f"{label}:no_frames")
+                tried.append(f"{label}:{'busy_placeholder' if busy else 'no_frames'}")
                 opened_without_frames = True
                 self._safe_release(cap)
+                if busy:  # the device itself is held by another app: other backends cannot get it
+                    break
                 continue
             self._cap = cap
             self._first = first
@@ -311,18 +322,33 @@ class CameraSource:
         except Exception:
             log.info("camera %d: some properties could not be set", self.index)
 
-    def _probe_first_frame(self, cap: VideoCaptureLike, until: float) -> RawFrame | None:
+    def _is_busy_placeholder(self, frame: np.ndarray, read_s: float) -> bool:
+        if read_s < self.BUSY_READ_S or float(frame.mean()) >= self.BUSY_MAX_MEAN:
+            return False
+        self.busy_placeholders += 1
+        return True
+
+    def _probe_first_frame(self, cap: VideoCaptureLike, until: float) -> tuple[RawFrame | None, bool]:
+        """(first frame, device proven busy)."""
+        busy_in_row = 0
         while time.monotonic() < until and not self._stop.is_set():
+            t_read = time.monotonic()
             try:
                 ok, img = cap.read()
             except Exception:
                 ok, img = False, None
             mono = time.monotonic_ns()
             frame = normalize_bgr(img) if ok else None
+            if frame is not None and self._is_busy_placeholder(frame, time.monotonic() - t_read):
+                busy_in_row += 1
+                if busy_in_row >= self.BUSY_PLACEHOLDERS:
+                    return None, True
+                continue
             if frame is not None:
-                return RawFrame(image=frame, mono_ns=mono)
+                return RawFrame(image=frame, mono_ns=mono), False
+            busy_in_row = 0
             time.sleep(0.05)
-        return None
+        return None, busy_in_row > 0
 
     def _read_back(self, cap: VideoCaptureLike, image: np.ndarray) -> None:
         h, w = image.shape[:2]
@@ -390,16 +416,19 @@ class CameraSource:
             raise SourceDisconnected("camera is not open")
         fails = 0
         while not self._stop.is_set():
+            t_read = time.monotonic()
             try:
                 ok, img = cap.read()
             except Exception:
                 ok, img = False, None
             mono = time.monotonic_ns()
             frame = normalize_bgr(img) if ok else None
+            if frame is not None and self._is_busy_placeholder(frame, time.monotonic() - t_read):
+                frame = None  # black "busy" placeholder: a lost frame, never a picture for analyzers
             if frame is not None:
                 self._last_ok = time.monotonic()
                 return RawFrame(image=frame, mono_ns=mono)
-            if ok:  # a frame came but is unusable (empty/odd shape)
+            if ok:  # a frame came but is unusable (empty/odd shape, busy placeholder)
                 self.dropped += 1
             fails += 1
             if fails >= self.FAILS_TO_DISCONNECT or time.monotonic() - self._last_ok > self.FAIL_WINDOW_S:

@@ -86,6 +86,26 @@ def test_cli_replay_check_and_hash(settings, clip, capsys):
     assert capsys.readouterr().out.strip() == load_replay(settings.replay_dir, rid).manifest.media.sha256
 
 
+def test_record_countdown_starts_clip_after_countdown(settings):
+    lines: list[str] = []
+    out = record(settings, parse_source("synthetic", 160, 120, 20), "rec_cd", 1.2, consent="synthetic frames, nobody recorded", countdown_s=1, tick=lines.append)
+    assert lines[0] == "recording starts in 1 s ..." and lines[1].startswith("REC t = 0 s")
+    assert any(line == "REC t = 1 s" for line in lines)
+    assert load_replay(settings.replay_dir, "rec_cd").sidecar[0] == 0.0 and out["duration_ms"] < 1500
+
+
+def test_rss_and_cpu_name_are_measured_on_supported_platforms():
+    import sys
+
+    from proctor.capture.measure import hardware_info, rss_bytes
+
+    if sys.platform == "win32" or sys.platform.startswith("linux"):
+        rss = rss_bytes()
+        assert rss is not None and rss > 1_000_000  # was always None on Windows (ctypes prototypes)
+    if sys.platform == "win32":
+        assert "Family" not in hardware_info()["cpu"]  # model name, not "AMD64 Family 25 ..."
+
+
 def test_parse_source():
     assert parse_source("live:2", 640, 480, 30).camera_index == 2
     assert parse_source("replay:x", 640, 480, 30).mode == SourceMode.REPLAY

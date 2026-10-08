@@ -35,7 +35,10 @@ class FakeDevice:
         self.width, self.height = width, height
         self.connected = True  # False: isOpened() false for new handles, read() fails
         self.delivers = True  # False: opens but read() returns (False, None) -> busy
-        self.mode = "bgr"  # "bgr" | "gray" | "bgra" | "empty"
+        self.mode = "bgr"  # "bgr" | "gray" | "bgra" | "empty" | "busy_black"
+        # "busy_black" = DirectShow while another app holds the camera (measured on Windows 11):
+        # isOpened() True, read() blocks ~1 s and returns ok=True with an all-black frame
+        self.busy_read_s = 0.6
         self.open_delay_s = 0.0
         self.unblocked = threading.Event()
         self.unblocked.set()  # clear() -> read() hangs until set()
@@ -93,6 +96,9 @@ class FakeVideoCapture:
             d.reads += 1
         if not self._opened or self._released or not d.connected or not d.delivers:
             return False, None
+        if d.mode == "busy_black":
+            time.sleep(d.busy_read_s)
+            return True, np.zeros((d.height, d.width, 3), np.uint8)
         return True, d.frame()
 
     def set(self, prop: int, value: float) -> bool:

@@ -18,7 +18,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from proctor_contracts.interfaces import FramePacket, SessionClock
 from proctor_contracts.v1 import SourceConfig
@@ -62,7 +62,21 @@ class _Writer:
                 self.writer.release()
 
 
-def record(settings: Any, source: SourceConfig, replay_id: str, seconds: float, *, consent: str, title: str = "", overwrite: bool = False) -> dict[str, Any]:
+def record(
+    settings: Any,
+    source: SourceConfig,
+    replay_id: str,
+    seconds: float,
+    *,
+    consent: str,
+    title: str = "",
+    overwrite: bool = False,
+    countdown_s: int = 0,
+    tick: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
+    """``countdown_s``: the camera is opened first, then the countdown runs, then writing starts,
+    so t = 0 of the clip is the moment "REC" is shown (the person in front of the camera can
+    follow a timed script). ``tick`` gets the countdown and one line per recorded second."""
     if cv2 is None:
         raise SystemExit("OpenCV is required for recording")
     if not REPLAY_ID_RE.match(replay_id):
@@ -78,13 +92,23 @@ def record(settings: Any, source: SourceConfig, replay_id: str, seconds: float, 
     if not overwrite and (manifest_path.exists() or video.exists()):
         raise SystemExit(f"{manifest_path.name} or its media already exists (use --overwrite)")
     writer = _Writer(video, fps=float(source.fps))
+    say = tick or (lambda _msg: None)
     svc = FrameCaptureService(settings)
-    svc.add_consumer("recorder", writer)
     svc.open(f"record-{replay_id}", source, SessionClock())
-    started = time.monotonic()
     try:
+        for n in range(max(0, int(countdown_s)), 0, -1):
+            say(f"recording starts in {n} s ...")
+            time.sleep(1.0)
+        svc.add_consumer("recorder", writer)
+        started = time.monotonic()
+        say(f"REC t = 0 s (of {seconds:g} s)")
+        shown = 0
         while time.monotonic() - started < seconds and writer.error is None:
-            time.sleep(0.2)
+            time.sleep(0.1)
+            elapsed = int(time.monotonic() - started)
+            if elapsed > shown:
+                shown = elapsed
+                say(f"REC t = {elapsed} s")
         health = svc.health()
         metrics = svc.metrics()
     finally:
