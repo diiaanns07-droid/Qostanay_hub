@@ -184,3 +184,11 @@ def test_teacher_ws_without_cookie_rejected(server):
             return e.rcvd.code if e.rcvd else None
 
     assert asyncio.run(go()) in (403, 4401)
+
+
+def test_class_panel_route_off_by_default_and_loopback_only(server):
+    _, port = server
+    assert httpx.get(f"http://127.0.0.1:{port}/class-panel/").status_code == 404
+    ip = _lan_ip()
+    if ip:
+        assert httpx.get(f"http://{ip}:{port}/class-panel/").status_code == 403

@@ -48,11 +48,12 @@ const lanIp = () =>
     .flat()
     .find((i) => i && i.family === "IPv4" && !i.internal)?.address ?? null;
 
-async function startServer({ tls = null } = {}) {
+async function startServer({ tls = null, extraArgs = [] } = {}) {
   const port = await freePort();
   const pinFile = join(mkdtempSync(join(tmpdir(), "qa-pin-")), "pin.json");
   const args = ["-m", "qorgau_class_audio.devserver", "--host", "0.0.0.0", "--port", String(port), "--pin-file", pinFile];
   if (tls) args.push("--tls-cert", tls.cert, "--tls-key", tls.key);
+  args.push(...extraArgs);
   const proc = spawn(PY, args, { cwd: serverDir, env: { ...process.env, PYTHONPATH: serverDir, QORGAU_AUDIO_LOG: "WARNING" }, stdio: ["ignore", "pipe", "pipe"] });
   let out = "";
   proc.stdout.on("data", (d) => (out += d));
@@ -386,6 +387,31 @@ try {
       await P.page.screenshot({ path: join(OUT, "12-peer-https-lan-address.png") });
     }
   }
+  // ---------------------------------------------------------------- S14 inside the real class panel of T02 (optional)
+  const panelDir = process.env.QORGAU_CLASS_PANEL_DIR;
+  if (panelDir && existsSync(join(panelDir, "src", "extensions.js"))) {
+    srv?.proc.kill("SIGTERM");
+    srv = await startServer({ extraArgs: ["--class-panel-dir", panelDir] });
+    const pb = `http://127.0.0.1:${srv.port}`;
+    const TP = await teacherPage(browser, pb, srv.pin); // login (cookie) on the same origin
+    const G = await peerPage(browser, pb, srv.join, "G-panel");
+    await TP.page.goto(`${pb}/class-panel/`);
+    await TP.page.locator(`button.card-hit[data-id="${G.sid}"]`).waitFor({ timeout: 15000 });
+    await TP.page.locator(`button.card-hit[data-id="${G.sid}"]`).click();
+    const slot = TP.page.locator('.slot-audio [data-module="t05-audio"]');
+    await slot.waitFor({ timeout: 10000 });
+    await slot.getByRole("button", { name: "Слушать" }).click();
+    await slot.getByText("Слушаю студента.").waitFor({ timeout: 20000 }).then(
+      () => check("T02 class panel: audio slot module → listening (same-origin, cookie auth)", true, "T02 @ codex/proctor-T02, real adapter"),
+      () => check("T02 class panel: audio slot module → listening (same-origin, cookie auth)", false),
+    );
+    await TP.page.screenshot({ path: join(OUT, "13-class-panel-audio-slot.png") });
+    await slot.getByRole("button", { name: "Завершить связь" }).click();
+    await until(async () => (await ptracks(G.page)).lastMic === "ended", 10000).then(
+      () => check("T02 class panel: stop → student mic ended", true),
+      () => check("T02 class panel: stop → student mic ended", false),
+    );
+  } else console.log("SKIP  T02 class panel check (set QORGAU_CLASS_PANEL_DIR to proctoring/class-panel of codex/proctor-T02)");
 } catch (e) {
   check("e2e completed", false, String(e?.stack ?? e).slice(0, 600));
   if (srv) console.log(srv.log().slice(-2000));

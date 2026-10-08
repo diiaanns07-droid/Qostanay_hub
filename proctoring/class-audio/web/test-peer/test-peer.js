@@ -1,7 +1,7 @@
 // @ts-check
 // TEST PEER (T05) — a minimal qorgau.class.v1 student link + the reference StudentAudioEndpoint.
 // Purpose: verify teacher↔student audio independently of the student application. Clearly NOT the student app.
-import { StudentAudioEndpoint } from "/shared/student-endpoint.js";
+import { StudentAudioEndpoint } from "../shared/student-endpoint.js";
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
 const stateEl = $("state");

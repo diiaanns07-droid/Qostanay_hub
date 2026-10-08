@@ -117,7 +117,7 @@ class State:
                     pass
 
 
-def create_app(pin: str, *, secure_cookie: bool = False) -> FastAPI:
+def create_app(pin: str, *, secure_cookie: bool = False, class_panel_dir: str | None = None) -> FastAPI:
     st = State(pin, secure_cookie)
 
     @asynccontextmanager
@@ -172,6 +172,30 @@ def create_app(pin: str, *, secure_cookie: bool = False) -> FastAPI:
     @app.get("/teacher/{path:path}")
     async def teacher_static(path: str, request: Request) -> Response:
         return loopback_only(request) or static(f"teacher/{path}")
+
+    # Optional: the class panel of T02 served from the same origin (as C1 should do), with this audio module
+    # plugged into its "Аудиосвязь" slot by one script tag. Dev/integration aid only; T02 files are not copied.
+    panel_root = Path(class_panel_dir).resolve() if class_panel_dir else None
+
+    @app.get("/class-panel/{path:path}")
+    async def class_panel(path: str, request: Request) -> Response:
+        denied = loopback_only(request)
+        if denied:
+            return denied
+        if panel_root is None:
+            return Response(status_code=404)
+        rel = path or "index.html"
+        if rel == "config.json":
+            return JSONResponse({"adapter": "real"}, headers=security_headers())
+        p = (panel_root / rel).resolve()
+        if not str(p).startswith(str(panel_root)) or not p.is_file():
+            return Response(status_code=404)
+        if rel == "index.html":
+            html = p.read_text(encoding="utf-8")
+            tag = '<script type="module" src="/teacher/class-panel-module.js"></script>'
+            html = html.replace('<script type="module" src="./src/app.js"></script>', tag + '\n    <script type="module" src="./src/app.js"></script>', 1)
+            return Response(html, media_type="text/html; charset=utf-8", headers=security_headers())
+        return FileResponse(p, media_type=MIME.get(p.suffix, "application/octet-stream"), headers=security_headers())
 
     @app.get("/shared/{path:path}")
     async def shared_static(path: str) -> Response:
@@ -379,11 +403,12 @@ def main() -> None:
     ap.add_argument("--tls-cert")
     ap.add_argument("--tls-key")
     ap.add_argument("--pin-file", help="write the one-time teacher PIN and join code here (0600) instead of only printing")
+    ap.add_argument("--class-panel-dir", help="serve the T02 class panel from this directory at /class-panel/ (loopback only)")
     args = ap.parse_args()
     logging.basicConfig(level=os.environ.get("QORGAU_AUDIO_LOG", "INFO"))
     pin = f"{secrets.randbelow(10**6):06d}"
     tls = bool(args.tls_cert and args.tls_key)
-    app = create_app(pin, secure_cookie=tls)
+    app = create_app(pin, secure_cookie=tls, class_panel_dir=args.class_panel_dir)
     st: State = app.state.audio
     scheme = "https" if tls else "http"
     print(f"[qorgau class audio DEV] teacher PIN: {pin}   join code: {st.join_code}", flush=True)
