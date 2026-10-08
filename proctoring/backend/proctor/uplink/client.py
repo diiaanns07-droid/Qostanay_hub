@@ -106,6 +106,9 @@ class Uplink:
             self.outbox.set_meta("student_id", None)
             self.outbox.set_meta("server", cfg.server)
             self.outbox.set_meta("code_key", code_key)
+            dropped = self.outbox.clear()  # messages queued for another class session must not leak into this one
+            if dropped:
+                log.info("uplink: %d queued message(s) of a previous class session dropped", dropped)
         self.connection = "connecting"
         self.locked = False
         self.lock_reason_ru: str | None = None
