@@ -1,0 +1,114 @@
+[
+  {
+    "test": "backend.proctor.evidence.tests.test_evidence_report::test_report_renders_and_prints_in_chromium",
+    "owner": "A08 / QA",
+    "classification": "Новый сбой окружения",
+    "repeat": "PASS отдельно с PYTHONUTF8=1; продукт не менялся",
+    "log": "isolated-1.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_config_manifest_prepare::test_install_success_writes_atomically",
+    "owner": "A03",
+    "classification": "Известный QA-WIN-003",
+    "repeat": "FAIL отдельно: разделитель пути",
+    "log": "isolated-2.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_config_manifest_prepare::test_install_source_error_leaves_nothing_and_keeps_existing_target",
+    "owner": "A03",
+    "classification": "Известный QA-WIN-003",
+    "repeat": "FAIL отдельно: разделитель пути",
+    "log": "isolated-3.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_config_manifest_prepare::test_real_prepare_from_file_installs_and_check_loads",
+    "owner": "A03",
+    "classification": "Известная причина QA-WIN-003, ранее SKIP",
+    "repeat": "FAIL отдельно: разделитель пути",
+    "log": "isolated-4.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_config_manifest_prepare::test_app_health_lists_phone_model_missing",
+    "owner": "A03",
+    "classification": "Известный QA-WIN-003",
+    "repeat": "FAIL отдельно: запрет socketpair",
+    "log": "isolated-5.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_real_model::test_real_phone_only_config_does_not_report_other_objects",
+    "owner": "A03",
+    "classification": "Новый QA-FINAL-007",
+    "repeat": "FAIL отдельно: object_class_names пересекается с class_names теста",
+    "log": "isolated-6.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_real_model::test_real_inference_is_deterministic",
+    "owner": "A03",
+    "classification": "Новый QA-FINAL-007",
+    "repeat": "FAIL отдельно: raw_outputs=8 вместо 2, при first==second; тест не учитывает несколько проходов",
+    "log": "isolated-7.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_real_model::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-rect]",
+    "owner": "A03",
+    "classification": "Новый QA-FINAL-007",
+    "repeat": "FAIL отдельно: конфигурация теста пересекает классы",
+    "log": "isolated-8.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_real_model::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-square]",
+    "owner": "A03",
+    "classification": "Новый QA-FINAL-007",
+    "repeat": "FAIL отдельно: конфигурация теста пересекает классы",
+    "log": "isolated-9.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_real_model::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-rect]",
+    "owner": "A03",
+    "classification": "Новый QA-FINAL-007",
+    "repeat": "FAIL отдельно: конфигурация теста пересекает классы",
+    "log": "isolated-10.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_real_model::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square]",
+    "owner": "A03",
+    "classification": "Новый QA-FINAL-007",
+    "repeat": "FAIL отдельно: конфигурация теста пересекает классы",
+    "log": "isolated-11.txt"
+  },
+  {
+    "test": "backend.proctor.phone.tests.test_real_model::test_real_prepadded_frame_gives_identical_boxes",
+    "owner": "A03",
+    "classification": "Новый QA-FINAL-007",
+    "repeat": "FAIL отдельно: конфигурация теста пересекает классы",
+    "log": "isolated-12.txt"
+  },
+  {
+    "test": "backend.proctor.uplink.tests.test_uplink_app::test_without_env_the_backend_has_no_uplink",
+    "owner": "A03 / C2",
+    "classification": "Известный плавающий эффект QA-WIN-003",
+    "repeat": "PASS отдельно; отложенный BaseEventLoop.__del__ после A03",
+    "log": "isolated-13.txt"
+  },
+  {
+    "test": "classroom.server.tests.test_persistence_audio::test_audio_signaling_is_bound_to_an_acked_audio_session",
+    "owner": "T01/T05",
+    "classification": "QA-FINAL-001",
+    "repeat": "FAIL отдельно на f12cea4; в f6525a6 пришло исправление теста, перепроверяется",
+    "log": "isolated-14.txt"
+  },
+  {
+    "test": "classroom.server.tests.test_persistence_audio::test_audio_ends_when_student_goes_offline",
+    "owner": "T01/T05",
+    "classification": "QA-FINAL-001",
+    "repeat": "FAIL отдельно на f12cea4; в f6525a6 пришло исправление теста, перепроверяется",
+    "log": "isolated-15.txt"
+  },
+  {
+    "test": "classreview.tests.test_review_e2e::test_teacher_flow_in_browser_with_restart",
+    "owner": "T03",
+    "classification": "Новый QA-FINAL-008",
+    "repeat": "FAIL отдельно: нет bundled Chromium; с QA adapter для установленного Chrome — FAIL strict locator .t3-test-label (2 элемента вместо 1), клип HTTP 206 получен",
+    "log": "isolated-16.txt"
+  }
+]

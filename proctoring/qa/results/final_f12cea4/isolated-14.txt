@@ -1,0 +1,25 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___________ test_audio_signaling_is_bound_to_an_acked_audio_session ___________
+
+server = <classroom.server.tests.harness.ServerProcess object at 0x000001EDFBE801D0>
+teacher = <httpx.Client object at 0x000001EDFBE80860>
+session = {'session_id': 'cs-17239f53e3a39c9e', 'join_code': '235420', 'session': {'session_id': 'cs-17239f53e3a39c9e', 'title': 'Тест', 'state': 'open', 'created_at': '2026-10-08T14:25:26.894969Z', ...}}
+students = <function students.<locals>.make at 0x000001EDFBF467A0>
+
+    def test_audio_signaling_is_bound_to_an_acked_audio_session(server, teacher, session, students):
+        ts = TeacherStream(server, teacher.cookies.get("qorgau_teacher"))
+        try:
+            ts.wait_for(lambda x: x["type"] == "snapshot")
+            s = students()
+            sid = s.hello(join_code=session["join_code"])["student_id"]
+            ts.send({"type": "audio_signal", "student_id": sid, "command_id": "cmd-none", "sdp": "v=0"})
+            assert ts.wait_for(lambda x: x["type"] == "error")["code"] == "no_audio_session"
+>           start = teacher.post(f"/api/teacher/students/{sid}/commands", json={"kind": "audio_start", "payload": {"direction": "listen"}}).json()["command_id"]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'command_id'
+
+classroom\server\tests\test_persistence_audio.py:95: KeyError
+=========================== short test summary info ===========================
+FAILED classroom/server/tests/test_persistence_audio.py::test_audio_signaling_is_bound_to_an_acked_audio_session
+1 failed in 1.24s

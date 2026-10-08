@@ -1,0 +1,46 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+______________ test_no_download_calls_in_backend_runtime_source _______________
+
+    def test_no_download_calls_in_backend_runtime_source():
+        """Heuristic gate: product runtime code must not contain download/HTTP-client calls.
+
+        Scans proctoring/backend/proctor (excluding tests and the A01 smoke client, which talks to
+        127.0.0.1 only). A hit is not automatically a bug; it must be justified or removed.
+        """
+        hits = []
+        root = PROCTORING_ROOT / "backend" / "proctor"
+        for path in root.rglob("*.py"):
+            rel = path.relative_to(root).as_posix()
+            if "/tests/" in f"/{rel}" or rel.endswith("bootstrap/smoke.py"):
+                continue
+            # These reviewed preparation CLIs download weights explicitly before
+            # runtime; their presence does not imply a runtime network dependency.
+            # The runtime audit guard remains active and catches attempted connections.
+            if rel in {"phone/model_tool.py", "phone/prepare.py", "attention/model_tool.py"}:
+                continue
+            for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if line.lstrip().startswith("#"):
+                    continue
+                if DOWNLOAD_PATTERNS.search(line):
+                    hits.append(f"{rel}:{n}: {line.strip()[:120]}")
+>       assert not hits, "\n".join(hits)
+E       AssertionError: audio/prepare.py:7: import urllib.request
+E         audio/prepare.py:26: with urllib.request.urlopen(yamnet.MODEL_URL, timeout=60) as response:
+E         audio/prepare.py:29: with urllib.request.urlopen(yamnet.LICENSE_URL, timeout=30) as response:
+E         audio/prepare.py:49: with urllib.request.urlopen(MODEL_URL, timeout=60) as response:
+E         audio/prepare.py:53: with urllib.request.urlopen(LICENSE_URL, timeout=30) as response:
+E         identity/prepare.py:20: import urllib.request
+E         identity/prepare.py:64: with urllib.request.urlopen(url, timeout=120) as resp:  # noqa: S310 - https only, explicit user action
+E         uplink/client.py:24: import urllib.request
+E         uplink/client.py:85: req = urllib.request.Request(url, data=data, method="POST", headers={
+E         uplink/client.py:90: with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310 (LAN class server, http by protocol)
+E         uplink/demo_teacher.py:25: import urllib.request
+E         uplink/demo_teacher.py:33: self.http = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar))
+E         uplink/demo_teacher.py:38: req = urllib.request.Request(self.base + path, data=data, method=method, headers={"Content-Type": "application/json; cha
+E       assert not ['audio/prepare.py:7: import urllib.request', 'audio/prepare.py:26: with urllib.request.urlopen(yamnet.MODEL_URL, time...th urllib.request.urlopen(LICENSE_URL, timeout=30) as response:', 'identity/prepare.py:20: import urllib.request', ...]
+
+qa\tests\test_offline.py:127: AssertionError
+=========================== short test summary info ===========================
+FAILED qa/tests/test_offline.py::test_no_download_calls_in_backend_runtime_source
+1 failed in 0.17s

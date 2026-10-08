@@ -1,0 +1,148 @@
+
+> qorgau-exam-desktop@0.1.0 test:shell
+> node main/tests/run.mjs
+
+✔ default policy: during the exam no review/history/report/evidence, even when unlocked (1.3375ms)
+✔ default policy: after pause/finish the teacher reviews with the unlock (0.2595ms)
+✔ live-review policy: only unlocked, only the bound session, never history/export/delete (0.2204ms)
+✔ operator-only actions need the unlock in every mode and policy (0.3347ms)
+✔ during the exam NO session-scoped method reaches another session (answers, exam, lifecycle) (1.5231ms)
+✔ outside the exam another session (history) is teacher-only; no bound session means everything is 'other' (0.1565ms)
+✔ student and lifecycle methods are never closed by the teacher policy (0.1454ms)
+✔ accessTable covers every bridge method (for the A07 handoff) (1.0127ms)
+✔ operator unlock expires after inactivity and after the absolute limit (0.7967ms)
+✔ api wiring: unlock expiry locks the shell state and notifies listeners without any further call (340.9325ms)
+✔ expiry timer locks proactively without any call (152.5985ms)
+▶ backend process + bridge API (real backend)
+  ✔ READY handshake: loopback port, token never on the command line or in the environment (89.9972ms)
+  ✔ capabilities PUT is accepted by the backend contract (9.3202ms)
+  ✔ bridge API drives a synthetic session; exam mode only while RUNNING; operator gating (326.0322ms)
+  ✔ teacher access: default closes review during the exam; opt-in live review is bound-session + PIN + expiring (235.2682ms)
+  ✔ arity/size/untrusted values are rejected before reaching the backend (42.8943ms)
+  ✔ backend crash: restrictions released at once, supervisor restarts with a NEW token and port (1304.1445ms)
+  ✔ graceful stop: stdin shutdown with a RUNNING session; the process exits by itself (1874.3902ms)
+✔ backend process + bridge API (real backend) (4924.0276ms)
+▶ backend process failure paths (fake backends)
+  ﹣ stop escalates to kill when the backend ignores shutdown and SIGTERM (0.309ms) # SKIP
+  ✔ READY with a foreign contract is rejected (92.9397ms)
+2026-10-08T14:07:05.976Z ERROR shell.backend: launch failed: backend did not print QORGAU_READY within 400 ms
+2026-10-08T14:07:06.453Z ERROR shell.backend: launch failed: backend did not print QORGAU_READY within 400 ms
+2026-10-08T14:07:06.930Z ERROR shell.backend: launch failed: backend did not print QORGAU_READY within 400 ms
+2026-10-08T14:07:07.136Z ERROR shell.backend: spawn failed: spawn C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring\does-not-exist\python ENOENT
+2026-10-08T14:07:07.136Z ERROR shell.backend: launch failed: spawn C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring\does-not-exist\python ENOENT
+  ✔ READY timeout -> restarts with backoff -> failed (no endless loop) (1571.3755ms)
+2026-10-08T14:07:07.164Z ERROR shell.backend: spawn failed: spawn C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring\does-not-exist\python ENOENT
+2026-10-08T14:07:07.164Z ERROR shell.backend: launch failed: spawn C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring\does-not-exist\python ENOENT
+  ✔ missing python executable -> failed state, no crash (59.3358ms)
+  ✔ token is not inherited by the child through dev variables (112.7567ms)
+✔ backend process failure paths (fake backends) (1837.3571ms)
+✔ matrix reports every action with a valid status and <=64 items (1.8027ms)
+✔ no self-test, no records -> in-app items unverified, OS items unverified on Windows (0.2051ms)
+✔ passing self-test marks in-app items blocked, with verified_on from this machine (0.3069ms)
+✔ failed self-test check -> unsupported, not silently blocked (1.6352ms)
+✔ inconclusive self-test (no Electron pipeline) stays unverified (0.4199ms)
+✔ OS-level items are unsupported on non-Windows (0.2738ms)
+✔ a manual verification record only counts when platform AND os release match exactly (0.3942ms)
+✔ summarize counts statuses (0.2633ms)
+✔ verification JSON parsing is defensive (0.9021ms)
+✔ helper self-check/ready alone never promotes an OS-level item (needs a measured record) (0.2897ms)
+✔ audio capture requires exact trusted main frame, audio-only request and active lease (0.8058ms)
+✔ pending lock hides exam surface before any receipt; successful DOM verification posts exact scope (2.4072ms)
+✔ hidden renderer and wrong scopes cannot acknowledge (0.2597ms)
+✔ DOM rejection posts applied=false; unlock only releases after verified removal (0.2294ms)
+✔ reset rejects old renderer replies and malformed messages cannot release (0.8587ms)
+✔ renderer loss blocks immediately and invalidates only the current backend (0.2862ms)
+2026-10-08T14:07:07.612Z ERROR shell.guard: release step clipboard_clear failed Error: unavailable
+✔ clipboard is cleared each second while engaged, never read, timer removed on release (2.6349ms)
+✔ clipboard errors are reported once while failing and don't prevent release (1.9896ms)
+✔ second monitor blocks preflight; fresh single-monitor snapshot clears it (1.1498ms)
+✔ display polling every 2s, transition dedup, and release cleanup (2.2328ms)
+✔ bridge refreshes conditions before preflight/start/resume; stale PASS cannot start (78.3997ms)
+✔ approved exam and authentication endpoints retain exact origin/path boundaries (1.5722ms)
+✔ malformed/overbroad patterns invalidate the whole policy; native application mode stays unsupported (0.303ms)
+✔ exact query restrictions and wildcard landing URL are deterministic (0.1622ms)
+✔ bounds cannot cover trusted header/footer and reject invalid geometry (1.2666ms)
+✔ enforce returns focus at 400ms, retries <=2/s, blur storms don't postpone it (3.7499ms)
+✔ dry-run observes foreign window without refocus; regained focus cancels enforce retry (1.39ms)
+2026-10-08T14:07:08.014Z ERROR shell.guard: release step closable failed Error: closable failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step always_on_top failed Error: alwaysOnTop failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step kiosk failed Error: kiosk failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step closable failed Error: closable failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step always_on_top failed Error: alwaysOnTop failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step kiosk failed Error: kiosk failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step closable failed Error: closable failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step always_on_top failed Error: alwaysOnTop failed
+2026-10-08T14:07:08.015Z ERROR shell.guard: release step kiosk failed Error: kiosk failed
+2026-10-08T14:07:08.016Z ERROR shell.guard: engage step always_on_top failed Error: alwaysOnTop failed
+2026-10-08T14:07:08.016Z ERROR shell.guard: release step always_on_top failed Error: alwaysOnTop failed
+✔ engage sets window restrictions; release restores all of them (4.0511ms)
+✔ release is idempotent and never throws even if window calls fail (1.4663ms)
+✔ a required engage step failing releases what was set and throws (0.5716ms)
+✔ debug switches refuse exam mode (0.1634ms)
+✔ emergency hotkey not registrable -> enforcement_error reported (registration result, not the call) (0.228ms)
+✔ emergency hotkey callback reaches the shell (0.1848ms)
+✔ non-Windows: no PrintScreen hotkey attempt (0.2431ms)
+✔ key policy only while engaged; events carry no typed text (1.7755ms)
+✔ close prevented only while engaged (0.394ms)
+✔ focus loss is detected_only with measured duration (0.5046ms)
+✔ devtools opened during exam are closed and reported (0.2307ms)
+✔ native helper failure does not block engage but is reported; release stops it (0.2934ms)
+✔ health preserves backend report and adds only local display metadata (2.4177ms)
+✔ clipboard shortcuts are blocked, also on ru/kk layouts (physical key) (1.1044ms)
+✔ OS-level keys are detected_only (window scope cannot stop them) (0.2206ms)
+✔ tab switching, close, devtools, reload, new window are blocked (0.2245ms)
+✔ ordinary typing and editing keys are allowed (1.0267ms)
+✔ throttle reports a held shortcut once per window, never key-up or auto-repeat (0.2222ms)
+✔ parseHelperLine maps keys/foreground/error and ignores junk (3.1048ms)
+✔ checkHelper runs --self-check against the fake helper (64.6269ms)
+✔ start reports ready (dry-run), delivers observations, heartbeats, stops cleanly (372.4667ms)
+✔ enforce mode is honored only when opted in (274.9685ms)
+2026-10-08T14:07:09.018Z ERROR shell.native: helper claims enforce mode without opt-in; stopping it
+✔ helper claiming enforce WITHOUT opt-in is rejected and stopped (64.6906ms)
+✔ no ready within timeout -> rejected, process killed (417.1068ms)
+✔ unexpected helper exit after ready -> enforcement_error observation (373.1556ms)
+✔ stopSync kills immediately and stop() is then a no-op (66.3768ms)
+✔ Python helper resolves the backend interpreter, paths with spaces remain separate arguments (0.8466ms)
+✔ default missing exe falls back to native/qorgau_guard.py; existing or explicit exe does not (0.5476ms)
+✔ .py protocol-only helper starts through Python, self-checks and stops (NO actual hook) (205.5214ms)
+✔ remote helper parser rejects paths/junk, keeps only exact basenames and RDP (1.8971ms)
+✔ read-only subprocess protocol via fake (no hooks) (67.5181ms)
+✔ 5s remote polling emits once per appearance, resumes after disappearance, stops on release (1.9802ms)
+✔ remote result arriving after release cannot emit into next session (0.3058ms)
+2026-10-08T14:07:10.293Z ERROR shell.state: engage failed: kiosk refused
+2026-10-08T14:07:10.297Z ERROR shell.state: listener failed Error: bad listener
+2026-10-08T14:07:10.297Z ERROR shell.state: listener failed Error: bad listener
+2026-10-08T14:07:10.297Z ERROR shell.state: listener failed Error: bad listener
+2026-10-08T14:07:10.297Z ERROR shell.state: listener failed Error: bad listener
+✔ starts in normal mode with nothing engaged (0.9007ms)
+✔ bind -> preflight; running engages exam; finish releases to normal (1.9906ms)
+✔ pause releases (operator), resume re-engages, abort releases (0.3568ms)
+✔ observations for other (unbound) sessions are ignored (0.2156ms)
+✔ backend loss releases immediately and reports error (0.2879ms)
+✔ engage failure leaves everything released and mode=error (1.7583ms)
+✔ finish arriving while engage is in flight still ends released (serialized) (0.4094ms)
+✔ emergency latch: a session can never re-engage after an emergency exit (0.3348ms)
+✔ operator unlock is cleared on EVERY engage: start, resume, recovery (0.6244ms)
+✔ engageForbidden reports the latch (0.7615ms)
+✔ rebinding releases a still-engaged previous session (0.2212ms)
+✔ listeners get every change; a throwing listener does not break the machine (0.491ms)
+✔ id accepts contract ids and rejects paths/oversize/unicode (1.1642ms)
+✔ sessionCreate accepts the contract fixture and rejects extra/missing keys (1.2042ms)
+✔ bodies: reason, answer, review, calibration target, format, pin (1.1209ms)
+✔ checkSize caps serialized arguments (0.5359ms)
+✔ VM protocol accepts only known platforms and complete tri-state output (1.8167ms)
+✔ VM advisory preserves display/remote gates and never blocks on its own (1.5107ms)
+✔ VM subprocess result and missing executable do not become clean (81.6591ms)
+✔ VM is informational once per session, survives pause/resume and logs next session (1.7615ms)
+✔ app protocol serves only files inside the renderer dir (1.0862ms)
+✔ trusted origin is the app scheme (and the configured dev origin only) (0.176ms)
+✔ production CSP: no inline/eval scripts, no remote origins, no frames/objects (0.3006ms)
+✔ config: defaults, dev URL and devtools only when unpackaged (1.1483ms)
+ℹ tests 107
+ℹ suites 2
+ℹ pass 106
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 10802.1878

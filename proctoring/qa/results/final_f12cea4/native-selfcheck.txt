@@ -1,0 +1,1 @@
+{"type": "selfcheck", "version": "python-prototype-1", "os": "10.0.26200", "elevated": false}

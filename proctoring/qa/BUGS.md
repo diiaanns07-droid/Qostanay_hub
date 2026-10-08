@@ -1,5 +1,27 @@
 # Reproducible findings for module owners (A09 does not patch other modules)
 
+## Финальная QA 2026-10-08 (a883e96 → f12cea4 → f6525a6)
+
+Подробные команды, каждый FAIL и отдельные повторы: [FINAL_QA.md](../handoffs/FINAL_QA.md).
+Код продукта не исправлялся. Старые записи ниже не являются актуальным списком открытых P0.
+
+| ID / приоритет | Владелец | Наблюдение и следующий шаг |
+|---|---|---|
+| QA-FINAL-001 / CLOSED в f6525a6 | T01/T05 | На a883e96/f12cea4 два legacy audio_start теста стабильно FAIL отдельно. Поставка integration обновила ожидания; повтор на f6525a6 PASS (в составе 112 PASS изменённых путей). |
+| QA-FINAL-002 / P1 тестового запуска | A06/A01 | `desktop/main/src/main.ts` создаёт NativeHelper с `maxMinutes: 240`, конфигурации лимита нет. Для QA по требованию капитана нужен максимум 2 минуты. Просьба добавить параметр длительности; текущая проверка использует отдельный QA-only adapter без изменения продукта. |
+| QA-FINAL-003 / P1 схемы, P2 harness | A01/A08/A09 | Временная A08 SessionSummary возвращает `review_zone`, `review_zone_reasons_ru`, `review_zone_rule_version`, но опубликованная schema их запрещает. 8 состояний lifecycle FAIL отдельно; временные поля были ранее согласованы. Дополнительно QA flow ожидает READY 1.0.0 при реальном 1.2.0. Согласовать схему/временную модель и версию проверки, без удаления полей из UI ради зелёного теста. |
+| QA-FINAL-004 / P2 harness | A09 | Fault-injection camera_unplugged берёт последний health любой компоненты и получает audio/noise_calibration вместо capture/camera_disconnected. Отдельный повтор FAIL. Фильтровать по компоненте и ждать нужное событие. |
+| QA-FINAL-005 / P2 harness | A09 | Static offline gate считает `audio/prepare.py`, `identity/prepare.py`, `uplink/client.py`, `uplink/demo_teacher.py` runtime downloads. Первые — явная подготовка моделей; остальные — разрешённый класс/демо. Уточнить границы статического аудита, сохранив динамический запрет внешней сети для автономного экзамена. |
+| QA-FINAL-006 / P2 отчёт harness | A09 | run_qa JUnit parser теряет non-strict XPASS: пишет PASS=356 вместо pytest PASS=354, XPASS=2. Исправленные QA-OBS-003/004 нельзя скрывать в PASS; отчёт FINAL_QA приводит фактические статусы. |
+| QA-WIN-003 / прежний P2 | A03 | Три прежних Windows FAIL повторились отдельно. Последующий C2 redelivered-command падает из-за отложенного BaseEventLoop.__del__, отдельно PASS: известный плавающий эффект no_network/Windows, а не доказанный дефект C2. |
+
+| QA-FINAL-007 / P1 тестовой приёмки | A03 | С реальными весами 7 дополнительных FAIL: phone_only/4 boxes_map/prepadded создают несовместимую с новой object-веткой конфигурацию (`object_class_names must not repeat phone classes`); deterministic ожидает 2 ONNX-вызова, фактически 8 при одинаковом итоговом результате. Все повторились отдельно. Обновить реальные тесты с учётом нескольких проходов и раздельных наборов классов; качество модели из этих FAIL не следует. |
+| QA-FINAL-008 / P2 теста UI | T03 | E2E ожидает bundled Chromium, которого нет. С QA-only выбором установленного Chrome он получает карточку/red/клип HTTP 206, но падает на strict locator `.t3-test-label`: после добавления provenance теперь 2 элемента. Уточнить селектор; оставшиеся шаги и рестарт этим прогоном не проверены. |
+
+| QA-FINAL-009 / P1 проверки типов | A01/A06 | Новый в f6525a6: `main/src/__tests__/backend.integration.test.ts:151–152`, TS18047: dsDone possibly null. Отдельный `tsc --project tsconfig.main.json --noEmit` повторяет FAIL. Добавить проверку ненулевого результата before field access в тесте; build и 107 shell-тестов проходят. |
+
+P0 видео пока не подтверждены: REPLAY/HTML ещё проверяются. LIVE preflight и калибровка PASS по капитану.
+
 ## Актуально: кандидат de7290509bf558d6488be84d2e0730b2b9ab104a, Windows 11
 
 Исходный прогон: `results/20261008T070227Z_candidate_de7290509bf5/`.

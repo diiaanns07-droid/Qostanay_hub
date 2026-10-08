@@ -1,0 +1,124 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______________ test_read_routes_valid_in_every_state[created] ________________
+
+backend = BackendProcess(proc=<Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...>, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 61020, "pid": 35048}\n', exit_code=None)
+api = <qorgau_qa.backend.Api object at 0x0000024C5B6C6030>, state = 'created'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+>       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191609-c85d326c', 'state': 'created', 'source': {'mode': 'synthetic', 'camera_..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+>           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191609-c85d326c',
+E                            'state': 'created',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:16:09.506948Z',
+E                            'started_at': None,
+E                            'finished_at': None,
+E                            'exam_started_t_ms': None,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'not_started',
+E                                            'targets': [],
+E                                            'current_target': None,
+E                                            'message_code': None,
+E                                            'updated_at': '2026-10-08T14:16:09.506948Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Экзамен не был начат: наблюдение не проводилось.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError
+=========================== short test summary info ===========================
+FAILED qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[created]
+1 failed in 1.78s

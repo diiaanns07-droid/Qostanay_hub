@@ -1,0 +1,62 @@
+[
+  {
+    "test": "qa/tests/test_e2e_synthetic.py::test_full_synthetic_flow",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-1.txt"
+  },
+  {
+    "test": "qa/tests/test_fault_injection.py::test_camera_unplugged_mid_exam_is_visible_and_session_survives",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-2.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[created]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-3.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[preflight]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-4.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[calibrating]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-5.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[ready]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-6.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[running]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-7.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[paused]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-8.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[finished]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-9.txt"
+  },
+  {
+    "test": "qa/tests/test_lifecycle_matrix.py::test_read_routes_valid_in_every_state[aborted]",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-10.txt"
+  },
+  {
+    "test": "qa/tests/test_offline.py::test_full_flow_offline_audit_guard",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-11.txt"
+  },
+  {
+    "test": "qa/tests/test_offline.py::test_no_download_calls_in_backend_runtime_source",
+    "exit": 1,
+    "log": "qa\\results\\final_a883e96\\qa-isolated-12.txt"
+  }
+]

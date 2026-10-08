@@ -1,0 +1,30 @@
+✔ health metadata distinguishes absent server from unknown and configured (1.241ms)
+✔ class state accepts the C2 fields and explicit unlock (0.2713ms)
+✔ malformed flags cannot silently become unlock or hide the microphone banner (0.1405ms)
+✔ invalid class state preserves a previous lock (0.9261ms)
+✔ class state survives session changes and valid unlock still works (0.2006ms)
+✔ class messages participate in envelope sequence without false resyncs (0.1347ms)
+✔ stale unlock is ignored; reconnect resets sequence for fresh class state (0.1937ms)
+✔ desk scan: laptop hints follow the 12 s countdown (0–4 tilt, 4–8 left, 8–12 right) (1.1744ms)
+✔ desk scan: USB camera has one hint; fixed camera means the teacher checks in the room (0.2433ms)
+✔ desk scan: variant -> query mode (fixed = no camera scan) (0.1501ms)
+✔ desk scan: student texts are built from state + objects, never 'нарушение' (1.9478ms)
+✔ FIXTURE desk scan: start -> recording -> clear; 'phone' label -> objects_found; skip needs the PIN (8364.5303ms)
+✔ before camera consent, module readiness does not claim a working camera or missing 1.1 modules (1.2973ms)
+✔ camera readiness follows preflight and a later health failure wins (0.2693ms)
+✔ keys keep separate blocked, detected-only, unsupported and unverified statuses (0.1828ms)
+✔ no capabilities, unsupported exam mode and backend loss cannot claim protection (0.8279ms)
+✔ synthetic and replay never claim to use the live camera (0.2288ms)
+✔ present audio/identity honor module health rather than the class mic flag (0.168ms)
+✔ identity row says what it is: same person as at the start, local, not identification (0.4779ms)
+✔ REPLAY end reaches the main UI and never leaks into another session (3.3039ms)
+✔ summary shows each reported zone without classifying incidents (0.7202ms)
+✔ missing or malformed zone is never shown as green (0.1643ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8452.6501

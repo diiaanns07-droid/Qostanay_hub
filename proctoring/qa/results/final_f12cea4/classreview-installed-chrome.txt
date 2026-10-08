@@ -1,0 +1,93 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________________ test_teacher_flow_in_browser_with_restart __________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-235/test_teacher_flow_in_browser_w0')
+
+    def test_teacher_flow_in_browser_with_restart(tmp_path):
+        env = _node_env()
+        if env is None:
+            pytest.skip("Node + Playwright + Chromium not available")
+        pytest.importorskip("cv2")
+        httpx = pytest.importorskip("httpx")
+        port, data, log = _free_port(), tmp_path / "data", tmp_path / "server.log"
+        base = f"http://127.0.0.1:{port}"
+        server = _start_server(port, data, log)
+        student = None
+        try:
+            c = httpx.Client(base_url=base)
+            assert c.post("/api/teacher/login", json={"pin": PIN}).status_code == 200
+            code = c.post("/api/teacher/session", json={"title": "e2e"}).json()["join_code"]
+            student = subprocess.Popen(
+                [sys.executable, "-m", "classreview.examples.fake_student", "--server", base, "--code", code, "--refuse", "2", "--run-seconds", "200"],
+                cwd=PROCTORING, stdout=open(tmp_path / "student.log", "w"), stderr=subprocess.STDOUT,
+            )
+            deadline = time.monotonic() + 20
+            while time.monotonic() < deadline:
+                st = c.get("/api/teacher/students").json()
+                if st and st[0]["incidents_total"] == 3:
+                    break
+                time.sleep(0.3)
+            assert st and st[0]["incidents_total"] == 3 and "_token" not in st[0]
+            main = _node("main", base, tmp_path, env)
+            failed = [s for s in main["steps"] if not s["ok"]]
+>           assert not failed, json.dumps(main, ensure_ascii=False, indent=1)
+E           AssertionError: {
+E              "phase": "main",
+E              "steps": [
+E               {
+E                "name": "three_episodes_listed",
+E                "ok": true,
+E                "detail": "Телефон в кадре | Долгий взгляд вниз | Второе лицо в кадре"
+E               },
+E               {
+E                "name": "timeline_bars",
+E                "ok": true,
+E                "detail": ""
+E               },
+E               {
+E                "name": "zone_reported_red",
+E                "ok": true,
+E                "detail": ""
+E               },
+E               {
+E                "name": "not_recorded_is_unavailable",
+E                "ok": true,
+E                "detail": "Клип недоступен: На компьютере студента клип этого эпизода не сохранён."
+E               },
+E               {
+E                "name": "not_requested_state",
+E                "ok": true,
+E                "detail": ""
+E               },
+E               {
+E                "name": "loading_or_available_after_request",
+E                "ok": true,
+E                "detail": "Клип загружается… (запрошен в 19:28:18)"
+E               },
+E               {
+E                "name": "exception",
+E                "ok": false,
+E                "detail": "locator.textContent: Error: strict mode violation: locator('.t3-test-label') resolved to 2 elements:\n    1) <p class=\"t3-test-label\">ИСТОЧНИК НЕИЗВЕСТЕН</p> aka getByRole('paragraph').filter({ hasText: 'ИСТОЧНИК НЕИЗВЕСТЕН' })\n    2) <p class=\"t3-test-label\">ТЕСТОВЫЙ КЛИП: не запись реального студен"
+E               }
+E              ],
+E              "clipResponses": [
+E               {
+E                "status": 206,
+E                "range": "bytes=0-"
+E               }
+E              ],
+E              "console": []
+E             }
+E           assert not [{'name': 'exception', 'ok': False, 'detail': 'locator.textContent: Error: strict mode violation: locator(\'.t3-test-l...ter({ hasText: \'ИСТОЧНИК НЕИЗВЕСТЕН\' })\n    2) <p class="t3-test-label">ТЕСТОВЫЙ КЛИП: не запись реального студен'}]
+
+classreview\tests\test_review_e2e.py:87: AssertionError
+============================== warnings summary ===============================
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED classreview/tests/test_review_e2e.py::test_teacher_flow_in_browser_with_restart
+1 failed, 1 warning in 6.58s
