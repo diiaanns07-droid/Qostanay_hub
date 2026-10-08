@@ -39,6 +39,7 @@ export interface GuardPlatform {
   isShortcutRegistered(accelerator: string): boolean;
   unregisterShortcut(accelerator: string): void;
   clearClipboard(): void;
+  displayCount(): number;
   /** Subscribe to display changes; returns an unsubscribe function. */
   onDisplayChange(cb: (kind: "added" | "removed" | "metrics") => void): () => void;
   platform: NodeJS.Platform;
@@ -76,6 +77,8 @@ export class ExamGuard implements Guard {
   private registrations: ShortcutRegistration[] = [];
   private throttle: KeyEventThrottle;
   private refocusTimer: NodeJS.Timeout | null = null;
+  private displayTimer: NodeJS.Timeout | null = null;
+  private lastDisplayCount: number | null = null;
   /** Last engage report (for the handoff/diagnostics; no user content). */
   lastEngage: { steps: Record<string, "ok" | "failed" | "skipped">; registrations: ShortcutRegistration[] } | null = null;
 
@@ -159,9 +162,10 @@ export class ExamGuard implements Guard {
         steps.print_screen_hotkey = "skipped";
       }
       step("display_watch", () => {
-        this.unsubDisplay = this.platform.onDisplayChange(() =>
-          this.emit("display_changed", "detected_only", "electron.screen_events", "os_session"),
-        );
+        this.lastDisplayCount = this.platform.displayCount();
+        this.unsubDisplay = this.platform.onDisplayChange(() => this.checkDisplays());
+        this.displayTimer = setInterval(() => this.checkDisplays(), 2_000);
+        this.displayTimer.unref();
       }, false);
     } catch (err) {
       this.releaseSync("engage_failed");
@@ -207,6 +211,9 @@ export class ExamGuard implements Guard {
     this.activeSession = null;
     if (this.refocusTimer) clearTimeout(this.refocusTimer);
     this.refocusTimer = null;
+    if (this.displayTimer) clearInterval(this.displayTimer);
+    this.displayTimer = null;
+    this.lastDisplayCount = null;
     const w = this.win();
     const attempt = (name: string, fn: () => void) => {
       try {
@@ -252,6 +259,19 @@ export class ExamGuard implements Guard {
   }
 
   // ------------------------------------------------------------- window hooks (wired by main)
+
+  private checkDisplays(): void {
+    if (!this.active) return;
+    try {
+      const count = this.platform.displayCount();
+      if (count !== this.lastDisplayCount) {
+        this.lastDisplayCount = count;
+        this.emit("display_changed", "detected_only", "electron.display_poll", "os_session");
+      }
+    } catch {
+      this.emit("enforcement_error", "failed", "electron.display_poll", "os_session");
+    }
+  }
 
   /** before-input-event of the exam window. Returns true when the event must be prevented. */
   onBeforeInput(input: KeyInput): boolean {

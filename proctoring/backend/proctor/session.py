@@ -565,6 +565,14 @@ class SessionRuntime:
             )
         counts: dict[str, int] = {}
         for item in caps.items:
+            if item.mechanism in ("electron.display_count.multiple", "electron.display_count.unavailable"):
+                return PreflightCheck(
+                    check_id=PreflightCheckId.ENVIRONMENT_PROTECTION, status=CheckStatus.FAIL,
+                    required=required, message_code="environment_condition_failed",
+                    message_ru=item.note_ru or "Не пройдена проверка защиты среды",
+                    details={"mechanism": item.mechanism},
+                )
+        for item in caps.items:
             counts[item.status.value] = counts.get(item.status.value, 0) + 1
         ok = caps.exam_mode_supported and counts.get("blocked", 0) > 0
         status = CheckStatus.WARN if ok and len(counts) > 1 else (CheckStatus.PASS if ok else CheckStatus.FAIL)

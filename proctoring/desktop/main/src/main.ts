@@ -32,6 +32,7 @@ import { fail, shellError } from "./errors";
 import { buildCapabilities, parseVerificationRecords, summarize, type NativeHelperInfo, type PlatformInfo, type ProbeResults, type VerificationRecord } from "./environment/capabilities";
 import { EnvironmentEventQueue } from "./environment/events";
 import { ExamGuard, type GuardPlatform } from "./environment/guard";
+import { withDisplayCheck } from "./environment/preflight";
 import { checkHelper, NativeHelper } from "./environment/native";
 import { createElectronProbeDriver } from "./environment/probe-electron";
 import { probeSummary, runSelfTest } from "./environment/probe";
@@ -95,6 +96,7 @@ const guardPlatform: GuardPlatform = {
   isShortcutRegistered: (acc) => globalShortcut.isRegistered(acc),
   unregisterShortcut: (acc) => globalShortcut.unregister(acc),
   clearClipboard: () => clipboard.clear(),
+  displayCount: () => screen.getAllDisplays().length,
   onDisplayChange: (cb) => {
     const added = () => cb("added");
     const removed = () => cb("removed");
@@ -156,7 +158,7 @@ async function onBackendReady(conn: BackendConnection): Promise<void> {
   log.info(`backend connected (launch #${conn.launchId})`);
 }
 
-async function reportCapabilities(): Promise<void> {
+async function reportCapabilities(strict = false): Promise<void> {
   capabilities = buildCapabilities({
     platform: platformInfo,
     shellVersion: app.getVersion(),
@@ -165,10 +167,16 @@ async function reportCapabilities(): Promise<void> {
     records: verification,
     helper: nativeInfo,
   });
+  let displayCount = 0;
+  try { displayCount = screen.getAllDisplays().length; } catch { /* unknown is a preflight failure */ }
+  capabilities = withDisplayCheck(capabilities, displayCount);
   log.info(`capability matrix: ${JSON.stringify(summarize(capabilities))}`);
   if (!supervisor.connection) return;
   const r = await client.json("PUT", BackendClient.path("environment", "capabilities"), capabilities);
-  if (!r.ok) log.error(`PUT capabilities failed: ${r.error.code} ${r.error.message}`);
+  if (!r.ok) {
+    log.error(`PUT capabilities failed: ${r.error.code} ${r.error.message}`);
+    if (strict) throw new Error("Не удалось обновить проверку защиты среды");
+  }
 }
 
 // ---------------------------------------------------------------- emergency exit / release
@@ -218,6 +226,7 @@ function registerIpc(): void {
     machine,
     operator,
     capabilities: () => capabilities,
+    refreshEnvironment: () => reportCapabilities(true),
     healthMetadata: () => ({
       computer_name: hostname().slice(0, 64),
       class_configured: !!(process.env.QORGAU_CLASS_SERVER?.trim() && process.env.QORGAU_CLASS_CODE?.trim()),
