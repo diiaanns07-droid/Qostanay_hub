@@ -12,4 +12,17 @@ Branch `codex/adal-unified-launch`, base `8302d14`; assigned origin checked: `ht
 
 Validation: `test_unified_launcher.py` **11 PASS** on Windows PowerShell 5.1. Temporary copied scripts execute actual environment/root/build validation; only process/probe/wait functions are stubbed. Covers explicit Enforce/default-off, standalone delegation/current-source selection, no app in CheckOnly, bad option rejection, missing helper/models, stale build rejection, optional SHA failure, compatibility flags, BOM and parser. No Electron/device/network/hook launched by these tests. Initial sandbox temp-directory restriction required bounded approved test escalation.
 
-Next: run safe existing launcher parse/check-only/error checks and PowerShell 7 regression, verify real canonical CheckOnly/current-SHA report, then report final commit for coordinator integration/push. Enforce remains a request; actual native blocking and combined LIVE CV require manual target-machine acceptance.
+Checkpoint commit: `a5ff87044096ee14d0bc35673652cb6079b6c3b1`.
+
+## Final validation
+
+- New process-stub suite: **11/11 PASS Windows PowerShell 5.1**, **11/11 PASS PowerShell 7**. Actual production functions choose root/Python/environment/build paths; no production testing bypass was added.
+- Existing `test_launchers.py` selected parser/bad server-code-Python/whitespace-label checks: **3/3 PASS**. Server/backend runtime tests were intentionally not executed in this assignment.
+- Actual canonical `Start-Adal -Role Teacher -ExpectedSha <full checkpoint SHA> -CheckOnly -Python <explicit shared test venv>`: **PASS**, prints the full actual SHA, `dirty=False`, selected checkout source and readable Russian; imports only, no C1 listener.
+- Actual canonical `Start-Adal -Role Student -BackendOnly -CheckOnly` with synthetic join code: **PASS**; prints selected source, masks code, reports no camera/microphone/hooks/window/network. Backend service was not started.
+- Short ExpectedSha is rejected by the 40-character parameter contract; missing Git metadata with explicit ExpectedSha fails closed. Stale source/build and missing model checks remain covered by negative fixture tests.
+- `git diff --check` clean; four PS entrypoints have UTF-8 BOM, and redirected console output remains valid UTF-8.
+
+No real Electron, camera, microphone, native hook, service deployment, firewall change or physical Enforce test was executed. Enforce remains a request; actual native blocking and simultaneous LIVE CV require the restored manual target-machine checklist. Standalone's strict assets preflight is tested with the copied process fixture here; this isolated checkout has no installed desktop/model assets, so no full standalone launch is claimed.
+
+Next: coordinator integrates this branch (checkpoint plus final handoff commit), rebuilds the integrated desktop, publishes the integration branch and uses the single Start-Adal entrypoint for explicitly authorized manual LIVE+Enforce acceptance. No push by this agent.
