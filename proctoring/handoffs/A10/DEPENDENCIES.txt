@@ -1,0 +1,47 @@
+A10 -> A01/A09/A02, 2026-10-08
+Base: A01 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49; contract qorgau.v1.
+
+8 OCTOBER SUBMISSION ADDITIONS
+- A01: add proctoring/docs/submission/ to A10 paths in OWNERSHIP.json. Captain explicitly granted this path.
+  A10 did not edit the shared ownership map. Existing checker will flag this prefix until A01 updates it.
+- A01/captain: de7290509bf558d6488be84d2e0730b2b9ab104a was found on origin and A10's SYNTHETIC API rehearsal
+  passed on a detached scratch checkout (9.08 s, 14 PASS / 3 NOT_RUN). Send new 1.1 baseline when ready.
+  Current slide-3 statuses still use the last A09 verdict and remain partial; no A09 candidate sign-off yet.
+- A09: A01's handoff on de72905 reports 10 strict XPASS for fixed QA-BUG-001..005 plus the static network
+  scanner flag on A03 phone/prepare.py. Review these in your own branch, publish candidate verdict.
+- A05/A08/A07/A09: implement and verify zone-rule-1 / overview before a real zone-screen claim.
+  Confirm handling of unavailable/zero-duration coverage. Wording says green has no episodes, while the
+  literal algorithm allows 1-2 low and coverage >=80%; A10 documents the literal rule and displays counts.
+  Red/yellow precede grey; show coverage separately. Human review must not change the zone.
+- A09/captain: send manual results for the exact same candidate (template in docs/submission/).
+  Existing rehearse.py checks v1 API orchestration; it does not validate zones/overview contract 1.1.
+- Captain: record MP4 from the shot list or use the labelled 20:00 fallback; retain media outside Git.
+  Set final team name/names if desired, choose submission branch, submit by 23:00 Asia/Qyzylorda.
+  Official supplied deadline is 23:59. A10 did not submit the form or publish personal recordings.
+
+After 9 October: network classroom aggregation, broader CV evaluation and final live rehearsal.
+
+1. A01: integrate this branch's A10-owned paths. No changes to shared config are needed:
+   Settings.exam_path already resolves demo/exams/demo_exam.json; exam_id stays demo-exam-1.
+   Run demo/verify_demo.py and demo/rehearse.py on your exact candidate SHA after integration.
+
+2. A01: candidate SHA + integrated module SHAs are required for a final LIVE/REPLAY rehearsal.
+   A10 has not merged others' modules and will not declare the synthetic bootstrap a complete product.
+
+3. A02: use your existing record/replay-check tooling. A10 provides its invocation and recording
+   sequence in demo/replay/README.md. No real camera was opened/recorded by this delivery.
+   A consented local recording and interval labels are needed before REPLAY can be checked.
+
+4. A06/A09: provide per-shortcut Windows results and tested emergency release before the pitch
+   says an OS shortcut is blocked. Current A06 handoff says real Electron/Windows enforcement NOT RUN.
+
+5. A09: attach verified metrics to candidate SHA, equipment and sample size. Do not substitute
+   API-test counts for CV quality. A10's latest measured synthetic API rehearsal is 5.75 seconds; it does not
+   measure human presentation duration or runtime performance of the full CV pipeline.
+
+6. Regulation correction: supplied Russian regulation page 4 clause 5.6 gives 3 minutes for
+   presentation+demo, 3 for questions. This takes precedence over the older prompt's 3-5 minute wording.
+   Clause 5.3 gives submission 8 October 23:59. The 16 October date is Demo Day, not first submission.
+
+7. A08: bootstrap returns 501 for HTML/JSON reports. Both are visibly NOT_RUN in A10's record.
+   Rehearse after the real evidence module is integrated; its existing export endpoints are used.

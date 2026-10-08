@@ -1,0 +1,29 @@
+{
+  "name": "g08_phone_reappearances_merged",
+  "requirement": "dedup: a phone that briefly disappears and returns is ONE incident, not three alerts",
+  "mode": "synthetic",
+  "phone": [
+    {"from": 0, "to": 1000, "step": 125, "visible": "absent"},
+    {"from": 1000, "to": 3000, "step": 125, "visible": "present"},
+    {"from": 3000, "to": 4000, "step": 125, "visible": "absent"},
+    {"from": 4000, "to": 5000, "step": 125, "visible": "present"},
+    {"from": 5000, "to": 5500, "step": 125, "visible": "absent"},
+    {"from": 5500, "to": 6500, "step": 125, "visible": "present"},
+    {"from": 6500, "to": 12000, "step": 125, "visible": "absent"}
+  ],
+  "attention": [{"from": 0, "to": 12000, "step": 100, "direction": "center"}],
+  "finish": 12000,
+  "derivation": [
+    "opens at 2000 (t_start 1000); absent from 3000; returns at 4000 (4000 - 2875 = 1125 < merge_gap 2000) -> same incident, appearances 2",
+    "returns at 5500 (5500 - 4875 = 625) -> appearances 3 >= repeat_segments 3 -> medium raised to high (repeated)",
+    "last present 6375; closes at 8375 -> [1000, 6375], 5375 ms; present samples 16 + 8 + 8 = 32"
+  ],
+  "expected": [
+    {
+      "rule_id": "phone_visible", "t_start_ms": 1000, "t_end_ms": 6375, "end_reason": "condition_cleared",
+      "priority": "high", "observation_count": 32, "related_rules": [],
+      "facts": {"phone_visible_ms": 5375.0, "appearances": 3, "priority_basis": "base_medium,repeated"},
+      "summary_contains": ["Телефон виден 5,4 с", "появлений: 3"]
+    }
+  ]
+}

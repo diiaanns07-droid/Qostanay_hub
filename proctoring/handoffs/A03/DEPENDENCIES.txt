@@ -1,0 +1,43 @@
+A03 -> A01 requests (contracts/dependencies/shared files are A01's; A03 changed none of them)
+Baseline: BOOTSTRAP 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49 (branch claude/nifty-ride-ux8e4j), contract qorgau.v1 1.0.0.
+
+1. [integration, required] Two A01 tests encode "no module integrated" and fail as soon as proctor.phone exists:
+   - backend/tests/test_lifecycle_api.py::test_health_reports_missing_modules_honestly
+     asserts codes[phone] == "module_not_integrated"; with A03 the phone code is the honest load result:
+     "model_missing" (weights absent), "model_loaded" (weights verified), "model_invalid", "manifest_invalid", ...
+     Proposal: for integrated modules assert status != ok OR code in the module's documented set; or build the
+     app with module_overrides that hide modules for this test.
+   - backend/tests/test_lifecycle_api.py::test_live_never_falls_back_to_synthetic
+     uses Settings() default models_dir; on a machine WITH the verified weights phone_model preflight is "pass",
+     so the assertion "phone_model status == fail" fails there (passes where weights are absent). Proposal: use
+     Settings(models_dir=tmp_path / "models") in _settings() so the test does not depend on the developer machine.
+   Evidence: see handoffs/A03/STATUS.md "Checks" (full pytest run with and without weights).
+
+2. [optional, interface] ExportManifest.models (A08 report) needs the ModelManifest of loaded models. PhoneAnalyzer
+   exposes `.manifest` (ModelManifest | None, set after load) and `runtime_stats()` (measured infer/process ms p50/p95,
+   counters) as extra public attributes. If A01 wants this in the protocol, add e.g.
+   `FrameAnalyzer.model_manifests() -> list[ModelManifest]`; until then A08 can read
+   backend/proctor/phone/models.manifest.json (committed, validates as ModelManifest).
+
+3. [optional, settings] Phone thresholds live in proctor.phone.PhoneConfig with env overrides QORGAU_PHONE_<FIELD>
+   (input_size, conf_threshold, nms_iou, intra_op_threads, raise_zone_y_max, ...). The value set is identified by
+   Producer.config_version ("phone-cfg-1.<sha12>"). If A01 prefers all config in Settings, add a single
+   `phone_config_path: Path | None` (JSON) instead of many fields; A03 will read it.
+
+4. [info, scheduling] Inference period = A01's settings.phone_max_fps (8) via capture max_fps. Measured on the
+   cloud container (4 vCPU, 2 ORT threads, 640x480 rect input): infer p50 ~55-65 ms, p95 ~85-135 ms => 8 fps is
+   feasible on this CPU; the Windows demo laptop is NOT measured (A09/A10: run `python -m proctor.phone.prepare --check`
+   and a live session there and read runtime_stats()/RuntimeMetrics). If the laptop is slower:
+   QORGAU_PHONE_INPUT_SIZE=480 (smaller phones get missed more often) or QORGAU_PHONE_INTRA_OP_THREADS.
+
+5. [info, dependencies] No new runtime dependency: onnxruntime 1.29.0 + opencv-contrib 4.13 + numpy from the existing
+   lock are enough. No torch/ultralytics anywhere (the ONNX file is the official Ultralytics release asset). Model
+   preparation is an explicit step before the exam: `python -m proctor.phone.prepare --download` (network) or
+   `--from-file <copy>` (offline); the runtime never downloads.
+
+6. [info, license] Model license is AGPL-3.0 (Ultralytics YOLO11n). Recorded in models.manifest.json and health
+   details. Needs a decision by the team before any distribution beyond the local hackathon demo.
+
+7. [optional, calibration] phone_raised uses a FRAME-relative zone (center y <= 0.60). If A04's calibration/face box
+   ever becomes available to analyzers through a contract, the zone could be anchored to the face/shoulders; not
+   needed for v1.

@@ -1,0 +1,135 @@
+{
+  "profile": "desktop",
+  "tested_sha": "de7290509bf558d6488be84d2e0730b2b9ab104a",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "checks": [
+    {
+      "check": "python_3_12",
+      "status": "PASS",
+      "detail": "3.12.14"
+    },
+    {
+      "check": "dependency:fastapi",
+      "status": "PASS",
+      "detail": "installed=0.141.1; pinned=0.141.1"
+    },
+    {
+      "check": "dependency:uvicorn",
+      "status": "PASS",
+      "detail": "installed=0.53.0; pinned=0.53.0"
+    },
+    {
+      "check": "dependency:websockets",
+      "status": "PASS",
+      "detail": "installed=17.1; pinned=17.1"
+    },
+    {
+      "check": "dependency:pydantic",
+      "status": "PASS",
+      "detail": "installed=2.13.5; pinned=2.13.5"
+    },
+    {
+      "check": "dependency:numpy",
+      "status": "PASS",
+      "detail": "installed=2.4.6; pinned=2.4.6"
+    },
+    {
+      "check": "dependency:opencv-contrib-python",
+      "status": "PASS",
+      "detail": "installed=4.13.0.92; pinned=4.13.0.92"
+    },
+    {
+      "check": "dependency:mediapipe",
+      "status": "PASS",
+      "detail": "installed=0.10.35; pinned=0.10.35"
+    },
+    {
+      "check": "dependency:onnxruntime",
+      "status": "PASS",
+      "detail": "installed=1.29.0; pinned=1.29.0"
+    },
+    {
+      "check": "file:backend/proctor/__main__.py",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "file:contracts/python/proctor_contracts/v1.py",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "module:capture",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "module:phone",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "module:attention",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "module:fusion",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "module:evidence",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "file:desktop/dist/main/main.cjs",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "file:desktop/dist/preload/preload.cjs",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "file:desktop/dist/renderer/index.html",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "file:desktop/node_modules/electron/dist/electron.exe",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "file:demo/exams/demo_exam.json",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "model:phone",
+      "status": "PASS",
+      "reason": "checksum_verified",
+      "file": "phone/yolo11n.onnx",
+      "sha256": "634279b40c07c6391472c51ad45b81ebc48706a9a1fe72dd3396322acd0c053b"
+    },
+    {
+      "check": "model:attention",
+      "status": "PASS",
+      "reason": "checksum_verified",
+      "file": "attention/face_landmarker.task",
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff"
+    },
+    {
+      "check": "target_windows",
+      "status": "PASS",
+      "detail": "Windows-11-10.0.26200-SP0"
+    }
+  ],
+  "ready_for_launch": true,
+  "cv_accuracy_verified": false,
+  "windows_enforcement_verified": false,
+  "note": "Files, imports and checksums only. Camera, Electron rendering and restrictions need candidate acceptance tests."
+}

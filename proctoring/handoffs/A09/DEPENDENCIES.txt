@@ -1,0 +1,24 @@
+A09 ? A01/A06. Candidate de7290509bf558d6488be84d2e0730b2b9ab104a, Windows 11, 2026-10-08.
+
+1. P0 QA-WIN-007: real Electron exits after the successful startup probe closes its last window.
+   main.ts has unconditional window-all-closed => app.quit() before mainWindow exists.
+   Proposed owner patch: proctoring/qa/fixes/QA-WIN-007-A06-startup.patch.
+   git apply --check PASS; NOT applied to product; not runtime-verified.
+   Please integrate the lifecycle fix and send a NEW A01 candidate SHA.
+   Latest fetched A06 7104aa8 still contains the unconditional handler; A01 still de72905.
+
+2. P0 for full-case demo QA-WIN-001: native helper absent. Do not claim Alt+Tab/Win/PrtScn
+   blocking or foreign-window identification. No Windows policy/registry change is authorized.
+   QA-WIN-002 (P1): refuse engage when the emergency hotkey is not actually registered.
+
+3. A03/A08: fix Windows tests (QA-WIN-003/004); A06: update late-event expectation (QA-WIN-005).
+   Raw baseline remains FAIL. These test failures are separate from the observed startup P0.
+
+4. A09 delivery is ready to cherry-pick: updated harness 363 PASS / 6 XFAIL / 1 SKIP;
+   models, locked environments, camera, Electron build, diagnostic startup prepared on laptop.
+   Do NOT use --diagnostic-no-selftest as a LIVE acceptance bypass: all capabilities unverified.
+   No verification records fabricated, no foreign product code patched.
+
+5. Manual results are still pending. Use qa/scenarios/LIVE_TONIGHT.md AFTER startup is fixed.
+   First test recovery; native enforcement remains off. A09 will enter only user-reported
+   results in ACCEPTANCE_MATRIX.md and route failures to owners.

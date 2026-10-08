@@ -1,0 +1,58 @@
+{
+  "dataset_id": "qorgau-phone-eval-v0",
+  "owner": "A03",
+  "updated": "2026-10-08",
+  "status": "PLANNED — no exam-webcam clips exist yet; clip/event-level accuracy is NOT EVALUATED",
+  "rules": [
+    "Only licensed public material or clips recorded by volunteers with written consent for this evaluation.",
+    "Media (frames, clips) stays OUTSIDE Git; this file and clip manifests reference them by path + sha256.",
+    "No faces of non-consenting people; delete raw recordings after the hackathon unless consent says otherwise.",
+    "Split by subject_group (person + recording session): frames of one clip never appear in both tune and test.",
+    "Thresholds are chosen on 'tune' only; report 'test' with denominators, condition range and matching rule.",
+    "A small sample supports a demo statement ('worked in N of M recorded clips under conditions X'), not a production accuracy claim."
+  ],
+  "matching_rule": {
+    "event": "same signal, temporal overlap >= 200 ms after widening the labelled event by 500 ms on each side; merge predicted runs with gaps <= 500 ms; drop predicted runs < 250 ms",
+    "image": "IoU >= 0.5, greedy by score, one prediction per ground-truth box"
+  },
+  "positive_categories": [
+    {"id": "phone_in_hand_chest", "signal": "phone_visible", "description": "phone held at chest height in front of the laptop, screen facing the student", "target_clips": 6, "collected": 0},
+    {"id": "phone_raise_from_lap", "signal": "phone_raised", "description": "phone lifted from lap/desk (out of view) to face height within ~1 s", "target_clips": 6, "collected": 0},
+    {"id": "phone_back_to_screen", "signal": "possible_screen_capture", "description": "phone held up with its back (camera) toward the monitor/webcam, steady >= 1 s", "target_clips": 6, "collected": 0},
+    {"id": "phone_screen_to_webcam", "signal": "phone_visible", "description": "phone screen (front) facing the webcam", "target_clips": 4, "collected": 0},
+    {"id": "frame_edge", "signal": "phone_visible", "description": "phone partly outside the frame (left/right/bottom edge)", "target_clips": 4, "collected": 0},
+    {"id": "small_object", "signal": "phone_visible", "description": "phone far from the camera / small in frame (arm's length, low)", "target_clips": 4, "collected": 0},
+    {"id": "reflections", "signal": "phone_visible", "description": "glossy phone screen with glare / window reflections", "target_clips": 3, "collected": 0},
+    {"id": "low_light", "signal": "phone_visible", "description": "dim room lit mainly by the laptop screen", "target_clips": 4, "collected": 0}
+  ],
+  "hard_negative_categories": [
+    {"id": "calculator", "description": "handheld calculator held and raised like a phone", "target_clips": 3, "collected": 0},
+    {"id": "wallet", "description": "wallet / card holder in hand", "target_clips": 3, "collected": 0},
+    {"id": "glasses", "description": "taking glasses off/on, holding a glasses case", "target_clips": 3, "collected": 0},
+    {"id": "notebook", "description": "paper notebook / small book raised to read", "target_clips": 3, "collected": 0},
+    {"id": "normal_exam", "description": "student typing/reading/thinking with no objects (long, for false alarms per hour)", "target_clips": 4, "collected": 0}
+  ],
+  "available_sources": [
+    {
+      "id": "coco_val2017",
+      "use": "detector-only sanity check on generic photos (held out from YOLO11n training, which used COCO train2017)",
+      "obtained_from": "https://github.com/ultralytics/assets/releases/download/v0.0.0/coco2017val.zip",
+      "sha256": "a9291310cd3ecd93f05e8c5815ba62a64215646ebab0bb39b7a10ef4af500b1f",
+      "license": "COCO annotations CC BY 4.0; images remain under their individual Flickr licenses (listed in instances_val2017.json); not redistributed, not committed",
+      "content": "5000 images; 214 with 262 'cell phone' boxes",
+      "limitations": "not the exam webcam view; no temporal signals; no calculator class in COCO"
+    },
+    {
+      "id": "coco128",
+      "use": "pipeline smoke only (these are COCO TRAIN images seen by the model — never an accuracy number)",
+      "obtained_from": "https://github.com/ultralytics/assets/releases/download/v0.0.0/coco128.zip",
+      "sha256": "61e5e3028863d8ffc3b81d6a514603954889f0edd5e4b44c4ce60b2da99aeb8e",
+      "license": "COCO terms as above; not committed",
+      "content": "128 images; 5 with 8 'cell phone' boxes"
+    }
+  ],
+  "unavailable_in_sandbox": [
+    "Wikimedia Commons / Open Images / Hugging Face hosts are blocked by the A03 cloud sandbox network policy",
+    "No camera in the sandbox: volunteer clips must be recorded on the demo laptop (via A02 capture/replay) by the team"
+  ]
+}

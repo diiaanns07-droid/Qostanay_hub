@@ -1,0 +1,35 @@
+{
+  "name": "g07_face_missing_and_second_face",
+  "requirement": "2.2d/2.2e: absence of the face and a second face; a short second-face flicker is ignored",
+  "mode": "synthetic",
+  "phone": [{"from": 0, "to": 20000, "step": 125, "visible": "absent"}],
+  "attention": [
+    {"from": 0, "to": 2000, "step": 100, "face_count": 1},
+    {"from": 2000, "to": 5000, "step": 100, "face_count": 0},
+    {"from": 5000, "to": 9000, "step": 100, "face_count": 1},
+    {"from": 9000, "to": 9300, "step": 100, "face_count": 2},
+    {"from": 9300, "to": 11000, "step": 100, "face_count": 1},
+    {"from": 11000, "to": 13000, "step": 100, "face_count": 2},
+    {"from": 13000, "to": 20000, "step": 100, "face_count": 1}
+  ],
+  "finish": 20000,
+  "derivation": [
+    "face_count 0 at 2000..4900: opens at 4000 (span 2000), closes at 6900 (6900 - 4900 >= merge_gap 2000) -> [2000, 4900], 2900 ms, base medium",
+    "two faces 9000..9200: span 200 < min_duration 1000, reset when t - 9200 > 500 -> no incident",
+    "two faces 11000..12900: opens at 12000, closes at 15900 (merge_gap 3000) -> [11000, 12900], base high"
+  ],
+  "expected": [
+    {
+      "rule_id": "face_missing", "t_start_ms": 2000, "t_end_ms": 4900, "end_reason": "condition_cleared",
+      "priority": "medium", "observation_count": 30, "related_rules": [],
+      "facts": {"face_missing_ms": 2900.0},
+      "summary_contains": ["Лицо не обнаружено в кадре 2,9 с"]
+    },
+    {
+      "rule_id": "multiple_faces", "t_start_ms": 11000, "t_end_ms": 12900, "end_reason": "condition_cleared",
+      "priority": "high", "observation_count": 20, "related_rules": [],
+      "facts": {"multiple_faces_ms": 1900.0, "max_face_count": 2},
+      "summary_contains": ["несколько лиц (до 2) в течение 1,9 с"]
+    }
+  ]
+}

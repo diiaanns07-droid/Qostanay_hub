@@ -1,0 +1,31 @@
+{
+  "product": "Qorgau Exam",
+  "candidate": "r2-candidate-1",
+  "contract": "qorgau.v1",
+  "contract_version": "1.0.1",
+  "contract_note": "1.0.1 = no wire/schema change vs 1.0.0; documents the HTTP status table, re-entry transitions and pipeline-fault reporting",
+  "integration_branch": "claude/nifty-ride-ux8e4j",
+  "candidate_sha": "reported out-of-band by A01 after push (a commit cannot contain its own SHA)",
+  "bootstrap_sha": "35bea4c7b28d2c622cf7ba26ff354273cc7b6c49",
+  "integrated_modules": [
+    {"role": "A01", "what": "QA-BUG-001..005 fixes + composition", "branch": "claude/nifty-ride-ux8e4j", "sha": "29cadde6602e67dfee638e38213255fbdad8db0f"},
+    {"role": "A02", "what": "capture", "branch": "claude/pensive-pasteur-wnjd2n", "sha": "7769f13bc7db83aee0a0d477060292dfb0fc859e"},
+    {"role": "A03", "what": "phone", "branch": "claude/focused-babbage-29mbea", "sha": "c0275a2136f19ee7e6e941e904a420ab20e7e370"},
+    {"role": "A04", "what": "attention", "branch": "claude/compassionate-goodall-8mxley", "sha": "40144441e4ff36931c4909d2eea5980aad563a6d"},
+    {"role": "A05", "what": "fusion", "branch": "claude/zen-mayer-e0tivt", "sha": "8f763a1f616263d0ac11ebffcb1ccc8ecddab697"},
+    {"role": "A08", "what": "evidence", "branch": "claude/focused-mendel-4940jx", "sha": "5509950e38c622ae544d40c75d4b8fdba7256b82"},
+    {"role": "A06", "what": "shell", "branch": "claude/inspiring-feynman-h9n9v8", "sha": "62a7fb1e42bc723152f49338ba4f816dfcad9334"},
+    {"role": "A07", "what": "renderer", "branch": "claude/upbeat-gauss-798nt9", "sha": "3fef6fb80d4106b5faad1609e42f31981401da13"},
+    {"role": "A10", "what": "demo", "branch": "codex/proctor-A10", "sha": "de71342df7ac8758e355009004593ef71ca38690"},
+    {"role": "A09", "what": "qa + packaging (incl. Windows tooling of the continuation)", "branch": "codex/proctor-A09", "sha": "e01fff54db0220b963df2282fe3362735f589078"}
+  ],
+  "integration_method": "git merge --no-ff of each pinned SHA in order A02, A03, A04, A05, A08, A06, A07, A10, A09; every delivery verified as a BOOTSTRAP descendant touching only its OWNERSHIP paths (verify_ownership.py PASS for all 9); zero merge conflicts; no owner file edited by A01",
+  "run": {
+    "setup": "see proctoring/README.md (Python 3.12 venv + requirements/full.txt, desktop npm ci)",
+    "models": "python -m proctor.phone.prepare --download (or --from-file) ; python -m proctor.attention.model_tool fetch ; then --check / verify offline",
+    "backend_selfcheck": "python -m proctor smoke",
+    "desktop": "cd desktop && npm run build && npm start (Electron, Windows: NOT RUN by A01)",
+    "windows_launcher": "packaging/launch-windows.ps1 (A09)",
+    "qa_gate": "python qa/run_qa.py --with-baseline --label candidate --expected-sha <CANDIDATE_SHA>"
+  }
+}

@@ -16,6 +16,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import socket
 import sys
 import threading
@@ -25,6 +26,24 @@ from proctor_contracts.v1 import CONTRACT_ID, CONTRACT_VERSION
 from .settings import BACKEND_VERSION, Settings
 
 READY_PREFIX = "QORGAU_READY "
+_QUERY_RE = re.compile(r"\?[^\s\"']*")
+
+
+class StripQueryFilter(logging.Filter):
+    """QA-BUG-001: uvicorn logs WebSocket handshakes as 'WebSocket /path?query'. Tokens never belong in a URL,
+    but if a client misplaces one it must not reach the log: drop every query string from the record."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple) and record.args:
+            record.args = tuple(_QUERY_RE.sub("", a) if isinstance(a, str) else a for a in record.args)
+        if isinstance(record.msg, str) and "?" in record.msg:
+            record.msg = _QUERY_RE.sub("", record.msg)
+        return True
+
+
+def install_log_filters() -> None:
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "websockets", "websockets.server"):
+        logging.getLogger(name).addFilter(StripQueryFilter())
 
 
 def _bind(host: str, port: int) -> socket.socket:
@@ -76,6 +95,7 @@ def serve(args: argparse.Namespace) -> int:
     app = create_app(settings, token, on_ready=on_ready)
     config = uvicorn.Config(app, log_level=settings.log_level.lower(), access_log=False, lifespan="on", log_config=None, timeout_graceful_shutdown=5)
     server = uvicorn.Server(config)
+    install_log_filters()
 
     if args.token_stdin or args.exit_on_stdin_eof:
 
