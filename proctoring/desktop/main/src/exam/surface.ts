@@ -222,6 +222,15 @@ export class ExamSurface {
     if (this.attached && this.view && w && !w.isDestroyed()) w.contentView.removeChildView(this.view);
     this.attached = false;
   }
+  private async completeLifecycle(operation: Promise<unknown>): Promise<void> {
+    let timer: NodeJS.Timeout | undefined;
+    try {
+      await Promise.race([operation, new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("exam lifecycle acknowledgement timed out")), 1500);
+        timer.unref();
+      })]);
+    } finally { if (timer) clearTimeout(timer); }
+  }
   private suspendView(): void {
     this.networkOpen = false;
     this.detach();
@@ -244,10 +253,10 @@ export class ExamSurface {
     const ses = view.webContents.session;
     this.transition = this.transition.then(async () => {
       if (this.view !== view) return;
-      await Promise.all([
+      await this.completeLifecycle(Promise.all([
         ses.closeAllConnections(),
         view.webContents.debugger.sendCommand("Page.setWebLifecycleState", { state: "frozen" }),
-      ]);
+      ]));
     }).catch(() => this.lifecycleFailed(view));
   }
   private resumeView(): void {
@@ -257,7 +266,7 @@ export class ExamSurface {
     const id = ++this.transitionId;
     this.transition = this.transition.then(async () => {
       if (this.view !== view || id !== this.transitionId) return;
-      await view.webContents.debugger.sendCommand("Page.setWebLifecycleState", { state: "active" });
+      await this.completeLifecycle(view.webContents.debugger.sendCommand("Page.setWebLifecycleState", { state: "active" }));
       // A second lock or policy/session replacement can arrive while thawing.
       if (this.view !== view || id !== this.transitionId) return;
       this.suspended = false;

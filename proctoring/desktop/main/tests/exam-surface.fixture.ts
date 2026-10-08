@@ -212,6 +212,25 @@ const run = async () => {
   assert.match(surface.status.message, /Несохранённые ответы/);
   surface.setBlocked("class-lock", false); await ready(); wc = view().webContents;
   record("WebSocket document explicitly falls back to destruction; no persistent socket remains hidden");
+  const freezeCommands = wc.debugger.sendCommand.bind(wc.debugger);
+  wc.debugger.sendCommand = (method, params, sessionId) => method === "Page.setWebLifecycleState"
+    ? new Promise(() => {}) : freezeCommands(method, params, sessionId);
+  surface.setBlocked("class-lock", true);
+  assert.equal(window.contentView.children.length, 0);
+  await until(() => wc.isDestroyed(), "unacknowledged freeze destroys document within bounded deadline");
+  assert.equal(surface.status.phase, "error");
+  surface.setBlocked("class-lock", false); await ready(); wc = view().webContents;
+  const thawCommands = wc.debugger.sendCommand.bind(wc.debugger);
+  wc.debugger.sendCommand = (method, params, sessionId) => method === "Page.setWebLifecycleState" && params?.state === "active"
+    ? new Promise(() => {}) : thawCommands(method, params, sessionId);
+  surface.setBlocked("class-lock", true);
+  surface.setBlocked("class-lock", false);
+  assert.equal(window.contentView.children.length, 0);
+  await until(() => wc.isDestroyed(), "unacknowledged thaw destroys document without attachment");
+  assert.equal(surface.status.phase, "error");
+  assert.equal(window.contentView.children.length, 0);
+  surface.reload(); await ready(); wc = view().webContents;
+  record("stalled freeze and thaw acknowledgements fail closed within deadline; explicit reload recovers");
   wc.debugger.detach();
   await until(() => wc.isDestroyed(), "lost lifecycle controller closes view");
   assert.equal(surface.status.phase, "error");
