@@ -474,11 +474,17 @@ def create_app(
         state["manager"] = SessionManager(settings, registry, hub, load_exam(settings))
         store = registry.router_store()
         state["manager"].health_reporter = health
+        n_before = len(app.router.routes)
         app.include_router(
             store.create_router(_Context(state["manager"], registry)),
             prefix="/v1",
             dependencies=[Depends(validate_path_ids)],
         )
+        # Store routes are added at startup, after the API router. Move them first so static
+        # paths such as /v1/sessions/overview are not captured by /v1/sessions/{session_id}.
+        store_routes = app.router.routes[n_before:]
+        del app.router.routes[n_before:]
+        app.router.routes[0:0] = store_routes
         state["calibration_task"] = asyncio.create_task(_calibration_progress(state, hub))
         log.info("backend ready: %s", {h.component.value: h.code for h in registry.health_components()})
         if on_ready is not None:
