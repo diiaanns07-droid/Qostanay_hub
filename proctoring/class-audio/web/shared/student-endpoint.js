@@ -135,16 +135,20 @@ export class StudentAudioEndpoint {
   /** @param {string} cid @param {any} p */
   async _update(cid, p) {
     const s = this.session;
+    const generation = this.generation;
     if (!s || p.audio_session_id !== s.id) return this._ack(cid, false, "busy", "Нет такой аудиосвязи.");
     s.listen = p.listen === true;
     s.talk = p.talk === true;
     try {
       if (s.listen && !this.micActive) await this._acquireMic();
+      if (generation !== this.generation) return;
       if (!s.listen) this._releaseMic();
       await this._indicate({});
+      if (generation !== this.generation) return;
       this._ack(cid, true);
       this._media();
     } catch (e) {
+      if (generation !== this.generation) return;
       const prob = mapMediaError(e);
       this._teardown(prob.code, false);
       this._ack(cid, false, prob.code, prob.message_ru);
@@ -162,7 +166,10 @@ export class StudentAudioEndpoint {
       throw Object.assign(new Error("session ended"), { name: "AbortError" });
     }
     const track = stream.getAudioTracks()[0];
-    if (!track) throw Object.assign(new Error("no audio track"), { name: "NotFoundError" });
+    if (!track) {
+      stream.getTracks().forEach((item) => item.stop());
+      throw Object.assign(new Error("no audio track"), { name: "NotFoundError" });
+    }
     stream.getTracks().forEach((t) => t !== track && t.stop());
     this.mic = track;
     track.addEventListener("ended", () => {
@@ -223,8 +230,10 @@ export class StudentAudioEndpoint {
   async _offer(sdp) {
     const s = this.session;
     if (!s) return;
+    const generation = this.generation;
     const pc = this._ensurePc();
     await pc.setRemoteDescription({ type: "offer", sdp });
+    if (generation !== this.generation) return;
     const tr = pc.getTransceivers()[0];
     if (tr) {
       // student sends only when the teacher listens; receives only when the teacher talks
@@ -234,6 +243,7 @@ export class StudentAudioEndpoint {
     for (const c of this.pendingIce.splice(0)) await pc.addIceCandidate(c).catch(() => {});
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
+    if (generation !== this.generation) return;
     this.o.send({ type: "audio_signal", audio_session_id: s.id, command_id: s.commandId, kind: "answer", sdp: pc.localDescription?.sdp ?? answer.sdp });
   }
 

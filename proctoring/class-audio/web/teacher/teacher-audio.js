@@ -67,6 +67,7 @@ export class TeacherAudio {
     /** @type {ReturnType<typeof setTimeout>|null} */
     this.giveUpTimer = null;
     this.restarted = false;
+    this.generation = 0;
     this.unsub = this.sig.subscribe((m) => this._onMessage(m));
     this.unsubStatus = this.sig.onStatus((up, code) => this._onSignaling(up, code));
     this.s.signalingUp = this.sig.up;
@@ -121,7 +122,7 @@ export class TeacherAudio {
    */
   _set(patch) {
     const n = { ...this.s, ...patch };
-    if (n.listening && !(n.connection === "connected" && n.listen && n.studentMedia?.mic_live === true)) {
+    if (n.listening && !(n.connection === "connected" && n.listen && n.studentMedia?.mic_live === true && !this.audioEl.paused && !n.needsPlayClick)) {
       n.listening = false;
       n.inLevel = 0;
     }
@@ -143,11 +144,14 @@ export class TeacherAudio {
       return;
     }
     this._reset();
+    const generation = this.generation;
     this._set({ ...this._fresh(), phase: "requesting", studentId, listen: want.listen, talk: want.talk, signalingUp: true });
     if (want.talk && !(await this._ensureMic())) {
+      if (generation !== this.generation) return;
       this._set({ phase: "error" });
       return;
     }
+    if (generation !== this.generation || !this.sig.up) return;
     this.sig.send({ type: "audio_request", student_id: studentId, listen: want.listen, talk: want.talk });
   }
 
@@ -163,9 +167,11 @@ export class TeacherAudio {
 
   /** @param {boolean} listen @param {boolean} talk */
   async _change(listen, talk) {
+    const generation = this.generation;
     if (!this.busy || !this.s.sessionId) return;
     if (!listen && !talk) return this.stop();
     if (talk && !(await this._ensureMic())) return; // keep the session, report the mic problem
+    if (generation !== this.generation) return;
     if (!talk) this._releaseMic();
     this._set({ listen, talk });
     this.sig.send({ type: "audio_update", audio_session_id: this.s.sessionId, listen, talk });
@@ -363,6 +369,7 @@ export class TeacherAudio {
 
   // ------------------------------------------------------------------ mic + cleanup
   async _ensureMic() {
+    const generation = this.generation;
     if (this.micTrack && this.micTrack.readyState === "live") return true;
     const pre = micPrecheck();
     if (pre) {
@@ -371,6 +378,10 @@ export class TeacherAudio {
     }
     try {
       const stream = await this.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+      if (generation !== this.generation || !this.sig.up) {
+        stream.getTracks().forEach((track) => track.stop());
+        return false;
+      }
       this.micTrack = stream.getAudioTracks()[0] ?? null;
       stream.getTracks().forEach((t) => t !== this.micTrack && t.stop());
       if (!this.micTrack) throw Object.assign(new Error("no track"), { name: "NotFoundError" });
@@ -398,6 +409,7 @@ export class TeacherAudio {
   }
 
   _teardown() {
+    this.generation += 1;
     this._clearRecovery();
     if (this.statsTimer) clearInterval(this.statsTimer);
     this.statsTimer = null;

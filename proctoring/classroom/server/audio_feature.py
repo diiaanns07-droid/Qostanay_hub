@@ -137,7 +137,9 @@ class ClassroomAudioFeature:
         if hello.get("audio_protocol") == AUDIO_PROTOCOL:
             # A replacement connection never inherits a live audio session.
             if student.student_id in self.hub.students:
-                self.spawn(self.hub.student_offline(student.student_id, self.hub.students[student.student_id]))
+                old_id = self.hub.by_student.get(student.student_id)
+                if old_id:
+                    self.spawn(self.hub._end(self.hub.sessions[old_id], "student_reconnected", notify_student=False))
             self.student_sessions[student.student_id] = student.session_id
             self.hub.student_online(student.student_id, StudentLink(self.ctx, student.student_id))
 
