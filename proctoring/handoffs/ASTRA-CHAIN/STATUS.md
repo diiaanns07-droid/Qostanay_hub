@@ -1,5 +1,52 @@
 # ASTRA-CHAIN — Windows full-backend classroom acceptance
 
+## Student preparation UX checkpoint (2026-10-08)
+
+Assigned follow-up scope: `desktop/renderer/src/screens/Preflight.tsx`, the
+preflight-only CSS group, renderer tests, and this handoff. No bridge, contracts,
+App.tsx, ClassOverlays, backend or native changes.
+
+The initial screen now leads with optional name, a short processing/sharing
+explanation, explicit consent, and **Проверить устройства**. Source/replay/exam ID
+settings and detailed component/protection diagnostics are native collapsed
+details. The actual classroom connection block stays beside the primary flow.
+No pairing API was invented. Default camera/live behavior is unchanged; FIXTURE,
+SYNTHETIC and REPLAY remain visible outside collapsed options. Consent gating,
+preflight failures and protection warnings remain visible and enforced. Invalid
+hidden replay/exam fields get an explanatory banner outside the details.
+
+The privacy copy now mentions real classroom preview/event sharing and short
+clips on teacher request, instead of incorrectly claiming camera data never
+leaves the student computer. No microphone or recording capability is invented.
+
+Validation on Windows:
+
+- Renderer TypeScript: PASS.
+- Vite fixture build: PASS (57 modules). The first sandboxed esbuild failed to
+  read the config path; the same local build passed after approval escalation.
+- New `renderer/tests/e2e-preflight.mjs`: PASS in installed Chrome at **1366×768
+  and 1024×768**, with 11 key checks per viewport. Covers consent, collapsed
+  technical sections, source/class/warning visibility, no overflow, clear replay
+  validation, failed LIVE preflight and disabled calibration, zero getUserMedia,
+  and no page errors. This is FIXTURE UX validation, not backend integration.
+- Screenshots of both sizes visually inspected. Machine-readable result retained
+  in `preflight-results.json`; screenshots remain local outside Git at the
+  visualization root under `Qorgau-preflight-shots/`.
+- Existing fixture/class/real-bridge test selectors were updated to open source
+  settings and use the new primary label; the entire old suites were not rerun.
+
+Run after a fixture build (from `proctoring/desktop`, PLAYWRIGHT_MODULE set to an
+available Playwright install):
+
+```powershell
+node renderer/tests/e2e-preflight.mjs dist/renderer-fixture <screenshots-directory>
+```
+
+Build dependencies reuse the coordinator's installed node_modules via a local
+ignored junction; no dependencies or lockfiles changed. Next: coordinator merges
+the UX checkpoint locally and checks it alongside the final classroom build.
+Push was not retried after the previously recorded automatic approval rejection.
+
 Branch: `codex/classroom-chain-check`.
 Origin verified: `https://github.com/diiaanns07-droid/Qostanay_hub.git`.
 Product baseline: `23c6c3b1ce4dd28ed07f01aa9dbb72237ec578fd`.

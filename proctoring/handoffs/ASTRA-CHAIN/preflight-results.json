@@ -1,0 +1,39 @@
+{
+  "source": "FIXTURE",
+  "results": [
+    {
+      "width": 1366,
+      "status": "pass",
+      "checks": [
+        "consent_gate",
+        "collapsed_settings",
+        "collapsed_diagnostics",
+        "visible_synthetic_label",
+        "visible_class_connection",
+        "visible_protection_warning",
+        "no_overflow",
+        "replay_reason_outside_details",
+        "live_failure_visible",
+        "no_camera",
+        "no_page_errors"
+      ]
+    },
+    {
+      "width": 1024,
+      "status": "pass",
+      "checks": [
+        "consent_gate",
+        "collapsed_settings",
+        "collapsed_diagnostics",
+        "visible_synthetic_label",
+        "visible_class_connection",
+        "visible_protection_warning",
+        "no_overflow",
+        "replay_reason_outside_details",
+        "live_failure_visible",
+        "no_camera",
+        "no_page_errors"
+      ]
+    }
+  ]
+}
