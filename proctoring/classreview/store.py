@@ -288,7 +288,7 @@ class ReviewStore:
     def note_clip_requested(self, student_id: str, incident_id: str, command_id: str | None,
                             *, requested_at: datetime | None = None) -> dict[str, Any]:
         """Called by the class server when it sends `request_clip` to the student."""
-        now = now_utc()
+        now = requested_at or now_utc()  # the command's issue time: a replayed QUEUED/SENT cannot extend the timeout
         with self._lock:
             self._require_incident(student_id, incident_id)
             if command_id and self.conn.execute("SELECT 1 FROM clip_requests WHERE command_id=?", (command_id,)).fetchone():
@@ -610,7 +610,7 @@ class ReviewStore:
 
     def expire_requests(self) -> None:
         """Persist timeout states and publish them, even when no teacher is polling."""
-        now = requested_at or now_utc()
+        now = now_utc()
         with self._lock:
             rows = self.conn.execute("SELECT DISTINCT student_id,incident_id FROM clip_requests WHERE status='pending'"
                                      " AND requested_at_us < ?", (_us(now) - int(self.config.clip_request_timeout_s * 1e6),)).fetchall()
