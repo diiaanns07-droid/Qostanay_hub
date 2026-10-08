@@ -246,6 +246,13 @@ function registerIpc(): void {
     if (flag && supervisor.connection) preview.open();
     if (!flag) preview.close();
   });
+  // A07-student (A01-approved minimal IPC): full-screen calibration window. Exam mode keeps its own full screen.
+  ipcMain.on(SEND.windowFullscreen, (event, flag: unknown) => {
+    const w = mainWindow;
+    if (!trustedSender(event) || typeof flag !== "boolean" || !w || w.isDestroyed()) return;
+    if (!flag && machine.state.exam_mode_active) return;
+    w.setFullScreen(flag);
+  });
 }
 
 // ---------------------------------------------------------------- web hardening
