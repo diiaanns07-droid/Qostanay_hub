@@ -47,7 +47,19 @@ test("tab switching, close, devtools, reload, new window are blocked", () => {
   assert.equal(classifyExamKey(k("n", "KeyN", { control: true }))?.action, "new_window_blocked");
   const print = classifyExamKey(k("p", "KeyP", { control: true }));
   assert.equal(print?.prevent, true);
-  assert.equal(print?.action, null);
+  assert.equal(print?.action, "clipboard_blocked");
+  assert.equal(print?.shortcut, "Печать (Ctrl+P)");
+});
+
+test("print/save/source/zoom/context menu have distinct journal labels on physical keys", () => {
+  for (const [code, label] of [["KeyP", "Печать (Ctrl+P)"], ["KeyS", "Сохранение (Ctrl+S)"], ["KeyU", "Исходный код (Ctrl+U)"], ["Equal", "Масштаб страницы"]]) {
+    const d = classifyExamKey(k("я", code!, { control: true }));
+    assert.equal(d?.prevent, true);
+    assert.equal(d?.enforcement, "blocked");
+    assert.equal(d?.shortcut, label);
+    assert.ok(d?.action);
+  }
+  assert.equal(classifyExamKey(k("F10", "F10", { shift: true }))?.shortcut, "Контекстное меню");
 });
 
 test("ordinary typing and editing keys are allowed", () => {

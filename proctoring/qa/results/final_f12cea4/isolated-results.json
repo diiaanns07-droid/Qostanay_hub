@@ -1,0 +1,98 @@
+[
+  {
+    "test": "backend/proctor/evidence/tests/test_evidence_report.py::test_report_renders_and_prints_in_chromium",
+    "exit": 0,
+    "log": "qa\\results\\final_f12cea4\\isolated-1.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_success_writes_atomically",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-2.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_source_error_leaves_nothing_and_keeps_existing_target",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-3.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_real_prepare_from_file_installs_and_check_loads",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-4.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_app_health_lists_phone_model_missing",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-5.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_real_model.py::test_real_phone_only_config_does_not_report_other_objects",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-6.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_real_model.py::test_real_inference_is_deterministic",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-7.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-rect]",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-8.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-square]",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-9.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-rect]",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-10.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square]",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-11.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/phone/tests/test_real_model.py::test_real_prepadded_frame_gives_identical_boxes",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-12.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "backend/proctor/uplink/tests/test_uplink_app.py::test_without_env_the_backend_has_no_uplink",
+    "exit": 0,
+    "log": "qa\\results\\final_f12cea4\\isolated-13.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "classroom/server/tests/test_persistence_audio.py::test_audio_signaling_is_bound_to_an_acked_audio_session",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-14.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "classroom/server/tests/test_persistence_audio.py::test_audio_ends_when_student_goes_offline",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-15.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  },
+  {
+    "test": "classreview/tests/test_review_e2e.py::test_teacher_flow_in_browser_with_restart",
+    "exit": 1,
+    "log": "qa\\results\\final_f12cea4\\isolated-16.txt",
+    "environment_note": "PYTHONUTF8=1; same models and installed Chrome settings"
+  }
+]

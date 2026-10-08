@@ -1,0 +1,12 @@
+[
+  {
+    "nodeid": "qa/tests/test_offline.py::test_no_download_calls_in_backend_runtime_source",
+    "exit_code": 1,
+    "log": "qa-isolated-1.txt"
+  },
+  {
+    "nodeid": "qa/tests/test_offline.py::test_reviewed_network_scopes_cannot_hide_new_runtime_calls",
+    "exit_code": 1,
+    "log": "qa-isolated-2.txt"
+  }
+]

@@ -308,6 +308,22 @@
         "onnxruntime"
       ],
       "notes": "A05 audio_rules (background_speech) already consume string-typed audio observations."
+    },
+    "A15": {
+      "role": "Desk (workplace) scan before the exam",
+      "paths": [
+        "proctoring/backend/proctor/deskscan/",
+        "proctoring/handoffs/A15/"
+      ],
+      "provides": [
+        "POST/GET /v1/sessions/{session_id}/desk-scan -> DeskScanResult (contract 1.2)"
+      ],
+      "consumes": [
+        "A02 capture frames/export_clip",
+        "A03 phone analyzer detections (cell phone, book, laptop, tv)",
+        "A08 evidence store/report"
+      ],
+      "notes": "Route registration in app.py, renderer step (A07) and report section (A08) granted as minimal edits for 8 Oct."
     }
   },
   "integration_order": [

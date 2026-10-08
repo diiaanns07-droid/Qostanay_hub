@@ -39,6 +39,8 @@ test("passing self-test marks in-app items blocked, with verified_on from this m
     key_alt_f4: pass(),
     key_devtools: pass(),
     key_reload: pass(),
+    key_print: pass(), key_save: pass(), key_source: pass(), key_zoom: pass(), key_context_menu: pass(),
+    page_print: pass(), page_context_menu: pass(), page_selection: pass(), page_drag: pass(), page_zoom: pass(),
     window_close: pass(),
     window_open: pass(),
     navigation: pass(),

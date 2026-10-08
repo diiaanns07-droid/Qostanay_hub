@@ -34,6 +34,8 @@ import { EnvironmentEventQueue } from "./environment/events";
 import { ExamGuard, type GuardPlatform } from "./environment/guard";
 import { withDisplayCheck, withRemoteCheck } from "./environment/preflight";
 import { checkRemoteEnvironment } from "./environment/remote";
+import { checkVm, unknownVm, withVmCheck } from "./environment/vm";
+import { prepareContentSession, protectContent } from "./environment/content";
 import { checkHelper, NativeHelper } from "./environment/native";
 import { createElectronProbeDriver } from "./environment/probe-electron";
 import { probeSummary, runSelfTest } from "./environment/probe";
@@ -76,6 +78,7 @@ let quitting = false;
 let shutdownDone = false;
 let previewWanted = false;
 let capabilities: EnvironmentCapabilities | null = null;
+let vmSnapshot = unknownVm();
 let probeResults: ProbeResults = {};
 let probeRanAt: string | null = null;
 let verification: VerificationRecord[] = [];
@@ -120,13 +123,15 @@ const guardPlatform: GuardPlatform = {
 
 const guard = new ExamGuard(() => mainWindow, events, guardPlatform, {
   enforce: cfg.nativeEnforce,
+  vmSnapshot: process.platform === "win32" ? () => vmSnapshot : undefined,
   scanRemote: process.platform === "win32" ? () => checkRemoteEnvironment({ command: cfg.nativeHelperPath }) : undefined,
   emergencyAccelerator: cfg.emergencyAccelerator,
   onEmergencyHotkey: () => void emergencyExit("emergency_hotkey"),
 });
 
 machine = new ShellStateMachine(guard, { shell_version: app.getVersion(), platform: platformInfo.label });
-const examSurface = new ExamSurface(() => mainWindow, (status) => push(EXAM_CHANNEL.status, status), (input) => guard.onBeforeInput(input));
+const examSurface = new ExamSurface(() => mainWindow, (status) => push(EXAM_CHANNEL.status, status),
+  (input) => guard.onBeforeInput(input), (id) => guard.onContentBlocked(id));
 const classLock = new ClassLockController({
   client, window: () => mainWindow,
   setExamBlocked: (blocked) => examSurface.setBlocked("class-lock", blocked),
@@ -204,6 +209,8 @@ async function reportCapabilities(strict = false): Promise<void> {
   capabilities = withDisplayCheck(capabilities, displayCount);
   if (process.platform === "win32") {
     capabilities = withRemoteCheck(capabilities, await checkRemoteEnvironment({ command: cfg.nativeHelperPath }));
+    vmSnapshot = await checkVm({ command: cfg.nativeHelperPath });
+    capabilities = withVmCheck(capabilities, vmSnapshot);
   }
   log.info(`capability matrix: ${JSON.stringify(summarize(capabilities))}`);
   if (!supervisor.connection) return;
@@ -382,6 +389,7 @@ app.on("web-contents-created", (_e, wc) => { if (!isExamWebContents(wc)) hardenW
 
 // ---------------------------------------------------------------- window
 function createWindow(ses: Session): BrowserWindow {
+  prepareContentSession(ses);
   const w = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -411,6 +419,7 @@ function createWindow(ses: Session): BrowserWindow {
     },
   });
   w.once("ready-to-show", () => w.show());
+  protectContent(w.webContents, () => guard.active, id => guard.onContentBlocked(id));
   w.on("resize", () => examSurface.resized());
   w.webContents.on("did-start-navigation", (_event, _url, inPlace, isMainFrame) => {
     if (isMainFrame && !inPlace) {

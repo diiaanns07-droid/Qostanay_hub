@@ -6,9 +6,10 @@ import { contextBridge, ipcRenderer } from "electron";
 import "./exam";
 import "./class-audio";
 import "../../main/src/class-lock-preload";
-import { BRIDGE_VERSION, type QorgauBridge, type ShellState, type Unsubscribe } from "@contracts/bridge";
+import { BRIDGE_VERSION, type ShellState, type Unsubscribe } from "@contracts/bridge";
 import type { PreviewFrameMeta, StreamEnvelope } from "@contracts/qorgau-v1.generated";
 import { INVOKE, PUSH, SEND, type InvokeName } from "../../main/src/ipc/channels";
+import type { AppBridge } from "../../shared/desk-scan";
 
 const call =
   (name: InvokeName) =>
@@ -51,7 +52,7 @@ const subscribePreview = fanout<[PreviewFrameMeta, Uint8Array]>(PUSH.previewFram
   ipcRenderer.send(SEND.previewSubscribed, count > 0),
 );
 
-const bridge: QorgauBridge = {
+const bridge: AppBridge = {
   bridgeVersion: BRIDGE_VERSION,
   transport: "electron",
 
@@ -73,6 +74,9 @@ const bridge: QorgauBridge = {
   calibrationFinish: call("calibrationFinish"),
   calibrationCancel: call("calibrationCancel"),
   calibrationSkip: call("calibrationSkip"),
+  getDeskScan: call("getDeskScan"),
+  startDeskScan: call("startDeskScan"),
+  skipDeskScan: call("skipDeskScan"),
   startExam: call("startExam"),
   pauseExam: call("pauseExam"),
   resumeExam: call("resumeExam"),

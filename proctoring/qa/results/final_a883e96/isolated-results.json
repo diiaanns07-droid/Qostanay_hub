@@ -1,0 +1,32 @@
+[
+    {
+        "test":  "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_success_writes_atomically",
+        "exit":  1,
+        "log":  "qa/results/final_a883e96/isolated-1.txt"
+    },
+    {
+        "test":  "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_source_error_leaves_nothing_and_keeps_existing_target",
+        "exit":  1,
+        "log":  "qa/results/final_a883e96/isolated-2.txt"
+    },
+    {
+        "test":  "backend/proctor/phone/tests/test_config_manifest_prepare.py::test_app_health_lists_phone_model_missing",
+        "exit":  1,
+        "log":  "qa/results/final_a883e96/isolated-3.txt"
+    },
+    {
+        "test":  "backend/proctor/uplink/tests/test_uplink.py::test_redelivered_command_is_not_executed_twice_and_ack_has_code_and_result",
+        "exit":  0,
+        "log":  "qa/results/final_a883e96/isolated-4.txt"
+    },
+    {
+        "test":  "classroom/server/tests/test_persistence_audio.py::test_audio_signaling_is_bound_to_an_acked_audio_session",
+        "exit":  1,
+        "log":  "qa/results/final_a883e96/isolated-5.txt"
+    },
+    {
+        "test":  "classroom/server/tests/test_persistence_audio.py::test_audio_ends_when_student_goes_offline",
+        "exit":  1,
+        "log":  "qa/results/final_a883e96/isolated-6.txt"
+    }
+]

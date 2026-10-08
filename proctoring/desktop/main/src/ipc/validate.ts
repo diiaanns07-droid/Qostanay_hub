@@ -13,6 +13,7 @@ import {
   type PauseRequest,
   type SessionCreate,
 } from "@contracts/qorgau-v1.generated";
+import { DESK_SCAN_DURATION, DESK_SCAN_MODES, type DeskScanSkipRequest, type DeskScanStartArgs } from "../../../shared/desk-scan";
 
 export class ValidationError extends Error {
   constructor(
@@ -128,6 +129,16 @@ function reasonBody(v: unknown): { reason: string } {
 export const pauseRequest = (v: unknown): PauseRequest => reasonBody(v);
 export const abortRequest = (v: unknown): AbortRequest => reasonBody(v);
 export const calibrationSkip = (v: unknown): CalibrationSkipRequest => reasonBody(v);
+export const deskScanSkip = (v: unknown): DeskScanSkipRequest => reasonBody(v);
+
+/** A15: {duration_s 5..30, mode laptop|usb}; mode goes to the query string, duration_s to the body. */
+export function deskScanStart(v: unknown): DeskScanStartArgs {
+  const o = exactKeys(v, "body", ["duration_s", "mode"]);
+  return {
+    duration_s: int(o.duration_s, "body.duration_s", DESK_SCAN_DURATION.min, DESK_SCAN_DURATION.max),
+    mode: oneOf(o.mode, "body.mode", DESK_SCAN_MODES),
+  };
+}
 
 export function calibrationTarget(v: unknown): CalibrationTarget {
   return oneOf(v, "target", CalibrationTargetValues);

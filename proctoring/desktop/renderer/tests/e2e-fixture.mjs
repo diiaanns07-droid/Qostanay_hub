@@ -90,7 +90,7 @@ async function flow(page, tag, shot, consoleErrors) {
   await page.getByText("Студент ознакомлен").click();
   await page.getByRole("button", { name: "Проверить устройства" }).click();
   await page.getByText("Начать нельзя").waitFor();
-  check(`[${tag}] LIVE preflight blocked`, await page.getByRole("button", { name: "К калибровке" }).isDisabled());
+  check(`[${tag}] LIVE preflight blocked`, await page.getByRole("button", { name: "К осмотру рабочего места" }).isDisabled());
   await shot("02-preflight-live-blocked");
   await page.getByRole("button", { name: "Отменить сессию" }).click();
   await page.getByRole("button", { name: "Режим преподавателя…" }).waitFor();
@@ -111,7 +111,11 @@ async function flow(page, tag, shot, consoleErrors) {
   await page.getByRole("button", { name: "Проверить устройства" }).click();
   await page.getByText("Обязательные проверки пройдены").waitFor();
   await shot("03-preflight-ready");
-  await page.getByRole("button", { name: "К калибровке" }).click();
+  await page.getByRole("button", { name: "К осмотру рабочего места" }).click();
+  // A15 desk scan (FIXTURE: scripted 12 s scan, no camera/detector), then «Далее» to calibration
+  await page.getByRole("button", { name: "Начать осмотр" }).click();
+  await page.getByText("Стол осмотрен: посторонних предметов не замечено", { exact: true }).waitFor({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Далее", exact: true }).click();
   await page.getByText("Калибровка взгляда").waitFor();
   // A07-student: full-screen layer, big dots at the screen edges, hint, panel never covers a dot
   const geo = await page.evaluate(() => {

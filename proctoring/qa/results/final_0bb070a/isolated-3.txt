@@ -1,0 +1,38 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________ test_real_prepare_from_file_installs_and_check_loads _____________
+
+real_models_dir = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-253/test_real_prepare_from_file_in0')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001D33CE8ED20>
+no_network = [], no_camera = []
+
+    @pytest.mark.real_model
+    def test_real_prepare_from_file_installs_and_check_loads(real_models_dir, manifest, tmp_path, capsys, no_network, no_camera):
+        """Offline install of the verified file into an empty models dir, then --check builds an ORT CPU session.
+        Integrity/loadability only; no image is inferred and no accuracy is claimed."""
+        models_dir = tmp_path / "models"
+        src = real_models_dir / manifest.file
+        assert prepare.main(["--from-file", str(src), "--models-dir", str(models_dir)]) == 0
+>       assert _files_under(models_dir) == [manifest.file]
+E       AssertionError: assert ['phone\\yolo11n.onnx'] == ['phone/yolo11n.onnx']
+E
+E         At index 0 diff: 'phone\\yolo11n.onnx' != 'phone/yolo11n.onnx'
+E         Use -v to get more diff
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:756: AssertionError
+---------------------------- Captured stdout call -----------------------------
+manifest: models.manifest.json model=yolo11n-coco-onnx license=AGPL-3.0 sha256=634279b40c07...
+[installed] models/phone/yolo11n.onnx
+[model_ok] models/phone/yolo11n.onnx verified (sha256 634279b40c07...)
+[model_loaded] provider=CPUExecutionProvider phone_classes={67: 'cell phone'} input=640 rect=True warmup_ms=38.1 meta={'version': '8.3.237', 'date': '2025-12-12T19:47:40.765629', 'license': 'AGPL-3.0 License (https://ultralytics.com/license)', 'imgsz': '[640, 640]', 'author': 'Ultralytics'}
+============================== warnings summary ===============================
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_real_prepare_from_file_installs_and_check_loads
+1 failed, 1 warning in 1.00s

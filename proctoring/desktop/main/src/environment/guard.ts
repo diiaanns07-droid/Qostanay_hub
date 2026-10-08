@@ -15,6 +15,8 @@ import type { Guard } from "../shell/state";
 import type { EventSink } from "./events";
 import { classifyExamKey, KeyEventThrottle, type KeyInput } from "./keyboard";
 import { remoteNames, type RemoteSnapshot } from "./remote";
+import type { VmSnapshot } from "./vm";
+import { CONTENT_ACTIONS, type ContentAction } from "./content-policy";
 
 const log = logger("guard");
 
@@ -65,6 +67,7 @@ export interface GuardOptions {
   /** Explicit enforce mode only; dry-run must never pull focus back. */
   enforce?: boolean;
   scanRemote?: () => Promise<RemoteSnapshot>;
+  vmSnapshot?: () => VmSnapshot;
   now?: () => number;
 }
 
@@ -91,6 +94,7 @@ export class ExamGuard implements Guard {
   private remoteFailed = false;
   private clipboardTimer: NodeJS.Timeout | null = null;
   private clipboardFailed = false;
+  private vmReportedSessions = new Set<string>();
   /** Last engage report (for the handoff/diagnostics; no user content). */
   lastEngage: { steps: Record<string, "ok" | "failed" | "skipped">; registrations: ShortcutRegistration[] } | null = null;
 
@@ -219,6 +223,13 @@ export class ExamGuard implements Guard {
       this.emit("enforcement_error", "failed", "electron.global_shortcut", "app", { shortcut: "emergency_hotkey" });
     }
     this.emit("exam_mode_engaged", "allowed", "electron.kiosk", "window");
+    const vm = this.opts.vmSnapshot?.();
+    if (vm && !this.vmReportedSessions.has(sessionId)) {
+      // Informational session metadata, never an escape attempt; survive pause/resume.
+      this.emit("exam_mode_engaged", "allowed", `native.vm_check.${vm.state}`, "os_session",
+        { shortcut: vm.platform ?? vm.state });
+      this.vmReportedSessions.add(sessionId);
+    }
     log.info(`engaged for ${sessionId}: ${JSON.stringify(steps)}`);
   }
 
@@ -411,6 +422,12 @@ export class ExamGuard implements Guard {
 
   onNavigationBlocked(): void {
     if (this.active) this.emit("navigation_blocked", "blocked", "electron.will_navigate", "app");
+  }
+
+  onContentBlocked(id: ContentAction): void {
+    if (!this.active) return;
+    const item = CONTENT_ACTIONS[id];
+    this.emit(item.action, "blocked", `electron.content.${id}`, "window", { shortcut: item.label });
   }
 
   onWindowOpenBlocked(): void {

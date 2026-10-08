@@ -43,6 +43,8 @@ class WebContents extends EventEmitter {
     this.devtools = false;
   }
   focus() {}
+  setVisualZoomLevelLimits() { return Promise.resolve(); }
+  setZoomFactor() {}
   getURL() {
     return this.mainFrame.url;
   }
@@ -106,6 +108,7 @@ function makeSession() {
     s[m] = (fn) => (s.handlers[m] = fn);
   }
   s.setSpellCheckerEnabled = () => {};
+  s.registerPreloadScript = (script) => script.id;
   s.webRequest = {
     onBeforeRequest: (filter, fn) => (s.handlers.onBeforeRequest = fn),
     onHeadersReceived: (filter, fn) => (s.handlers.onHeadersReceived = fn),

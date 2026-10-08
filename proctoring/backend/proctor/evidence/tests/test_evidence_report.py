@@ -116,6 +116,8 @@ def test_report_content_is_honest(evil_snapshot):
     ):
         assert needle in page, needle
     assert "вероятность списывания" not in page
+    assert not any(w in page.lower() for w in ("вероятност", "списыва", "нарушител"))
+    assert "оценка для проверки преподавателем, не вывод о нарушении" in page
     assert page.count("data:image/jpeg;base64,") == 1
 
 
@@ -220,3 +222,12 @@ def test_report_renders_and_prints_in_chromium(evil_snapshot, tmp_path):
     assert result["mobileOverflow"] <= 0
     data = pdf.read_bytes()
     assert data.startswith(b"%PDF") and len(re.findall(rb"/Type\s*/Page[^s]", data)) >= 2
+
+
+def test_visible_product_name_is_adal_ids_unchanged(evil_snapshot):
+    _, snap = evil_snapshot
+    page = report.render_html(snap)
+    visible = "".join(assert_inert(page).text)
+    assert "Adal — отчёт о сессии экзамена" in visible and "<title>Adal — отчёт" in page
+    assert "Qorgau" not in visible.replace("qorgau", "")  # no visible brand; ids below stay
+    assert "qorgau.report.v1" in page and "qorgau.v1" in page

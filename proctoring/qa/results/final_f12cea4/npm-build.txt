@@ -1,0 +1,37 @@
+
+> qorgau-exam-desktop@0.1.0 build
+> npm run build:electron && npm run build:renderer
+
+
+> qorgau-exam-desktop@0.1.0 build:electron
+> node scripts/build-electron.mjs
+
+npm.cmd :
+строка:2 знак:403
++ ... | Out-Null; npm.cmd run build *> ..\qa\results\final_f12cea4\npm-buil ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  dist\main\main.cjs      277.7kb
+  dist\main\main.cjs.map  546.6kb
+
+Done in 52ms
+
+  dist\preload\preload.cjs       6.0kb
+  dist\preload\preload.cjs.map  20.5kb
+
+Done in 6ms
+
+> qorgau-exam-desktop@0.1.0 build:renderer
+> vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 66 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/renderer/index.html                   0.62 kB │ gzip:   0.39 kB
+../dist/renderer/assets/index-TnAdNsqn.css   31.06 kB │ gzip:   7.56 kB
+../dist/renderer/assets/index-DOwMyhfO.js   338.09 kB │ gzip: 104.34 kB │ map: 1,337.54 kB
+✓ built in 1.89s

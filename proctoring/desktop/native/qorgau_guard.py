@@ -43,6 +43,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-check", action="store_true")
     parser.add_argument("--environment-check", action="store_true")
+    parser.add_argument("--vm-check", action="store_true")
     parser.add_argument("--parent-pid", type=int)
     parser.add_argument("--mode", choices=("dry-run", "enforce"), default="dry-run")
     parser.add_argument("--max-minutes", type=minutes, default=120)
@@ -50,6 +51,10 @@ def main(argv=None):
     if sys.platform != "win32":
         write_line('{"type":"error","code":"unsupported_platform"}\n')
         return 2
+    if args.vm_check:
+        from vm_check import snapshot
+        write_line(json.dumps(snapshot()) + "\n")
+        return 0  # read-only; do not even initialize hook/window APIs
     from guard_win32 import KeyboardHook, ParentHandle, Win32
     api = Win32()
     if args.environment_check:

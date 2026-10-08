@@ -1,0 +1,28 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________________ test_real_inference_is_deterministic _____________________
+
+phone_detector = <proctor.phone.detector.YoloOnnxDetector object at 0x0000021CAAB36F30>
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+raw_outputs = [array([[[4.6954699e+00, 1.7290321e+01, 2.3449492e+01, ...,
+         5.1917548e+02, 5.5966980e+02, 6.0213361e+02],
+   ...1858e-06, ...,
+         1.5199184e-06, 1.5497208e-06, 1.5497208e-06]]],
+      shape=(1, 84, 6300), dtype=float32), ...]
+
+    @pytest.mark.real_model
+    def test_real_inference_is_deterministic(phone_detector, model_file, manifest, raw_outputs):
+        image = make_image(seed=21)
+        raw_outputs.clear()
+        first, _ = phone_detector.detect(image)
+        second, _ = phone_detector.detect(image)
+        assert first == second
+>       assert len(raw_outputs) == 2 and np.array_equal(raw_outputs[0], raw_outputs[1])
+E       assert (8 == 2)
+E        +  where 8 = len([array([[[4.6954699e+00, 1.7290321e+01, 2.3449492e+01, ...,\n         5.1917548e+02, 5.5966980e+02, 6.0213361e+02],\n   ...1858e-06, ...,\n         1.5199184e-06, 1.5497208e-06, 1.5497208e-06]]],\n      shape=(1, 84, 6300), dtype=float32), ...])
+
+backend\proctor\phone\tests\test_real_model.py:454: AssertionError
+=========================== short test summary info ===========================
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_inference_is_deterministic
+1 failed in 0.68s

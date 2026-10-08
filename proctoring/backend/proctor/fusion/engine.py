@@ -505,8 +505,10 @@ class FusionEngine:
         if capture_state == SignalState.INSUFFICIENT_EVIDENCE:
             vis_info["bump"] = ("capture_unobservable",)
         out += self._rules[R.PHONE_VISIBLE].feed(t, visible, obs, vis_info)
-        out += self._rules[R.PHONE_RAISED].feed(t, raised, obs, {"confidence": raised_conf})
-        out += self._rules[R.POSSIBLE_SCREEN_CAPTURE].feed(t, capture, obs, {"confidence": capture_conf})
+        raised, raised_info = self._raised_evidence(obs, t, usable, raised, raised_conf)
+        capture, capture_info = self._capture_evidence(obs, t, usable, capture, capture_conf)
+        out += self._rules[R.PHONE_RAISED].feed(t, raised, obs, raised_info)
+        out += self._rules[R.POSSIBLE_SCREEN_CAPTURE].feed(t, capture, obs, capture_info)
         out += self._on_objects(obs, t, usable)
         return out
 
@@ -545,6 +547,7 @@ class FusionEngine:
         face_count = obs.face_count if usable else None
         if face_count:
             self._face_seen_t = t
+        self._remember_face(obs, t, usable)
         out += self._determinacy("attention", t, face_count is not None, self._undetermined_code(obs))
 
         direction: Direction | None = None
@@ -753,6 +756,53 @@ class FusionEngine:
         return []
 
     # ------------------------------------------------------------------ time-driven expiry
+    # ------------------------------------------------------------------ phone raised / capture geometry (A05 1.4)
+    def _remember_face(self, obs: AttentionObservation, t: float, usable: bool) -> None:
+        face = next((f for f in obs.faces if f.is_primary), None) if usable and obs.face_count else None
+        if face is not None:
+            self._last_face = (t, face.bbox)
+
+    def _raised_phone(self, obs: PhoneObservation, t: float) -> Any | None:
+        """The highest phone box that is at face level (or in the upper part of the frame without a face)."""
+        cfg = self.cfg
+        face = getattr(self, "_last_face", None)
+        fresh = face is not None and t - face[0] <= cfg.phone_face_max_age_ms
+        line = (face[1].y_min + cfg.phone_raise_face_frac * (face[1].y_max - face[1].y_min)) if fresh else cfg.phone_raise_fallback_top
+        cands = [d for d in obs.detections if d.class_name == PHONE_CLASS and d.confidence >= cfg.phone_raise_min_confidence and d.bbox.y_min <= line]
+        return min(cands, key=lambda d: d.bbox.y_min) if cands else None
+
+    def _raised_evidence(self, obs: PhoneObservation, t: float, usable: bool, a03: bool | None, a03_conf: float | None) -> tuple[bool | None, dict[str, Any]]:
+        """A03's track heuristic OR the face-relative geometry; unusable frame -> no evidence."""
+        if not usable:
+            return None, {"confidence": a03_conf}
+        det = self._raised_phone(obs, t)
+        hist = self.__dict__.setdefault("_raise_hist", [])
+        if det is not None:
+            b = det.bbox
+            hist.append((t, (b.x_min + b.x_max) / 2.0, (b.y_min + b.y_max) / 2.0))
+        else:
+            hist.clear()
+        bump = ("face_level",) if det is not None else ()
+        conf = max([c for c in (a03_conf, det.confidence if det is not None else None) if c is not None], default=None)
+        return bool(a03) or det is not None, {"confidence": conf, "bump": bump}  # usable frame: clear yes/no
+
+    def _capture_evidence(self, obs: PhoneObservation, t: float, usable: bool, a03: bool | None, a03_conf: float | None) -> tuple[bool | None, dict[str, Any]]:
+        """Raised, central and almost still for >= phone_capture_steady_ms (uses the history kept by _raised_evidence)."""
+        cfg = self.cfg
+        if not usable:
+            return None, {"confidence": a03_conf}
+        hist = [h for h in self.__dict__.get("_raise_hist", []) if t - h[0] <= cfg.phone_capture_steady_ms + 400.0]
+        self._raise_hist = hist
+        steady = False
+        if hist and hist[-1][0] - hist[0][0] >= cfg.phone_capture_steady_ms:
+            gaps_ok = all(b[0] - a[0] <= cfg.phone_raised.pending_gap_ms for a, b in zip(hist, hist[1:]))
+            mx = sum(h[1] for h in hist) / len(hist)
+            my = sum(h[2] for h in hist) / len(hist)
+            still = max(max(abs(h[1] - mx), abs(h[2] - my)) for h in hist) <= cfg.phone_capture_max_motion
+            central = cfg.phone_capture_x_min <= mx <= cfg.phone_capture_x_max
+            steady = gaps_ok and still and central
+        return bool(a03) or steady, {"confidence": a03_conf, "bump": ("steady_at_face",) if steady else ()}
+
     # ------------------------------------------------------------------ identity (contracts 1.1, A13)
     def _identity_rule(self) -> "_IntervalRule":
         """Registered lazily so the engine's generic expiry/pause/finish handle it like any interval rule."""

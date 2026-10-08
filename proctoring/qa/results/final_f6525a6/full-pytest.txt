@@ -1,0 +1,1032 @@
+........................................................................ [  4%]
+........................................................................ [  9%]
+.....................ssss............................................... [ 14%]
+................................................s....................... [ 19%]
+...................................................s.................... [ 24%]
+........................................................................ [ 29%]
+..............s......................................................... [ 33%]
+........................................................................ [ 38%]
+........................................................................ [ 43%]
+........................................................................ [ 48%]
+...............................F....F................FF................. [ 53%]
+........................................................................ [ 58%]
+..........................................F...F.FFFFF.......F..ss....... [ 62%]
+........................................................................ [ 67%]
+..................................F..................................... [ 72%]
+........................................................................ [ 77%]
+s....................................................................... [ 82%]
+........................................................................ [ 87%]
+............................F........................................... [ 91%]
+........................................................................ [ 96%]
+...............................................                          [100%]
+================================== FAILURES ===================================
+___________________ test_install_success_writes_atomically ____________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-239/test_install_success_writes_at0')
+
+    def test_install_success_writes_atomically(tmp_path):
+        data = b"abcdefg"
+        target = tmp_path / "models" / "phone" / "m.onnx"
+        sha = hashlib.sha256(data).hexdigest()
+        actual = prepare._install(_chunks(b"abc", b"", b"defg"), target, sha, len(data))
+        assert actual == sha
+        assert target.read_bytes() == data
+>       assert _files_under(tmp_path / "models") == ["phone/m.onnx"]  # no .part left behind
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['phone\\m.onnx'] == ['phone/m.onnx']
+E
+E         At index 0 diff: 'phone\\m.onnx' != 'phone/m.onnx'
+E         Use -v to get more diff
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:580: AssertionError
+_____ test_install_source_error_leaves_nothing_and_keeps_existing_target ______
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-239/test_install_source_error_leav0')
+
+    def test_install_source_error_leaves_nothing_and_keeps_existing_target(tmp_path):
+        target = tmp_path / "models" / "phone" / "m.onnx"
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b"previous file")
+
+        def broken():
+            yield b"abc"
+            raise OSError("connection reset")
+
+        with pytest.raises(OSError, match="connection reset"):
+            prepare._install(broken(), target, hashlib.sha256(b"abcdefg").hexdigest(), 7)
+        assert target.read_bytes() == b"previous file"  # failed install never touches the target
+>       assert _files_under(tmp_path / "models") == ["phone/m.onnx"]
+E       AssertionError: assert ['phone\\m.onnx'] == ['phone/m.onnx']
+E
+E         At index 0 diff: 'phone\\m.onnx' != 'phone/m.onnx'
+E         Use -v to get more diff
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:633: AssertionError
+____________ test_real_prepare_from_file_installs_and_check_loads _____________
+
+real_models_dir = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-239/test_real_prepare_from_file_in0')
+capsys = <_pytest.capture.CaptureFixture object at 0x00000245D14B7560>
+no_network = [], no_camera = []
+
+    @pytest.mark.real_model
+    def test_real_prepare_from_file_installs_and_check_loads(real_models_dir, manifest, tmp_path, capsys, no_network, no_camera):
+        """Offline install of the verified file into an empty models dir, then --check builds an ORT CPU session.
+        Integrity/loadability only; no image is inferred and no accuracy is claimed."""
+        models_dir = tmp_path / "models"
+        src = real_models_dir / manifest.file
+        assert prepare.main(["--from-file", str(src), "--models-dir", str(models_dir)]) == 0
+>       assert _files_under(models_dir) == [manifest.file]
+E       AssertionError: assert ['phone\\yolo11n.onnx'] == ['phone/yolo11n.onnx']
+E
+E         At index 0 diff: 'phone\\yolo11n.onnx' != 'phone/yolo11n.onnx'
+E         Use -v to get more diff
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:756: AssertionError
+---------------------------- Captured stdout call -----------------------------
+manifest: models.manifest.json model=yolo11n-coco-onnx license=AGPL-3.0 sha256=634279b40c07...
+[installed] models/phone/yolo11n.onnx
+[model_ok] models/phone/yolo11n.onnx verified (sha256 634279b40c07...)
+[model_loaded] provider=CPUExecutionProvider phone_classes={67: 'cell phone'} input=640 rect=True warmup_ms=46.9 meta={'version': '8.3.237', 'date': '2025-12-12T19:47:40.765629', 'license': 'AGPL-3.0 License (https://ultralytics.com/license)', 'imgsz': '[640, 640]', 'author': 'Ultralytics'}
+__________________ test_app_health_lists_phone_model_missing __________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-239/test_app_health_lists_phone_mo0')
+no_network = ['socket.connect']
+
+    def test_app_health_lists_phone_model_missing(tmp_path, no_network):
+        app = create_app(_app_settings(tmp_path), TOKEN)
+>       with TestClient(app, base_url="http://127.0.0.1", headers=AUTH) as client:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:780:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\starlette\testclient.py:504: in __enter__
+    self.portal = portal = stack.enter_context(anyio.from_thread.start_blocking_portal(**self.async_backend))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\from_thread.py:554: in start_blocking_portal
+    portal = future.result()
+             ^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\from_thread.py:538: in run_blocking_portal
+    run_eventloop(
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\_core\_eventloop.py:83: in run
+    return async_backend.run(func, args, {}, backend_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\anyio\_backends\_asyncio.py:2547: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (<socket.socket [closed] fd=-1, family=2, type=1, proto=0>, ('127.0.0.1', 50731))
+kwargs = {}
+
+    def _deny(*args, **kwargs):
+        calls.append(name)
+>       raise AssertionError(f"network access attempted: {name}")
+E       AssertionError: network access attempted: socket.connect
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:98: AssertionError
+__________ test_real_phone_only_config_does_not_report_other_objects __________
+
+phone_detector = <proctor.phone.detector.YoloOnnxDetector object at 0x00000245D32A49E0>
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+
+    @pytest.mark.real_model
+    def test_real_phone_only_config_does_not_report_other_objects(phone_detector, model_file, manifest):
+        """The drawn disc is found by the class-agnostic config, but the production config (phone class
+        by name) does not report it: the class filter works on real outputs."""
+>       any_class = _any_class_detector(model_file, manifest)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_real_model.py:372:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\phone\tests\test_real_model.py:146: in _any_class_detector
+    cfg = dataclasses.replace(PhoneConfig(), phone_class_names=names, conf_threshold=0.05, min_box_area=0.0, **overrides)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:48: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PhoneConfig(input_size=640, rect=True, conf_threshold=0.05, nms_iou=0.45, max_detections=16, min_box_area=0.0, phone_c..._zone_y_max=0.55, capture_min_area=0.012, capture_steady_ms=800.0, capture_max_motion=0.035, capture_min_hit_ratio=0.6)
+
+    def __post_init__(self) -> None:
+        problems = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{f.name} must be a finite number")
+        if self.input_size % 32 or not 160 <= self.input_size <= 1280:
+            problems.append("input_size must be a multiple of 32 in [160, 1280]")
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+            if not 0.0 < getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in (0, 1]")
+        for name in (
+            "min_box_area",
+            "track_center_gate",
+            "raise_zone_y_max",
+            "raise_exit_y",
+            "raise_min_rise",
+            "capture_zone_x_min",
+            "capture_zone_x_max",
+            "capture_zone_y_max",
+            "capture_min_area",
+            "capture_max_motion",
+            "small_object_area",
+            "edge_margin",
+        ):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in [0, 1]")
+        if not 1 <= self.max_detections <= 16:
+            problems.append("max_detections must be in [1, 16]")
+        if self.intra_op_threads < 1 or self.track_confirm_hits < 1 or self.max_tracks < 1 or self.track_recent_len < 1:
+            problems.append("thread/track counts must be >= 1")
+        if self.raise_exit_y < self.raise_zone_y_max:
+            problems.append("raise_exit_y must be >= raise_zone_y_max (hysteresis)")
+        if self.capture_zone_x_min >= self.capture_zone_x_max:
+            problems.append("capture_zone_x_min must be < capture_zone_x_max")
+        if self.execution_provider not in ("cpu", "auto"):
+            problems.append("execution_provider must be 'cpu' or 'auto'")
+        if not self.phone_class_names:
+            problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
+        for name in (
+            "min_interval_ms",
+            "stale_ms",
+            "track_max_miss_ms",
+            "track_history_ms",
+            "coast_visible_ms",
+            "raise_window_ms",
+            "raise_hold_ms",
+            "raise_min_history_ms",
+            "capture_steady_ms",
+        ):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} must be >= 0")
+        if self.track_history_ms < max(self.raise_window_ms, self.capture_steady_ms):
+            problems.append("track_history_ms must cover raise_window_ms and capture_steady_ms")
+        if problems:
+>           raise ValueError("; ".join(problems))
+E           ValueError: object_class_names must not repeat phone classes
+
+backend\proctor\phone\config.py:144: ValueError
+____________________ test_real_inference_is_deterministic _____________________
+
+phone_detector = <proctor.phone.detector.YoloOnnxDetector object at 0x00000245D32A49E0>
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+raw_outputs = [array([[[4.6954699e+00, 1.7290321e+01, 2.3449492e+01, ...,
+         5.1917548e+02, 5.5966980e+02, 6.0213361e+02],
+   ...1858e-06, ...,
+         1.5199184e-06, 1.5497208e-06, 1.5497208e-06]]],
+      shape=(1, 84, 6300), dtype=float32), ...]
+
+    @pytest.mark.real_model
+    def test_real_inference_is_deterministic(phone_detector, model_file, manifest, raw_outputs):
+        image = make_image(seed=21)
+        raw_outputs.clear()
+        first, _ = phone_detector.detect(image)
+        second, _ = phone_detector.detect(image)
+        assert first == second
+>       assert len(raw_outputs) == 2 and np.array_equal(raw_outputs[0], raw_outputs[1])
+E       assert (8 == 2)
+E        +  where 8 = len([array([[[4.6954699e+00, 1.7290321e+01, 2.3449492e+01, ...,\n         5.1917548e+02, 5.5966980e+02, 6.0213361e+02],\n   ...1858e-06, ...,\n         1.5199184e-06, 1.5497208e-06, 1.5497208e-06]]],\n      shape=(1, 84, 6300), dtype=float32), ...])
+
+backend\proctor\phone\tests\test_real_model.py:454: AssertionError
+__ test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-rect] ___
+
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+input_size = 320, rect = True
+
+    @pytest.mark.real_model
+    @pytest.mark.parametrize("rect", [True, False], ids=["rect", "square"])
+    @pytest.mark.parametrize("input_size", [320, 640])
+    def test_real_boxes_map_to_unmirrored_normalized_frame_coordinates(model_file, manifest, input_size, rect):
+        """A real box for a drawn disc lands on that disc in normalized coords of the ORIGINAL, UNMIRRORED
+        frame, for several frame sizes / aspect ratios (letterbox scale + offset undone correctly).
+        Class-agnostic config: geometry of the pipeline only, not phone detection accuracy."""
+>       det = _any_class_detector(model_file, manifest, input_size=input_size, rect=rect)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_real_model.py:522:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\phone\tests\test_real_model.py:146: in _any_class_detector
+    cfg = dataclasses.replace(PhoneConfig(), phone_class_names=names, conf_threshold=0.05, min_box_area=0.0, **overrides)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:48: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PhoneConfig(input_size=320, rect=True, conf_threshold=0.05, nms_iou=0.45, max_detections=16, min_box_area=0.0, phone_c..._zone_y_max=0.55, capture_min_area=0.012, capture_steady_ms=800.0, capture_max_motion=0.035, capture_min_hit_ratio=0.6)
+
+    def __post_init__(self) -> None:
+        problems = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{f.name} must be a finite number")
+        if self.input_size % 32 or not 160 <= self.input_size <= 1280:
+            problems.append("input_size must be a multiple of 32 in [160, 1280]")
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+            if not 0.0 < getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in (0, 1]")
+        for name in (
+            "min_box_area",
+            "track_center_gate",
+            "raise_zone_y_max",
+            "raise_exit_y",
+            "raise_min_rise",
+            "capture_zone_x_min",
+            "capture_zone_x_max",
+            "capture_zone_y_max",
+            "capture_min_area",
+            "capture_max_motion",
+            "small_object_area",
+            "edge_margin",
+        ):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in [0, 1]")
+        if not 1 <= self.max_detections <= 16:
+            problems.append("max_detections must be in [1, 16]")
+        if self.intra_op_threads < 1 or self.track_confirm_hits < 1 or self.max_tracks < 1 or self.track_recent_len < 1:
+            problems.append("thread/track counts must be >= 1")
+        if self.raise_exit_y < self.raise_zone_y_max:
+            problems.append("raise_exit_y must be >= raise_zone_y_max (hysteresis)")
+        if self.capture_zone_x_min >= self.capture_zone_x_max:
+            problems.append("capture_zone_x_min must be < capture_zone_x_max")
+        if self.execution_provider not in ("cpu", "auto"):
+            problems.append("execution_provider must be 'cpu' or 'auto'")
+        if not self.phone_class_names:
+            problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
+        for name in (
+            "min_interval_ms",
+            "stale_ms",
+            "track_max_miss_ms",
+            "track_history_ms",
+            "coast_visible_ms",
+            "raise_window_ms",
+            "raise_hold_ms",
+            "raise_min_history_ms",
+            "capture_steady_ms",
+        ):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} must be >= 0")
+        if self.track_history_ms < max(self.raise_window_ms, self.capture_steady_ms):
+            problems.append("track_history_ms must cover raise_window_ms and capture_steady_ms")
+        if problems:
+>           raise ValueError("; ".join(problems))
+E           ValueError: object_class_names must not repeat phone classes
+
+backend\proctor\phone\config.py:144: ValueError
+_ test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-square] __
+
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+input_size = 320, rect = False
+
+    @pytest.mark.real_model
+    @pytest.mark.parametrize("rect", [True, False], ids=["rect", "square"])
+    @pytest.mark.parametrize("input_size", [320, 640])
+    def test_real_boxes_map_to_unmirrored_normalized_frame_coordinates(model_file, manifest, input_size, rect):
+        """A real box for a drawn disc lands on that disc in normalized coords of the ORIGINAL, UNMIRRORED
+        frame, for several frame sizes / aspect ratios (letterbox scale + offset undone correctly).
+        Class-agnostic config: geometry of the pipeline only, not phone detection accuracy."""
+>       det = _any_class_detector(model_file, manifest, input_size=input_size, rect=rect)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_real_model.py:522:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\phone\tests\test_real_model.py:146: in _any_class_detector
+    cfg = dataclasses.replace(PhoneConfig(), phone_class_names=names, conf_threshold=0.05, min_box_area=0.0, **overrides)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:48: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PhoneConfig(input_size=320, rect=False, conf_threshold=0.05, nms_iou=0.45, max_detections=16, min_box_area=0.0, phone_..._zone_y_max=0.55, capture_min_area=0.012, capture_steady_ms=800.0, capture_max_motion=0.035, capture_min_hit_ratio=0.6)
+
+    def __post_init__(self) -> None:
+        problems = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{f.name} must be a finite number")
+        if self.input_size % 32 or not 160 <= self.input_size <= 1280:
+            problems.append("input_size must be a multiple of 32 in [160, 1280]")
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+            if not 0.0 < getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in (0, 1]")
+        for name in (
+            "min_box_area",
+            "track_center_gate",
+            "raise_zone_y_max",
+            "raise_exit_y",
+            "raise_min_rise",
+            "capture_zone_x_min",
+            "capture_zone_x_max",
+            "capture_zone_y_max",
+            "capture_min_area",
+            "capture_max_motion",
+            "small_object_area",
+            "edge_margin",
+        ):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in [0, 1]")
+        if not 1 <= self.max_detections <= 16:
+            problems.append("max_detections must be in [1, 16]")
+        if self.intra_op_threads < 1 or self.track_confirm_hits < 1 or self.max_tracks < 1 or self.track_recent_len < 1:
+            problems.append("thread/track counts must be >= 1")
+        if self.raise_exit_y < self.raise_zone_y_max:
+            problems.append("raise_exit_y must be >= raise_zone_y_max (hysteresis)")
+        if self.capture_zone_x_min >= self.capture_zone_x_max:
+            problems.append("capture_zone_x_min must be < capture_zone_x_max")
+        if self.execution_provider not in ("cpu", "auto"):
+            problems.append("execution_provider must be 'cpu' or 'auto'")
+        if not self.phone_class_names:
+            problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
+        for name in (
+            "min_interval_ms",
+            "stale_ms",
+            "track_max_miss_ms",
+            "track_history_ms",
+            "coast_visible_ms",
+            "raise_window_ms",
+            "raise_hold_ms",
+            "raise_min_history_ms",
+            "capture_steady_ms",
+        ):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} must be >= 0")
+        if self.track_history_ms < max(self.raise_window_ms, self.capture_steady_ms):
+            problems.append("track_history_ms must cover raise_window_ms and capture_steady_ms")
+        if problems:
+>           raise ValueError("; ".join(problems))
+E           ValueError: object_class_names must not repeat phone classes
+
+backend\proctor\phone\config.py:144: ValueError
+__ test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-rect] ___
+
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+input_size = 640, rect = True
+
+    @pytest.mark.real_model
+    @pytest.mark.parametrize("rect", [True, False], ids=["rect", "square"])
+    @pytest.mark.parametrize("input_size", [320, 640])
+    def test_real_boxes_map_to_unmirrored_normalized_frame_coordinates(model_file, manifest, input_size, rect):
+        """A real box for a drawn disc lands on that disc in normalized coords of the ORIGINAL, UNMIRRORED
+        frame, for several frame sizes / aspect ratios (letterbox scale + offset undone correctly).
+        Class-agnostic config: geometry of the pipeline only, not phone detection accuracy."""
+>       det = _any_class_detector(model_file, manifest, input_size=input_size, rect=rect)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_real_model.py:522:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\phone\tests\test_real_model.py:146: in _any_class_detector
+    cfg = dataclasses.replace(PhoneConfig(), phone_class_names=names, conf_threshold=0.05, min_box_area=0.0, **overrides)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:48: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PhoneConfig(input_size=640, rect=True, conf_threshold=0.05, nms_iou=0.45, max_detections=16, min_box_area=0.0, phone_c..._zone_y_max=0.55, capture_min_area=0.012, capture_steady_ms=800.0, capture_max_motion=0.035, capture_min_hit_ratio=0.6)
+
+    def __post_init__(self) -> None:
+        problems = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{f.name} must be a finite number")
+        if self.input_size % 32 or not 160 <= self.input_size <= 1280:
+            problems.append("input_size must be a multiple of 32 in [160, 1280]")
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+            if not 0.0 < getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in (0, 1]")
+        for name in (
+            "min_box_area",
+            "track_center_gate",
+            "raise_zone_y_max",
+            "raise_exit_y",
+            "raise_min_rise",
+            "capture_zone_x_min",
+            "capture_zone_x_max",
+            "capture_zone_y_max",
+            "capture_min_area",
+            "capture_max_motion",
+            "small_object_area",
+            "edge_margin",
+        ):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in [0, 1]")
+        if not 1 <= self.max_detections <= 16:
+            problems.append("max_detections must be in [1, 16]")
+        if self.intra_op_threads < 1 or self.track_confirm_hits < 1 or self.max_tracks < 1 or self.track_recent_len < 1:
+            problems.append("thread/track counts must be >= 1")
+        if self.raise_exit_y < self.raise_zone_y_max:
+            problems.append("raise_exit_y must be >= raise_zone_y_max (hysteresis)")
+        if self.capture_zone_x_min >= self.capture_zone_x_max:
+            problems.append("capture_zone_x_min must be < capture_zone_x_max")
+        if self.execution_provider not in ("cpu", "auto"):
+            problems.append("execution_provider must be 'cpu' or 'auto'")
+        if not self.phone_class_names:
+            problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
+        for name in (
+            "min_interval_ms",
+            "stale_ms",
+            "track_max_miss_ms",
+            "track_history_ms",
+            "coast_visible_ms",
+            "raise_window_ms",
+            "raise_hold_ms",
+            "raise_min_history_ms",
+            "capture_steady_ms",
+        ):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} must be >= 0")
+        if self.track_history_ms < max(self.raise_window_ms, self.capture_steady_ms):
+            problems.append("track_history_ms must cover raise_window_ms and capture_steady_ms")
+        if problems:
+>           raise ValueError("; ".join(problems))
+E           ValueError: object_class_names must not repeat phone classes
+
+backend\proctor\phone\config.py:144: ValueError
+_ test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square] __
+
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+input_size = 640, rect = False
+
+    @pytest.mark.real_model
+    @pytest.mark.parametrize("rect", [True, False], ids=["rect", "square"])
+    @pytest.mark.parametrize("input_size", [320, 640])
+    def test_real_boxes_map_to_unmirrored_normalized_frame_coordinates(model_file, manifest, input_size, rect):
+        """A real box for a drawn disc lands on that disc in normalized coords of the ORIGINAL, UNMIRRORED
+        frame, for several frame sizes / aspect ratios (letterbox scale + offset undone correctly).
+        Class-agnostic config: geometry of the pipeline only, not phone detection accuracy."""
+>       det = _any_class_detector(model_file, manifest, input_size=input_size, rect=rect)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_real_model.py:522:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\phone\tests\test_real_model.py:146: in _any_class_detector
+    cfg = dataclasses.replace(PhoneConfig(), phone_class_names=names, conf_threshold=0.05, min_box_area=0.0, **overrides)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:48: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PhoneConfig(input_size=640, rect=False, conf_threshold=0.05, nms_iou=0.45, max_detections=16, min_box_area=0.0, phone_..._zone_y_max=0.55, capture_min_area=0.012, capture_steady_ms=800.0, capture_max_motion=0.035, capture_min_hit_ratio=0.6)
+
+    def __post_init__(self) -> None:
+        problems = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{f.name} must be a finite number")
+        if self.input_size % 32 or not 160 <= self.input_size <= 1280:
+            problems.append("input_size must be a multiple of 32 in [160, 1280]")
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+            if not 0.0 < getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in (0, 1]")
+        for name in (
+            "min_box_area",
+            "track_center_gate",
+            "raise_zone_y_max",
+            "raise_exit_y",
+            "raise_min_rise",
+            "capture_zone_x_min",
+            "capture_zone_x_max",
+            "capture_zone_y_max",
+            "capture_min_area",
+            "capture_max_motion",
+            "small_object_area",
+            "edge_margin",
+        ):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in [0, 1]")
+        if not 1 <= self.max_detections <= 16:
+            problems.append("max_detections must be in [1, 16]")
+        if self.intra_op_threads < 1 or self.track_confirm_hits < 1 or self.max_tracks < 1 or self.track_recent_len < 1:
+            problems.append("thread/track counts must be >= 1")
+        if self.raise_exit_y < self.raise_zone_y_max:
+            problems.append("raise_exit_y must be >= raise_zone_y_max (hysteresis)")
+        if self.capture_zone_x_min >= self.capture_zone_x_max:
+            problems.append("capture_zone_x_min must be < capture_zone_x_max")
+        if self.execution_provider not in ("cpu", "auto"):
+            problems.append("execution_provider must be 'cpu' or 'auto'")
+        if not self.phone_class_names:
+            problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
+        for name in (
+            "min_interval_ms",
+            "stale_ms",
+            "track_max_miss_ms",
+            "track_history_ms",
+            "coast_visible_ms",
+            "raise_window_ms",
+            "raise_hold_ms",
+            "raise_min_history_ms",
+            "capture_steady_ms",
+        ):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} must be >= 0")
+        if self.track_history_ms < max(self.raise_window_ms, self.capture_steady_ms):
+            problems.append("track_history_ms must cover raise_window_ms and capture_steady_ms")
+        if problems:
+>           raise ValueError("; ".join(problems))
+E           ValueError: object_class_names must not repeat phone classes
+
+backend\proctor\phone\config.py:144: ValueError
+_______________ test_real_prepadded_frame_gives_identical_boxes _______________
+
+model_file = WindowsPath('C:/Qostanay_hub-codex-proctoring-prompts/worktrees/final-qa-20261008/proctoring/models/phone/yolo11n.onnx')
+manifest = ModelManifest(model_id='yolo11n-coco-onnx', module='phone', task='object_detection', file='phone/yolo11n.onnx', format...natives: Ultralytics Enterprise license or a permissively licensed detector). No torch/ultralytics needed at runtime.")
+
+    @pytest.mark.real_model
+    def test_real_prepadded_frame_gives_identical_boxes(model_file, manifest):
+        """Square letterbox at 640: a frame whose long side is 640 and the same frame pre-padded by hand
+        with the letterbox gray (114) give a bit-identical network input, so the un-letterboxed boxes must
+        agree exactly after mapping the padded coordinates back. Class-agnostic config, geometry only."""
+>       det = _any_class_detector(model_file, manifest, rect=False)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_real_model.py:557:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\phone\tests\test_real_model.py:146: in _any_class_detector
+    cfg = dataclasses.replace(PhoneConfig(), phone_class_names=names, conf_threshold=0.05, min_box_area=0.0, **overrides)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:48: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PhoneConfig(input_size=640, rect=False, conf_threshold=0.05, nms_iou=0.45, max_detections=16, min_box_area=0.0, phone_..._zone_y_max=0.55, capture_min_area=0.012, capture_steady_ms=800.0, capture_max_motion=0.035, capture_min_hit_ratio=0.6)
+
+    def __post_init__(self) -> None:
+        problems = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{f.name} must be a finite number")
+        if self.input_size % 32 or not 160 <= self.input_size <= 1280:
+            problems.append("input_size must be a multiple of 32 in [160, 1280]")
+        for name in ("conf_threshold", "object_conf_threshold", "nms_iou", "high_conf_single", "track_iou_min", "capture_min_hit_ratio"):
+            if not 0.0 < getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in (0, 1]")
+        for name in (
+            "min_box_area",
+            "track_center_gate",
+            "raise_zone_y_max",
+            "raise_exit_y",
+            "raise_min_rise",
+            "capture_zone_x_min",
+            "capture_zone_x_max",
+            "capture_zone_y_max",
+            "capture_min_area",
+            "capture_max_motion",
+            "small_object_area",
+            "edge_margin",
+        ):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                problems.append(f"{name} must be in [0, 1]")
+        if not 1 <= self.max_detections <= 16:
+            problems.append("max_detections must be in [1, 16]")
+        if self.intra_op_threads < 1 or self.track_confirm_hits < 1 or self.max_tracks < 1 or self.track_recent_len < 1:
+            problems.append("thread/track counts must be >= 1")
+        if self.raise_exit_y < self.raise_zone_y_max:
+            problems.append("raise_exit_y must be >= raise_zone_y_max (hysteresis)")
+        if self.capture_zone_x_min >= self.capture_zone_x_max:
+            problems.append("capture_zone_x_min must be < capture_zone_x_max")
+        if self.execution_provider not in ("cpu", "auto"):
+            problems.append("execution_provider must be 'cpu' or 'auto'")
+        if not self.phone_class_names:
+            problems.append("phone_class_names must not be empty")
+        if set(self.object_class_names) & set(self.phone_class_names):
+            problems.append("object_class_names must not repeat phone classes")
+        for name in (
+            "min_interval_ms",
+            "stale_ms",
+            "track_max_miss_ms",
+            "track_history_ms",
+            "coast_visible_ms",
+            "raise_window_ms",
+            "raise_hold_ms",
+            "raise_min_history_ms",
+            "capture_steady_ms",
+        ):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} must be >= 0")
+        if self.track_history_ms < max(self.raise_window_ms, self.capture_steady_ms):
+            problems.append("track_history_ms must cover raise_window_ms and capture_steady_ms")
+        if problems:
+>           raise ValueError("; ".join(problems))
+E           ValueError: object_class_names must not repeat phone classes
+
+backend\proctor\phone\config.py:144: ValueError
+__________________ test_real_latency_p50_from_runtime_stats ___________________
+
+loaded_analyzer = <proctor.phone.analyzer.PhoneAnalyzer object at 0x00000245D279C800>
+
+    @pytest.mark.real_model
+    def test_real_latency_p50_from_runtime_stats(loaded_analyzer):
+        loaded_analyzer.start_session(SESSION, SourceMode.REPLAY)
+        n = 10
+        for i in range(n):
+            (obs,) = loaded_analyzer.process(make_frame(i, image=make_image(seed=200 + i)))
+            assert obs.status == ObservationStatus.OK
+        stats = loaded_analyzer.runtime_stats()
+        print(
+            f"\n[A03 real model] infer_ms p50={stats['infer_ms_p50']} p95={stats['infer_ms_p95']} "
+            f"process_ms p50={stats['process_ms_p50']} p95={stats['process_ms_p95']} over {n} frames 640x480 "
+            f"(onnxruntime {ort.__version__} CPU, {PhoneConfig().intra_op_threads} intra-op threads)"
+        )
+        assert stats["processed"] == n and stats["errors"] == 0
+        assert 0 < stats["infer_ms_p50"] < LATENCY_P50_LIMIT_MS
+>       assert stats["process_ms_p50"] >= stats["infer_ms_p50"]  # end-to-end includes the inference
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert 31.0 >= 32.72
+
+backend\proctor\phone\tests\test_real_model.py:641: AssertionError
+---------------------------- Captured stdout call -----------------------------
+
+[A03 real model] infer_ms p50=32.72 p95=35.35 process_ms p50=31.0 p95=47.0 over 10 frames 640x480 (onnxruntime 1.29.0 CPU, 2 intra-op threads)
+_____________ test_local_ack_route_requires_auth_and_strict_scope _____________
+
+self = TypeAdapter(Annotated[HealthReport, FieldInfo(annotation=NoneType, required=True)])
+ns_resolver = <pydantic._internal._namespace_utils.NsResolver object at 0x00000245D2DA42F0>
+force = False, raise_errors = False
+
+    def _init_core_attrs(
+        self, ns_resolver: _namespace_utils.NsResolver, force: bool, raise_errors: bool = False
+    ) -> bool:
+        """Initialize the core schema, validator, and serializer for the type.
+
+        Args:
+            ns_resolver: The namespace resolver to use when building the core schema for the adapted type.
+            force: Whether to force the construction of the core schema, validator, and serializer.
+                If `force` is set to `False` and `_defer_build` is `True`, the core schema, validator, and serializer will be set to mocks.
+            raise_errors: Whether to raise errors if initializing any of the core attrs fails.
+
+        Returns:
+            `True` if the core schema, validator, and serializer were successfully initialized, otherwise `False`.
+
+        Raises:
+            PydanticUndefinedAnnotation: If `PydanticUndefinedAnnotation` occurs in`__get_pydantic_core_schema__`
+                and `raise_errors=True`.
+        """
+        if not force and self._defer_build:
+            _mock_val_ser.set_type_adapter_mocks(self)
+            self.pydantic_complete = False
+            return False
+
+        try:
+>           self.core_schema = _getattr_no_parents(self._type, '__pydantic_core_schema__')
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\pydantic\type_adapter.py:287:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+obj = typing.Annotated[proctor_contracts.v1.HealthReport, FieldInfo(annotation=NoneType, required=True)]
+attribute = '__pydantic_core_schema__'
+
+    def _getattr_no_parents(obj: Any, attribute: str) -> Any:
+        """Returns the attribute value without attempting to look up attributes from parent types."""
+        if hasattr(obj, '__dict__'):
+            try:
+                return obj.__dict__[attribute]
+            except KeyError:
+                pass
+
+        slots = getattr(obj, '__slots__', None)
+        if slots is not None and attribute in slots:
+            return getattr(obj, attribute)
+        else:
+>           raise AttributeError(attribute)
+E           AttributeError: __pydantic_core_schema__
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\pydantic\type_adapter.py:56: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+_warn = <built-in function warn>
+
+    def __del__(self, _warn=warnings.warn):
+        if not self.is_closed():
+            _warn(f"unclosed event loop {self!r}", ResourceWarning, source=self)
+            if not self.is_running():
+>               self.close()
+
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\base_events.py:732:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:697: in close
+    self._close_self_pipe()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+
+    def _close_self_pipe(self):
+        if self._self_reading_future is not None:
+            self._self_reading_future.cancel()
+            self._self_reading_future = None
+>       self._ssock.close()
+        ^^^^^^^^^^^
+E       AttributeError: 'ProactorEventLoop' object has no attribute '_ssock'
+
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:779: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x00000245E4087920>
+when = 'call'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\logging.py:865: in pytest_runtest_call
+    yield
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\capture.py:900: in pytest_runtest_call
+    return (yield)
+            ^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\skipping.py:268: in pytest_runtest_call
+    return (yield)
+            ^^^^^
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\unraisableexception.py:183: in pytest_runtest_call
+    collect_unraisable(item.config)
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\unraisableexception.py:79: in collect_unraisable
+    raise errors[0]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+config = <_pytest.config.Config object at 0x00000245AE4B7980>
+
+    def collect_unraisable(config: Config) -> None:
+        pop_unraisable = config.stash[unraisable_exceptions].pop
+        errors: list[pytest.PytestUnraisableExceptionWarning | RuntimeError] = []
+        meta = None
+        hook_error = None
+        try:
+            while True:
+                try:
+                    meta = pop_unraisable()
+                except IndexError:
+                    break
+
+                if isinstance(meta, BaseException):
+                    hook_error = RuntimeError("Failed to process unraisable exception")
+                    hook_error.__cause__ = meta
+                    errors.append(hook_error)
+                    continue
+
+                msg = meta.msg
+                try:
+>                   warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+E                   pytest.PytestUnraisableExceptionWarning: Exception ignored in: <function BaseEventLoop.__del__ at 0x00000245B12E8D60>
+E                   Enable tracemalloc to get traceback where the object was allocated.
+E                   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\_pytest\unraisableexception.py:67: PytestUnraisableExceptionWarning
+------------------------------ Captured log call ------------------------------
+WARNING  proctor.app:app.py:470 exam file C:\Users\karab\AppData\Local\Temp\pytest-of-karab\pytest-239\test_local_ack_route_requires_0\none.json not found; using contract fixture exam (demo)
+__________________ test_teacher_flow_in_browser_with_restart __________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-239/test_teacher_flow_in_browser_w0')
+
+    def test_teacher_flow_in_browser_with_restart(tmp_path):
+        env = _node_env()
+        if env is None:
+            pytest.skip("Node + Playwright + Chromium not available")
+        pytest.importorskip("cv2")
+        httpx = pytest.importorskip("httpx")
+        port, data, log = _free_port(), tmp_path / "data", tmp_path / "server.log"
+        base = f"http://127.0.0.1:{port}"
+        server = _start_server(port, data, log)
+        student = None
+        try:
+            c = httpx.Client(base_url=base)
+            assert c.post("/api/teacher/login", json={"pin": PIN}).status_code == 200
+            code = c.post("/api/teacher/session", json={"title": "e2e"}).json()["join_code"]
+            student = subprocess.Popen(
+                [sys.executable, "-m", "classreview.examples.fake_student", "--server", base, "--code", code, "--refuse", "2", "--run-seconds", "200"],
+                cwd=PROCTORING, stdout=open(tmp_path / "student.log", "w"), stderr=subprocess.STDOUT,
+            )
+            deadline = time.monotonic() + 20
+            while time.monotonic() < deadline:
+                st = c.get("/api/teacher/students").json()
+                if st and st[0]["incidents_total"] == 3:
+                    break
+                time.sleep(0.3)
+            assert st and st[0]["incidents_total"] == 3 and "_token" not in st[0]
+            main = _node("main", base, tmp_path, env)
+            failed = [s for s in main["steps"] if not s["ok"]]
+>           assert not failed, json.dumps(main, ensure_ascii=False, indent=1)
+E           AssertionError: {
+E              "phase": "main",
+E              "steps": [
+E               {
+E                "name": "three_episodes_listed",
+E                "ok": true,
+E                "detail": "Телефон в кадре | Долгий взгляд вниз | Второе лицо в кадре"
+E               },
+E               {
+E                "name": "timeline_bars",
+E                "ok": true,
+E                "detail": ""
+E               },
+E               {
+E                "name": "zone_reported_red",
+E                "ok": true,
+E                "detail": ""
+E               },
+E               {
+E                "name": "not_recorded_is_unavailable",
+E                "ok": true,
+E                "detail": "Клип недоступен: На компьютере студента клип этого эпизода не сохранён."
+E               },
+E               {
+E                "name": "not_requested_state",
+E                "ok": true,
+E                "detail": ""
+E               },
+E               {
+E                "name": "loading_or_available_after_request",
+E                "ok": true,
+E                "detail": "Клип загружается… (запрошен в 19:49:51)"
+E               },
+E               {
+E                "name": "exception",
+E                "ok": false,
+E                "detail": "locator.textContent: Error: strict mode violation: locator('.t3-test-label') resolved to 2 elements:\n    1) <p class=\"t3-test-label\">ИСТОЧНИК НЕИЗВЕСТЕН</p> aka getByRole('paragraph').filter({ hasText: 'ИСТОЧНИК НЕИЗВЕСТЕН' })\n    2) <p class=\"t3-test-label\">ТЕСТОВЫЙ КЛИП: не запись реального студен"
+E               }
+E              ],
+E              "clipResponses": [
+E               {
+E                "status": 206,
+E                "range": "bytes=0-"
+E               }
+E              ],
+E              "console": []
+E             }
+E           assert not [{'name': 'exception', 'ok': False, 'detail': 'locator.textContent: Error: strict mode violation: locator(\'.t3-test-l...ter({ hasText: \'ИСТОЧНИК НЕИЗВЕСТЕН\' })\n    2) <p class="t3-test-label">ТЕСТОВЫЙ КЛИП: не запись реального студен'}]
+
+classreview\tests\test_review_e2e.py:87: AssertionError
+============================== warnings summary ===============================
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:76: public test image man-woman-okay.jpg not provided (QORGAU_A04_TEST_IMAGES)
+SKIPPED [3] backend\proctor\attention\tests\test_mediapipe_real.py:76: public test image portrait.jpg not provided (QORGAU_A04_TEST_IMAGES)
+SKIPPED [1] backend\proctor\capture\tests\test_capture_app_integration.py:181: a camera may be present
+SKIPPED [1] backend\proctor\capture\tests\test_capture_replay.py:127: symlink not permitted
+SKIPPED [1] backend\proctor\evidence\tests\test_qa_regressions.py:78: Windows symlink privilege unavailable (WinError 1314); OS settings unchanged
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:757: QORGAU_PHONE_EVAL_IMAGES not set (optional labelled-image pipeline check)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:833: QORGAU_PHONE_EVAL_IMAGES not set (optional labelled-image pipeline check)
+SKIPPED [1] backend\tests\test_integrated_flow.py:129: QORGAU_IT_REPLAY_DIR not set (replay media is kept outside Git)
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_success_writes_atomically
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_source_error_leaves_nothing_and_keeps_existing_target
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_real_prepare_from_file_installs_and_check_loads
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_app_health_lists_phone_model_missing
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_phone_only_config_does_not_report_other_objects
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_inference_is_deterministic
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-rect]
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[320-square]
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-rect]
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_boxes_map_to_unmirrored_normalized_frame_coordinates[640-square]
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_prepadded_frame_gives_identical_boxes
+FAILED backend/proctor/phone/tests/test_real_model.py::test_real_latency_p50_from_runtime_stats
+FAILED backend/proctor/uplink/tests/test_lock.py::test_local_ack_route_requires_auth_and_strict_scope
+FAILED classreview/tests/test_review_e2e.py::test_teacher_flow_in_browser_with_restart
+14 failed, 1463 passed, 10 skipped, 1 warning in 306.50s (0:05:06)

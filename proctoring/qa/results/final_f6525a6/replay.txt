@@ -1,0 +1,67 @@
+node.exe : 2026-10-08T14:42:12.910Z INFO shell.state: mode=normal exam=false backend=starting session=-
+строка:2 знак:561
++ ... lyContinue; & node.exe renderer/tests/real-bridge/run-replay.mjs 'C:\ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-10-08T14:4...rting session=-:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+2026-10-08T14:42:12.919Z INFO shell.backend: launch #1:
+C:\Qostanay_hub-codex-proctoring-prompts\verify-candidate\proctoring\.venv\Scripts\python.exe -m proctor serve
+--token-stdin --port 0 (cwd C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring)
+2026-10-08T14:42:15.323Z WARN shell.backend: READY pid 8668 differs from child pid 428
+2026-10-08T14:42:15.323Z INFO shell.backend: launch #1 ready: port 60534, backend 0.1.0
+2026-10-08T14:42:15.323Z INFO shell.state: mode=normal exam=false backend=ready session=-
+PASS  real backend READY through A06 BackendSupervisor — pid 8668
+2026-10-08T14:42:15.416Z INFO shell.stream: stream connected
+2026-10-08T14:42:15.418Z INFO shell.stream: preview connected
+PASS  product renderer, no FixtureBridge
+START zone_a_green_01
+2026-10-08T14:42:16.596Z INFO shell.state: mode=normal exam=false backend=ready session=-
+PASS  zone_a_green_01: preflight marked REPLAY
+2026-10-08T14:42:16.732Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-194216-c7dc5af8
+2026-10-08T14:42:17.740Z INFO shell.state: mode=exam exam=true backend=ready session=s-20261008-194216-c7dc5af8
+PASS  zone_a_green_01: exam opened through UI — preflight-to-exam 1128 ms
+PASS  zone_a_green_01: recording end is visible
+2026-10-08T14:42:47.506Z INFO shell.state: mode=releasing exam=true backend=ready session=s-20261008-194216-c7dc5af8
+2026-10-08T14:42:47.506Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-194216-c7dc5af8
+2026-10-08T14:42:47.679Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-194216-c7dc5af8
+PASS  zone_a_green_01: expected green — actual green
+PASS  zone_a_green_01: UI zone matches backend
+PASS  zone_a_green_01: summary REPLAY visible
+PASS  zone_a_green_01: exported HTML opens with zone
+PASS  zone_a_green_01: HTML is marked REPLAY
+START zone_b_yellow_02
+PASS  zone_b_yellow_02: preflight marked REPLAY
+2026-10-08T14:42:48.611Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-194248-2887ba35
+2026-10-08T14:42:48.935Z INFO shell.state: mode=exam exam=true backend=ready session=s-20261008-194248-2887ba35
+PASS  zone_b_yellow_02: exam opened through UI — preflight-to-exam 446 ms
+PASS  zone_b_yellow_02: recording end is visible
+2026-10-08T14:43:24.486Z INFO shell.state: mode=releasing exam=true backend=ready session=s-20261008-194248-2887ba35
+2026-10-08T14:43:24.487Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-194248-2887ba35
+2026-10-08T14:43:24.757Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-194248-2887ba35
+PASS  zone_b_yellow_02: expected yellow — actual yellow
+PASS  zone_b_yellow_02: UI zone matches backend
+PASS  zone_b_yellow_02: summary REPLAY visible
+PASS  zone_b_yellow_02: exported HTML opens with zone
+PASS  zone_b_yellow_02: HTML is marked REPLAY
+START zone_c_red_01
+PASS  zone_c_red_01: preflight marked REPLAY
+2026-10-08T14:43:25.492Z INFO shell.state: mode=preflight exam=false backend=ready session=s-20261008-194325-7bb817ce
+2026-10-08T14:43:25.824Z INFO shell.state: mode=exam exam=true backend=ready session=s-20261008-194325-7bb817ce
+PASS  zone_c_red_01: exam opened through UI — preflight-to-exam 564 ms
+PASS  zone_c_red_01: recording end is visible
+2026-10-08T14:44:05.924Z INFO shell.state: mode=releasing exam=true backend=ready session=s-20261008-194325-7bb817ce
+2026-10-08T14:44:05.924Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-194325-7bb817ce
+2026-10-08T14:44:06.026Z INFO shell.state: mode=normal exam=false backend=ready session=s-20261008-194325-7bb817ce
+PASS  zone_c_red_01: expected red — actual red
+PASS  zone_c_red_01: UI zone matches backend
+PASS  zone_c_red_01: summary REPLAY visible
+PASS  zone_c_red_01: exported HTML opens with zone
+PASS  zone_c_red_01: HTML is marked REPLAY
+PASS  renderer never opens camera/microphone
+PASS  no CSP violations
+PASS  no renderer errors
+PASS  backend checkout stayed at the recorded revision — f6525a6f7bd46c2347a5d7a7e010060c39191cfb
+2026-10-08T14:44:07.417Z INFO shell.backend: launch #1 exited: code 0, signal null, expected true
+2026-10-08T14:44:07.417Z INFO shell.state: mode=normal exam=false backend=stopped session=s-20261008-194325-7bb817ce
+30/30 checks passed

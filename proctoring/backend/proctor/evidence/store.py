@@ -51,6 +51,7 @@ from proctor_contracts.v1 import (
     CoverageGap,
     ErrorCode,
     EvidenceItem,
+    DeskScanResult,
     EvidenceKind,
     Health,
     HealthObservation,
@@ -85,6 +86,10 @@ from .coverage import (
     total,
 )
 from .media import JPEG_SOI, MediaPathError, MediaVault, encode_jpeg
+
+WEBM_EBML = bytes.fromhex("1a45dfa3")  # A15 desk-scan clip (video/webm, EBML header)
+# A15 (contract 1.2): one desk-scan result per session; additive table, created if missing (no schema bump).
+DESK_SCAN_TABLE = "CREATE TABLE IF NOT EXISTS desk_scans (session_id TEXT PRIMARY KEY, body_json TEXT NOT NULL, updated_at_us INTEGER NOT NULL)"
 from . import review_zones
 from .review_zones import SessionSummary, SessionOverviewRow, ZONE_ORDER
 
@@ -209,6 +214,7 @@ class SqliteEvidenceStore:
                 except BaseException:
                     conn.close()
                     raise
+                conn.execute(DESK_SCAN_TABLE)  # A15
                 self._conn = conn
                 self._deleted = {r[0] for r in conn.execute("SELECT session_id FROM deleted_sessions")}
                 self._recover_interrupted()
@@ -544,6 +550,81 @@ class SqliteEvidenceStore:
                 raise
             return item
 
+    # ================================================================ A15 desk scan (contract 1.2)
+    def record_desk_scan(self, session_id: str, result: DeskScanResult, clip: tuple[bytes, str, float] | None = None) -> DeskScanResult:
+        """Keep the latest desk-scan result of a session (a re-scan overwrites it). The clip (WebM bytes,
+        media type, start session ms) becomes evidence kind=clip without incident, ONLY when the session
+        retains media and the media limits allow it; otherwise evidence_id stays None."""
+        evidence_id = None
+        if clip is not None:
+            try:
+                evidence_id = self._store_desk_scan_clip(session_id, *clip)
+            except Exception as exc:
+                self._write_failed("desk_scan_clip", exc, session_id)
+        if evidence_id is not None:
+            result = result.model_copy(update={"evidence_id": evidence_id})
+        result = DeskScanResult.model_validate(result.model_dump())
+        conn = self._require_conn()
+        with self._db_lock:
+            if session_id in self._deleted or session_id not in self._live:
+                self._stats["writes_for_unknown_session" if session_id not in self._deleted else "writes_for_deleted_session"] += 1
+                return result
+            with db.transaction(conn):
+                conn.execute(
+                    "INSERT OR REPLACE INTO desk_scans(session_id, body_json, updated_at_us) VALUES (?,?,?)",
+                    (session_id, result.model_dump_json(), _us(utc_now())),
+                )
+        return result
+
+    def _store_desk_scan_clip(self, session_id: str, data: bytes, media_type: str, t_ms: float) -> str | None:
+        cfg = self.config
+        if media_type != "video/webm" or not data.startswith(WEBM_EBML):
+            return None
+        with self._session_lock(session_id):
+            with self._db_lock:
+                live = self._live.get(session_id)
+                if live is None or live.terminal or not live.retain_media or session_id in self._deleted:
+                    return None
+                conn = self._require_conn()
+                n_items, n_bytes = conn.execute(
+                    "SELECT COUNT(*), COALESCE(SUM(size_bytes), 0) FROM evidence WHERE session_id=?", (session_id,)
+                ).fetchone()
+                token = live.media_token
+            if (n_items >= cfg.max_media_items_per_session or len(data) > cfg.max_snapshot_bytes
+                    or n_bytes + len(data) > cfg.max_media_bytes_per_session or self.vault.free_bytes() < cfg.min_free_disk_bytes):
+                self._count(session_id, "desk_scan_clip_skipped_limit")
+                return None
+            file_name = MediaVault.new_file_name(media_type)
+            sha, size = self.vault.write(token, file_name, data)
+            created = utc_now()
+            evidence_id = f"ev-{secrets.token_hex(12)}"
+            try:
+                with self._db_lock:
+                    conn = self._require_conn()
+                    with db.transaction(conn):
+                        conn.execute(
+                            "INSERT INTO evidence(session_id, evidence_id, incident_id, kind, frame_id, t_session_ms, media_type,"
+                            " sha256, size_bytes, created_at, created_at_us, file_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                            (session_id, evidence_id, None, EvidenceKind.CLIP.value, None, max(0.0, float(t_ms)),
+                             media_type, sha, size, created.isoformat(), _us(created), file_name),
+                        )
+            except BaseException:
+                self.vault.remove_file(token, file_name)
+                raise
+            return evidence_id
+
+    def desk_scan(self, session_id: str) -> DeskScanResult | None:
+        with self._read() as conn:
+            return self._desk_scan(conn, session_id)
+
+    @staticmethod
+    def _desk_scan(conn: sqlite3.Connection, session_id: str) -> DeskScanResult | None:
+        try:
+            row = conn.execute("SELECT body_json FROM desk_scans WHERE session_id=?", (session_id,)).fetchone()
+        except sqlite3.OperationalError:  # table missing (older database opened read-only)
+            return None
+        return DeskScanResult.model_validate_json(row[0]) if row is not None else None
+
     # ================================================================ router-facing (raise ProctorError)
     def list_sessions(self) -> list[SessionInfo]:
         with self._read() as conn:
@@ -793,7 +874,9 @@ class SqliteEvidenceStore:
                     continue
                 if data is None:
                     evidence[item.evidence_id] = EvidenceFile(item, None, "missing")
-                elif hashlib.sha256(data).hexdigest() != item.sha256 or not data.startswith(JPEG_SOI):
+                elif hashlib.sha256(data).hexdigest() != item.sha256 or not data.startswith(
+                    WEBM_EBML if item.media_type == "video/webm" else JPEG_SOI
+                ):
                     evidence[item.evidence_id] = EvidenceFile(item, None, "hash_mismatch")
                 else:
                     evidence[item.evidence_id] = EvidenceFile(item, data, "ok")
@@ -855,6 +938,7 @@ class SqliteEvidenceStore:
                         for table in db.SESSION_TABLES:
                             conn.execute(f"DELETE FROM {table} WHERE session_id=?", (session_id,))
                             self._fault_point(f"delete:{table}")
+                        conn.execute("DELETE FROM desk_scans WHERE session_id=?", (session_id,))  # A15
                     self._deleted.add(session_id)
                     self._live.pop(session_id, None)
                     try:
@@ -1330,6 +1414,7 @@ class SqliteEvidenceStore:
         retained = conn.execute("SELECT COUNT(*) FROM evidence WHERE session_id=? AND purged_at IS NULL", (session_id,)).fetchone()[0]
         summary = SessionSummary(
             session=info,
+            desk_scan=self._desk_scan(conn, session_id),  # A15
             observed_ms=coverage["observed_ms"],
             paused_ms=coverage["paused_ms"],
             gaps=coverage["gaps"],

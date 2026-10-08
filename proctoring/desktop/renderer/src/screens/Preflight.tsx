@@ -21,7 +21,8 @@ const DEFAULT_EXAM_ID = "demo-exam-1";
 const checkTone = (c: PreflightCheck): Tone =>
   c.status === "pass" ? "ok" : c.status === "fail" ? (c.required ? "danger" : "warn") : c.status === "warn" ? "warn" : "neutral";
 
-export function PreflightScreen() {
+/** `onDeskScan`: A15 — after the checks the student goes to «Осмотр рабочего места», then to calibration. */
+export function PreflightScreen({ onDeskScan }: { onDeskScan: (sessionId: string) => void }) {
   const { bridge, shell, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher, live } = useApp();
   useLive(live);
   const [health, setHealth] = useState<HealthReport | null>(null);
@@ -29,7 +30,7 @@ export function PreflightScreen() {
   const capsTries = useRef(0);
   const [loadErr, setLoadErr] = useState<ApiErrorBody | null>(null);
   const [report, setReport] = useState<PreflightReport | null>(null);
-  const [busy, setBusy] = useState<null | "create" | "preflight" | "calibrate" | "skip" | "abort">(null);
+  const [busy, setBusy] = useState<null | "create" | "preflight" | "skip" | "abort">(null);
   const [actionErr, setActionErr] = useState<{ ctx: string; error: ApiErrorBody } | null>(null);
   const [skipOpen, setSkipOpen] = useState(false);
 
@@ -113,20 +114,6 @@ export function PreflightScreen() {
     if (!r.ok) return setActionErr({ ctx: "Создание сессии", error: r.error });
     bindSession(r.data);
     await runPreflight(r.data.session_id);
-  };
-
-  const toCalibration = async () => {
-    if (!session) return;
-    setBusy("calibrate");
-    setActionErr(null);
-    const r = await call(bridge.calibrationStart(session.session_id));
-    if (!r.ok) {
-      setBusy(null);
-      return setActionErr({ ctx: "Калибровка", error: r.error });
-    }
-    const s = await call(bridge.getSession(session.session_id));
-    setBusy(null);
-    if (s.ok) setSession(s.data);
   };
 
   const skip = async (reason: string) => {
@@ -285,11 +272,10 @@ export function PreflightScreen() {
                   variant="primary"
                   size="lg"
                   disabled={!report?.ready || backendLost}
-                  busy={busy === "calibrate"}
-                  onClick={() => void toCalibration()}
+                  onClick={() => onDeskScan(session.session_id)}
                   title={!report?.ready ? "Сначала должны пройти обязательные проверки" : undefined}
                 >
-                  К калибровке
+                  К осмотру рабочего места
                 </Button>
                 <Button busy={busy === "preflight"} disabled={backendLost} onClick={() => void runPreflight(session.session_id)}>
                   Проверить снова

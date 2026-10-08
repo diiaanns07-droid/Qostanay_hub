@@ -1,0 +1,27 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ test_camera_unplugged_mid_exam_is_visible_and_session_survives ________
+
+faked = <function faked.<locals>.make at 0x000002AD1C0EEC00>
+
+    def test_camera_unplugged_mid_exam_is_visible_and_session_survives(faked):
+        be = faked(capture="disconnect_after:2.5")
+        with StreamRecorder(be.ws_url("/stream"), headers=be.auth) as rec:
+            sid, checks = _live(be)
+            assert checks["_ready"]
+            api = Api(be.http)
+            be.http.post(f"/sessions/{sid}/calibration/skip", json={"reason": "qa"})
+            api.start(sid)
+            health_obs = rec.wait(lambda ms: [m["message"]["observation"] for m in ms if m["message"]["type"] == "observation" and m["message"]["observation"]["kind"] == "health"], 10)
+            assert health_obs, "camera loss must be published as a HealthObservation"
+            h = health_obs[-1]
+>           assert h["health"]["code"] == "camera_disconnected" and h["status"] == "degraded" and h["source_mode"] == "live" and h["frame_id"] is None
+E           AssertionError: assert ('noise_calibration' == 'camera_disconnected'
+E
+E             - camera_disconnected
+E             + noise_calibration)
+
+qa\tests\test_fault_injection.py:132: AssertionError
+=========================== short test summary info ===========================
+FAILED qa/tests/test_fault_injection.py::test_camera_unplugged_mid_exam_is_visible_and_session_survives
+1 failed in 3.00s

@@ -28,6 +28,7 @@ import type {
   CalibrationState,
   CalibrationTarget,
   CoverageGap,
+  DeskScanResult,
   EnvironmentCapabilities,
   EnvironmentObservation,
   ErrorCode,
@@ -61,6 +62,7 @@ import type {
 import { CalibrationTargetValues } from "@contracts/qorgau-v1.generated";
 import { FRAME_H, FRAME_W, renderFixtureFrame } from "./fixtureFrames";
 import { RULE, CATEGORY, REVIEW_STATUS } from "../lib/labels";
+import type { DeskScanBridge, DeskScanSkipRequest, DeskScanStartArgs } from "../../../shared/desk-scan";
 
 /** Mirrors A06 ipc/api.ts so the fixture rejects exactly what the real shell rejects. */
 type Gated = "listSessions" | "listIncidents" | "getIncident" | "addReview" | "getEvidence" | "getSummary" | "exportReport" | "deleteSession" | "pauseExam" | "resumeExam";
@@ -82,6 +84,8 @@ export interface FixtureFaults {
   calibrationFailsOnce: boolean;
   /** saveAnswer latency 0.2–1.5 s in random order (request races). */
   slowSaves: boolean;
+  /** A15 desk scan ends with objects_found (one FIXTURE "телефон"); also when student_label contains "phone". */
+  deskScanFindsPhone: boolean;
 }
 
 const TERMINAL: SessionState[] = ["finished", "aborted", "failed"];
@@ -138,7 +142,11 @@ function emptyCalibration(): CalibrationState {
   };
 }
 
-export class FixtureBridge implements QorgauBridge {
+function emptyDeskScan(): DeskScanResult {
+  return { scan_id: null, state: "not_started", started_t_ms: null, duration_ms: null, objects: [], evidence_id: null, message_ru: null, skip_reason: null };
+}
+
+export class FixtureBridge implements QorgauBridge, DeskScanBridge {
   readonly bridgeVersion = BRIDGE_VERSION;
   readonly transport = "fixture" as const;
 
@@ -148,6 +156,7 @@ export class FixtureBridge implements QorgauBridge {
     answerSaveFails: false,
     calibrationFailsOnce: true,
     slowSaves: false,
+    deskScanFindsPhone: false,
   };
 
   /** One-time PIN of this tab (never a built-in constant); shown only in the FIXTURE panel/dialog. */
@@ -172,6 +181,8 @@ export class FixtureBridge implements QorgauBridge {
   private preflightReport: PreflightReport | null = null;
   private cal: CalibrationState = emptyCalibration();
   private calFailedOnce = false;
+  /** A15 desk scan per session (FIXTURE: no camera, no detector; the outcome is scripted). */
+  private deskScans = new Map<string, DeskScanResult>();
   private answers = new Map<string, Map<string, AnswerRecord>>();
   private incidents = new Map<string, Incident[]>();
   private reviews = new Map<string, HumanReview[]>();
@@ -1041,6 +1052,72 @@ export class FixtureBridge implements QorgauBridge {
     });
   }
 
+  // ================================================================== A15 desk scan (FIXTURE)
+  getDeskScan(sessionId: string): Promise<BridgeResult<DeskScanResult>> {
+    return this.respond(() => {
+      const s = this.find(sessionId);
+      if ("code" in s) return s;
+      return this.deskScans.get(sessionId) ?? emptyDeskScan();
+    }, 40);
+  }
+
+  startDeskScan(sessionId: string, body: DeskScanStartArgs): Promise<BridgeResult<DeskScanResult>> {
+    return this.respond(() => {
+      const s = this.requireActive(sessionId, "осмотреть рабочее место", "preflight", "calibrating", "ready");
+      if ("code" in s) return s;
+      if (!Number.isInteger(body.duration_s) || body.duration_s < 5 || body.duration_s > 30) return err("INVALID_ARGUMENT", "duration_s: 5–30");
+      if (body.mode !== "laptop" && body.mode !== "usb") return err("INVALID_ARGUMENT", "mode: laptop|usb");
+      if (this.deskScans.get(sessionId)?.state === "recording") return err("INVALID_STATE", "Осмотр уже идёт");
+      const variant = `Вариант: ${body.mode === "laptop" ? "ноутбук" : "USB-камера"}.`;
+      const phone = this.faults.deskScanFindsPhone || /phone/i.test(s.student_label ?? "");
+      const scan: DeskScanResult = {
+        scan_id: this.nextId("desk"),
+        state: "recording",
+        started_t_ms: Math.round(this.t()),
+        duration_ms: null,
+        objects: [],
+        evidence_id: null,
+        message_ru: `${variant} Идёт осмотр (FIXTURE, без камеры).`,
+        skip_reason: null,
+      };
+      this.deskScans.set(sessionId, scan);
+      setTimeout(() => {
+        if (this.deskScans.get(sessionId) !== scan) return; // re-run or skipped meanwhile
+        this.deskScans.set(sessionId, {
+          ...scan,
+          state: phone ? "objects_found" : "clear",
+          duration_ms: body.duration_s * 1000,
+          objects: phone ? [{ class_name: "cell phone", label_ru: "телефон", max_confidence: 0.82, seen_ms: 1500 }] : [],
+          message_ru: phone
+            ? `${variant} Замечено: телефон — уберите его и повторите осмотр. (FIXTURE: сценарий, не детектор)`
+            : `${variant} Стол осмотрен: посторонних предметов не замечено. (FIXTURE: сценарий, не детектор)`,
+        });
+      }, body.duration_s * 1000);
+      return scan;
+    });
+  }
+
+  skipDeskScan(sessionId: string, body: DeskScanSkipRequest): Promise<BridgeResult<DeskScanResult>> {
+    return this.respond(() => {
+      if (!this.shell.operator_unlocked) return shellErr("INVALID_STATE", "operator_locked", "skipDeskScan requires the operator (teacher) unlock");
+      const s = this.requireActive(sessionId, "пропустить осмотр рабочего места", "preflight", "calibrating", "ready");
+      if ("code" in s) return s;
+      if (!body.reason.trim() || body.reason.length > 200) return err("INVALID_ARGUMENT", "Причина пропуска: 1–200 символов");
+      const fixed = body.reason === "fixed_camera_teacher_check";
+      const scan: DeskScanResult = {
+        ...emptyDeskScan(),
+        scan_id: this.nextId("desk"),
+        state: "skipped",
+        skip_reason: body.reason,
+        message_ru: fixed
+          ? "Вариант: камера не двигается. Осмотр камерой невозможен (стационарная камера) — подтверждён преподавателем."
+          : `Осмотр пропущен оператором: ${body.reason}`,
+      };
+      this.deskScans.set(sessionId, scan);
+      return scan;
+    });
+  }
+
   startExam(sessionId: string): Promise<BridgeResult<SessionInfo>> {
     return this.respond(() => {
       const s = this.requireActive(sessionId, "начать экзамен", "ready");
@@ -1260,6 +1337,7 @@ export class FixtureBridge implements QorgauBridge {
           "Синтетический источник кадров; точность распознавания не измерялась.",
           "Защита среды не проверялась (нет оболочки Electron).",
         ],
+        desk_scan: null,
       };
     });
   }

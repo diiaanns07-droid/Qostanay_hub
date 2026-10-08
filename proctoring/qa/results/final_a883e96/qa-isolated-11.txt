@@ -1,0 +1,30 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_____________________ test_full_flow_offline_audit_guard ______________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-221/test_full_flow_offline_audit_g0')
+record_property = <function record_property.<locals>.append_property at 0x000001A3CEDF7740>
+
+    def test_full_flow_offline_audit_guard(tmp_path, record_property):
+        result = _offline_run(tmp_path, [], expect_isolated=False)
+        record_property("layer", "A: audit hook in backend process")
+>       _assert_offline_ok(result)
+
+qa\tests\test_offline.py:82:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+result = {'isolation': 'not requested', 'rows': [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {"co...am_definition', 'status': 'PASS', 'detail': 'demo-exam-1: 2 question(s)'}, ...], 'exit_code': 0, 'token_leaks': 0, ...}
+
+    def _assert_offline_ok(result: dict) -> None:
+        failed = [r for r in result["rows"] if r["status"] == "FAIL"]
+>       assert not failed, failed
+E       AssertionError: [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {"contract": "qorgau.v1", "contract_version...chema:
+E             {'additionalProperties': False,
+E              'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E               "}]
+E       assert not [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {"contract": "qorgau.v1", "contract_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      "}]
+
+qa\tests\test_offline.py:74: AssertionError
+=========================== short test summary info ===========================
+FAILED qa/tests/test_offline.py::test_full_flow_offline_audit_guard - Asserti...
+1 failed in 8.06s

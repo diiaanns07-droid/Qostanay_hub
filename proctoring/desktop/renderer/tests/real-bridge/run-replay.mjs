@@ -171,7 +171,7 @@ await page.addInitScript(() => {
   };
   window.__gum = 0;
   if (navigator.mediaDevices) navigator.mediaDevices.getUserMedia = async () => { window.__gum += 1; throw new Error("blocked"); };
-  const names = ["getShellState", "getEnvironmentCapabilities", "operatorUnlock", "operatorLock", "requestEmergencyExit", "health", "listSessions", "createSession", "getSession", "runPreflight", "calibrationStart", "calibrationTarget", "calibrationState", "calibrationFinish", "calibrationCancel", "calibrationSkip", "startExam", "pauseExam", "resumeExam", "finishExam", "abortExam", "getExam", "saveAnswer", "listAnswers", "listIncidents", "getIncident", "addReview", "getEvidence", "getSummary", "exportReport", "deleteSession"];
+  const names = ["getShellState", "getEnvironmentCapabilities", "operatorUnlock", "operatorLock", "requestEmergencyExit", "health", "listSessions", "createSession", "getSession", "runPreflight", "calibrationStart", "calibrationTarget", "calibrationState", "calibrationFinish", "calibrationCancel", "calibrationSkip", "getDeskScan", "startDeskScan", "skipDeskScan", "startExam", "pauseExam", "resumeExam", "finishExam", "abortExam", "getExam", "saveAnswer", "listAnswers", "listIncidents", "getIncident", "addReview", "getEvidence", "getSummary", "exportReport", "deleteSession"];
   const bridge = { bridgeVersion: "1.0.0", transport: "electron" };
   for (const n of names) bridge[n] = async (...args) => dec(await window.__qorgauInvoke(n, args));
   bridge.onShellState = shellF.sub;

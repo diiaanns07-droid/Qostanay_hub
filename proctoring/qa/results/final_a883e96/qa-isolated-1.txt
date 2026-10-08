@@ -1,0 +1,27 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________________________ test_full_synthetic_flow ___________________________
+
+backend = BackendProcess(proc=<Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...>, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 65181, "pid": 35700}\n', exit_code=None)
+api = <qorgau_qa.backend.Api object at 0x0000021172D2CD70>
+record_property = <function record_property.<locals>.append_property at 0x0000021172DE5440>
+
+    def test_full_synthetic_flow(backend, api, record_property):
+        rows = run_full_flow(backend)
+        for name, status, detail in rows.rows:
+            record_property(f"{status}:{name}", detail)
+>       assert not rows.failed, "\n".join(f"FAIL {n}: {d}" for n, _, d in rows.failed)
+E       AssertionError: FAIL ready_line_contract: QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 65181, "pid": 35700}
+E         FAIL summary: ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E         Failed validating 'additionalProperties' in schema:
+E             {'additionalProperties': False,
+E              'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E
+E       assert not [('ready_line_contract', 'FAIL', 'QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backend_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      ")]
+E        +  where [('ready_line_contract', 'FAIL', 'QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backend_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      ")] = Rows(rows=[('ready_line_contract', 'FAIL', 'QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backe...rst=[1, 2, 3] last=[169, 170, 171]'), ('synthetic_observations_labelled', 'PASS', '122 observations, mislabelled=[]')]).failed
+
+qa\tests\test_e2e_synthetic.py:21: AssertionError
+=========================== short test summary info ===========================
+FAILED qa/tests/test_e2e_synthetic.py::test_full_synthetic_flow - AssertionEr...
+1 failed in 8.14s

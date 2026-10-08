@@ -1,0 +1,1185 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="12" skipped="5" tests="373" time="149.264" timestamp="2026-10-08T19:11:57.379896+05:00" hostname="Kayenlap"><testcase classname="qa.tests.test_e2e_synthetic" name="test_full_synthetic_flow" time="7.012"><properties><property name="FAIL:ready_line_contract" value="QORGAU_READY {&quot;contract&quot;: &quot;qorgau.v1&quot;, &quot;contract_version&quot;: &quot;1.2.0&quot;, &quot;backend_version&quot;: &quot;0.1.0&quot;, &quot;port&quot;: 54036, &quot;pid&quot;: 28140}" /><property name="PASS:health" value="backend=ok, capture=idle, phone=model_missing, attention=model_missing, identity=model_missing, fusion=ok, evidence=ok, environment=shell_not_reported" /><property name="PASS:capabilities_roundtrip" value="fake shell, labelled" /><property name="PASS:stream_hello_first" value="[{'contract': 'qorgau.v1', 'seq': 1, 'sent_at': '2026-10-08T14:11:58.941190+00:00', 'session_id': None, 'message': {'type': 'hello', 'contract': 'qorgau.v1', 'contract_version': '1.2.0', 'backend_vers" /><property name="PASS:create_session" value="s-20261008-191158-b25a2709" /><property name="PASS:exam_definition" value="demo-exam-1: 2 question(s)" /><property name="PASS:preflight_ready" value="backend=pass, camera=pass, lighting=pass, phone_model=warn, face_model=warn, fusion=pass, storage=pass, environment_protection=warn, offline_assets=not_run" /><property name="PASS:preflight_bootstrap_parts_labelled_not_pass" value="bootstrap parts must be WARN + impl=bootstrap, never PASS" /><property name="PASS:preflight_no_failed_required_check_when_ready" value="" /><property name="PASS:calibration" value="5 targets, sample-driven" /><property name="PASS:start" value="3984.0" /><property name="PASS:answer_last_writer_by_client_seq" value="stale write kept ['b']" /><property name="PASS:answers_list" value="1 answer(s)" /><property name="PASS:environment_events" value="accepted=8" /><property name="PASS:environment_events_dedup" value="dup=8" /><property name="PASS:environment_incidents_on_stream" value="all actions observed; one or more grouped environment episodes" /><property name="PASS:phone_episode_opened_on_stream" value="Телефон виден 1,0 с; требуется проверка преподавателем." /><property name="PASS:episode_explainable_and_labelled" value="priority=medium caveats=3" /><property name="PASS:incidents_list" value="3 incident(s), ordered by t_start_ms" /><property name="PASS:human_review_append_only" value="reviews=2 status=confirmed" /><property name="PASS:review_comment_stored_verbatim" value="escaping is the renderer/report job; API stores text" /><property name="FAIL:summary" value="ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;      " /><property name="PASS:report_html" value="200 text/html; charset=utf-8" /><property name="PASS:report_json_export" value="200 application/json" /><property name="PASS:metrics" value="capture_fps=15.0 frames=76" /><property name="PASS:preview_jpeg" value="10590 bytes frame_id=74 cache=no-store" /><property name="PASS:finish" value="finished" /><property name="PASS:finish_closes_all_incidents" value="open after finish: []" /><property name="PASS:no_answers_after_finish" value="" /><property name="PASS:no_environment_events_after_finish" value="409" /><property name="PASS:stream_state_order" value="created → preflight → calibrating → ready → running → finished" /><property name="PASS:restart_new_session" value="201" /><property name="PASS:restart_capture_reopens" value="" /><property name="PASS:restart_abort" value="" /><property name="PASS:stream_envelopes_valid" value="167 envelopes, 0 invalid []" /><property name="PASS:stream_seq_contiguous" value="first=[1, 2, 3] last=[165, 166, 167]" /><property name="PASS:synthetic_observations_labelled" value="117 observations, mislabelled=[]" /></properties><failure message="AssertionError: FAIL ready_line_contract: QORGAU_READY {&quot;contract&quot;: &quot;qorgau.v1&quot;, &quot;contract_version&quot;: &quot;1.2.0&quot;, &quot;backend_version&quot;: &quot;0.1.0&quot;, &quot;port&quot;: 54036, &quot;pid&quot;: 28140}&#10;  FAIL summary: ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;  &#10;  Failed validating 'additionalProperties' in schema:&#10;      {'additionalProperties': False,&#10;       'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;        &#10;assert not [('ready_line_contract', 'FAIL', 'QORGAU_READY {&quot;contract&quot;: &quot;qorgau.v1&quot;, &quot;contract_version&quot;: &quot;1.2.0&quot;, &quot;backend_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      &quot;)]&#10; +  where [('ready_line_contract', 'FAIL', 'QORGAU_READY {&quot;contract&quot;: &quot;qorgau.v1&quot;, &quot;contract_version&quot;: &quot;1.2.0&quot;, &quot;backend_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      &quot;)] = Rows(rows=[('ready_line_contract', 'FAIL', 'QORGAU_READY {&quot;contract&quot;: &quot;qorgau.v1&quot;, &quot;contract_version&quot;: &quot;1.2.0&quot;, &quot;backe...rst=[1, 2, 3] last=[165, 166, 167]'), ('synthetic_observations_labelled', 'PASS', '117 observations, mislabelled=[]')]).failed">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 54036, "pid": 28140}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x00000242932187A0&gt;
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x000002429308C900&gt;
+
+    def test_full_synthetic_flow(backend, api, record_property):
+        rows = run_full_flow(backend)
+        for name, status, detail in rows.rows:
+            record_property(f"{status}:{name}", detail)
+&gt;       assert not rows.failed, "\n".join(f"FAIL {n}: {d}" for n, _, d in rows.failed)
+E       AssertionError: FAIL ready_line_contract: QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 54036, "pid": 28140}
+E         FAIL summary: ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E         Failed validating 'additionalProperties' in schema:
+E             {'additionalProperties': False,
+E              'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E
+E       assert not [('ready_line_contract', 'FAIL', 'QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backend_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      ")]
+E        +  where [('ready_line_contract', 'FAIL', 'QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backend_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      ")] = Rows(rows=[('ready_line_contract', 'FAIL', 'QORGAU_READY {"contract": "qorgau.v1", "contract_version": "1.2.0", "backe...rst=[1, 2, 3] last=[165, 166, 167]'), ('synthetic_observations_labelled', 'PASS', '117 observations, mislabelled=[]')]).failed
+
+qa\tests\test_e2e_synthetic.py:21: AssertionError</failure></testcase><testcase classname="qa.tests.test_e2e_synthetic" name="test_finish_during_open_phone_episode_closes_it_with_session_finished" time="4.479" /><testcase classname="qa.tests.test_e2e_synthetic" name="test_abort_during_open_episode_closes_it_with_session_aborted" time="4.478" /><testcase classname="qa.tests.test_e2e_synthetic" name="test_pause_closes_open_episode_rejects_answers_and_counts_gap" time="5.049" /><testcase classname="qa.tests.test_e2e_synthetic" name="test_environment_events_accepted_while_paused" time="0.097" /><testcase classname="qa.tests.test_e2e_synthetic" name="test_restart_after_finish_reuses_camera_owner_cleanly" time="0.741" /><testcase classname="qa.tests.test_fault_injection" name="test_doubles_drive_a_complete_live_session" time="4.666" /><testcase classname="qa.tests.test_fault_injection" name="test_camera_open_failure_is_an_honest_preflight_fail[CAMERA_UNAVAILABLE]" time="1.711" /><testcase classname="qa.tests.test_fault_injection" name="test_camera_open_failure_is_an_honest_preflight_fail[CAMERA_BUSY]" time="1.439" /><testcase classname="qa.tests.test_fault_injection" name="test_camera_open_failure_is_an_honest_preflight_fail[CAMERA_DENIED]" time="1.612" /><testcase classname="qa.tests.test_fault_injection" name="test_camera_without_frames_fails_preflight_within_timeout" time="6.917" /><testcase classname="qa.tests.test_fault_injection" name="test_capture_factory_crash_keeps_backend_up" time="1.456" /><testcase classname="qa.tests.test_fault_injection" name="test_camera_unplugged_mid_exam_is_visible_and_session_survives" time="2.631"><failure message="AssertionError: assert ('noise_calibration' == 'camera_disconnected'&#10;  &#10;  - camera_disconnected&#10;  + noise_calibration)">faked = &lt;function faked.&lt;locals&gt;.make at 0x0000024294761440&gt;
+
+    def test_camera_unplugged_mid_exam_is_visible_and_session_survives(faked):
+        be = faked(capture="disconnect_after:2.5")
+        with StreamRecorder(be.ws_url("/stream"), headers=be.auth) as rec:
+            sid, checks = _live(be)
+            assert checks["_ready"]
+            api = Api(be.http)
+            be.http.post(f"/sessions/{sid}/calibration/skip", json={"reason": "qa"})
+            api.start(sid)
+            health_obs = rec.wait(lambda ms: [m["message"]["observation"] for m in ms if m["message"]["type"] == "observation" and m["message"]["observation"]["kind"] == "health"], 10)
+            assert health_obs, "camera loss must be published as a HealthObservation"
+            h = health_obs[-1]
+&gt;           assert h["health"]["code"] == "camera_disconnected" and h["status"] == "degraded" and h["source_mode"] == "live" and h["frame_id"] is None
+E           AssertionError: assert ('noise_calibration' == 'camera_disconnected'
+E
+E             - camera_disconnected
+E             + noise_calibration)
+
+qa\tests\test_fault_injection.py:132: AssertionError</failure></testcase><testcase classname="qa.tests.test_fault_injection" name="test_phone_weights_missing_blocks_live_without_fallback" time="1.948" /><testcase classname="qa.tests.test_fault_injection" name="test_corrupt_phone_weights_load_error_keeps_backend_up" time="1.581" /><testcase classname="qa.tests.test_fault_injection" name="test_face_model_missing_blocks_live_calibration" time="1.525" /><testcase classname="qa.tests.test_fault_injection" name="test_synthetic_demo_still_available_when_models_are_missing" time="1.371" /><testcase classname="qa.tests.test_fault_injection" name="test_storage_open_error_blocks_live" time="1.473" /><testcase classname="qa.tests.test_fault_injection" name="test_storage_unwritable_blocks_live" time="1.481" /><testcase classname="qa.tests.test_fault_injection" name="test_storage_write_failure_does_not_silence_episode_detection" time="4.630" /><testcase classname="qa.tests.test_fault_injection" name="test_pipeline_errors_are_visible_in_health[store_writes_fail]" time="4.112" /><testcase classname="qa.tests.test_fault_injection" name="test_pipeline_errors_are_visible_in_health[engine_consume_fails]" time="4.267" /><testcase classname="qa.tests.test_fault_injection" name="test_slow_analyzer_does_not_block_api_or_finish" time="4.348" /><testcase classname="qa.tests.test_fault_injection" name="test_engine_consume_failure_keeps_session_controllable" time="3.046" /><testcase classname="qa.tests.test_fault_injection" name="test_engine_finish_failure_still_finishes_session" time="3.065" /><testcase classname="qa.tests.test_fault_injection" name="test_finish_during_open_episode_with_module_engine" time="4.002" /><testcase classname="qa.tests.test_final_guard_limit" name="test_qa_adapter_preserves_arguments_and_caps_duration[arguments0]" time="0.120" /><testcase classname="qa.tests.test_final_guard_limit" name="test_qa_adapter_preserves_arguments_and_caps_duration[arguments1]" time="0.103" /><testcase classname="qa.tests.test_final_guard_limit" name="test_qa_adapter_preserves_arguments_and_caps_duration[arguments2]" time="0.085" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[AnswerRecord.single]" time="0.011" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[AnswerUpsert.single]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[ApiError.invalid_state]" time="0.010" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[AttentionObservation.gaze_down]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[AttentionObservation.two_faces]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[AttentionObservation.unknown_low_light]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[CalibrationState.collecting]" time="0.003" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[EnvironmentCapabilities.unverified]" time="0.007" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[EnvironmentEventAck.one]" time="0.008" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[EnvironmentEventBatch.alt_tab]" time="0.009" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[EnvironmentObservation.alt_tab_detected]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[ExamDefinition.demo_min]" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[ExportManifest.example]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[FramePacketMeta.synthetic]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[HealthObservation.camera_disconnected]" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[HealthReport.bootstrap]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[HumanReview.dismissed]" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[HumanReviewCreate.dismiss]" time="0.007" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[Incident.phone_visible_open]" time="0.008" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[IncidentChange.opened]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[IncidentDetail.with_review]" time="0.010" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[ModelManifest.example_only]" time="0.010" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[PhoneObservation.phone_visible]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[PreflightReport.synthetic]" time="0.003" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[PreviewFrameMeta.synthetic]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[RuntimeMetrics.synthetic]" time="0.010" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[SessionCreate.synthetic]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[SessionInfo.running]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[SessionSummary.finished]" time="0.003" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[SourceConfig.synthetic]" time="0.008" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[StreamEnvelope.hello]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[StreamEnvelope.incident_opened]" time="0.003" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_accepts_every_contract_fixture[StreamEnvelope.observation_phone]" time="0.003" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_rejects_mutated_payloads[extra]" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_rejects_mutated_payloads[bad_enum]" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_rejects_mutated_payloads[traversal_id]" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_rejects_mutated_payloads[naive_datetime]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_validator_rejects_mutated_payloads[missing_field]" time="0.002" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_both_validators_are_independent" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_api_error_helper_rejects_non_contract_errors" time="0.001" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_preview_parser_rejects_malformed_frames" time="0.000" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_backend_start_reports_failure_instead_of_hanging" time="0.867" /><testcase classname="qa.tests.test_harness_selfcheck" name="test_session_body_helper_returns_independent_copies" time="0.001" /><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-preflight]" time="1.068"><properties><property name="result" value="created --preflight--&gt; HTTP 200, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-calibration/start]" time="0.015"><properties><property name="result" value="created --calibration/start--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-calibration/target]" time="0.015"><properties><property name="result" value="created --calibration/target--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-calibration/finish]" time="0.017"><properties><property name="result" value="created --calibration/finish--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-calibration/cancel]" time="0.014"><properties><property name="result" value="created --calibration/cancel--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-calibration/skip]" time="0.015"><properties><property name="result" value="created --calibration/skip--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-start]" time="0.015"><properties><property name="result" value="created --start--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-pause]" time="0.015"><properties><property name="result" value="created --pause--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-resume]" time="0.018"><properties><property name="result" value="created --resume--&gt; HTTP 409, state created" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-finish]" time="0.014"><properties><property name="result" value="created --finish--&gt; HTTP 200, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[created-abort]" time="0.012"><properties><property name="result" value="created --abort--&gt; HTTP 200, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-preflight]" time="0.079"><properties><property name="result" value="preflight --preflight--&gt; HTTP 200, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-calibration/start]" time="0.086"><properties><property name="result" value="preflight --calibration/start--&gt; HTTP 200, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-calibration/target]" time="0.078"><properties><property name="result" value="preflight --calibration/target--&gt; HTTP 409, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-calibration/finish]" time="0.075"><properties><property name="result" value="preflight --calibration/finish--&gt; HTTP 409, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-calibration/cancel]" time="0.085"><properties><property name="result" value="preflight --calibration/cancel--&gt; HTTP 409, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-calibration/skip]" time="0.088"><properties><property name="result" value="preflight --calibration/skip--&gt; HTTP 200, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-start]" time="0.087"><properties><property name="result" value="preflight --start--&gt; HTTP 409, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-pause]" time="0.082"><properties><property name="result" value="preflight --pause--&gt; HTTP 409, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-resume]" time="0.089"><properties><property name="result" value="preflight --resume--&gt; HTTP 409, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-finish]" time="0.073"><properties><property name="result" value="preflight --finish--&gt; HTTP 200, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[preflight-abort]" time="0.085"><properties><property name="result" value="preflight --abort--&gt; HTTP 200, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-preflight]" time="0.095"><properties><property name="result" value="calibrating --preflight--&gt; HTTP 409, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-calibration/start]" time="0.095"><properties><property name="result" value="calibrating --calibration/start--&gt; HTTP 200, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-calibration/target]" time="0.091"><properties><property name="result" value="calibrating --calibration/target--&gt; HTTP 200, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-calibration/finish]" time="0.089"><properties><property name="result" value="calibrating --calibration/finish--&gt; HTTP 200, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-calibration/cancel]" time="0.090"><properties><property name="result" value="calibrating --calibration/cancel--&gt; HTTP 200, state preflight" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-calibration/skip]" time="0.092"><properties><property name="result" value="calibrating --calibration/skip--&gt; HTTP 200, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-start]" time="0.096"><properties><property name="result" value="calibrating --start--&gt; HTTP 409, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-pause]" time="0.089"><properties><property name="result" value="calibrating --pause--&gt; HTTP 409, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-resume]" time="0.088"><properties><property name="result" value="calibrating --resume--&gt; HTTP 409, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-finish]" time="0.086"><properties><property name="result" value="calibrating --finish--&gt; HTTP 200, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[calibrating-abort]" time="0.088"><properties><property name="result" value="calibrating --abort--&gt; HTTP 200, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-preflight]" time="0.088"><properties><property name="result" value="ready --preflight--&gt; HTTP 409, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-calibration/start]" time="0.094"><properties><property name="result" value="ready --calibration/start--&gt; HTTP 200, state calibrating" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-calibration/target]" time="0.082"><properties><property name="result" value="ready --calibration/target--&gt; HTTP 409, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-calibration/finish]" time="0.094"><properties><property name="result" value="ready --calibration/finish--&gt; HTTP 409, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-calibration/cancel]" time="0.086"><properties><property name="result" value="ready --calibration/cancel--&gt; HTTP 409, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-calibration/skip]" time="0.107"><properties><property name="result" value="ready --calibration/skip--&gt; HTTP 409, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-start]" time="0.156"><properties><property name="result" value="ready --start--&gt; HTTP 200, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-pause]" time="0.125"><properties><property name="result" value="ready --pause--&gt; HTTP 409, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-resume]" time="0.108"><properties><property name="result" value="ready --resume--&gt; HTTP 409, state ready" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-finish]" time="0.083"><properties><property name="result" value="ready --finish--&gt; HTTP 200, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[ready-abort]" time="0.083"><properties><property name="result" value="ready --abort--&gt; HTTP 200, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-preflight]" time="0.089"><properties><property name="result" value="running --preflight--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-calibration/start]" time="0.091"><properties><property name="result" value="running --calibration/start--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-calibration/target]" time="0.103"><properties><property name="result" value="running --calibration/target--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-calibration/finish]" time="0.089"><properties><property name="result" value="running --calibration/finish--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-calibration/cancel]" time="0.092"><properties><property name="result" value="running --calibration/cancel--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-calibration/skip]" time="0.094"><properties><property name="result" value="running --calibration/skip--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-start]" time="0.080"><properties><property name="result" value="running --start--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-pause]" time="0.102"><properties><property name="result" value="running --pause--&gt; HTTP 200, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-resume]" time="0.103"><properties><property name="result" value="running --resume--&gt; HTTP 409, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-finish]" time="0.099"><properties><property name="result" value="running --finish--&gt; HTTP 200, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[running-abort]" time="0.094"><properties><property name="result" value="running --abort--&gt; HTTP 200, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-preflight]" time="0.095"><properties><property name="result" value="paused --preflight--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-calibration/start]" time="0.090"><properties><property name="result" value="paused --calibration/start--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-calibration/target]" time="0.100"><properties><property name="result" value="paused --calibration/target--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-calibration/finish]" time="0.109"><properties><property name="result" value="paused --calibration/finish--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-calibration/cancel]" time="0.119"><properties><property name="result" value="paused --calibration/cancel--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-calibration/skip]" time="0.103"><properties><property name="result" value="paused --calibration/skip--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-start]" time="0.090"><properties><property name="result" value="paused --start--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-pause]" time="0.090"><properties><property name="result" value="paused --pause--&gt; HTTP 409, state paused" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-resume]" time="0.092"><properties><property name="result" value="paused --resume--&gt; HTTP 200, state running" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-finish]" time="0.083"><properties><property name="result" value="paused --finish--&gt; HTTP 200, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[paused-abort]" time="0.088"><properties><property name="result" value="paused --abort--&gt; HTTP 200, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-preflight]" time="0.087"><properties><property name="result" value="finished --preflight--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-calibration/start]" time="0.083"><properties><property name="result" value="finished --calibration/start--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-calibration/target]" time="0.091"><properties><property name="result" value="finished --calibration/target--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-calibration/finish]" time="0.090"><properties><property name="result" value="finished --calibration/finish--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-calibration/cancel]" time="0.085"><properties><property name="result" value="finished --calibration/cancel--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-calibration/skip]" time="0.084"><properties><property name="result" value="finished --calibration/skip--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-start]" time="0.081"><properties><property name="result" value="finished --start--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-pause]" time="0.084"><properties><property name="result" value="finished --pause--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-resume]" time="0.086"><properties><property name="result" value="finished --resume--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-finish]" time="0.097"><properties><property name="result" value="finished --finish--&gt; HTTP 200, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[finished-abort]" time="0.091"><properties><property name="result" value="finished --abort--&gt; HTTP 409, state finished" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-preflight]" time="0.024"><properties><property name="result" value="aborted --preflight--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-calibration/start]" time="0.022"><properties><property name="result" value="aborted --calibration/start--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-calibration/target]" time="0.020"><properties><property name="result" value="aborted --calibration/target--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-calibration/finish]" time="0.023"><properties><property name="result" value="aborted --calibration/finish--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-calibration/cancel]" time="0.027"><properties><property name="result" value="aborted --calibration/cancel--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-calibration/skip]" time="0.031"><properties><property name="result" value="aborted --calibration/skip--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-start]" time="0.036"><properties><property name="result" value="aborted --start--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-pause]" time="0.030"><properties><property name="result" value="aborted --pause--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-resume]" time="0.025"><properties><property name="result" value="aborted --resume--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-finish]" time="0.020"><properties><property name="result" value="aborted --finish--&gt; HTTP 409, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_transition[aborted-abort]" time="0.017"><properties><property name="result" value="aborted --abort--&gt; HTTP 200, state aborted" /></properties></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[created]" time="0.036"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191326-ad316aae',&#10;                 'state': 'created',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:26.197279Z',&#10;                 'started_at': None,&#10;                 'finished_at': None,&#10;                 'exam_started_t_ms': None,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': None,&#10;                                 'phase': 'not_started',&#10;                                 'targets': [],&#10;                                 'current_target': None,&#10;                                 'message_code': None,&#10;                                 'updated_at': '2026-10-08T14:13:26.197279Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Экзамен не был начат: наблюдение не проводилось.',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x00000242947077D0&gt;, state = 'created'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191326-ad316aae', 'state': 'created', 'source': {'mode': 'synthetic', 'camera_..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191326-ad316aae',
+E                            'state': 'created',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:26.197279Z',
+E                            'started_at': None,
+E                            'finished_at': None,
+E                            'exam_started_t_ms': None,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'not_started',
+E                                            'targets': [],
+E                                            'current_target': None,
+E                                            'message_code': None,
+E                                            'updated_at': '2026-10-08T14:13:26.197279Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Экзамен не был начат: наблюдение не проводилось.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[preflight]" time="0.109"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191326-e927e601',&#10;                 'state': 'preflight',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:26.256183Z',&#10;                 'started_at': None,&#10;                 'finished_at': None,&#10;                 'exam_started_t_ms': None,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': None,&#10;                                 'phase': 'not_started',&#10;                                 'targets': [],&#10;                                 'current_target': None,&#10;                                 'message_code': None,&#10;                                 'updated_at': '2026-10-08T14:13:26.256183Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Экзамен не был начат: наблюдение не проводилось.',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x0000024294701400&gt;, state = 'preflight'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191326-e927e601', 'state': 'preflight', 'source': {'mode': 'synthetic', 'camer..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191326-e927e601',
+E                            'state': 'preflight',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:26.256183Z',
+E                            'started_at': None,
+E                            'finished_at': None,
+E                            'exam_started_t_ms': None,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'not_started',
+E                                            'targets': [],
+E                                            'current_target': None,
+E                                            'message_code': None,
+E                                            'updated_at': '2026-10-08T14:13:26.256183Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Экзамен не был начат: наблюдение не проводилось.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[calibrating]" time="0.102"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191326-708158c4',&#10;                 'state': 'calibrating',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:26.388457Z',&#10;                 'started_at': None,&#10;                 'finished_at': None,&#10;                 'exam_started_t_ms': None,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': 'syn-cal',&#10;                                 'phase': 'collecting',&#10;                                 'targets': [{'target': 'center',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'left',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'right',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'up',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'down',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None}],&#10;                                 'current_target': None,&#10;                                 'message_code': 'synthetic_calibration',&#10;                                 'updated_at': '2026-10-08T14:13:26.461261Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Экзамен не был начат: наблюдение не проводилось.',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x000002429313EB40&gt;
+state = 'calibrating'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191326-708158c4', 'state': 'calibrating', 'source': {'mode': 'synthetic', 'cam..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191326-708158c4',
+E                            'state': 'calibrating',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:26.388457Z',
+E                            'started_at': None,
+E                            'finished_at': None,
+E                            'exam_started_t_ms': None,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': 'syn-cal',
+E                                            'phase': 'collecting',
+E                                            'targets': [{'target': 'center',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'left',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'right',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'up',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'down',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None}],
+E                                            'current_target': None,
+E                                            'message_code': 'synthetic_calibration',
+E                                            'updated_at': '2026-10-08T14:13:26.461261Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Экзамен не был начат: наблюдение не проводилось.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[ready]" time="0.110"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191326-f04b73d7',&#10;                 'state': 'ready',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:26.509944Z',&#10;                 'started_at': None,&#10;                 'finished_at': None,&#10;                 'exam_started_t_ms': None,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': None,&#10;                                 'phase': 'skipped',&#10;                                 'targets': [{'target': 'center',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'left',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'right',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'up',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'down',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None}],&#10;                                 'current_target': None,&#10;                                 'message_code': 'skipped_by_operator',&#10;                                 'updated_at': '2026-10-08T14:13:26.583000Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Калибровка взгляда пропущена: оценки взгляда не '&#10;                        'откалиброваны под этого участника.',&#10;                        'Экзамен не был начат: наблюдение не проводилось.',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x000002429313D430&gt;, state = 'ready'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191326-f04b73d7', 'state': 'ready', 'source': {'mode': 'synthetic', 'camera_in..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191326-f04b73d7',
+E                            'state': 'ready',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:26.509944Z',
+E                            'started_at': None,
+E                            'finished_at': None,
+E                            'exam_started_t_ms': None,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'skipped',
+E                                            'targets': [{'target': 'center',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'left',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'right',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'up',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'down',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None}],
+E                                            'current_target': None,
+E                                            'message_code': 'skipped_by_operator',
+E                                            'updated_at': '2026-10-08T14:13:26.583000Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Калибровка взгляда пропущена: оценки взгляда не '
+E                                   'откалиброваны под этого участника.',
+E                                   'Экзамен не был начат: наблюдение не проводилось.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[running]" time="0.107"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191326-1e3a9bb6',&#10;                 'state': 'running',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:26.640399Z',&#10;                 'started_at': '2026-10-08T14:13:26.717145Z',&#10;                 'finished_at': None,&#10;                 'exam_started_t_ms': 78.0,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': None,&#10;                                 'phase': 'skipped',&#10;                                 'targets': [{'target': 'center',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'left',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'right',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'up',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'down',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None}],&#10;                                 'current_target': None,&#10;                                 'message_code': 'skipped_by_operator',&#10;                                 'updated_at': '2026-10-08T14:13:26.713136Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Калибровка взгляда пропущена: оценки взгляда не '&#10;                        'откалиброваны под этого участника.',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x00000242946D7A40&gt;, state = 'running'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191326-1e3a9bb6', 'state': 'running', 'source': {'mode': 'synthetic', 'camera_..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191326-1e3a9bb6',
+E                            'state': 'running',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:26.640399Z',
+E                            'started_at': '2026-10-08T14:13:26.717145Z',
+E                            'finished_at': None,
+E                            'exam_started_t_ms': 78.0,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'skipped',
+E                                            'targets': [{'target': 'center',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'left',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'right',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'up',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'down',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None}],
+E                                            'current_target': None,
+E                                            'message_code': 'skipped_by_operator',
+E                                            'updated_at': '2026-10-08T14:13:26.713136Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Калибровка взгляда пропущена: оценки взгляда не '
+E                                   'откалиброваны под этого участника.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[paused]" time="0.137"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191326-db698803',&#10;                 'state': 'paused',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:26.766389Z',&#10;                 'started_at': '2026-10-08T14:13:26.871272Z',&#10;                 'finished_at': None,&#10;                 'exam_started_t_ms': 94.0,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': None,&#10;                                 'phase': 'skipped',&#10;                                 'targets': [{'target': 'center',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'left',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'right',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'up',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'down',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None}],&#10;                                 'current_target': None,&#10;                                 'message_code': 'skipped_by_operator',&#10;                                 'updated_at': '2026-10-08T14:13:26.856061Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [{'t_start_ms': 107.397,&#10;               't_end_ms': 125.644,&#10;               'component': 'backend',&#10;               'reason': 'paused'}],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Калибровка взгляда пропущена: оценки взгляда не '&#10;                        'откалиброваны под этого участника.',&#10;                        'Интервалов без наблюдения или с неопределёнными '&#10;                        'результатами: 1. В них нарушения не определялись '&#10;                        '— это «неизвестно», а не «нарушений нет».',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x000002429313EAE0&gt;, state = 'paused'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191326-db698803', 'state': 'paused', 'source': {'mode': 'synthetic', 'camera_i..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191326-db698803',
+E                            'state': 'paused',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:26.766389Z',
+E                            'started_at': '2026-10-08T14:13:26.871272Z',
+E                            'finished_at': None,
+E                            'exam_started_t_ms': 94.0,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'skipped',
+E                                            'targets': [{'target': 'center',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'left',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'right',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'up',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'down',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None}],
+E                                            'current_target': None,
+E                                            'message_code': 'skipped_by_operator',
+E                                            'updated_at': '2026-10-08T14:13:26.856061Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [{'t_start_ms': 107.397,
+E                          't_end_ms': 125.644,
+E                          'component': 'backend',
+E                          'reason': 'paused'}],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Калибровка взгляда пропущена: оценки взгляда не '
+E                                   'откалиброваны под этого участника.',
+E                                   'Интервалов без наблюдения или с неопределёнными '
+E                                   'результатами: 1. В них нарушения не определялись '
+E                                   '— это «неизвестно», а не «нарушений нет».',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[finished]" time="0.097"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191326-cfe596e6',&#10;                 'state': 'finished',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:26.926447Z',&#10;                 'started_at': '2026-10-08T14:13:26.995828Z',&#10;                 'finished_at': '2026-10-08T14:13:26.999341Z',&#10;                 'exam_started_t_ms': 63.0,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': None,&#10;                                 'phase': 'skipped',&#10;                                 'targets': [{'target': 'center',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'left',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'right',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'up',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None},&#10;                                             {'target': 'down',&#10;                                              'state': 'pending',&#10;                                              'samples': 0,&#10;                                              'required_samples': 10,&#10;                                              'quality': None,&#10;                                              'message_code': None}],&#10;                                 'current_target': None,&#10;                                 'message_code': 'skipped_by_operator',&#10;                                 'updated_at': '2026-10-08T14:13:26.991227Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Калибровка взгляда пропущена: оценки взгляда не '&#10;                        'откалиброваны под этого участника.',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Наблюдение неполное: 0% времени экзамена '&#10;                                'без пауз (порог 80%)'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x00000242930FDEB0&gt;, state = 'finished'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191326-cfe596e6', 'state': 'finished', 'source': {'mode': 'synthetic', 'camera..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191326-cfe596e6',
+E                            'state': 'finished',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:26.926447Z',
+E                            'started_at': '2026-10-08T14:13:26.995828Z',
+E                            'finished_at': '2026-10-08T14:13:26.999341Z',
+E                            'exam_started_t_ms': 63.0,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'skipped',
+E                                            'targets': [{'target': 'center',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'left',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'right',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'up',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None},
+E                                                        {'target': 'down',
+E                                                         'state': 'pending',
+E                                                         'samples': 0,
+E                                                         'required_samples': 10,
+E                                                         'quality': None,
+E                                                         'message_code': None}],
+E                                            'current_target': None,
+E                                            'message_code': 'skipped_by_operator',
+E                                            'updated_at': '2026-10-08T14:13:26.991227Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Калибровка взгляда пропущена: оценки взгляда не '
+E                                   'откалиброваны под этого участника.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Наблюдение неполное: 0% времени экзамена '
+E                                           'без пауз (порог 80%)'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_read_routes_valid_in_every_state[aborted]" time="0.030"><failure message="jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)&#10;&#10;Failed validating 'additionalProperties' in schema:&#10;    {'additionalProperties': False,&#10;     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;                    'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},&#10;                                            {'type': 'null'}],&#10;                                  'default': None},&#10;                    'observed_ms': {'minimum': 0,&#10;                                    'title': 'Observed Ms',&#10;                                    'type': 'number'},&#10;                    'paused_ms': {'minimum': 0,&#10;                                  'title': 'Paused Ms',&#10;                                  'type': 'number'},&#10;                    'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},&#10;                             'title': 'Gaps',&#10;                             'type': 'array'},&#10;                    'incidents_total': {'minimum': 0,&#10;                                        'title': 'Incidents Total',&#10;                                        'type': 'integer'},&#10;                    'incidents_by_rule': {'additionalProperties': {'type': 'integer'},&#10;                                          'title': 'Incidents By Rule',&#10;                                          'type': 'object'},&#10;                    'reviews_by_decision': {'additionalProperties': {'type': 'integer'},&#10;                                            'title': 'Reviews By Decision',&#10;                                            'type': 'object'},&#10;                    'limitations_ru': {'items': {'type': 'string'},&#10;                                       'title': 'Limitations Ru',&#10;                                       'type': 'array'}},&#10;     'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],&#10;     'title': 'SessionSummary',&#10;     'type': 'object'}&#10;&#10;On instance:&#10;    {'session': {'session_id': 's-20261008-191327-6a8cecd3',&#10;                 'state': 'aborted',&#10;                 'source': {'mode': 'synthetic',&#10;                            'camera_index': 0,&#10;                            'replay_id': None,&#10;                            'width': 640,&#10;                            'height': 480,&#10;                            'fps': 30},&#10;                 'source_mode': 'synthetic',&#10;                 'exam_id': 'demo-exam-1',&#10;                 'student_label': 'qa-a09',&#10;                 'retain_media': False,&#10;                 'created_at': '2026-10-08T14:13:27.043076Z',&#10;                 'started_at': None,&#10;                 'finished_at': '2026-10-08T14:13:27.047426Z',&#10;                 'exam_started_t_ms': None,&#10;                 'paused_total_ms': 0.0,&#10;                 'calibration': {'calibration_id': None,&#10;                                 'phase': 'not_started',&#10;                                 'targets': [],&#10;                                 'current_target': None,&#10;                                 'message_code': None,&#10;                                 'updated_at': '2026-10-08T14:13:27.043076Z'},&#10;                 'contract_version': '1.2.0',&#10;                 'backend_version': '0.1.0',&#10;                 'last_error': None},&#10;     'desk_scan': None,&#10;     'observed_ms': 0.0,&#10;     'paused_ms': 0.0,&#10;     'gaps': [],&#10;     'incidents_total': 0,&#10;     'incidents_by_rule': {},&#10;     'reviews_by_decision': {},&#10;     'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '&#10;                        'проверки системы, а не результат работы камеры и '&#10;                        'CV.',&#10;                        'Эпизоды — повод для проверки преподавателем, а не '&#10;                        'доказательство нарушения; решение принимает '&#10;                        'преподаватель.',&#10;                        'Направление взгляда — приблизительная оценка, не '&#10;                        'eye-tracking; обнаружение телефона не доказывает '&#10;                        'съёмку экрана.',&#10;                        'Экзамен не был начат: наблюдение не проводилось.',&#10;                        'Снимки не сохранялись (сохранение медиа '&#10;                        'выключено): отчёт содержит только метаданные.',&#10;                        'Хэши SHA-256 помогают обнаружить случайное '&#10;                        'изменение файлов, но не защищают от изменения '&#10;                        'владельцем компьютера.'],&#10;     'review_zone': 'grey',&#10;     'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],&#10;     'review_zone_rule_version': 'zone-rule-1'}">backend = BackendProcess(proc=&lt;Popen: returncode: None args: ['C:\\Qostanay_hub-codex-proctoring-prompts\\...&gt;, ready={'contract... "qorgau.v1", "contract_version": "1.2.0", "backend_version": "0.1.0", "port": 60212, "pid": 32348}\n', exit_code=None)
+api = &lt;qorgau_qa.backend.Api object at 0x0000024294701E80&gt;, state = 'aborted'
+
+    @pytest.mark.parametrize("state", STATES)
+    def test_read_routes_valid_in_every_state(backend, api, state):
+        sid = _reach(api, state)
+        contract.ok(backend.http.get(f"/sessions/{sid}"), "SessionInfo")
+        contract.ok(backend.http.get(f"/sessions/{sid}/calibration"), "CalibrationState")
+        contract.ok(backend.http.get(f"/sessions/{sid}/exam"), "ExamDefinition")
+        contract.ok(backend.http.get(f"/sessions/{sid}/metrics"), "RuntimeMetrics")
+        contract.validate_list("Incident", backend.http.get(f"/sessions/{sid}/incidents").json())
+        contract.validate_list("AnswerRecord", backend.http.get(f"/sessions/{sid}/answers").json())
+&gt;       contract.ok(backend.http.get(f"/sessions/{sid}/summary"), "SessionSummary")
+
+qa\tests\test_lifecycle_matrix.py:115:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+qa\qorgau_qa\contract.py:61: in ok
+    return validate(name, resp.json())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+qa\qorgau_qa\contract.py:44: in validate
+    _validator(name).validate(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Draft202012Validator(schema={'$defs': {'AbortRequest': {'additionalProperties': False, 'properties': {'reason': {'maxL...error'], ...}, ...}, '$ref': '#/$defs/SessionSummary', '$schema': 'https://json...020-12/schema'}, format_checker=None)
+args = ({'session': {'session_id': 's-20261008-191327-6a8cecd3', 'state': 'aborted', 'source': {'mode': 'synthetic', 'camera_..., 'width': 640, ...}, 'source_mode': 'synthetic', ...}, 'desk_scan': None, 'observed_ms': 0.0, 'paused_ms': 0.0, ...},)
+kwargs = {}
+
+    def validate(self, *args, **kwargs):
+        for error in self.iter_errors(*args, **kwargs):
+&gt;           raise error
+E           jsonschema.exceptions.ValidationError: Additional properties are not allowed ('review_zone', 'review_zone_reasons_ru', 'review_zone_rule_version' were unexpected)
+E
+E           Failed validating 'additionalProperties' in schema:
+E               {'additionalProperties': False,
+E                'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E                               'desk_scan': {'anyOf': [{'$ref': '#/$defs/DeskScanResult'},
+E                                                       {'type': 'null'}],
+E                                             'default': None},
+E                               'observed_ms': {'minimum': 0,
+E                                               'title': 'Observed Ms',
+E                                               'type': 'number'},
+E                               'paused_ms': {'minimum': 0,
+E                                             'title': 'Paused Ms',
+E                                             'type': 'number'},
+E                               'gaps': {'items': {'$ref': '#/$defs/CoverageGap'},
+E                                        'title': 'Gaps',
+E                                        'type': 'array'},
+E                               'incidents_total': {'minimum': 0,
+E                                                   'title': 'Incidents Total',
+E                                                   'type': 'integer'},
+E                               'incidents_by_rule': {'additionalProperties': {'type': 'integer'},
+E                                                     'title': 'Incidents By Rule',
+E                                                     'type': 'object'},
+E                               'reviews_by_decision': {'additionalProperties': {'type': 'integer'},
+E                                                       'title': 'Reviews By Decision',
+E                                                       'type': 'object'},
+E                               'limitations_ru': {'items': {'type': 'string'},
+E                                                  'title': 'Limitations Ru',
+E                                                  'type': 'array'}},
+E                'required': ['session', 'observed_ms', 'paused_ms', 'incidents_total'],
+E                'title': 'SessionSummary',
+E                'type': 'object'}
+E
+E           On instance:
+E               {'session': {'session_id': 's-20261008-191327-6a8cecd3',
+E                            'state': 'aborted',
+E                            'source': {'mode': 'synthetic',
+E                                       'camera_index': 0,
+E                                       'replay_id': None,
+E                                       'width': 640,
+E                                       'height': 480,
+E                                       'fps': 30},
+E                            'source_mode': 'synthetic',
+E                            'exam_id': 'demo-exam-1',
+E                            'student_label': 'qa-a09',
+E                            'retain_media': False,
+E                            'created_at': '2026-10-08T14:13:27.043076Z',
+E                            'started_at': None,
+E                            'finished_at': '2026-10-08T14:13:27.047426Z',
+E                            'exam_started_t_ms': None,
+E                            'paused_total_ms': 0.0,
+E                            'calibration': {'calibration_id': None,
+E                                            'phase': 'not_started',
+E                                            'targets': [],
+E                                            'current_target': None,
+E                                            'message_code': None,
+E                                            'updated_at': '2026-10-08T14:13:27.043076Z'},
+E                            'contract_version': '1.2.0',
+E                            'backend_version': '0.1.0',
+E                            'last_error': None},
+E                'desk_scan': None,
+E                'observed_ms': 0.0,
+E                'paused_ms': 0.0,
+E                'gaps': [],
+E                'incidents_total': 0,
+E                'incidents_by_rule': {},
+E                'reviews_by_decision': {},
+E                'limitations_ru': ['СИНТЕТИЧЕСКИЕ ДАННЫЕ: сценарные наблюдения для '
+E                                   'проверки системы, а не результат работы камеры и '
+E                                   'CV.',
+E                                   'Эпизоды — повод для проверки преподавателем, а не '
+E                                   'доказательство нарушения; решение принимает '
+E                                   'преподаватель.',
+E                                   'Направление взгляда — приблизительная оценка, не '
+E                                   'eye-tracking; обнаружение телефона не доказывает '
+E                                   'съёмку экрана.',
+E                                   'Экзамен не был начат: наблюдение не проводилось.',
+E                                   'Снимки не сохранялись (сохранение медиа '
+E                                   'выключено): отчёт содержит только метаданные.',
+E                                   'Хэши SHA-256 помогают обнаружить случайное '
+E                                   'изменение файлов, но не защищают от изменения '
+E                                   'владельцем компьютера.'],
+E                'review_zone': 'grey',
+E                'review_zone_reasons_ru': ['Покрытие наблюдения не измерено'],
+E                'review_zone_rule_version': 'zone-rule-1'}
+
+..\..\..\verify-candidate\proctoring\.venv\Lib\site-packages\jsonschema\validators.py:450: ValidationError</failure></testcase><testcase classname="qa.tests.test_lifecycle_matrix" name="test_start_requires_calibration_completed_or_skipped" time="0.096" /><testcase classname="qa.tests.test_lifecycle_matrix" name="test_calibration_cancel_then_restart" time="4.068" /><testcase classname="qa.tests.test_lifecycle_matrix" name="test_concurrent_finish_requests_are_idempotent" time="0.152" /><testcase classname="qa.tests.test_lifecycle_matrix" name="test_concurrent_create_yields_exactly_one_session" time="0.553" /><testcase classname="qa.tests.test_offline" name="test_netguard_blocks_and_records_external_connect" time="0.228" /><testcase classname="qa.tests.test_offline" name="test_netguard_blocks_dns_and_urllib" time="0.200" /><testcase classname="qa.tests.test_offline" name="test_netguard_allows_loopback" time="0.099" /><testcase classname="qa.tests.test_offline" name="test_full_flow_offline_audit_guard" time="8.244"><properties><property name="layer" value="A: audit hook in backend process" /></properties><failure message="AssertionError: [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {&quot;contract&quot;: &quot;qorgau.v1&quot;, &quot;contract_version...chema:&#10;      {'additionalProperties': False,&#10;       'properties': {'session': {'$ref': '#/$defs/SessionInfo'},&#10;        &quot;}]&#10;assert not [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {&quot;contract&quot;: &quot;qorgau.v1&quot;, &quot;contract_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      &quot;}]">tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-203/test_full_flow_offline_audit_g0')
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x00000242947AB600&gt;
+
+    def test_full_flow_offline_audit_guard(tmp_path, record_property):
+        result = _offline_run(tmp_path, [], expect_isolated=False)
+        record_property("layer", "A: audit hook in backend process")
+&gt;       _assert_offline_ok(result)
+
+qa\tests\test_offline.py:82:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+result = {'isolation': 'not requested', 'rows': [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {"co...am_definition', 'status': 'PASS', 'detail': 'demo-exam-1: 2 question(s)'}, ...], 'exit_code': 0, 'token_leaks': 0, ...}
+
+    def _assert_offline_ok(result: dict) -&gt; None:
+        failed = [r for r in result["rows"] if r["status"] == "FAIL"]
+&gt;       assert not failed, failed
+E       AssertionError: [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {"contract": "qorgau.v1", "contract_version...chema:
+E             {'additionalProperties': False,
+E              'properties': {'session': {'$ref': '#/$defs/SessionInfo'},
+E               "}]
+E       assert not [{'name': 'ready_line_contract', 'status': 'FAIL', 'detail': 'QORGAU_READY {"contract": "qorgau.v1", "contract_version...chema:\n    {'additionalProperties': False,\n     'properties': {'session': {'$ref': '#/$defs/SessionInfo'},\n      "}]
+
+qa\tests\test_offline.py:74: AssertionError</failure></testcase><testcase classname="qa.tests.test_offline" name="test_full_flow_offline_network_namespace" time="0.002"><skipped type="pytest.skip" message="layer B not available here: not Linux">C:\Qostanay_hub-codex-proctoring-prompts\worktrees\final-qa-20261008\proctoring\qa\tests\test_offline.py:88: layer B not available here: not Linux</skipped></testcase><testcase classname="qa.tests.test_offline" name="test_no_download_calls_in_backend_runtime_source" time="0.116"><failure message="AssertionError: audio/prepare.py:7: import urllib.request&#10;  audio/prepare.py:26: with urllib.request.urlopen(yamnet.MODEL_URL, timeout=60) as response:&#10;  audio/prepare.py:29: with urllib.request.urlopen(yamnet.LICENSE_URL, timeout=30) as response:&#10;  audio/prepare.py:49: with urllib.request.urlopen(MODEL_URL, timeout=60) as response:&#10;  audio/prepare.py:53: with urllib.request.urlopen(LICENSE_URL, timeout=30) as response:&#10;  identity/prepare.py:20: import urllib.request&#10;  identity/prepare.py:64: with urllib.request.urlopen(url, timeout=120) as resp:  # noqa: S310 - https only, explicit user action&#10;  uplink/client.py:24: import urllib.request&#10;  uplink/client.py:85: req = urllib.request.Request(url, data=data, method=&quot;POST&quot;, headers={&#10;  uplink/client.py:90: with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310 (LAN class server, http by protocol)&#10;  uplink/demo_teacher.py:25: import urllib.request&#10;  uplink/demo_teacher.py:33: self.http = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar))&#10;  uplink/demo_teacher.py:38: req = urllib.request.Request(self.base + path, data=data, method=method, headers={&quot;Content-Type&quot;: &quot;application/json; cha&#10;assert not ['audio/prepare.py:7: import urllib.request', 'audio/prepare.py:26: with urllib.request.urlopen(yamnet.MODEL_URL, time...th urllib.request.urlopen(LICENSE_URL, timeout=30) as response:', 'identity/prepare.py:20: import urllib.request', ...]">def test_no_download_calls_in_backend_runtime_source():
+        """Heuristic gate: product runtime code must not contain download/HTTP-client calls.
+
+        Scans proctoring/backend/proctor (excluding tests and the A01 smoke client, which talks to
+        127.0.0.1 only). A hit is not automatically a bug; it must be justified or removed.
+        """
+        hits = []
+        root = PROCTORING_ROOT / "backend" / "proctor"
+        for path in root.rglob("*.py"):
+            rel = path.relative_to(root).as_posix()
+            if "/tests/" in f"/{rel}" or rel.endswith("bootstrap/smoke.py"):
+                continue
+            # These reviewed preparation CLIs download weights explicitly before
+            # runtime; their presence does not imply a runtime network dependency.
+            # The runtime audit guard remains active and catches attempted connections.
+            if rel in {"phone/model_tool.py", "phone/prepare.py", "attention/model_tool.py"}:
+                continue
+            for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if line.lstrip().startswith("#"):
+                    continue
+                if DOWNLOAD_PATTERNS.search(line):
+                    hits.append(f"{rel}:{n}: {line.strip()[:120]}")
+&gt;       assert not hits, "\n".join(hits)
+E       AssertionError: audio/prepare.py:7: import urllib.request
+E         audio/prepare.py:26: with urllib.request.urlopen(yamnet.MODEL_URL, timeout=60) as response:
+E         audio/prepare.py:29: with urllib.request.urlopen(yamnet.LICENSE_URL, timeout=30) as response:
+E         audio/prepare.py:49: with urllib.request.urlopen(MODEL_URL, timeout=60) as response:
+E         audio/prepare.py:53: with urllib.request.urlopen(LICENSE_URL, timeout=30) as response:
+E         identity/prepare.py:20: import urllib.request
+E         identity/prepare.py:64: with urllib.request.urlopen(url, timeout=120) as resp:  # noqa: S310 - https only, explicit user action
+E         uplink/client.py:24: import urllib.request
+E         uplink/client.py:85: req = urllib.request.Request(url, data=data, method="POST", headers={
+E         uplink/client.py:90: with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310 (LAN class server, http by protocol)
+E         uplink/demo_teacher.py:25: import urllib.request
+E         uplink/demo_teacher.py:33: self.http = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar))
+E         uplink/demo_teacher.py:38: req = urllib.request.Request(self.base + path, data=data, method=method, headers={"Content-Type": "application/json; cha
+E       assert not ['audio/prepare.py:7: import urllib.request', 'audio/prepare.py:26: with urllib.request.urlopen(yamnet.MODEL_URL, time...th urllib.request.urlopen(LICENSE_URL, timeout=30) as response:', 'identity/prepare.py:20: import urllib.request', ...]
+
+qa\tests\test_offline.py:127: AssertionError</failure></testcase><testcase classname="qa.tests.test_offline" name="test_qa_harness_itself_is_offline" time="0.015" /><testcase classname="qa.tests.test_packaging_readiness" name="test_verified_model_passes" time="0.019" /><testcase classname="qa.tests.test_packaging_readiness" name="test_invalid_asset_fails[change0-model_missing]" time="0.013" /><testcase classname="qa.tests.test_packaging_readiness" name="test_invalid_asset_fails[change1-model_size_mismatch]" time="0.013" /><testcase classname="qa.tests.test_packaging_readiness" name="test_invalid_asset_fails[change2-model_hash_mismatch]" time="0.013" /><testcase classname="qa.tests.test_packaging_readiness" name="test_invalid_asset_fails[change3-invalid_manifest]" time="0.013" /><testcase classname="qa.tests.test_packaging_readiness" name="test_invalid_asset_fails[change4-invalid_manifest]" time="0.013" /><testcase classname="qa.tests.test_packaging_readiness" name="test_missing_manifest_is_reported" time="0.003" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_malformed_json[not_json]" time="0.968" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_malformed_json[json_array]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_malformed_json[json_null]" time="0.023" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_malformed_json[empty_object]" time="0.011" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_malformed_json[utf16_bom]" time="0.009" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_lax_typed_values[fps_as_string]" time="0.016"><skipped type="pytest.xfail" message="QA-OBS-005 (A01, informational): Pydantic lax mode accepts strings for int/bool fields that the JSON Schema rejects" /></testcase><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_lax_typed_values[consent_accepted_string]" time="0.012"><skipped type="pytest.xfail" message="QA-OBS-005 (A01, informational): Pydantic lax mode accepts strings for int/bool fields that the JSON Schema rejects" /></testcase><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_lax_typed_values[retain_media_string]" time="0.012"><skipped type="pytest.xfail" message="QA-OBS-005 (A01, informational): Pydantic lax mode accepts strings for int/bool fields that the JSON Schema rejects" /></testcase><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[unknown_mode]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[extra_top_level_field]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[extra_source_field]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[replay_without_id]" time="0.010" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[replay_id_traversal]" time="0.010" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[replay_id_windows_path]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[replay_id_too_long]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[camera_index_negative]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[camera_index_too_big]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[fps_zero]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[fps_too_high]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[width_too_small]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[height_too_big]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[exam_id_traversal]" time="0.009" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[exam_id_empty]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[student_label_too_long]" time="0.011" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[consent_missing]" time="0.010" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[consent_naive_datetime]" time="0.009" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_contract_violations[consent_empty_text_version]" time="0.009" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_consent_not_accepted" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_create_rejects_unknown_exam" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_error_status_matches_contract[consent_not_accepted]" time="0.006" /><testcase classname="qa.tests.test_payload_negative" name="test_error_status_matches_contract[unknown_exam]" time="0.006" /><testcase classname="qa.tests.test_payload_negative" name="test_error_status_matches_contract[session_mismatch]" time="0.021" /><testcase classname="qa.tests.test_payload_negative" name="test_create_accepts_cyrillic_and_kazakh_label" time="0.012" /><testcase classname="qa.tests.test_payload_negative" name="test_create_with_wrong_content_type_rejected" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[nope]" time="0.018" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[..]" time="0.009" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[%2e%2e]" time="0.015" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[a b]" time="0.015" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[s'--]" time="0.012" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[&lt;script&gt;]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[s%00x]" time="0.016" /><testcase classname="qa.tests.test_payload_negative" name="test_unknown_or_illegal_session_ids_are_404_or_422[\u03a9]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_overlong_session_id_is_rejected_cleanly" time="0.042" /><testcase classname="qa.tests.test_payload_negative" name="test_overlong_question_id_is_rejected_cleanly" time="0.126" /><testcase classname="qa.tests.test_payload_negative" name="test_overlong_incident_id_is_rejected_cleanly" time="0.127" /><testcase classname="qa.tests.test_payload_negative" name="test_backend_still_serves_after_bad_requests" time="0.086" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/pause-body0]" time="0.023" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/pause-body1]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/pause-body2]" time="0.014" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/abort-body3]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/abort-body4]" time="0.015" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/calibration/skip-body5]" time="0.015" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/calibration/skip-body6]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/calibration/target-body7]" time="0.014" /><testcase classname="qa.tests.test_payload_negative" name="test_lifecycle_body_validation[/calibration/target-body8]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[unknown_action]" time="0.015" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[unknown_enforcement]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[unknown_scope]" time="0.014" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[mechanism_uppercase]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[mechanism_space]" time="0.015" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[mechanism_too_long]" time="0.012" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[negative_seq]" time="0.014" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[seq_float]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[naive_wall_time]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[process_name_full_path]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[process_name_unix_path]" time="0.014" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[window_title_field]" time="0.012" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[typed_text_field]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[clipboard_field]" time="0.013" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_event_validation_and_privacy_allowlist[observation_id_injection]" time="0.015" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_batch_limits" time="0.021" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_duplicates_inside_one_batch" time="0.014" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_events_session_checks" time="0.018" /><testcase classname="qa.tests.test_payload_negative" name="test_environment_detail_allowlist_accepts_basename" time="0.018" /><testcase classname="qa.tests.test_payload_negative" name="test_capabilities_validation[naive_time]" time="0.008" /><testcase classname="qa.tests.test_payload_negative" name="test_capabilities_validation[bad_status]" time="0.006" /><testcase classname="qa.tests.test_payload_negative" name="test_capabilities_validation[long_mechanism]" time="0.006" /><testcase classname="qa.tests.test_payload_negative" name="test_capabilities_validation[too_many_items]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_capabilities_validation[long_platform]" time="0.006" /><testcase classname="qa.tests.test_payload_negative" name="test_capabilities_validation[extra_field]" time="0.007" /><testcase classname="qa.tests.test_payload_negative" name="test_answer_validation[empty]" time="0.085" /><testcase classname="qa.tests.test_payload_negative" name="test_answer_validation[no_seq]" time="0.085" /><testcase classname="qa.tests.test_payload_negative" name="test_answer_validation[negative_seq]" time="0.085" /><testcase classname="qa.tests.test_payload_negative" name="test_answer_validation[too_long]" time="0.084" /><testcase classname="qa.tests.test_payload_negative" name="test_answer_validation[traversal_option]" time="0.090" /><testcase classname="qa.tests.test_payload_negative" name="test_answer_validation[number]" time="0.083" /><testcase classname="qa.tests.test_payload_negative" name="test_answer_validation[extra]" time="0.082" /><testcase classname="qa.tests.test_payload_negative" name="test_answers_rejected_outside_running" time="0.017" /><testcase classname="qa.tests.test_payload_negative" name="test_answers_are_checked_against_exam_definition" time="0.083" /><testcase classname="qa.tests.test_payload_negative" name="test_review_validation[empty]" time="0.019" /><testcase classname="qa.tests.test_payload_negative" name="test_review_validation[unknown_decision]" time="0.017" /><testcase classname="qa.tests.test_payload_negative" name="test_review_validation[no_operator]" time="0.016" /><testcase classname="qa.tests.test_payload_negative" name="test_review_validation[empty_operator]" time="0.017" /><testcase classname="qa.tests.test_payload_negative" name="test_review_validation[long_operator]" time="0.018" /><testcase classname="qa.tests.test_payload_negative" name="test_review_validation[long_comment]" time="0.018" /><testcase classname="qa.tests.test_payload_negative" name="test_review_validation[extra_field]" time="0.018" /><testcase classname="qa.tests.test_payload_negative" name="test_review_of_unknown_incident_is_404" time="0.019" /><testcase classname="qa.tests.test_payload_negative" name="test_delete_active_session_refused_and_history_kept" time="0.036" /><testcase classname="qa.tests.test_payload_negative" name="test_deleted_session_is_not_readable" time="0.024" /><testcase classname="qa.tests.test_payload_negative" name="test_consent_record_is_required_fields" time="0.368" /><testcase classname="qa.tests.test_process_failures" name="test_port_already_in_use_fails_fast_without_ready" time="0.898" /><testcase classname="qa.tests.test_process_failures" name="test_ephemeral_port_avoids_busy_port" time="1.311" /><testcase classname="qa.tests.test_process_failures" name="test_short_or_empty_token_refused[]" time="0.808" /><testcase classname="qa.tests.test_process_failures" name="test_short_or_empty_token_refused[short]" time="0.776" /><testcase classname="qa.tests.test_process_failures" name="test_short_or_empty_token_refused[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]" time="0.757" /><testcase classname="qa.tests.test_process_failures" name="test_no_token_mode_refused" time="0.780" /><testcase classname="qa.tests.test_process_failures" name="test_token_env_var_mode_works_and_value_not_logged" time="1.349" /><testcase classname="qa.tests.test_process_failures" name="test_non_loopback_bind_refused[0.0.0.0]" time="0.760" /><testcase classname="qa.tests.test_process_failures" name="test_non_loopback_bind_refused[192.168.1.10]" time="0.769" /><testcase classname="qa.tests.test_process_failures" name="test_non_loopback_bind_refused[::]" time="0.768" /><testcase classname="qa.tests.test_process_failures" name="test_corrupt_exam_file_fails_visibly" time="1.086" /><testcase classname="qa.tests.test_process_failures" name="test_missing_exam_file_falls_back_to_labelled_demo_exam" time="1.376" /><testcase classname="qa.tests.test_process_failures" name="test_stdin_eof_during_running_exam_aborts_and_exits" time="1.407" /><testcase classname="qa.tests.test_process_failures" name="test_shutdown_line_stops_backend" time="1.329" /><testcase classname="qa.tests.test_process_failures" name="test_crash_mid_exam_then_restart_on_same_data_dir" time="2.432" /><testcase classname="qa.tests.test_process_failures" name="test_backend_ignores_duplicate_token_lines_and_extra_stdin" time="1.840" /><testcase classname="qa.tests.test_process_failures" name="test_runs_from_path_with_spaces_and_cyrillic" time="2.425" /><testcase classname="qa.tests.test_process_failures" name="test_backend_does_not_write_into_source_tree" time="2.200" /><testcase classname="qa.tests.test_result_classification" name="test_junit_distinguishes_strict_xpass_from_failure" time="0.018" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[none]" time="0.913" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[empty]" time="0.045" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[bearer-only]" time="0.042" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[basic]" time="0.027" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[token-scheme]" time="0.025" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[token+suffix]" time="0.025" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[token-prefix]" time="0.046" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[token-uppercase]" time="0.042" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[x-api-key]" time="0.026" /><testcase classname="qa.tests.test_security_negative" name="test_every_route_family_rejects_bad_credentials[cookie]" time="0.052" /><testcase classname="qa.tests.test_security_negative" name="test_token_in_query_string_is_not_accepted" time="0.023" /><testcase classname="qa.tests.test_security_negative" name="test_raw_malformed_authorization_values_rejected[Bearer ]" time="0.015" /><testcase classname="qa.tests.test_security_negative" name="test_raw_malformed_authorization_values_rejected[Bearer\t]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_raw_malformed_authorization_values_rejected[Bearer {token} extra]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_raw_malformed_authorization_values_rejected[Bearer\x00{token}]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_lowercase_bearer_scheme_is_accepted" time="0.060" /><testcase classname="qa.tests.test_security_negative" name="test_unknown_route_does_not_bypass_auth_or_reveal_routes" time="0.044" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[evil.example]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[127.0.0.1.evil.example]" time="0.021" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[localhost.evil.example]" time="0.015" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[0.0.0.0]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[[::1]]" time="0.027" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[10.0.0.5]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[127.0.0.2]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_non_loopback_host_header_rejected[]" time="0.003" /><testcase classname="qa.tests.test_security_negative" name="test_loopback_host_header_accepted[127.0.0.1]" time="0.024" /><testcase classname="qa.tests.test_security_negative" name="test_loopback_host_header_accepted[localhost]" time="0.004" /><testcase classname="qa.tests.test_security_negative" name="test_loopback_host_header_accepted[LOCALHOST]" time="0.007"><skipped type="pytest.xfail" message="QA-OBS-006 (A01, cosmetic): Host comparison is case-sensitive; browsers send lowercase, so no impact" /></testcase><testcase classname="qa.tests.test_security_negative" name="test_listens_on_loopback_only" time="4.035" /><testcase classname="qa.tests.test_security_negative" name="test_requests_with_origin_rejected_without_dev_allowlist[http://evil.example]" time="0.003" /><testcase classname="qa.tests.test_security_negative" name="test_requests_with_origin_rejected_without_dev_allowlist[null]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_requests_with_origin_rejected_without_dev_allowlist[file://]" time="0.003" /><testcase classname="qa.tests.test_security_negative" name="test_requests_with_origin_rejected_without_dev_allowlist[http://127.0.0.1:5173]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_requests_with_origin_rejected_without_dev_allowlist[http://localhost]" time="0.003" /><testcase classname="qa.tests.test_security_negative" name="test_requests_with_origin_rejected_without_dev_allowlist[app://qorgau]" time="0.003" /><testcase classname="qa.tests.test_security_negative" name="test_requests_with_origin_rejected_without_dev_allowlist[chrome-extension://abc]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_cors_preflight_from_foreign_origin_gets_no_allow_headers" time="0.021" /><testcase classname="qa.tests.test_security_negative" name="test_simple_cross_site_post_cannot_create_session" time="0.021" /><testcase classname="qa.tests.test_security_negative" name="test_dev_origin_allowlist_exact_match_only" time="1.431" /><testcase classname="qa.tests.test_security_negative" name="test_body_over_limit_rejected_before_parsing" time="0.003" /><testcase classname="qa.tests.test_security_negative" name="test_body_exactly_at_limit_is_parsed" time="0.006" /><testcase classname="qa.tests.test_security_negative" name="test_chunked_body_rejected" time="0.003" /><testcase classname="qa.tests.test_security_negative" name="test_malformed_content_length_rejected[-1]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_malformed_content_length_rejected[abc]" time="0.002" /><testcase classname="qa.tests.test_security_negative" name="test_malformed_content_length_rejected[1e3]" time="0.023" /><testcase classname="qa.tests.test_security_negative" name="test_malformed_content_length_rejected[99999999999999999999]" time="0.016" /><testcase classname="qa.tests.test_security_negative" name="test_websocket_requires_token[/stream]" time="0.017" /><testcase classname="qa.tests.test_security_negative" name="test_websocket_requires_token[/preview]" time="0.014" /><testcase classname="qa.tests.test_security_negative" name="test_websocket_token_in_query_rejected[/stream]" time="1.250" /><testcase classname="qa.tests.test_security_negative" name="test_websocket_token_in_query_rejected[/preview]" time="1.219" /><testcase classname="qa.tests.test_security_negative" name="test_token_misplaced_in_ws_query_is_not_logged" time="1.218" /><testcase classname="qa.tests.test_security_negative" name="test_websocket_foreign_origin_rejected" time="0.026" /><testcase classname="qa.tests.test_security_negative" name="test_websocket_wrong_subprotocol_token_rejected" time="0.014" /><testcase classname="qa.tests.test_security_negative" name="test_websocket_subprotocol_token_accepted_for_browser_dev" time="0.004" /><testcase classname="qa.tests.test_security_negative" name="test_token_never_in_responses_or_logs" time="0.245" /><testcase classname="qa.tests.test_security_negative" name="test_errors_have_no_stack_traces_or_paths" time="0.012" /><testcase classname="qa.tests.test_security_negative" name="test_responses_are_not_cacheable_for_preview" time="0.077" /><testcase classname="qa.tests.test_security_negative" name="test_openapi_requires_auth_and_lists_only_v1" time="0.007" /><testcase classname="qa.tests.test_security_negative" name="test_http_client_cannot_switch_to_absolute_form_proxy_request" time="0.020" /><testcase classname="qa.tests.test_security_negative" name="test_httpx_default_client_without_token_cannot_read_history" time="0.391" /><testcase classname="qa.tests.test_stream_preview" name="test_stream_session_filter_isolates_sessions" time="1.851" /><testcase classname="qa.tests.test_stream_preview" name="test_stream_filter_on_own_session_receives_lifecycle" time="0.383" /><testcase classname="qa.tests.test_stream_preview" name="test_stream_observations_carry_provenance" time="2.113" /><testcase classname="qa.tests.test_stream_preview" name="test_stream_survives_many_clients_connecting_and_dropping" time="0.209" /><testcase classname="qa.tests.test_stream_preview" name="test_slow_stream_client_does_not_block_api" time="0.242" /><testcase classname="qa.tests.test_stream_preview" name="test_preview_ws_binary_framing" time="0.383" /><testcase classname="qa.tests.test_stream_preview" name="test_preview_ws_for_other_session_sends_nothing" time="1.603" /><testcase classname="qa.tests.test_stream_preview" name="test_preview_rest_meta_matches_image" time="0.520" /></testsuite></testsuites>

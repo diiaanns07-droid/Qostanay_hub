@@ -1,0 +1,47 @@
+{
+  "started_at": "2026-10-08T14:20:17.565Z",
+  "completed_at": "2026-10-08T14:20:18.987Z",
+  "ok": true,
+  "entry": "http://127.0.0.1:65406/exam/",
+  "allowed_urls": [
+    "http://127.0.0.1:65406/exam/",
+    "http://127.0.0.1:65406/exam/*"
+  ],
+  "mode": "production ExamSurface with injected class/shell state",
+  "enforce": false,
+  "backend": false,
+  "capture": false,
+  "checks": [
+    "allowed website loaded/rendered",
+    "foreign address cancelled; URL unchanged; event emitted",
+    "new window denied; event emitted",
+    "window.print prevented and reported",
+    "no kiosk or always-on-top; no native helper instantiated"
+  ],
+  "events": [
+    {
+      "action": "navigation_blocked",
+      "enforcement": "blocked",
+      "mechanism": "electron.content.navigation",
+      "detail": {
+        "shortcut": "Адрес вне белого списка"
+      }
+    },
+    {
+      "action": "new_window_blocked",
+      "enforcement": "blocked",
+      "mechanism": "electron.content.new_window",
+      "detail": {
+        "shortcut": "Новое окно сайта"
+      }
+    },
+    {
+      "action": "clipboard_blocked",
+      "enforcement": "blocked",
+      "mechanism": "electron.content.print",
+      "detail": {
+        "shortcut": "Печать (window.print)"
+      }
+    }
+  ]
+}

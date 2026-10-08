@@ -8,7 +8,7 @@ import { join, resolve } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fixtures } from "@contracts/fixtures.generated";
 import type { BackendProcessState, ShellState } from "@contracts/bridge";
-import type { EnvironmentCapabilities, HealthReport, SessionInfo, StreamEnvelope } from "@contracts/qorgau-v1.generated";
+import type { DeskScanResult, EnvironmentCapabilities, HealthReport, SessionInfo, StreamEnvelope } from "@contracts/qorgau-v1.generated";
 import { BackendClient } from "../backend/client";
 import { BackendProcess, BackendSupervisor, type BackendConnection } from "../backend/process";
 import { BackendSocket } from "../backend/stream";
@@ -138,11 +138,29 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
 
       const pf = (await api.runPreflight(sid)) as { ok: boolean; data: { ready: boolean } };
       assert.ok(pf.ok && pf.data.ready, JSON.stringify(pf));
+
+      // A15 desk scan through the bridge. The model may be absent in this clone: then the result is
+      // "failed" with a message (never "clear" by default); with weights it is clear/objects_found.
+      const ds = (await api.startDeskScan(sid, { duration_s: 5, mode: "usb" })) as { ok: boolean; data: DeskScanResult };
+      assert.ok(ds.ok && ds.data.state === "recording", JSON.stringify(ds));
+      assert.equal(((await api.startDeskScan(sid, { duration_s: 5, mode: "phone" })) as { ok: boolean }).ok, false);
+      const dsDone = await until(async () => {
+        const r = (await api.getDeskScan(sid)) as { ok: boolean; data: DeskScanResult };
+        return r.ok && r.data.state !== "recording" ? r.data : null;
+      }, 30_000, 250);
+      assert.ok(dsDone, "desk scan did not finish");
+      assert.ok(["clear", "objects_found", "failed"].includes(dsDone.state), JSON.stringify(dsDone));
+      assert.ok(dsDone.message_ru?.startsWith("Вариант: USB-камера."), JSON.stringify(dsDone));
+      const dsSkipLocked = (await api.skipDeskScan(sid, { reason: "fixed_camera_teacher_check" })) as { ok: boolean; error?: { details: Record<string, unknown> } };
+      assert.equal(dsSkipLocked.error?.details.shell_code, "operator_locked", "skipping the desk scan is a teacher decision");
+
       const skipLocked = (await api.calibrationSkip(sid, { reason: "integration test" })) as { ok: boolean; error?: { details: Record<string, unknown> } };
       assert.equal(skipLocked.error?.details.shell_code, "operator_locked", "skipping calibration is a teacher decision");
       assert.ok(((await api.operatorUnlock("2468")) as { ok: boolean }).ok);
       const skip = (await api.calibrationSkip(sid, { reason: "integration test" })) as { ok: boolean };
       assert.ok(skip.ok, JSON.stringify(skip));
+      const dsSkip = (await api.skipDeskScan(sid, { reason: "fixed_camera_teacher_check" })) as { ok: boolean; data: DeskScanResult };
+      assert.ok(dsSkip.ok && dsSkip.data.state === "skipped" && dsSkip.data.skip_reason === "fixed_camera_teacher_check", JSON.stringify(dsSkip));
       assert.equal(guard.active, false, "nothing engaged before start");
 
       const startOther = (await api.startExam("not-bound")) as { ok: boolean; error?: { details: Record<string, unknown> } };
@@ -155,6 +173,8 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
       assert.equal(machine.state.exam_mode_active, true);
       assert.equal(guard.active, true);
       assert.equal(machine.state.operator_unlocked, false, "unlock from preflight is cleared when the exam starts");
+      const dsRunning = (await api.startDeskScan(sid, { duration_s: 5, mode: "laptop" })) as { ok: boolean; error?: { code: string } };
+      assert.equal(dsRunning.error?.code, "INVALID_STATE", "no desk scan while RUNNING");
 
       // environment events reach the session (accepted, client_seq increasing)
       events.emit({ action: "shortcut_ctrl_v", enforcement: "blocked", mechanism: "electron.before_input_event", scope: "window", detail: { shortcut: "Ctrl+V" } });

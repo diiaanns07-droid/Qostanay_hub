@@ -19,6 +19,7 @@ function ensureShared() {
   link.rel = "stylesheet";
   link.href = new URL("./audio.css", import.meta.url).href;
   document.head.append(link);
+  // Inside the class server (C1) the T05 hub is the audio feature's socket, not the standalone dev server's /ws/teacher
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
   const sig = new TeacherSignaling({ url: `${proto}//${location.host}/api/teacher/audio/ws` });
   sig.connect();

@@ -1,11 +1,11 @@
 {
   "format": "qorgau.report.v1",
   "contract": "qorgau.v1",
-  "contract_version": "1.0.0",
+  "contract_version": "1.2.0",
   "manifest": {
     "contract": "qorgau.v1",
-    "contract_version": "1.0.0",
-    "exported_at": "2026-10-08T09:10:00.931232Z",
+    "contract_version": "1.2.0",
+    "exported_at": "2026-10-08T14:10:34.101664Z",
     "session_id": "s-sample-synthetic-0001",
     "source_mode": "synthetic",
     "backend_version": "0.1.0",
@@ -25,11 +25,11 @@
       {
         "name": "report.html",
         "media_type": "text/html",
-        "sha256": "2def9d3608f1f125baceaeabba5e38afb8416eaa2dc834eac2678e606ef03127",
-        "size_bytes": 42108
+        "sha256": "f6889b3f73820ba6494469267f8ae9bd87996fe0e886564aa146b0efc5c79477",
+        "size_bytes": 42682
       },
       {
-        "name": "ev-7868fbcf7bc22802d09933ad.jpg",
+        "name": "ev-a54960caf52948536510ee2a.jpg",
         "media_type": "image/jpeg",
         "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
         "size_bytes": 11905
@@ -60,9 +60,9 @@
     "exam_id": "demo-exam-1",
     "student_label": "student-demo",
     "retain_media": true,
-    "created_at": "2026-10-08T08:58:00Z",
-    "started_at": "2026-10-08T08:58:30Z",
-    "finished_at": "2026-10-08T09:08:30Z",
+    "created_at": "2026-10-08T13:58:33Z",
+    "started_at": "2026-10-08T13:59:03Z",
+    "finished_at": "2026-10-08T14:09:03Z",
     "exam_started_t_ms": 30000.0,
     "paused_total_ms": 0.0,
     "calibration": {
@@ -71,9 +71,9 @@
       "targets": [],
       "current_target": null,
       "message_code": null,
-      "updated_at": "2026-10-08T08:58:20Z"
+      "updated_at": "2026-10-08T13:58:53Z"
     },
-    "contract_version": "1.0.0",
+    "contract_version": "1.2.0",
     "backend_version": "0.1.0",
     "last_error": null
   },
@@ -93,9 +93,9 @@
       "exam_id": "demo-exam-1",
       "student_label": "student-demo",
       "retain_media": true,
-      "created_at": "2026-10-08T08:58:00Z",
-      "started_at": "2026-10-08T08:58:30Z",
-      "finished_at": "2026-10-08T09:08:30Z",
+      "created_at": "2026-10-08T13:58:33Z",
+      "started_at": "2026-10-08T13:59:03Z",
+      "finished_at": "2026-10-08T14:09:03Z",
       "exam_started_t_ms": 30000.0,
       "paused_total_ms": 0.0,
       "calibration": {
@@ -104,12 +104,13 @@
         "targets": [],
         "current_target": null,
         "message_code": null,
-        "updated_at": "2026-10-08T08:58:20Z"
+        "updated_at": "2026-10-08T13:58:53Z"
       },
-      "contract_version": "1.0.0",
+      "contract_version": "1.2.0",
       "backend_version": "0.1.0",
       "last_error": null
     },
+    "desk_scan": null,
     "observed_ms": 583250.0,
     "paused_ms": 0.0,
     "gaps": [
@@ -154,11 +155,13 @@
       "Эпизодов, не закрытых до конца сессии: 1 (длительность — до последнего обновления).",
       "Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера."
     ],
-    "review_zone": null,
+    "review_zone": "red",
     "review_zone_reasons_ru": [
-      "Зона не рассчитана. Просмотрите эпизоды вручную."
+      "Выход из окна экзамена — 07:30, 3 с",
+      "Телефон в кадре — 01:05, 6 с",
+      "Второе лицо в кадре — 09:30"
     ],
-    "review_zone_rule_version": null
+    "review_zone_rule_version": "zone-rule-1"
   },
   "coverage": {
     "window": {
@@ -220,8 +223,8 @@
         "priority": "medium",
         "t_start_ms": 95000.0,
         "t_end_ms": 101000.0,
-        "wall_start": "2026-10-08T08:59:35Z",
-        "wall_end": "2026-10-08T08:59:41Z",
+        "wall_start": "2026-10-08T14:00:08Z",
+        "wall_end": "2026-10-08T14:00:14Z",
         "duration_ms": 6000.0,
         "source_mode": "synthetic",
         "max_confidence": 0.71,
@@ -251,7 +254,7 @@
         "trigger_frame_id": 264,
         "related_incident_ids": [],
         "evidence_ids": [
-          "ev-7868fbcf7bc22802d09933ad"
+          "ev-a54960caf52948536510ee2a"
         ],
         "rule_version": "sample-rules-1",
         "config_version": "sample-config-1",
@@ -261,29 +264,29 @@
       },
       "reviews": [
         {
-          "review_id": "rev-c25bdd24373ee39e1bff",
+          "review_id": "rev-d22a84a378fba6c44d41",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-phone-1",
           "decision": "inconclusive",
           "comment": "Нужно пересмотреть снимок.",
           "operator": "teacher-demo",
-          "created_at": "2026-10-08T09:10:00.915314Z",
+          "created_at": "2026-10-08T14:10:34.078637Z",
           "supersedes_review_id": null
         },
         {
-          "review_id": "rev-8614bb2defa5c001e701",
+          "review_id": "rev-7dd8a5d884f49e9ee423",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-phone-1",
           "decision": "dismissed",
           "comment": "Телефон лежал на столе экраном вниз.",
           "operator": "teacher-demo",
-          "created_at": "2026-10-08T09:10:00.916321Z",
-          "supersedes_review_id": "rev-c25bdd24373ee39e1bff"
+          "created_at": "2026-10-08T14:10:34.079636Z",
+          "supersedes_review_id": "rev-d22a84a378fba6c44d41"
         }
       ],
       "evidence": [
         {
-          "evidence_id": "ev-7868fbcf7bc22802d09933ad",
+          "evidence_id": "ev-a54960caf52948536510ee2a",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-phone-1",
           "kind": "snapshot",
@@ -292,7 +295,7 @@
           "media_type": "image/jpeg",
           "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
           "size_bytes": 11905,
-          "created_at": "2026-10-08T09:10:00.609489Z"
+          "created_at": "2026-10-08T14:10:33.788531Z"
         }
       ]
     },
@@ -306,8 +309,8 @@
         "priority": "low",
         "t_start_ms": 150000.0,
         "t_end_ms": 150000.0,
-        "wall_start": "2026-10-08T09:00:30Z",
-        "wall_end": "2026-10-08T09:00:30Z",
+        "wall_start": "2026-10-08T14:01:03Z",
+        "wall_end": "2026-10-08T14:01:03Z",
         "duration_ms": 0.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -353,8 +356,8 @@
         "priority": "low",
         "t_start_ms": 200000.0,
         "t_end_ms": 209000.0,
-        "wall_start": "2026-10-08T09:01:20Z",
-        "wall_end": "2026-10-08T09:01:29Z",
+        "wall_start": "2026-10-08T14:01:53Z",
+        "wall_end": "2026-10-08T14:02:02Z",
         "duration_ms": 9000.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -402,8 +405,8 @@
         "priority": "low",
         "t_start_ms": 300000.0,
         "t_end_ms": 306000.0,
-        "wall_start": "2026-10-08T09:03:00Z",
-        "wall_end": "2026-10-08T09:03:06Z",
+        "wall_start": "2026-10-08T14:03:33Z",
+        "wall_end": "2026-10-08T14:03:39Z",
         "duration_ms": 6000.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -450,8 +453,8 @@
         "priority": "high",
         "t_start_ms": 480000.0,
         "t_end_ms": 483200.0,
-        "wall_start": "2026-10-08T09:06:00Z",
-        "wall_end": "2026-10-08T09:06:03.200000Z",
+        "wall_start": "2026-10-08T14:06:33Z",
+        "wall_end": "2026-10-08T14:06:36.200000Z",
         "duration_ms": 3200.0,
         "source_mode": "synthetic",
         "max_confidence": null,
@@ -486,13 +489,13 @@
       },
       "reviews": [
         {
-          "review_id": "rev-add8e83ffde17fd8632c",
+          "review_id": "rev-22bf7823a59ff2c8f2ba",
           "session_id": "s-sample-synthetic-0001",
           "incident_id": "inc-env-2",
           "decision": "confirmed",
           "comment": "Переключение на другое окно подтверждено.",
           "operator": "teacher-demo",
-          "created_at": "2026-10-08T09:10:00.916321Z",
+          "created_at": "2026-10-08T14:10:34.079636Z",
           "supersedes_review_id": null
         }
       ],
@@ -508,7 +511,7 @@
         "priority": "medium",
         "t_start_ms": 600000.0,
         "t_end_ms": null,
-        "wall_start": "2026-10-08T09:08:00Z",
+        "wall_start": "2026-10-08T14:08:33Z",
         "wall_end": null,
         "duration_ms": 30000.0,
         "source_mode": "synthetic",
@@ -554,7 +557,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 260,
       "t_session_ms": 95000.0,
-      "wall_time": "2026-10-08T08:59:35Z",
+      "wall_time": "2026-10-08T14:00:08Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.phone",
@@ -600,7 +603,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 264,
       "t_session_ms": 96000.0,
-      "wall_time": "2026-10-08T08:59:36Z",
+      "wall_time": "2026-10-08T14:00:09Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.phone",
@@ -646,7 +649,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 284,
       "t_session_ms": 101000.0,
-      "wall_time": "2026-10-08T08:59:41Z",
+      "wall_time": "2026-10-08T14:00:14Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.phone",
@@ -692,7 +695,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 150000.0,
-      "wall_time": "2026-10-08T09:00:30Z",
+      "wall_time": "2026-10-08T14:01:03Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "environment",
@@ -711,7 +714,7 @@
       "mechanism": "electron.before_input_event",
       "scope": "window",
       "client_seq": 1,
-      "client_wall_time": "2026-10-08T09:00:29.990000Z",
+      "client_wall_time": "2026-10-08T14:01:02.990000Z",
       "detail": {
         "process_name": null,
         "shortcut": "Alt+Tab",
@@ -723,7 +726,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 680,
       "t_session_ms": 200000.0,
-      "wall_time": "2026-10-08T09:01:20Z",
+      "wall_time": "2026-10-08T14:01:53Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.attention",
@@ -758,7 +761,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 716,
       "t_session_ms": 209000.0,
-      "wall_time": "2026-10-08T09:01:29Z",
+      "wall_time": "2026-10-08T14:02:02Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.attention",
@@ -793,7 +796,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 300000.0,
-      "wall_time": "2026-10-08T09:03:00Z",
+      "wall_time": "2026-10-08T14:03:33Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "capture",
@@ -821,7 +824,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 306000.0,
-      "wall_time": "2026-10-08T09:03:06Z",
+      "wall_time": "2026-10-08T14:03:39Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "capture",
@@ -849,7 +852,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": null,
       "t_session_ms": 480000.0,
-      "wall_time": "2026-10-08T09:06:00Z",
+      "wall_time": "2026-10-08T14:06:33Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "environment",
@@ -868,7 +871,7 @@
       "mechanism": "electron.blur",
       "scope": "window",
       "client_seq": 2,
-      "client_wall_time": "2026-10-08T09:05:59.990000Z",
+      "client_wall_time": "2026-10-08T14:06:32.990000Z",
       "detail": {
         "process_name": null,
         "shortcut": null,
@@ -880,7 +883,7 @@
       "session_id": "s-sample-synthetic-0001",
       "frame_id": 2280,
       "t_session_ms": 600000.0,
-      "wall_time": "2026-10-08T09:08:00Z",
+      "wall_time": "2026-10-08T14:08:33Z",
       "source_mode": "synthetic",
       "producer": {
         "module": "bootstrap.attention",
@@ -921,7 +924,7 @@
         "b"
       ],
       "client_seq": 1,
-      "saved_at": "2026-10-08T09:10:00.497234Z"
+      "saved_at": "2026-10-08T14:10:33.724973Z"
     },
     {
       "session_id": "s-sample-synthetic-0001",
@@ -931,14 +934,14 @@
         "c"
       ],
       "client_seq": 2,
-      "saved_at": "2026-10-08T09:10:00.625056Z"
+      "saved_at": "2026-10-08T14:10:33.804074Z"
     },
     {
       "session_id": "s-sample-synthetic-0001",
       "question_id": "q3",
       "value": "Ответ текстом: 42",
       "client_seq": 3,
-      "saved_at": "2026-10-08T09:10:00.662698Z"
+      "saved_at": "2026-10-08T14:10:33.837134Z"
     }
   ],
   "producers": [
@@ -973,7 +976,7 @@
   ],
   "evidence_files": [
     {
-      "evidence_id": "ev-7868fbcf7bc22802d09933ad",
+      "evidence_id": "ev-a54960caf52948536510ee2a",
       "status": "ok",
       "sha256": "787f9589077ae0da6c5b9a979907f7dc7845fb5991265016225dfd29ce2f8768",
       "size_bytes": 11905

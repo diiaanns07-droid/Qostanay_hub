@@ -256,6 +256,7 @@ class SessionRuntime:
         self._analyzer_status: dict[Component, HealthStatus] = {}
         self.health_reporter: Callable[[], Any] | None = None  # set by the app: builds a HealthReport
         self._audio_monitor = None
+        self.extra_preflight_checks: list[Callable[[str], PreflightCheck]] = []  # A15 desk scan (set by the app)
 
     # ------------------------------------------------------------------ info
     @property
@@ -448,6 +449,7 @@ class SessionRuntime:
                     message_ru="Проверка офлайн-ресурсов ещё не подключена (A09)",
                 ),
             ]
+            checks += self._extra_checks()
             report = PreflightReport(
                 session_id=self.session_id,
                 source_mode=self.mode,
@@ -458,6 +460,15 @@ class SessionRuntime:
             self._preflight = report
             self._update(state=SessionState.PREFLIGHT)
             return report
+
+    def _extra_checks(self) -> list[PreflightCheck]:
+        result = []
+        for make in self.extra_preflight_checks:
+            try:
+                result.append(make(self.session_id))
+            except Exception:
+                log.exception("extra preflight check failed")
+        return result
 
     def _open_capture(self) -> PreflightCheck:
         cap = self.pipeline.capture
@@ -598,6 +609,19 @@ class SessionRuntime:
         for item in caps.items:
             counts[item.status.value] = counts.get(item.status.value, 0) + 1
         ok = caps.exam_mode_supported and counts.get("blocked", 0) > 0
+        vm_warning = next((i for i in caps.items if i.mechanism in (
+            "native.vm_check.detected", "native.vm_check.unknown")), None)
+        if ok and vm_warning is not None:
+            # VM/VDI is advisory. Hard environment failures were handled above;
+            # preserve their required gate while making only this warning optional.
+            return PreflightCheck(
+                check_id=PreflightCheckId.ENVIRONMENT_PROTECTION,
+                status=CheckStatus.WARN, required=False,
+                message_code="virtual_machine_" + vm_warning.mechanism.rsplit(".", 1)[-1],
+                message_ru=vm_warning.note_ru or "Не удалось определить виртуальную машину",
+                details={"vm_state": vm_warning.mechanism.rsplit(".", 1)[-1],
+                         "platform": caps.platform, **{f"count_{k}": v for k, v in counts.items()}},
+            )
         status = CheckStatus.WARN if ok and len(counts) > 1 else (CheckStatus.PASS if ok else CheckStatus.FAIL)
         if required and status == CheckStatus.WARN:
             status = CheckStatus.PASS  # partial protection is visible in details, not hidden
@@ -1053,6 +1077,7 @@ class SessionManager:
         self._lock = threading.Lock()
         self._sessions: dict[str, SessionRuntime] = {}
         self.health_reporter: Callable[[], Any] | None = None
+        self.extra_preflight_checks: list[Callable[[str], PreflightCheck]] = []  # A15 (optional checks, required=false)
 
     def create(self, req: SessionCreate) -> SessionInfo:
         if not req.consent.accepted:
@@ -1084,6 +1109,7 @@ class SessionManager:
             pipeline = self._provider.pipeline_for(req.source.mode)
             runtime = SessionRuntime(self.settings, info, clock, pipeline, self._bus, self._provider)
             runtime.health_reporter = self.health_reporter
+            runtime.extra_preflight_checks = self.extra_preflight_checks
             self._sessions[session_id] = runtime
         runtime._update()  # persist + broadcast "created"
         return runtime.info
