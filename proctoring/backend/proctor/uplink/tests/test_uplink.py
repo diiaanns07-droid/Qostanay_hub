@@ -223,8 +223,14 @@ def test_lock_unlock_audio_publish_class_state_and_ack(server, run, tmp_path):
     assert wait_for(lambda: server.of_type("status")[-1]["locked"] is True)
     bad = server.send_command("lock", {"reason_ru": ""})
     assert wait_for(lambda: bad in server.acks()) and server.acks()[bad]["ok"] is False and server.acks()[bad]["error_ru"]
-    a = server.send_command("audio_start", {"direction": "listen"})
-    assert wait_for(lambda: a in server.acks()) and events[-1].mic_active is True and events[-1].audio_direction == "listen"
+    # no WebRTC yet: audio_start / audio_update are refused and the microphone is never claimed (T05 semantics)
+    for kind in ("audio_start", "audio_update"):
+        a = server.send_command(kind, {"audio_session_id": "as-" + "0" * 32, "listen": True, "talk": False, "direction": "listen"})
+        assert wait_for(lambda: a in server.acks())
+        ack = server.acks()[a]
+        assert ack["ok"] is False and ack["error_code"] == "not_supported" and ack["code"] == "unsupported" and "Аудиосвязь" in ack["error_ru"]
+    assert up.mic_active is False and all(not e.mic_active for e in events)
+    assert server.of_type("status")[-1]["mic_active"] is False
     for kind in ("audio_stop", "unlock"):
         c = server.send_command(kind)
         assert wait_for(lambda: c in server.acks()) and server.acks()[c]["ok"]
@@ -282,3 +288,26 @@ def test_redelivered_command_is_not_executed_twice_and_ack_has_code_and_result(s
     view.exam_state = "preflight"
     f = server.send_command("request_clip", {"incident_id": "none"})
     assert wait_for(lambda: f in server.acks()) and server.acks()[f]["code"] == "failed"
+
+
+def test_class_state_is_republished_with_computer_name(server, run, tmp_path, monkeypatch):
+    import proctor.uplink.client as client_mod
+
+    monkeypatch.setattr(client_mod, "CLASS_STATE_REPUBLISH_S", 0.3)
+    events: list[ClassStateMsg] = []
+    up, _ = run(make_cfg(tmp_path, server.address), events=events)
+    assert wait_for(lambda: up.connection == "connected")
+    n = len(events)
+    assert wait_for(lambda: len(events) >= n + 3, timeout=5)  # periodic, without any change
+    last = events[-1]
+    assert last.connection == "connected" and last.computer_name == "pc-1" and last.student_label == "Студент 1"
+
+
+def test_class_state_is_republished_while_offline(run, tmp_path, monkeypatch):
+    import proctor.uplink.client as client_mod
+
+    monkeypatch.setattr(client_mod, "CLASS_STATE_REPUBLISH_S", 0.3)
+    events: list[ClassStateMsg] = []
+    up, _ = run(make_cfg(tmp_path, f"127.0.0.1:{free_port()}"), events=events)
+    assert wait_for(lambda: len(events) >= 4, timeout=5)
+    assert events[-1].connection in ("connecting", "reconnecting") and events[-1].computer_name == "pc-1"
