@@ -17,7 +17,11 @@ audio/headphones rules on plain values, head-pose fix from real A04 output.**
 * Пороги — `FusionConfig` (`phone_raise_*`, `phone_capture_*`, `phone_raised`). Код — отдельные функции
   `_remember_face`, `_raised_phone`, `_raised_evidence`, `_capture_evidence` (2 строки вызова в `_on_phone`, 1 в
   `_on_attention`). Тесты: `tests/test_phone_raised_geometry.py` (5); g09 / link-gap / priorities обновлены под ≥ 1 с.
-* Замер на роликах A02 (realtime и lockstep, 5 прогонов, малая выборка — не точность): `handoffs/A03/PHONE_RAISED.md`.
+* Замер на роликах A02, по 5 прогонов (малая выборка, не точность). `zone_c_red_01`: realtime 3/5 до → 5/5 после
+  (и 5/5 в повторе), lockstep 5/5 → 5/5, телефон 4 к/с 4/5 → 5/5. `zone_a_green_01` и `zone_b_yellow_02`: 0 ложных
+  до и после. «Возможная съёмка» на c не появилась: телефон у лица 1,6 с и опускается. Таблица и трассировка —
+  `handoffs/A03/PHONE_RAISED.md`.
+* Попутно: из текстов A05 убраны «списывания» / «вероятность» (оговорка взгляда, подпись `max_confidence`).
 
 ## 2026-10-08: LIVE PASS «взгляд вниз после калибровки» (проверка капитана)
 Сборка `codex/proctor-integration` @ `f46565c` (A04 «вверх» необязательна + полноэкранная калибровка A07), ноутбук
