@@ -1,0 +1,492 @@
+$ C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+........................................................................ [  8%]
+........................................................................ [ 16%]
+.................................................................ssssss. [ 24%]
+............s........................................................... [ 32%]
+.s..........................................F.........s................. [ 40%]
+........F.F............................................................. [ 48%]
+........................................................................ [ 56%]
+........................................................................ [ 64%]
+................F....F...............ssF................................ [ 72%]
+........................................................................ [ 80%]
+..................sssssssssssssssssssssssssss........................... [ 88%]
+........................................................................ [ 96%]
+..s........E.......................                                      [100%]
+=================================== ERRORS ====================================
+__________ ERROR at setup of test_live_never_falls_back_to_synthetic __________
+
+self = TypeAdapter(Annotated[Union[EnvironmentCapabilities, NoneType], FieldInfo(annotation=NoneType, required=True)])
+ns_resolver = <pydantic._internal._namespace_utils.NsResolver object at 0x000001721DF8A420>
+force = False, raise_errors = False
+
+    def _init_core_attrs(
+        self, ns_resolver: _namespace_utils.NsResolver, force: bool, raise_errors: bool = False
+    ) -> bool:
+        """Initialize the core schema, validator, and serializer for the type.
+
+        Args:
+            ns_resolver: The namespace resolver to use when building the core schema for the adapted type.
+            force: Whether to force the construction of the core schema, validator, and serializer.
+                If `force` is set to `False` and `_defer_build` is `True`, the core schema, validator, and serializer will be set to mocks.
+            raise_errors: Whether to raise errors if initializing any of the core attrs fails.
+
+        Returns:
+            `True` if the core schema, validator, and serializer were successfully initialized, otherwise `False`.
+
+        Raises:
+            PydanticUndefinedAnnotation: If `PydanticUndefinedAnnotation` occurs in`__get_pydantic_core_schema__`
+                and `raise_errors=True`.
+        """
+        if not force and self._defer_build:
+            _mock_val_ser.set_type_adapter_mocks(self)
+            self.pydantic_complete = False
+            return False
+
+        try:
+>           self.core_schema = _getattr_no_parents(self._type, '__pydantic_core_schema__')
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\pydantic\type_adapter.py:287:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+obj = typing.Annotated[proctor_contracts.v1.EnvironmentCapabilities | None, FieldInfo(annotation=NoneType, required=True)]
+attribute = '__pydantic_core_schema__'
+
+    def _getattr_no_parents(obj: Any, attribute: str) -> Any:
+        """Returns the attribute value without attempting to look up attributes from parent types."""
+        if hasattr(obj, '__dict__'):
+            try:
+                return obj.__dict__[attribute]
+            except KeyError:
+                pass
+
+        slots = getattr(obj, '__slots__', None)
+        if slots is not None and attribute in slots:
+            return getattr(obj, attribute)
+        else:
+>           raise AttributeError(attribute)
+E           AttributeError: __pydantic_core_schema__
+
+.venv\Lib\site-packages\pydantic\type_adapter.py:56: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+_warn = <built-in function warn>
+
+    def __del__(self, _warn=warnings.warn):
+        if not self.is_closed():
+            _warn(f"unclosed event loop {self!r}", ResourceWarning, source=self)
+            if not self.is_running():
+>               self.close()
+
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\base_events.py:732:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:697: in close
+    self._close_self_pipe()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+
+    def _close_self_pipe(self):
+        if self._self_reading_future is not None:
+            self._self_reading_future.cancel()
+            self._self_reading_future = None
+>       self._ssock.close()
+        ^^^^^^^^^^^
+E       AttributeError: 'ProactorEventLoop' object has no attribute '_ssock'
+
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:779: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x0000017216613600>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+.venv\Lib\site-packages\_pytest\runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\_pytest\runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\logging.py:858: in pytest_runtest_setup
+    yield
+.venv\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+.venv\Lib\site-packages\_pytest\unraisableexception.py:178: in pytest_runtest_setup
+    collect_unraisable(item.config)
+.venv\Lib\site-packages\_pytest\unraisableexception.py:79: in collect_unraisable
+    raise errors[0]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+config = <_pytest.config.Config object at 0x00000172728CA4E0>
+
+    def collect_unraisable(config: Config) -> None:
+        pop_unraisable = config.stash[unraisable_exceptions].pop
+        errors: list[pytest.PytestUnraisableExceptionWarning | RuntimeError] = []
+        meta = None
+        hook_error = None
+        try:
+            while True:
+                try:
+                    meta = pop_unraisable()
+                except IndexError:
+                    break
+
+                if isinstance(meta, BaseException):
+                    hook_error = RuntimeError("Failed to process unraisable exception")
+                    hook_error.__cause__ = meta
+                    errors.append(hook_error)
+                    continue
+
+                msg = meta.msg
+                try:
+>                   warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+E                   pytest.PytestUnraisableExceptionWarning: Exception ignored in: <function BaseEventLoop.__del__ at 0x00000172738F77E0>
+E                   Enable tracemalloc to get traceback where the object was allocated.
+E                   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+.venv\Lib\site-packages\_pytest\unraisableexception.py:67: PytestUnraisableExceptionWarning
+----------------------------- Captured log setup ------------------------------
+WARNING  proctor.app:app.py:453 exam file C:\Users\karab\AppData\Local\Temp\pytest-of-karab\pytest-19\test_live_never_falls_back_to_0\missing_exam.json not found; using contract fixture exam (demo)
+================================== FAILURES ===================================
+__________________________ test_full_synthetic_flow ___________________________
+
+api = <starlette.testclient.TestClient object at 0x000001720E261130>
+
+    def test_full_synthetic_flow(api):
+        sid = _running_session(api)
+        r = api.put(f"/v1/sessions/{sid}/answers/q1", json={"value": "<img src=x onerror=alert(1)>", "client_seq": 1})
+        assert r.status_code == 200 and r.json()["value"].startswith("<img")
+        ev = {"action": "shortcut_alt_tab", "enforcement": "detected_only", "mechanism": "test.shell", "scope": "window",
+              "client_seq": 1, "client_wall_time": "2026-10-08T09:00:05Z", "detail": {"shortcut": "<b>Alt+Tab</b>"}}
+        assert api.post(f"/v1/sessions/{sid}/environment/events", json={"session_id": sid, "events": [ev]}).status_code == 200
+
+        def phone_incident():
+            incidents = [Incident.model_validate(i) for i in api.get(f"/v1/sessions/{sid}/incidents").json()]
+            return next((i for i in incidents if i.rule_id.value == "phone_visible" and i.evidence_ids), None)
+
+        phone = _wait(phone_incident)
+        assert phone is not None, "synthetic phone incident with a snapshot did not arrive"
+        rules = {i["rule_id"] for i in api.get(f"/v1/sessions/{sid}/incidents").json()}
+        assert {"phone_visible", "environment_blocked_action"} <= rules
+
+        review = api.post(
+            f"/v1/sessions/{sid}/incidents/{phone.incident_id}/reviews",
+            json={"decision": "dismissed", "comment": "</td><svg onload=alert(1)>", "operator": "teacher-1"},
+        )
+        assert review.status_code == 200
+        HumanReview.model_validate(review.json())
+        detail = IncidentDetail.model_validate(api.get(f"/v1/sessions/{sid}/incidents/{phone.incident_id}").json())
+        assert detail.incident.review_status.value == "dismissed" and detail.evidence
+        media = api.get(f"/v1/sessions/{sid}/evidence/{detail.evidence[0].evidence_id}")
+        assert media.status_code == 200 and media.headers["content-type"] == "image/jpeg"
+        assert media.content[:3] == b"\xff\xd8\xff" and media.headers["x-content-type-options"] == "nosniff"
+
+        assert api.post(f"/v1/sessions/{sid}/finish").json()["state"] == "finished"
+        assert api.put(f"/v1/sessions/{sid}/answers/q1", json={"value": "late", "client_seq": 2}).status_code == 409
+
+        summary = SessionSummary.model_validate(api.get(f"/v1/sessions/{sid}/summary").json())
+        assert summary.incidents_total >= 2 and summary.reviews_by_decision["dismissed"] == 1
+        assert summary.observed_ms > 0 and any("СИНТЕТИЧЕСКИЕ" in x for x in summary.limitations_ru)
+
+        html_resp = api.get(f"/v1/sessions/{sid}/report.html")
+        assert html_resp.status_code == 200 and html_resp.headers["content-type"].startswith("text/html")
+        assert "default-src 'none'" in html_resp.headers["content-security-policy"]
+        page = html_resp.text
+        assert EVIL_LABEL not in page and "&lt;script&gt;" in page and "<svg" not in page
+        assert "СИНТЕТИЧЕСКИЕ ДАННЫЕ" in page and "data:image/jpeg;base64," in page
+
+        export = api.get(f"/v1/sessions/{sid}/report.json")
+        assert export.status_code == 200 and "attachment" in export.headers["content-disposition"]
+        payload = json.loads(export.content)
+        manifest = ExportManifest.model_validate(payload["manifest"])
+        assert manifest.session_id == sid and manifest.source_mode.value == "synthetic"
+        names = {f.name for f in manifest.files}
+        assert "report.html" in names and f"{detail.evidence[0].evidence_id}.jpg" in names
+        assert payload["session"]["student_label"] == EVIL_LABEL  # JSON keeps raw text, HTML escapes it
+>       assert manifest.config_versions["fusion.rule_version"] == "bootstrap-0"
+E       AssertionError: assert 'a05-rules-1.0.0' == 'bootstrap-0'
+E
+E         - bootstrap-0
+E         + a05-rules-1.0.0
+
+backend\proctor\evidence\tests\test_evidence_api.py:128: AssertionError
+----------------------------- Captured log setup ------------------------------
+WARNING  proctor.phone:analyzer.py:351 phone analyzer model_missing: Phone model file not found: models/phone/yolo11n.onnx (yolo11n-coco-onnx). Prepare it before the exam: python -m proctor.phone.prepare --download (or --from-file <file>); the runtime never downloads.
+WARNING  proctor.app:app.py:453 exam file C:\Users\karab\AppData\Local\Temp\pytest-of-karab\pytest-19\test_full_synthetic_flow0\missing_exam.json not found; using contract fixture exam (demo)
+______________________ test_evidence_paths_cannot_escape ______________________
+
+store = <proctor.evidence.store.SqliteEvidenceStore object at 0x000001721661C230>
+fx = namespace(load=<function load at 0x000001720D2FA020>, session_info=<function session_info at 0x000001720D2FA0C0>, inci...>, frame=<function frame at 0x000001720D2E4360>, T0=datetime.datetime(2026, 10, 9, 9, 0, tzinfo=datetime.timezone.utc))
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-19/test_evidence_paths_cannot_esc0')
+
+    def test_evidence_paths_cannot_escape(store, fx, tmp_path):
+        sid = "s-a"
+        store.upsert_session(fx.session_info(sid, retain_media=True))
+        store.record_incident_change(fx.incident_change(sid))
+        item = store.capture_snapshot(sid, "inc-1", fx.frame(sid))
+        secret = tmp_path / "secret.jpg"
+        secret.write_bytes(b"\xff\xd8\xff secret")
+        # a tampered database row pointing outside the media root is refused
+        for bad in ("../../secret.jpg", "/etc/passwd", "..", "a" * 32 + ".jpg/../../x"):
+            store._conn.execute("UPDATE evidence SET file_name=? WHERE evidence_id=?", (bad, item.evidence_id))
+            with pytest.raises(itf.NotFoundError):
+                store.evidence_media(sid, item.evidence_id)
+        # a symlink planted in the media directory is refused
+        link_name = "b" * 32 + ".jpg"
+>       os.symlink(secret, store.vault.root / store._live[sid].media_token / link_name)
+E       OSError: [WinError 1314] Клиент не обладает требуемыми правами: 'C:\\Users\\karab\\AppData\\Local\\Temp\\pytest-of-karab\\pytest-19\\test_evidence_paths_cannot_esc0\\secret.jpg' -> 'C:\\Users\\karab\\AppData\\Local\\Temp\\pytest-of-karab\\pytest-19\\test_evidence_paths_cannot_esc0\\data\\evidence-media\\63ba0f905f1f6c3be63c4d43c4084a67\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.jpg'
+
+backend\proctor\evidence\tests\test_evidence_store.py:206: OSError
+___________________ test_delete_removes_session_completely ____________________
+
+store = <proctor.evidence.store.SqliteEvidenceStore object at 0x000001720E279E50>
+fx = namespace(load=<function load at 0x000001720D2FA020>, session_info=<function session_info at 0x000001720D2FA0C0>, inci...>, frame=<function frame at 0x000001720D2E4360>, T0=datetime.datetime(2026, 10, 9, 9, 0, tzinfo=datetime.timezone.utc))
+
+    def test_delete_removes_session_completely(store, fx):
+        sid, other = "s-del", "s-keep"
+        marker = "UNIQUE-MARKER-7f3a9c"
+        store.upsert_session(fx.session_info(sid, retain_media=True, student_label=marker))
+        store.upsert_session(fx.session_info(other))
+        store.record_observation(fx.phone_obs(sid, "p-1", 4000.0))
+        store.record_observation(fx.env_obs(sid, "env-1", 4100.0))
+        store.record_incident_change(fx.incident_change(sid, observation_ids=["p-1"]))
+        store.capture_snapshot(sid, "inc-1", fx.frame(sid))
+        store.add_review(sid, "inc-1", HumanReviewCreate(decision="confirmed", comment=marker, operator="t"))
+        store.save_answer(sid, "q1", AnswerUpsert(value=marker, client_seq=1))
+        with pytest.raises(itf.InvalidStateError):
+            store.delete_session(sid)  # still running
+        token = store._live[sid].media_token
+        store.upsert_session(fx.session_info(sid, state="finished", retain_media=True, student_label=marker))
+        store.delete_session(sid)
+        for table in db.SESSION_TABLES:
+            assert rows(store, table, sid) == 0, table
+        assert not (store.vault.root / token).exists()
+        assert store.get_session(other) is not None
+        with pytest.raises(itf.NotFoundError):
+            store.list_incidents(sid)
+        store.delete_session(sid)  # idempotent
+        with pytest.raises(itf.NotFoundError):
+            store.delete_session("never-existed")
+        # late writes cannot resurrect the session
+        store.upsert_session(fx.session_info(sid))
+        store.record_incident_change(fx.incident_change(sid))
+        assert store.get_session(sid) is None
+        # secure_delete + WAL checkpoint: the marker is not left in the database files
+        # (best effort for SQLite pages; not a forensic erase of the disk)
+        store._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+>       blob = b"".join(p.read_bytes() for p in store.data_dir.glob("qorgau-evidence.sqlite3*") if p.is_file())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\evidence\tests\test_evidence_store.py:269:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\proctor\evidence\tests\test_evidence_store.py:269: in <genexpr>
+    blob = b"".join(p.read_bytes() for p in store.data_dir.glob("qorgau-evidence.sqlite3*") if p.is_file())
+                    ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-19/test_delete_removes_session_co0/data/qorgau-evidence.sqlite3.lock')
+
+    def read_bytes(self):
+        """
+        Open the file in bytes mode, read it, and close the file.
+        """
+        with self.open(mode='rb') as f:
+>           return f.read()
+                   ^^^^^^^^
+E           PermissionError: [Errno 13] Permission denied
+
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\pathlib.py:1020: PermissionError
+___________________ test_install_success_writes_atomically ____________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-19/test_install_success_writes_at0')
+
+    def test_install_success_writes_atomically(tmp_path):
+        data = b"abcdefg"
+        target = tmp_path / "models" / "phone" / "m.onnx"
+        sha = hashlib.sha256(data).hexdigest()
+        actual = prepare._install(_chunks(b"abc", b"", b"defg"), target, sha, len(data))
+        assert actual == sha
+        assert target.read_bytes() == data
+>       assert _files_under(tmp_path / "models") == ["phone/m.onnx"]  # no .part left behind
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['phone\\m.onnx'] == ['phone/m.onnx']
+E
+E         At index 0 diff: 'phone\\m.onnx' != 'phone/m.onnx'
+E         Use -v to get more diff
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:580: AssertionError
+_____ test_install_source_error_leaves_nothing_and_keeps_existing_target ______
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-19/test_install_source_error_leav0')
+
+    def test_install_source_error_leaves_nothing_and_keeps_existing_target(tmp_path):
+        target = tmp_path / "models" / "phone" / "m.onnx"
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b"previous file")
+
+        def broken():
+            yield b"abc"
+            raise OSError("connection reset")
+
+        with pytest.raises(OSError, match="connection reset"):
+            prepare._install(broken(), target, hashlib.sha256(b"abcdefg").hexdigest(), 7)
+        assert target.read_bytes() == b"previous file"  # failed install never touches the target
+>       assert _files_under(tmp_path / "models") == ["phone/m.onnx"]
+E       AssertionError: assert ['phone\\m.onnx'] == ['phone/m.onnx']
+E
+E         At index 0 diff: 'phone\\m.onnx' != 'phone/m.onnx'
+E         Use -v to get more diff
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:633: AssertionError
+__________________ test_app_health_lists_phone_model_missing __________________
+
+tmp_path = WindowsPath('C:/Users/karab/AppData/Local/Temp/pytest-of-karab/pytest-19/test_app_health_lists_phone_mo0')
+no_network = ['socket.connect']
+
+    def test_app_health_lists_phone_model_missing(tmp_path, no_network):
+        app = create_app(_app_settings(tmp_path), TOKEN)
+>       with TestClient(app, base_url="http://127.0.0.1", headers=AUTH) as client:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:780:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\starlette\testclient.py:504: in __enter__
+    self.portal = portal = stack.enter_context(anyio.from_thread.start_blocking_portal(**self.async_backend))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+.venv\Lib\site-packages\anyio\from_thread.py:554: in start_blocking_portal
+    portal = future.result()
+             ^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+.venv\Lib\site-packages\anyio\from_thread.py:538: in run_blocking_portal
+    run_eventloop(
+.venv\Lib\site-packages\anyio\_core\_eventloop.py:83: in run
+    return async_backend.run(func, args, {}, backend_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\anyio\_backends\_asyncio.py:2547: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\tmp\python-runtime\cpython-3.12-windows-x86_64-none\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (<socket.socket [closed] fd=-1, family=2, type=1, proto=0>, ('127.0.0.1', 52005))
+kwargs = {}
+
+    def _deny(*args, **kwargs):
+        calls.append(name)
+>       raise AssertionError(f"network access attempted: {name}")
+E       AssertionError: network access attempted: socket.connect
+
+backend\proctor\phone\tests\test_config_manifest_prepare.py:98: AssertionError
+============================== warnings summary ===============================
+backend\proctor\capture\sources.py:158
+  C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\backend\proctor\capture\sources.py:158: SyntaxWarning: invalid escape sequence '\C'
+    Only READS ...\CapabilityAccessManager\ConsentStore\webcam ``Value`` under HKLM ("camera access
+
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:54: real face model not available here: model_missing attention/face_landmarker.task not found under models_dir; prepare it with `python -m proctor.attention.model_tool fetch` (needs network once) or copy it
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:60: real face model not available here: model_missing attention/face_landmarker.task not found under models_dir; prepare it with `python -m proctor.attention.model_tool fetch` (needs network once) or copy it
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:80: real face model not available here: model_missing attention/face_landmarker.task not found under models_dir; prepare it with `python -m proctor.attention.model_tool fetch` (needs network once) or copy it
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:87: real face model not available here: model_missing attention/face_landmarker.task not found under models_dir; prepare it with `python -m proctor.attention.model_tool fetch` (needs network once) or copy it
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:97: real face model not available here: model_missing attention/face_landmarker.task not found under models_dir; prepare it with `python -m proctor.attention.model_tool fetch` (needs network once) or copy it
+SKIPPED [1] backend\proctor\attention\tests\test_mediapipe_real.py:76: public test image portrait.jpg not provided (QORGAU_A04_TEST_IMAGES)
+SKIPPED [1] backend\proctor\capture\tests\test_capture_app_integration.py:181: a camera may be present
+SKIPPED [1] backend\proctor\capture\tests\test_capture_replay.py:127: symlink not permitted
+SKIPPED [1] backend\proctor\evidence\tests\test_evidence_report.py:201: Node + Playwright + Chromium not available (real-renderer check runs where they are)
+SKIPPED [1] backend\proctor\phone\tests\test_config_manifest_prepare.py:740: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_config_manifest_prepare.py:749: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:262: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:305: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:328: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:346: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:368: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:388: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:407: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:426: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:447: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:477: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [4] backend\proctor\phone\tests\test_real_model.py:515: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:552: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [6] backend\proctor\phone\tests\test_real_model.py:585: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:610: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:626: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:649: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:676: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:757: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\proctor\phone\tests\test_real_model.py:833: verified phone weights not installed (python -m proctor.phone.prepare --download)
+SKIPPED [1] backend\tests\test_integrated_flow.py:129: QORGAU_IT_REPLAY_DIR not set (replay media is kept outside Git)
+ERROR backend/tests/test_lifecycle_api.py::test_live_never_falls_back_to_synthetic
+FAILED backend/proctor/evidence/tests/test_evidence_api.py::test_full_synthetic_flow
+FAILED backend/proctor/evidence/tests/test_evidence_store.py::test_evidence_paths_cannot_escape
+FAILED backend/proctor/evidence/tests/test_evidence_store.py::test_delete_removes_session_completely
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_success_writes_atomically
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_install_source_error_leaves_nothing_and_keeps_existing_target
+FAILED backend/proctor/phone/tests/test_config_manifest_prepare.py::test_app_health_lists_phone_model_missing
+6 failed, 853 passed, 39 skipped, 2 warnings, 1 error in 145.58s (0:02:25)

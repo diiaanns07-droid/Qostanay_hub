@@ -1,0 +1,49 @@
+{
+  "calibration_id": "fx-cal-1",
+  "phase": "collecting",
+  "targets": [
+    {
+      "target": "center",
+      "state": "ok",
+      "samples": 30,
+      "required_samples": 30,
+      "quality": 0.82,
+      "message_code": null
+    },
+    {
+      "target": "left",
+      "state": "collecting",
+      "samples": 12,
+      "required_samples": 30,
+      "quality": 0.7,
+      "message_code": null
+    },
+    {
+      "target": "right",
+      "state": "pending",
+      "samples": 0,
+      "required_samples": 30,
+      "quality": null,
+      "message_code": null
+    },
+    {
+      "target": "up",
+      "state": "pending",
+      "samples": 0,
+      "required_samples": 30,
+      "quality": null,
+      "message_code": null
+    },
+    {
+      "target": "down",
+      "state": "pending",
+      "samples": 0,
+      "required_samples": 30,
+      "quality": null,
+      "message_code": null
+    }
+  ],
+  "current_target": "left",
+  "message_code": null,
+  "updated_at": "2026-10-09T09:00:09Z"
+}

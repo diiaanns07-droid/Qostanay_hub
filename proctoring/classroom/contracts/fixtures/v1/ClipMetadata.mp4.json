@@ -1,0 +1,11 @@
+{
+  "clip_id": "clip-0001",
+  "incident_id": "inc-0001",
+  "student_id": "st-0001",
+  "media_type": "video/mp4",
+  "size_bytes": 2400000,
+  "sha256": "abababababababababababababababababababababababababababababababab",
+  "uploaded_at": "2026-10-09T09:00:04.200000Z",
+  "url": "/api/teacher/clips/inc-0001",
+  "origin": "simulated"
+}

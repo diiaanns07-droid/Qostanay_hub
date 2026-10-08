@@ -1,0 +1,43 @@
+{
+  "name": "g09_phone_raise_and_capture_grouped",
+  "requirement": "2.1b/2.1c: raise and possible screen capture are separate claims of ONE phone episode -> linked group",
+  "mode": "synthetic",
+  "phone": [
+    {"from": 0, "to": 1000, "step": 125, "visible": "absent", "capture": "absent"},
+    {"from": 1000, "to": 2000, "step": 125, "visible": "present", "capture": "absent"},
+    {"from": 2000, "to": 2250, "step": 125, "visible": "present", "raised": "present", "capture": "absent"},
+    {"from": 2250, "to": 3000, "step": 125, "visible": "present", "capture": "absent"},
+    {"from": 3000, "to": 4000, "step": 125, "visible": "present", "capture": "present"},
+    {"from": 4000, "to": 6000, "step": 125, "visible": "present", "capture": "absent"},
+    {"from": 6000, "to": 14000, "step": 125, "visible": "absent", "capture": "absent"}
+  ],
+  "attention": [{"from": 0, "to": 14000, "step": 100, "direction": "center"}],
+  "finish": 14000,
+  "derivation": [
+    "phone_visible: present 1000..5875, opens at 2000 -> [1000, 5875], medium",
+    "phone_raised (min_duration 0, min_count 1): present 2000, 2125 -> opens at 2000; closes at 7125 (merge_gap 5000) -> [2000, 2125], high (a05-rules-1.1.0: phone raised = high)",
+    "possible_screen_capture (min_duration 500, min_count 2): present 3000..3875 -> opens at 3500 -> closes at 8875 -> [3000, 3875], base high",
+    "links (overlap or gap <= 1000): visible-raised overlap, visible-capture overlap, raised-capture gap 3000 - 2125 = 875"
+  ],
+  "expected": [
+    {
+      "rule_id": "phone_visible", "t_start_ms": 1000, "t_end_ms": 5875, "end_reason": "condition_cleared",
+      "priority": "medium", "related_rules": ["phone_raised", "possible_screen_capture"],
+      "facts": {"phone_visible_ms": 4875.0}
+    },
+    {
+      "rule_id": "phone_raised", "t_start_ms": 2000, "t_end_ms": 2125, "end_reason": "condition_cleared",
+      "priority": "high", "observation_count": 2, "related_rules": ["phone_visible", "possible_screen_capture"],
+      "facts": {"phone_raised_ms": 125.0, "raise_signals": 2},
+      "summary_contains": ["Эвристика зафиксировала подъём телефона (сигналов: 2)"],
+      "caveats_contain": ["Подъём определён эвристикой"]
+    },
+    {
+      "rule_id": "possible_screen_capture", "t_start_ms": 3000, "t_end_ms": 3875, "end_reason": "condition_cleared",
+      "priority": "high", "observation_count": 8, "related_rules": ["phone_raised", "phone_visible"],
+      "facts": {"screen_capture_signal_ms": 875.0, "screen_capture_signals": 8},
+      "summary_contains": ["признак держался 0,9 с (наблюдений: 8); факт съёмки не установлен"],
+      "caveats_contain": ["факт съёмки не установлен"]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "contract": "qorgau.classroom",
+  "contract_version": "1.1.0",
+  "wire_protocol": "qorgau.class.v1",
+  "wire_extension": "1.2",
+  "server_version": "0.1.0",
+  "server_time": "2026-10-09T09:00:00Z",
+  "session": null,
+  "students_online": 0,
+  "students_total": 0,
+  "simulated_students": 0,
+  "features": [
+    {
+      "name": "history",
+      "owner": "T03",
+      "status": "not_installed",
+      "detail": "classreview is not installed in this build"
+    }
+  ]
+}

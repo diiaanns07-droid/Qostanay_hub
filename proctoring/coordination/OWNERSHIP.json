@@ -1,0 +1,337 @@
+{
+  "contract": "qorgau.v1",
+  "contract_version": "1.0.1",
+  "root": "proctoring/",
+  "rules": [
+    "Paths are relative to the repository root. Each path prefix has exactly one writer.",
+    "Write ONLY inside your own paths (plus proctoring/handoffs/<you>/). Never edit shared files: request changes in proctoring/handoffs/<you>/DEPENDENCIES.txt.",
+    "Cross-module imports only through proctor_contracts.v1, proctor_contracts.interfaces, proctor.settings.Settings (read-only) and the public factories listed under provides.",
+    "Each owner keeps its tests inside its own path (e.g. proctoring/backend/proctor/capture/tests/).",
+    "Branch: keep the branch assigned by your platform; if none, create codex/proctor-<Axx>. Base it on the BOOTSTRAP commit. No main, no force-push, no merging other branches.",
+    "Self-check before every push: python proctoring/coordination/verify_ownership.py --agent <Axx> --base <BOOTSTRAP_SHA>"
+  ],
+  "shared_read_only": [
+    "proctoring/contracts/",
+    "proctoring/coordination/",
+    "proctoring/pyproject.toml",
+    "proctoring/uv.lock",
+    "proctoring/requirements/",
+    "proctoring/desktop/package.json",
+    "proctoring/desktop/package-lock.json",
+    "proctoring/desktop/tsconfig*.json",
+    "proctoring/desktop/vite.config.ts",
+    "proctoring/desktop/scripts/",
+    "proctoring/.gitignore",
+    "proctoring/README.md"
+  ],
+  "agents": {
+    "A01": {
+      "role": "Architect, contracts, composition root, integration",
+      "paths": [
+        "proctoring/coordination/",
+        "proctoring/contracts/",
+        "proctoring/backend/proctor/__init__.py",
+        "proctoring/backend/proctor/__main__.py",
+        "proctoring/backend/proctor/app.py",
+        "proctoring/backend/proctor/session.py",
+        "proctoring/backend/proctor/settings.py",
+        "proctoring/backend/proctor/bootstrap/",
+        "proctoring/backend/tests/",
+        "proctoring/pyproject.toml",
+        "proctoring/uv.lock",
+        "proctoring/requirements/",
+        "proctoring/desktop/package.json",
+        "proctoring/desktop/package-lock.json",
+        "proctoring/desktop/tsconfig.json",
+        "proctoring/desktop/tsconfig.contracts.json",
+        "proctoring/desktop/tsconfig.main.json",
+        "proctoring/desktop/tsconfig.renderer.json",
+        "proctoring/desktop/vite.config.ts",
+        "proctoring/desktop/scripts/",
+        "proctoring/models/README.md",
+        "proctoring/.gitignore",
+        "proctoring/README.md",
+        "proctoring/handoffs/A01/"
+      ],
+      "provides": [
+        "HTTP/WS API v1 lifecycle routes (CONTRACTS.md §HTTP API)",
+        "python -m proctor serve --token-stdin (READY handshake)",
+        "python -m proctor smoke",
+        "SessionManager/SessionRuntime lifecycle, fusion thread, stream hub"
+      ],
+      "consumes": [
+        "all module factories"
+      ]
+    },
+    "A02": {
+      "role": "Camera, frame stream, runtime metrics",
+      "paths": [
+        "proctoring/backend/proctor/capture/",
+        "proctoring/handoffs/A02/"
+      ],
+      "provides": [
+        "proctor.capture.create_capture_service(settings) -> CaptureService"
+      ],
+      "consumes": [
+        "SourceConfig",
+        "SessionClock",
+        "FramePacket",
+        "PreviewFrameMeta",
+        "RuntimeMetrics",
+        "Health"
+      ],
+      "notes": "Only module allowed to open cv2.VideoCapture. Implements live, replay and synthetic sources. Replay inputs are ids under settings.replay_dir (manifest format owned by A02, demo content by A10)."
+    },
+    "A03": {
+      "role": "Phone detection and phone signals",
+      "paths": [
+        "proctoring/backend/proctor/phone/",
+        "proctoring/handoffs/A03/"
+      ],
+      "provides": [
+        "proctor.phone.create_phone_analyzer(settings) -> FrameAnalyzer (name='phone')"
+      ],
+      "consumes": [
+        "FramePacket",
+        "ModelManifest"
+      ],
+      "emits": [
+        "PhoneObservation"
+      ],
+      "notes": "Weights under settings.models_dir/phone/ (git-ignored); manifest committed at proctoring/backend/proctor/phone/models.manifest.json."
+    },
+    "A04": {
+      "role": "Faces, presence, head pose, approximate gaze, calibration",
+      "paths": [
+        "proctoring/backend/proctor/attention/",
+        "proctoring/handoffs/A04/"
+      ],
+      "provides": [
+        "proctor.attention.create_attention_analyzer(settings) -> AttentionAnalyzer (name='attention')"
+      ],
+      "consumes": [
+        "FramePacket",
+        "ModelManifest",
+        "CalibrationTarget"
+      ],
+      "emits": [
+        "AttentionObservation",
+        "CalibrationState"
+      ],
+      "notes": "mediapipe==0.10.35 has NO legacy mp.solutions: use mediapipe.tasks.python.vision.FaceLandmarker with a local face_landmarker.task under settings.models_dir/attention/."
+    },
+    "A05": {
+      "role": "Fusion: observations -> explainable incidents",
+      "paths": [
+        "proctoring/backend/proctor/fusion/",
+        "proctoring/handoffs/A05/"
+      ],
+      "provides": [
+        "proctor.fusion.create_incident_engine(session_id, source_mode, settings) -> IncidentEngine"
+      ],
+      "consumes": [
+        "PhoneObservation",
+        "AttentionObservation",
+        "EnvironmentObservation",
+        "HealthObservation"
+      ],
+      "emits": [
+        "IncidentChange"
+      ]
+    },
+    "A06": {
+      "role": "Electron shell, trusted IPC, backend process, Windows environment protection",
+      "paths": [
+        "proctoring/desktop/main/",
+        "proctoring/desktop/preload/",
+        "proctoring/desktop/native/",
+        "proctoring/handoffs/A06/"
+      ],
+      "provides": [
+        "desktop/main/src/main.ts (entry) -> dist/main/main.cjs",
+        "desktop/preload/src/preload.ts (entry) -> dist/preload/preload.cjs exposing window.qorgau: QorgauBridge (contracts/ts/bridge.ts)",
+        "PUT /v1/environment/capabilities, POST /v1/sessions/{id}/environment/events"
+      ],
+      "consumes": [
+        "HTTP/WS API v1",
+        "QorgauBridge",
+        "EnvironmentEventIn",
+        "EnvironmentCapabilities"
+      ]
+    },
+    "A07": {
+      "role": "Product UI (renderer)",
+      "paths": [
+        "proctoring/desktop/renderer/",
+        "proctoring/handoffs/A07/"
+      ],
+      "provides": [
+        "desktop/renderer/index.html + desktop/renderer/src/main.tsx -> dist/renderer/"
+      ],
+      "consumes": [
+        "window.qorgau: QorgauBridge",
+        "all wire types from @contracts/qorgau-v1.generated",
+        "fixtures from @contracts/fixtures.generated"
+      ],
+      "notes": "Never opens a camera (no getUserMedia). A FixtureBridge for development must label data as fixture."
+    },
+    "A08": {
+      "role": "SQLite storage, evidence, human review, reports",
+      "paths": [
+        "proctoring/backend/proctor/evidence/",
+        "proctoring/handoffs/A08/"
+      ],
+      "provides": [
+        "proctor.evidence.create_evidence_store(settings) -> EvidenceStore",
+        "EvidenceStore.create_router(context) with the A08 routes (CONTRACTS.md §HTTP API)"
+      ],
+      "consumes": [
+        "SessionInfo",
+        "Observation",
+        "IncidentChange",
+        "HumanReviewCreate",
+        "AnswerUpsert",
+        "FramePacket (snapshots)"
+      ]
+    },
+    "A09": {
+      "role": "Independent QA, Windows release",
+      "paths": [
+        "proctoring/qa/",
+        "proctoring/packaging/",
+        "proctoring/handoffs/A09/"
+      ],
+      "provides": [
+        "qa/RESULTS*, integration tests against the public API, packaging scripts"
+      ],
+      "consumes": [
+        "the integration candidate SHA from A01"
+      ]
+    },
+    "A10": {
+      "role": "Demo, scenarios, pitch",
+      "paths": [
+        "proctoring/demo/",
+        "proctoring/docs/pitch/",
+        "proctoring/docs/submission/",
+        "proctoring/handoffs/A10/"
+      ],
+      "provides": [
+        "proctoring/demo/exams/demo_exam.json (ExamDefinition, read by settings.exam_path)",
+        "proctoring/demo/replay/ manifests (media outside Git) in A02's replay format"
+      ],
+      "consumes": [
+        "the integration candidate SHA from A01"
+      ]
+    },
+    "A11": {
+      "role": "Read-only boundary review (round 2); no product paths",
+      "paths": [
+        "research/proctoring-review-r2/A11/",
+        "research/handoffs/shared/A11/proctoring-r2/"
+      ],
+      "provides": [
+        "review report only"
+      ],
+      "consumes": [
+        "the integration candidate SHA from A01 (read-only)"
+      ]
+    },
+    "A12": {
+      "role": "Headphones / accessories detection (optional)",
+      "paths": [
+        "proctoring/backend/proctor/accessories/",
+        "proctoring/handoffs/A12/"
+      ],
+      "provides": [
+        "proctor.accessories.create_accessory_analyzer(settings) -> FrameAnalyzer (name='accessories')"
+      ],
+      "consumes": [
+        "FramePacket via A02 add_consumer"
+      ]
+    },
+    "C1": {
+      "role": "Class server + teacher dashboard (qorgau.class.v1, teacher side)",
+      "paths": [
+        "proctoring/classroom/",
+        "proctoring/handoffs/C1/"
+      ],
+      "provides": [
+        "python -m classroom.server (port 8765): /ws/student, /api/student/*, loopback-only /api/teacher/*, /ws/teacher, dashboard at /"
+      ],
+      "consumes": [
+        "proctoring/contracts/class/PROTOCOL_v1.md"
+      ]
+    },
+    "C2": {
+      "role": "Student uplink (qorgau.class.v1, student backend side)",
+      "paths": [
+        "proctoring/backend/proctor/uplink/",
+        "proctoring/handoffs/C2/"
+      ],
+      "provides": [
+        "uplink client started by the student backend when QORGAU_CLASS_SERVER is set; forwards status/incident/preview, executes commands via public hooks"
+      ],
+      "consumes": [
+        "proctoring/contracts/class/PROTOCOL_v1.md",
+        "A05 assess_session_zone",
+        "A08 store (public)",
+        "A02 preview frames"
+      ],
+      "notes": "Minimal wiring in backend/proctor/app.py is granted to C2 by A01 for 8 Oct (one import + start/stop hook), documented in handoff."
+    },
+    "A13": {
+      "role": "Identity continuity (same person as at exam start), local, no biometric database",
+      "paths": [
+        "proctoring/backend/proctor/identity/",
+        "proctoring/handoffs/A13/"
+      ],
+      "provides": [
+        "proctor.identity.create_identity_analyzer(settings) -> FrameAnalyzer (name='identity')"
+      ],
+      "consumes": [
+        "FramePacket via A02 add_consumer"
+      ],
+      "notes": "OpenCV FaceDetectorYN + FaceRecognizerSF (opencv-contrib already pinned); models prepared outside runtime with manifest + sha256."
+    },
+    "A14": {
+      "role": "Audio voice-activity monitor (levels and speech probability only, no recording)",
+      "paths": [
+        "proctoring/backend/proctor/audio/",
+        "proctoring/handoffs/A14/"
+      ],
+      "provides": [
+        "proctor.audio.create_audio_monitor(settings) -> background microphone monitor emitting audio observations"
+      ],
+      "consumes": [
+        "sounddevice (already in uv.lock via mediapipe)",
+        "onnxruntime"
+      ],
+      "notes": "A05 audio_rules (background_speech) already consume string-typed audio observations."
+    }
+  },
+  "integration_order": [
+    [
+      "A02"
+    ],
+    [
+      "A03",
+      "A04"
+    ],
+    [
+      "A05"
+    ],
+    [
+      "A08"
+    ],
+    [
+      "A06",
+      "A07"
+    ],
+    [
+      "A09",
+      "A10"
+    ]
+  ],
+  "integration_notes": "A06 (safe shell) is integrated in parallel with the CV chain; A07 against fixtures first. First end-to-end build is not postponed until all improvements are done."
+}

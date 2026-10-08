@@ -1,0 +1,16 @@
+import { build } from "esbuild";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve, join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const out = resolve("dist/test-lock-electron");
+mkdirSync(out, { recursive: true });
+await build({ entryPoints: ["renderer/tests/lock-electron/main.ts"], outfile: join(out, "main.cjs"), platform: "node", format: "cjs", bundle: true, external: ["electron"] });
+await build({ entryPoints: ["main/src/class-lock-preload.ts"], outfile: join(out, "preload.cjs"), platform: "node", format: "cjs", bundle: true, external: ["electron"] });
+await build({ entryPoints: ["renderer/tests/lock-electron/renderer.tsx"], outfile: join(out, "renderer.js"), platform: "browser", bundle: true, jsx: "automatic" });
+writeFileSync(join(out, "index.html"), '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\'; style-src \'self\'; img-src \'self\' data:"><link rel="stylesheet" href="renderer.css"><div id="root"></div><script src="renderer.js"></script>');
+const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+const result = spawnSync(require("electron"), [join(out, "main.cjs")], { env, stdio: "inherit", timeout: 30000 });
+if (result.error) console.error(result.error);
+process.exit(result.status ?? 1);

@@ -1,0 +1,6 @@
+{
+  "type": "resync_required",
+  "seq": 7,
+  "sent_at": "2026-10-09T09:00:04.200000Z",
+  "reason": "queue_overflow"
+}

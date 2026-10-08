@@ -1,0 +1,25 @@
+{
+  "backend_version": "0.1.0",
+  "contract_version": "1.0.0",
+  "overall": "degraded",
+  "components": [
+    {
+      "component": "backend",
+      "status": "ok",
+      "code": "ok",
+      "message": "",
+      "since_t_session_ms": null,
+      "details": {}
+    },
+    {
+      "component": "phone",
+      "status": "unavailable",
+      "code": "module_not_integrated",
+      "message": "proctor.phone is not integrated in this build",
+      "since_t_session_ms": null,
+      "details": {}
+    }
+  ],
+  "active_session_id": null,
+  "server_time": "2026-10-09T09:00:00.500000Z"
+}

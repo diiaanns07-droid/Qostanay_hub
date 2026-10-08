@@ -1,0 +1,15 @@
+{
+  // Type-check of the plain ES modules (no build step): node <typescript>/bin/tsc -p proctoring/class-audio/tsconfig.json
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["web/**/*.js"]
+}

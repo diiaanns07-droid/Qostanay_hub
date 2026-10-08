@@ -1,0 +1,23 @@
+{
+  "contract": "qorgau.v1",
+  "contract_version": "1.0.0",
+  "exported_at": "2026-10-09T09:11:40Z",
+  "session_id": "fx-session-0001",
+  "source_mode": "synthetic",
+  "backend_version": "0.1.0",
+  "config_versions": {
+    "fusion": "fixture-config-1"
+  },
+  "models": [],
+  "files": [
+    {
+      "name": "report.html",
+      "media_type": "text/html",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 12345
+    }
+  ],
+  "limitations_ru": [
+    "Хэш не защищает от изменения владельцем компьютера"
+  ]
+}

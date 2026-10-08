@@ -1,0 +1,55 @@
+{
+  "contract": "qorgau.v1",
+  "seq": 42,
+  "sent_at": "2026-10-09T09:00:04.010000Z",
+  "session_id": "fx-session-0001",
+  "message": {
+    "type": "incident",
+    "change": {
+      "change": "opened",
+      "incident": {
+        "incident_id": "fx-inc-1",
+        "session_id": "fx-session-0001",
+        "rule_id": "phone_visible",
+        "category": "phone",
+        "state": "open",
+        "priority": "medium",
+        "t_start_ms": 2400.0,
+        "t_end_ms": null,
+        "wall_start": "2026-10-09T09:00:02.400000Z",
+        "wall_end": null,
+        "duration_ms": 1600.0,
+        "source_mode": "synthetic",
+        "max_confidence": 0.71,
+        "mean_quality": 0.8,
+        "explanation": {
+          "summary_ru": "Телефон виден 1,6 с; требуется проверка преподавателем.",
+          "summary_kk": null,
+          "facts": [
+            {
+              "key": "phone_visible_ms",
+              "value": 1600.0,
+              "unit": "ms",
+              "label_ru": "Телефон виден"
+            }
+          ],
+          "caveats_ru": [
+            "Обнаружение телефона не доказывает фотографирование экрана."
+          ]
+        },
+        "observation_ids": [
+          "fx-phone-120"
+        ],
+        "observation_count": 48,
+        "trigger_frame_id": 120,
+        "related_incident_ids": [],
+        "evidence_ids": [],
+        "rule_version": "fixture-rules-1",
+        "config_version": "fixture-config-1",
+        "end_reason": null,
+        "update_seq": 1,
+        "review_status": "pending"
+      }
+    }
+  }
+}

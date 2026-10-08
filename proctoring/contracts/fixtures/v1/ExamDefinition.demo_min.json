@@ -1,0 +1,32 @@
+{
+  "exam_id": "demo-exam-1",
+  "title": "Демонстрационный тест (fixture)",
+  "locale": "ru",
+  "duration_s": 600,
+  "is_demo": true,
+  "questions": [
+    {
+      "question_id": "q1",
+      "kind": "single_choice",
+      "prompt": "Сколько байт в одном килобайте (KiB)?",
+      "options": [
+        {
+          "option_id": "a",
+          "text": "1000"
+        },
+        {
+          "option_id": "b",
+          "text": "1024"
+        }
+      ],
+      "max_length": null
+    },
+    {
+      "question_id": "q2",
+      "kind": "short_text",
+      "prompt": "Назовите протокол, используемый для веб-страниц.",
+      "options": [],
+      "max_length": 200
+    }
+  ]
+}

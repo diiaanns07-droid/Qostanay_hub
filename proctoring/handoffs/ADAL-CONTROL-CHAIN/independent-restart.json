@@ -1,0 +1,96 @@
+{
+  "source": "actual production Electron + proctor/C2 + C1; CREATED synthetic sessions",
+  "nativeGuard": false,
+  "camera": false,
+  "microphone": false,
+  "skipped": [
+    "renderer reload (explicit diagnostic option)"
+  ],
+  "results": [
+    {
+      "name": "production IPC creates synthetic session without starting exam",
+      "pass": true
+    },
+    {
+      "name": "two independent real C2 identities and synthetic provenance",
+      "pass": true
+    },
+    {
+      "name": "legacy initial false is not a confirmed unlock",
+      "pass": true
+    },
+    {
+      "name": "actual C1 → C2 → production Electron → UI receipt ACK",
+      "pass": true
+    },
+    {
+      "name": "teacher UI shows confirmed only after real application receipt",
+      "pass": true
+    },
+    {
+      "name": "pending appears before application confirmation",
+      "pass": true
+    },
+    {
+      "name": "custom reason shown and underlying application inert",
+      "pass": true
+    },
+    {
+      "name": "targeted lock leaves other actual backend untouched",
+      "pass": true
+    },
+    {
+      "name": "actual teacher feed loss invalidates current card lock status",
+      "pass": true
+    },
+    {
+      "name": "teacher reconnect restores confirmation from actual fresh C1 state",
+      "pass": true
+    },
+    {
+      "name": "actual unlock removes overlay and restores interaction",
+      "pass": true
+    },
+    {
+      "name": "backend without renderer fails truthfully without fabricated ACK",
+      "pass": true
+    },
+    {
+      "name": "failed command to B cannot lock A",
+      "pass": true
+    },
+    {
+      "name": "hidden Electron window cannot confirm lock",
+      "pass": true
+    },
+    {
+      "name": "new visible request receives genuine renderer confirmation",
+      "pass": true
+    },
+    {
+      "name": "student shutdown invalidates current lock confirmation",
+      "pass": true
+    },
+    {
+      "name": "full Electron/backend restart resumes identity and confirms restored overlay",
+      "pass": true
+    },
+    {
+      "name": "second client disconnect stays isolated",
+      "pass": true
+    },
+    {
+      "name": "no running exam, native guard, fullscreen or kiosk",
+      "pass": true
+    },
+    {
+      "name": "production audio panel asset loads without starting audio",
+      "pass": true
+    },
+    {
+      "name": "no renderer page errors",
+      "pass": true
+    }
+  ],
+  "diagnostics": null
+}

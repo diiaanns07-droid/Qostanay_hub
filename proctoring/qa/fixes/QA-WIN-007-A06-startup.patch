@@ -1,0 +1,15 @@
+--- a/proctoring/desktop/main/src/main.ts
++++ b/proctoring/desktop/main/src/main.ts
+@@ -440,7 +440,11 @@
+   globalShortcut.unregisterAll();
+ });
+
+-app.on("window-all-closed", () => app.quit());
++app.on("window-all-closed", () => {
++  // The hidden startup probe closes before the exam window is created.
++  // Closing the real main window already calls app.quit() in its closed handler.
++  if (mainWindow !== null) app.quit();
++});
+
+ for (const sig of ["SIGINT", "SIGTERM"] as const) {
+   process.on(sig, () => {

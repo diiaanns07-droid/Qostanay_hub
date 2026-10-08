@@ -1,0 +1,72 @@
+A02 -> A01 (и другим) запросы. Базовый контракт: qorgau.v1 1.0.0 @ 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49. A02 не правил чужие файлы.
+Одна строка = что и где. Подробности и доказательства — ниже.
+
+R1  A01 | backend/tests/test_lifecycle_api.py::test_health_reports_missing_modules_honestly — убрать "capture" из цикла module_not_integrated, проверять capture code == "idle" (падает с A02: 'idle' != 'module_not_integrated'; Linux и Windows).
+R2  A01 | backend/tests/test_lifecycle_api.py::test_live_never_falls_back_to_synthetic и smoke-проверка live_without_capture_module_is_not_ready — не требовать camera=fail; проверять ready==False и details.impl=="module" (ПОДТВЕРЖДЕНО 08.10 на ноутбуке с камерой: 'pass' != 'fail', smoke 33/34).
+R7  A01 | backend/proctor/session.py SessionRuntime._release_capture() — вызвать capture.set_health_listener(None) ДО capture.close() (иначе ложный monitoring_degraded на каждом finish; для зон это лишний low).
+R9  A01/A06 | окружение backend для демо — QORGAU_REPLAY_DIR=%LOCALAPPDATA%\QorgauExam\replay (ролики с людьми вне Git; дефолт proctoring/demo/replay лежит в репозитории).
+R11 A01 | backend/proctor/session.py — в REPLAY по capture stopped/replay_ended автоматически завершать сессию (или оператор жмёт «Завершить» сразу после конца ролика): иначе конец записи = пробел покрытия (+1 low monitoring_degraded, проверено в scratch).
+R12 A01 (после 9.10) | proctor_contracts.interfaces.SessionClock + все time.monotonic_ns() — на Windows/Python 3.12 time.monotonic = GetTickCount64, шаг 15,6 мс (измерено): все t_session_ms/латентности квантованы ±16 мс; варианты: Python 3.13 (QPC) или perf_counter_ns везде согласованно.
+R13 A01 | proctoring/.gitignore — добавить `$R/` и `*.ts.json` (клип с людьми по ошибке записался в proctoring/$R; *.avi уже игнорируется, манифесты с именами и sidecar — нет); у A02 пока только локальный .git/info/exclude.
+R14 A04/A05 FYI | proctor.attention без калибровки на этом ноутбуке: нейтральная поза = head "up" (pitch +11..+19), взгляд вниз 25–30° = "center"; при yaw −50° gaze скачет left/up -> gaze_prolonged_side не открывается (ролик zone_b_yellow_01, 6,5–11 с). Данные: handoffs/A02/DEMO_CLIPS.md.
+R15 A01/A03 | backend/proctor/phone/tests (test_install_success_writes_atomically, test_install_source_error_leaves_nothing_and_keeps_existing_target, test_app_health_lists_phone_model_missing, test_signals[capture_flicker]) падают на Windows и на чистом baseline 78798b7 ('phone\m.onnx' vs 'phone/m.onnx', ProactorEventLoop).
+R16 C2 | proctor/uplink — вызывать capture.export_clip(inc.t_start_ms) СРАЗУ при открытии эпизода (буфер 10 с), загружать готовый файл по request_clip; см. handoffs/A02/CLIPS_FOR_C2.md.
+R3  A01 (после 9.10) | contracts SourceConfig.replay_pacing "realtime"|"lockstep"|null — детерминированный прогон A09 через HTTP без отдельного манифеста.
+R4  A01 (после 9.10) | Settings.capture_backend "auto"|"dshow"|"msmf" — сейчас обход: python -m proctor.capture verify-live --backend msmf. Измерено: MSMF открывается 5–6 с, DSHOW 0,2–1 с.
+R5  A05 FYI | коды health capture (ниже); любое capture status != ok = пробел покрытия, не face_missing.
+R6  A05/A09 FYI | определения метрик RuntimeMetrics (ниже).
+R8  A05/A09 FYI | занятая камера: при open -> CAMERA_BUSY/camera_no_frames (~2,4 с), во время сессии -> unavailable/camera_disconnected; чёрные кадры-заглушки DSHOW анализаторам больше не уходят.
+R10 A05/капитан | proctor.fusion (a05-rules-1.0.0) + zone-rule-1 — взгляд в сторону/вниз даёт low только от 3 с, поэтому сценарий «пара коротких взглядов + 5–6 с вниз» = 1 low = GREEN, а не yellow; ролик (б) переписан на 3 low (handoffs/A02/DEMO_CLIPS.md).
+
+----------------------------------------------------------------------------------------------------
+Подробности
+
+R1 (needed at integration, test only) backend/tests/test_lifecycle_api.py::test_health_reports_missing_modules_honestly
+    asserts codes["capture"] == "module_not_integrated". With proctor.capture present the capture health is real
+    (code "idle", status "stopped"), so this A01 test fails by design. Proposal: drop "capture" from that loop once
+    A02 is integrated and assert capture code == "idle" instead.
+
+R2 (camera-dependent A01 checks) on a machine WITH a camera — CONFIRMED on the Windows demo laptop 2026-10-08:
+    * test_live_never_falls_back_to_synthetic asserts checks["camera"]["status"] == "fail" — with A02 the camera
+      check PASSES when a camera exists (other required checks still fail, ready stays False).
+    * smoke check "live_without_capture_module_is_not_ready" -> "FAIL camera=pass:live_source_ok", smoke 33/34.
+    Proposal: assert ready is False and that the camera check's details.impl == "module" (never "bootstrap");
+    assert camera status only via a module override that fails.
+
+R3 (optional, contract v1.1) SourceConfig.replay_pacing: "realtime" | "lockstep" | null.
+    Today pacing comes from the replay manifest (field "pacing") or FrameCaptureService(replay_pacing=...).
+
+R4 (optional, Settings) capture_backend: "auto" | "dshow" | "msmf" (default auto = DSHOW then MSMF on Windows).
+    Measured 2026-10-08 (ASUS TUF A15, "USB2.0 HD UVC WebCam" VID_322E/PID_2233, OpenCV 4.13): DSHOW open 0.2–1.0 s,
+    first frame 110 ms, YUY2 640x480@30; MSMF open 5.0–6.0 s, first frame ~480 ms. If DSHOW ever fails on a machine,
+    MSMF alone can exceed the 6 s open budget (-> open_timeout). OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS=0 is untested.
+
+R5 (FYI for A05, no change) capture health codes emitted through the listener (A01 wraps them in HealthObservation):
+    starting/opening, ok/running, degraded/frame_stall, unavailable/camera_disconnected (reconnect loop running),
+    stopped/replay_ended, stopped/closed, error/capture_error|source_lost, unavailable/<open failure reason>.
+    A02 uses "unavailable" for a missing/busy device and "error" only for internal failures.
+
+R6 (FYI) metric definitions used by A02 (RuntimeMetrics):
+    * frames_dropped = frames discarded before fan-out: replay frames skipped to keep real time, undecodable replay
+      frames, unusable camera frames (empty/odd shape, DSHOW busy placeholders), out-of-order frames.
+    * e2e_latency_ms = consumer callback RETURN minus t_capture_mono_ns, analysis consumers only (not "preview").
+    * t_capture_mono_ns = when cv2 read() returned; driver/sensor buffering before that is not visible to OpenCV.
+
+R7 (needed before the demo; A01 session.py, FYI A05) spurious "monitoring_degraded" incident at EVERY finish/abort.
+    SessionRuntime._end() calls _release_capture() -> capture.close() while self._accepting is still True; A02 notifies
+    stopped/closed (contract: every state change), A01 queues it to fusion, A05 opens monitoring_degraded right before
+    engine.finish(). Reproduced in scratch (A02 @ b390856 + A05 @ 8f763a1). Fix: set_health_listener(None) before
+    close() (or _accepting = False before _release_capture()). Verified in the same scratch: incident list empty.
+
+R8 (FYI) DirectShow + camera held by another app (measured 2026-10-08, holder = second OpenCV process via DSHOW or
+    MSMF): isOpened() True, read() blocks ~1000 ms and returns ok=True with an all-black frame. Before A02's fix the
+    service reported "running" at ~0.5 FPS of black frames (analyzers would see "no face"). Now: open() ->
+    CAMERA_BUSY/camera_no_frames in ~2.4 s (backends_tried "DSHOW:busy_placeholder", MSMF not tried); mid-session
+    placeholders are dropped (frames_dropped) and health goes unavailable/camera_disconnected -> reconnect loop.
+
+R9 (demo config) replay clips with people must stay outside Git: record into %LOCALAPPDATA%\QorgauExam\replay and
+    start the backend with QORGAU_REPLAY_DIR pointing there (A06 Electron main or the manual start command).
+
+R10 (FYI A05, captain) zones vs A05 thresholds: gaze_prolonged_side/down open at >= 3000 ms with base priority low;
+    zone-rule-1 needs >= 3 low or >= 1 medium for yellow. Clip (b) therefore uses two 5 s side looks + one 6 s look
+    down (3 low). If A05 retunes thresholds, re-check DEMO_CLIPS.md.

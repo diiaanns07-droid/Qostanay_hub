@@ -1,0 +1,23 @@
+{
+  "session_id": "fx-session-0001",
+  "t_session_ms": 30000.0,
+  "window_s": 5.0,
+  "capture_fps": 29.8,
+  "frames_captured": 900,
+  "frames_dropped": 0,
+  "consumers": [
+    {
+      "name": "phone",
+      "processed_fps": 7.9,
+      "frames_processed": 230,
+      "frames_skipped": 660,
+      "errors": 0,
+      "frame_age_ms_p50": 20.0,
+      "frame_age_ms_p95": 41.0,
+      "process_ms_p50": 95.0,
+      "process_ms_p95": 130.0
+    }
+  ],
+  "e2e_latency_ms_p50": 120.0,
+  "e2e_latency_ms_p95": 170.0
+}

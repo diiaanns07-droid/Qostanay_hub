@@ -1,0 +1,13 @@
+{
+  "contract": "qorgau.v1",
+  "seq": 0,
+  "sent_at": "2026-10-09T09:00:00Z",
+  "session_id": null,
+  "message": {
+    "type": "hello",
+    "contract": "qorgau.v1",
+    "contract_version": "1.0.0",
+    "backend_version": "0.1.0",
+    "server_time": "2026-10-09T09:00:00Z"
+  }
+}

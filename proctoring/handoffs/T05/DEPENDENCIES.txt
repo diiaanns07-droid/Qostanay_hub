@@ -1,0 +1,34 @@
+T05 requests. Baseline 65c8c17 (T01 baseline not published). No shared file, contract, dependency, student app or CV
+module was edited. New dependencies: none.
+
+To T01 / A01 (contracts, ownership):
+1. Approve qorgau.class.audio.v1 (proctoring/class-audio/PROTOCOL_AUDIO.md) as an additive part of qorgau.class.v1 §6:
+   new command kind `audio_update`; new fields in audio_start/audio_stop payload (audio_session_id, listen, talk,
+   reason); new fields in `audio_signal` (audio_session_id, kind); new types audio_request/audio_update/audio_media/
+   audio_stop (teacher), audio_media (student), audio_state/audio_error (server→teacher); `ack.error_code`.
+2. OWNERSHIP: assign proctoring/class-audio/ and proctoring/handoffs/T05/ to T05 (path is free today).
+3. LAN security: v1 says ws:// for /ws/student. SDP (DTLS fingerprints) travel over it → LAN MITM can intercept audio.
+   Proposal: wss:// with the server certificate pinned in the student app (fingerprint shown in the teacher panel).
+4. Teacher login endpoint: v1 describes PIN → cookie but no route. DEV server uses POST /api/teacher/login {pin},
+   POST /api/teacher/logout; please fix the real routes (T02 asked the same).
+
+To C1 (class server):
+5. Mount AudioHub (README §"Встраивание"): route audio_* from /ws/teacher, audio_signal/audio_media and acks of audio
+   commands from /ws/student; call teacher_auth_lost on logout/cookie revocation BEFORE closing sockets; shutdown()
+   on server stop. Serve the T02 panel from the same origin and add
+   <script type="module" src="…/class-audio/web/teacher/class-panel-module.js">.
+
+To C2 (student uplink), A06 (shell), A07 (renderer) — see STUDENT_INTEGRATION.md:
+6. C2: relay audio commands/signals both ways; report link loss to the renderer (fail closed); status.mic_active.
+7. A01: backend stream message for class audio + route renderer→server (≤ 256 KB, whitelisted types).
+8. A06: bridge method classAudioSend; permission handler allowing ONLY audio for the main window on the trusted origin
+   (today every permission is denied); keep video/screen denied.
+9. A07: student indicators "Микрофон включён преподавателем" / "Говорит преподаватель" over every screen incl. lock.
+
+To T02 (class panel):
+10. Slot "audio" works with class-panel-module.js (checked in a browser with the REAL adapter on the same origin).
+    The module unmounts with the card but keeps the call; "Завершить связь" ends it. If T01 publishes a shared
+    extension API, the module needs only the registration lines changed.
+
+Test dependency (A01/A09): e2e uses a global Playwright (1.56.1) and Chromium 141 (full build for the real
+permission-denied case). Please pin a devDependency or let A09 own browser e2e.

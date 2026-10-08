@@ -1,0 +1,17 @@
+
+
+[Qorgau DEMO] one-time operator PIN for this run: [REDACTED]
+
+2026-10-08T07:33:13.973Z WARN shell.main: window.open blocked
+2026-10-08T07:33:14.919Z INFO shell.main: self-test: key_ctrl_c=pass key_ctrl_v=pass key_shift_insert=pass key_ctrl_x=pass key_ctrl_tab=pass key_alt_f4=pass key_devtools=pass key_reload=pass window_open=pass navigation=pass devtools=pass window_close=pass
+2026-10-08T07:33:14.921Z INFO shell.main: shutdown: before-quit
+2026-10-08T07:33:14.922Z INFO shell.main: native helper: не собран (desktop/native/bin/qorgau-guard.exe отсутствует)
+2026-10-08T07:33:14.933Z INFO shell.main: capability matrix: {"blocked":9,"detected_only":0,"unsupported":0,"unverified":6}
+2026-10-08T07:33:14.934Z INFO shell.main: backend starting: launch
+2026-10-08T07:33:14.934Z INFO shell.state: mode=normal exam=false backend=starting session=-
+2026-10-08T07:33:14.944Z INFO shell.backend: launch #1: C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\.venv\Scripts\python.exe -m proctor serve --token-stdin --port 0 (cwd C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring)
+2026-10-08T07:33:17.367Z WARN shell.backend: READY pid 29964 differs from child pid 35160
+2026-10-08T07:33:17.368Z INFO shell.backend: launch #1 ready: port 58275, backend 0.1.0
+2026-10-08T07:33:18.179Z INFO shell.backend: launch #1 exited: code 0, signal null, expected true
+2026-10-08T07:33:18.179Z INFO shell.main: backend stopped: stopped
+2026-10-08T07:33:18.179Z INFO shell.state: mode=normal exam=false backend=stopped session=-

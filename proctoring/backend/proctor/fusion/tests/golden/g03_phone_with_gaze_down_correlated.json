@@ -1,0 +1,37 @@
+{
+  "name": "g03_phone_with_gaze_down_correlated",
+  "requirement": "correlation phone + gaze down raises REVIEW priority (not proof); both incidents linked, no duplicate alerts",
+  "mode": "synthetic",
+  "phone": [
+    {"from": 0, "to": 2000, "step": 125, "visible": "absent"},
+    {"from": 2000, "to": 6000, "step": 125, "visible": "present"},
+    {"from": 6000, "to": 14000, "step": 125, "visible": "absent"}
+  ],
+  "attention": [
+    {"from": 0, "to": 3000, "step": 100, "direction": "center"},
+    {"from": 3000, "to": 7000, "step": 100, "direction": "down"},
+    {"from": 7000, "to": 14000, "step": 100, "direction": "center"}
+  ],
+  "finish": 14000,
+  "derivation": [
+    "phone_visible: present 2000..5875, opens at 3000, closes at 7875 -> [2000, 5875]",
+    "gaze_prolonged_down: down 3000..6900, opens at 6000 (span 3000), closes at 8400 (8400 - 6900 >= merge_gap 1500) -> [3000, 6900], 3900 ms",
+    "gaze 'down' time inside [2000, 5875]: down samples cover [3000, 7000) -> 2875 ms >= corr_min_overlap 1000 -> phone priority high",
+    "phone-visible time inside [3000, 6900]: present samples cover [2000, 6000) -> 3000 ms >= 1000 -> gaze priority high",
+    "intervals overlap -> each lists the other in related_incident_ids"
+  ],
+  "expected": [
+    {
+      "rule_id": "phone_visible", "t_start_ms": 2000, "t_end_ms": 5875, "end_reason": "condition_cleared",
+      "priority": "high", "related_rules": ["gaze_prolonged_down"],
+      "facts": {"phone_visible_ms": 3875.0, "gaze_down_overlap_ms": 2875.0, "priority_basis": "base_medium,phone_with_gaze_down"},
+      "summary_contains": ["Телефон виден 3,9 с", "взгляд оценён как «вниз» 2,9 с в это же время"]
+    },
+    {
+      "rule_id": "gaze_prolonged_down", "t_start_ms": 3000, "t_end_ms": 6900, "end_reason": "condition_cleared",
+      "priority": "high", "related_rules": ["phone_visible"],
+      "facts": {"gaze_down_ms": 3900.0, "phone_visible_overlap_ms": 3000.0, "priority_basis": "base_low,phone_with_gaze_down"},
+      "summary_contains": ["Взгляд оценён как направленный вниз 3,9 с", "в это же время виден телефон 3,0 с"]
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+$ C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\.venv\Scripts\python.exe coordination/verify_ownership.py --self-test
+OWNERSHIP self-test: PASS (48 path prefixes, 11 agents)

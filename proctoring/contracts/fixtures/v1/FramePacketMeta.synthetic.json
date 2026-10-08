@@ -1,0 +1,13 @@
+{
+  "session_id": "fx-session-0001",
+  "frame_id": 120,
+  "t_session_ms": 4000.0,
+  "wall_time": "2026-10-09T09:00:04Z",
+  "t_capture_mono_ns": 123456789000,
+  "width": 640,
+  "height": 480,
+  "color_format": "BGR",
+  "mirrored": false,
+  "source_mode": "synthetic",
+  "source_id": "synthetic:bootstrap"
+}

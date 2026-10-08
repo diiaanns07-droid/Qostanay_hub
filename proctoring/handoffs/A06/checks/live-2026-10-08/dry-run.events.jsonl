@@ -1,0 +1,18 @@
+{"type": "ready", "version": "python-prototype-1", "mode": "dry_run", "hook": true, "foreground_watch": true}
+{"type": "foreground", "foreign": true, "process": "WindowsTerminal.exe"}
+{"type": "key", "key": "win", "swallowed": false}
+{"type": "foreground", "foreign": true, "process": "SearchHost.exe"}
+{"type": "foreground", "foreign": true, "process": "WindowsTerminal.exe"}
+{"type": "key", "key": "alt_tab", "swallowed": false}
+{"type": "foreground", "foreign": true, "process": "explorer.exe"}
+{"type": "foreground", "foreign": true, "process": "Code.exe"}
+{"type": "foreground", "foreign": true, "process": "explorer.exe"}
+{"type": "foreground", "foreign": true, "process": "WindowsTerminal.exe"}
+{"type": "key", "key": "print_screen", "swallowed": false}
+{"type": "foreground", "foreign": true, "process": "SnippingTool.exe"}
+{"type": "foreground", "foreign": true, "process": "WindowsTerminal.exe"}
+{"type": "foreground", "foreign": true, "process": "Code.exe"}
+{"type": "foreground", "foreign": true, "process": "WindowsTerminal.exe"}
+{"type": "foreground", "foreign": true, "process": "Code.exe"}
+{"type": "foreground", "foreign": true, "process": "WindowsTerminal.exe"}
+{"type": "bye", "reason": "emergency_hotkey"}

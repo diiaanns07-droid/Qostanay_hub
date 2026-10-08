@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "INVALID_STATE",
+    "message": "Cannot start: session is in state 'created'",
+    "retryable": false,
+    "details": {
+      "state": "created",
+      "action": "start"
+    }
+  }
+}

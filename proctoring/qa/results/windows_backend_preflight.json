@@ -1,0 +1,51 @@
+{
+  "profile": "backend",
+  "tested_sha": "fbd9dcbb84ca981bc7632260f589d34f06400ee3",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "checks": [
+    {
+      "check": "python_3_12",
+      "status": "PASS",
+      "detail": "3.12.14"
+    },
+    {
+      "check": "dependency:fastapi",
+      "status": "PASS",
+      "detail": "installed=0.141.1; pinned=0.141.1"
+    },
+    {
+      "check": "dependency:uvicorn",
+      "status": "PASS",
+      "detail": "installed=0.53.0; pinned=0.53.0"
+    },
+    {
+      "check": "dependency:websockets",
+      "status": "PASS",
+      "detail": "installed=17.1; pinned=17.1"
+    },
+    {
+      "check": "dependency:pydantic",
+      "status": "PASS",
+      "detail": "installed=2.13.5; pinned=2.13.5"
+    },
+    {
+      "check": "dependency:numpy",
+      "status": "PASS",
+      "detail": "installed=2.4.6; pinned=2.4.6"
+    },
+    {
+      "check": "file:backend/proctor/__main__.py",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "file:contracts/python/proctor_contracts/v1.py",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "ready_for_launch": true,
+  "cv_accuracy_verified": false,
+  "windows_enforcement_verified": false,
+  "note": "Files, imports and checksums only. Camera, Electron rendering and restrictions need candidate acceptance tests."
+}

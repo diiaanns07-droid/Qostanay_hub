@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Adal · Аудиосвязь (пульт преподавателя)</title>
+    <link rel="stylesheet" href="/teacher/audio.css" />
+    <script type="module" src="/teacher/app.js"></script>
+  </head>
+  <body>
+    <header class="qa-top">
+      <strong>Adal · Аудиосвязь</strong>
+      <span class="qa-dev">DEV-сервер сигнализации T05 (не сервер класса C1)</span>
+      <span id="conn" class="qa-conn" role="status">—</span>
+      <button id="logout" type="button" class="qa-btn qa-small" hidden>Выйти</button>
+    </header>
+    <main id="main" class="qa-main">
+      <p class="boot">Загрузка…</p>
+    </main>
+    <audio id="student-audio" autoplay></audio>
+    <noscript>Нужен JavaScript.</noscript>
+  </body>
+</html>

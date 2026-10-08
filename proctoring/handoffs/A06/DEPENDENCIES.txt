@@ -1,0 +1,90 @@
+A06 -> A01 requests (shared files are NOT edited by A06). Baseline: BOOTSTRAP 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49.
+
+1. desktop/package.json scripts (A01 owns package.json). Please add, no new dependencies needed:
+     "test:shell":  "node main/tests/run.mjs"
+     "smoke:shell": "npm run build:electron && node main/tests/shell-smoke.mjs"
+   Why: A06 tests use Node's built-in runner + the pinned esbuild (no vitest). Today they run as
+   `node main/tests/run.mjs` / `node main/tests/shell-smoke.mjs` from desktop/.
+
+2. proctoring/.gitignore (A01): add
+     desktop/native/bin/
+     desktop/native/build/
+   Why: the optional Windows helper is built locally (desktop/native/README.md); binaries must
+   never be committed.
+
+3. Electron binary: `npm ci` in the cloud sandbox cannot fetch electron 43.7.5 (undici proxy assert),
+   so no A06 check ran inside real Electron. Needs `npm ci` + `npm start` on the Windows demo
+   machine (A09). No change to the lockfile requested.
+
+4. Packaging (A09/A01): when packaging, flip Electron fuses RunAsNode=off,
+   EnableNodeCliInspectArguments=off, EnableNodeOptionsEnvironmentVariable=off,
+   OnlyLoadAppFromAsar=on, EnableEmbeddedAsarIntegrityValidation=on. Without them a student could
+   start the exe with debugging flags; the shell already REFUSES exam mode when
+   --remote-debugging-port/--inspect/--js-flags are present (guard.debugSwitches), but fuses are the
+   real fix. Also ship desktop/native/VERIFICATION.json next to the app (read at startup).
+
+5. bridge.ts documentation (contract v1.1, optional): shell errors use contract ErrorCode values with
+   details.shell_code in {invalid_argument, untrusted_sender, backend_unavailable,
+   backend_bad_response, operator_locked, operator_pin_not_configured, operator_pin_wrong,
+   operator_pin_rate_limited, session_not_bound, exam_mode_active, enforcement_error}. A07 can switch
+   on shell_code. ShellMode "preflight" is also used for a PAUSED session (restrictions released,
+   session still bound) — please confirm or add a mode.
+
+6. Backend (optional, A01): environment events that arrive after `finish` are rejected with 409, so
+   the shell's final `exam_mode_released` for a finished session is dropped (counted, logged). The
+   shell now flushes its queue BEFORE pause/finish/abort, so nothing that happened during the exam
+   is lost. If the report must show the release time, accept exam_mode_released for <= 5 s after
+   finish.
+
+7. Preflight rule (A01, for discussion): environment_protection passes when exam_mode_supported and
+   at least one item is "blocked". With the shell that means the in-window items verified by the
+   runtime self-test; OS-level items (Alt+Tab, Win, PrintScreen, foreign windows) stay
+   "unverified"/"unsupported" until a controlled Windows test record exists. Consider requiring
+   specific actions for LIVE, or at least showing count_unverified prominently (A07).
+
+--- Round 2 (continuation 62a7fb1) ---
+
+8. A01 — teacher access policy (handoffs/A06/ACCESS_POLICY.md). Default in the shell is
+   review_after_pause (no approval needed). Please APPROVE or REJECT the opt-in operator_live_review
+   (QORGAU_SHELL_OPERATOR_LIVE_REVIEW=1: PIN-unlocked review of the bound session during the exam,
+   history/export/delete closed, unlock expires 180 s idle / 30 min). Until approved it stays off.
+
+9. A01 — contract (optional, v1.1): EnvironmentAction "operator_unlocked" (+ "operator_locked") so a teacher
+   unlock during the exam is part of the session record; and ShellState.access_policy so A07 can render
+   availability without guessing. Today both are only in the shell log.
+
+10. A07 — renderer must treat details.shell_code "exam_mode_active" / "operator_locked" /
+    "session_not_bound" as described in ACCESS_POLICY.md (lock the console on expiry; do not show review
+    actions as available while exam_mode_active under the default policy). calibrationSkip now needs the
+    operator unlock in main (A07 already asks for the PIN).
+
+11. Windows helper: NOT delivered in round 2 (no source/build in the repo). OS-level items stay
+    unverified/unsupported. Options for the demo: institution-managed Keyboard Filter / Assigned Access
+    (desktop/native/README.md) measured on the target and recorded in VERIFICATION.json, or a separately
+    reviewed helper meeting the requirements listed in desktop/native/README.md.
+
+12. A07 — after the round-2 review the shell is stricter (handoffs/A06/ACCESS_POLICY.md, regenerated table):
+    * history is teacher-only: listSessions and ANY call with a session id other than the one created in
+      this shell run need the operator unlock outside the exam (shell_code operator_locked);
+    * during the exam every session-scoped call must use the current session id (session_not_bound);
+    * the unlock is cleared on every engage (start, resume, crash recovery): after resume the teacher
+      re-enters the PIN to pause again;
+    * startExam/resumeExam of a session whose restrictions cannot be re-engaged (emergency exit, main
+      exception during the exam, renderer crash loop) return INVALID_STATE / enforcement_error — show
+      "finish or abort", not a retry loop.
+A06-native continuation, 8 October 2026:
+- Checkpoint 3: captain approved and performed LIVE dry-run/enforce on win32 / 10.0.26200.
+  Win, Alt+Tab, PrtScn suppression + emergency release + restored keyboard/focus confirmed.
+  VERIFICATION.json now records exactly those checks and foreground detection; evidence in checks/live-2026-10-08/.
+- A01/A09: integrate codex/proctor-A06-native and test the actual Electron exam lifecycle.
+  QA-WIN-001 standalone-helper scope PASS; full integrated acceptance still pending.
+- Checkpoint 2: .py launcher, 41 Python tests / 33 Node tests, typecheck/build PASS. Existing dependencies reused.
+- Controlled-test console and Russian exit instructions are ready; the two completed LIVE runs were explicitly approved.
+- New branch codex/proctor-A06-native from integration 64354c014c4ad51054e8bb67fe841580771d43e5.
+- Checkpoint 1: Python helper source + 36 fake-hook tests, no SDK or packages installed.
+- .py shell-launch support is implemented within environment/native.ts (checkpoint 2).
+- Explicit captain approval remains required for LIVE hook testing; the existing approval covered both completed modes.
+- Alt+Esc/Ctrl+Esc, separate LWin/RWin and other cleanup paths were not tested LIVE; fake-hook tests cover them.
+- Python helper unsigned; Ctrl+Alt+Del and UAC remain available. No dependency installation needed for this prototype.
+
+Historical dependencies below:

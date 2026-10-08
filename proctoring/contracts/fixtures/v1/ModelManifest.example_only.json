@@ -1,0 +1,21 @@
+{
+  "model_id": "example-detector",
+  "module": "phone",
+  "task": "object_detection",
+  "file": "phone/example.onnx",
+  "format": "onnx",
+  "version": "EXAMPLE",
+  "source_url": "https://example.invalid/not-a-real-model",
+  "license": "EXAMPLE",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "size_bytes": 1,
+  "input_size": [
+    640,
+    640
+  ],
+  "class_names": {
+    "67": "cell phone"
+  },
+  "prepared_at": "2026-10-09T09:00:00Z",
+  "notes": "FIXTURE ONLY: not a real model, hash is a placeholder"
+}

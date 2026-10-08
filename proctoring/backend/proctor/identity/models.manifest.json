@@ -1,0 +1,36 @@
+{
+  "schema": "qorgau.identity.models/1",
+  "module": "identity",
+  "models": [
+    {
+      "model_id": "yunet-2023mar",
+      "role": "face_detector",
+      "file": "identity/face_detection_yunet_2023mar.onnx",
+      "format": "onnx",
+      "version": "YuNet face_detection_yunet_2023mar (OpenCV Zoo)",
+      "source_url": "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx",
+      "source_page": "https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet",
+      "license": "MIT",
+      "license_url": "https://github.com/opencv/opencv_zoo/blob/main/models/face_detection_yunet/LICENSE",
+      "sha256": "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
+      "size_bytes": 232589,
+      "opencv_api": "cv2.FaceDetectorYN",
+      "notes": "Official OpenCV Zoo file (git LFS, served via media.githubusercontent.com). 2023mar is the variant for OpenCV 4.x (2026may needs OpenCV 5). License file: 'MIT License, Copyright (c) 2020 Shiqi Yu'. Downloaded and sha256-verified by A13 on 2026-10-08; loads in opencv-contrib-python 4.13.0.92."
+    },
+    {
+      "model_id": "sface-2021dec",
+      "role": "face_embedder",
+      "file": "identity/face_recognition_sface_2021dec.onnx",
+      "format": "onnx",
+      "version": "SFace face_recognition_sface_2021dec fp32 (OpenCV Zoo)",
+      "source_url": "https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx",
+      "source_page": "https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/opencv/opencv_zoo/blob/main/models/face_recognition_sface/LICENSE",
+      "sha256": "0ba9fbfa01b5270c96627c4ef784da859931e02f04419c829e83484087c34e79",
+      "size_bytes": 38696353,
+      "opencv_api": "cv2.FaceRecognizerSF",
+      "notes": "Official OpenCV Zoo file (git LFS). README: 'All files in this directory are licensed under Apache 2.0 License'. Paper: arXiv:2205.12010. Cosine threshold 0.363 = OpenCV recommendation (opencv_zoo sface.py, opencv samples/dnn/face_detect.py). Downloaded and sha256-verified by A13 on 2026-10-08; loads in opencv-contrib-python 4.13.0.92."
+    }
+  ]
+}

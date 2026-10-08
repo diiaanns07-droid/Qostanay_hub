@@ -1,0 +1,45 @@
+A04 -> A01 requests (contracts v1 unchanged; no new Python/JS dependency is needed)
+Baseline: BOOTSTRAP 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49 (branch claude/nifty-ride-ux8e4j)
+
+R1  Linux runtime libraries for mediapipe 0.10.35 (setup docs / CI image)
+    What: the Tasks C library (libmediapipe.so) dlopens libGLESv2.so.2 and libEGL.so.1 even for CPU inference.
+          Without them FaceLandmarker creation fails with "OSError: libGLESv2.so.2: cannot open shared object file".
+    Fix:  apt-get install -y libgles2 libegl1 (verified in the cloud container on 2026-10-08).
+    A04 handles the absence gracefully: load() -> Health UNAVAILABLE code "runtime_unavailable" (no crash).
+    Windows: not verified (no Windows here). A09 should check that the wheel loads on the demo laptop.
+
+R2  Calibration progress on the WebSocket (no contract change)
+    What: per-target progress (samples, ok/failed, message_code) changes inside process() on the consumer thread.
+          SessionRuntime publishes CalibrationMsg only on calibration API calls, so the UI sees progress only by polling
+          GET /v1/sessions/{sid}/calibration.
+    Ask:  while state == calibrating, publish CalibrationMsg when calibration_state().updated_at changes (for example from the
+          fusion tick or a 250 ms timer). Until then A07 polls at about 4 Hz (documented in handoffs/A04/INTERFACE.md).
+
+R3  Two A01 tests encode the BOOTSTRAP state and fail once A04 is integrated (expected, not a regression)
+    backend/tests/test_lifecycle_api.py::test_health_reports_missing_modules_honestly
+        expects attention code "module_not_integrated"; with A04 it is "ok" (model present) or "model_missing" (model absent).
+    backend/tests/test_lifecycle_api.py::test_live_never_falls_back_to_synthetic
+        expects preflight face_model == fail for live; with the model present it is "pass" (correct: the module is there).
+        Without the model it still fails as expected (verified by temporarily removing the model file).
+    Suggestion: build that test app with ModuleRegistry overrides (modules absent), or accept any non-"ok" code for absent
+    modules. Note: create_app() now loads the real FaceLandmarker when models/attention/face_landmarker.task exists
+    (adds about 0.1-0.3 s per app instance in tests).
+
+R4  Model asset preparation (offline runtime)
+    File: <models_dir>/attention/face_landmarker.task (git-ignored by *.task).
+    Prepare once:  python -m proctor.attention.model_tool fetch     (network; checks size+sha256 against the manifest)
+    Verify:        python -m proctor.attention.model_tool verify
+    Manifest:      backend/proctor/attention/models.manifest.json (source URL, Apache-2.0, sha256 64184e22...bc9ff, 3758596 bytes).
+    A09: include it in packaging and in the offline_assets preflight check. A10/A01: the model cards list
+    "surveillance / identity recognition" and faces beyond about 2 m as out of scope. State in the limitations that Qorgau uses
+    the model only for consented, local presence/attention cues reviewed by a teacher, with no identification.
+
+R5  End-to-end path for A04
+    pipeline_for(SYNTHETIC) always uses ScriptedAttentionAnalyzer, so the real A04 module runs only in replay/live sessions.
+    An end-to-end A04 check therefore needs A02 replay + A10 clips (or a live camera). No change is requested; this is an integration-order note.
+
+R6  CONTRACTS.md wording (documentation only, no schema change)
+    * HeadPose: A04 reports angles relative to the line of sight from the face to the camera (not the camera optical axis),
+      subject-centric as specified. Suggest adding this sentence to §Directions.
+    * FaceBox.confidence is null with MediaPipe Tasks FaceLandmarker (it returns no per-face score).
+    * Calibration targets are screen points (center + near the four edges); A07 must not mirror their positions.

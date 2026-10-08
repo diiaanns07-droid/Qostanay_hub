@@ -1,0 +1,31 @@
+{
+  "name": "g04_source_lost_is_not_all_clear",
+  "requirement": "a vanished source closes episodes as source_lost (not condition_cleared) and leaves a coverage incident",
+  "mode": "synthetic",
+  "phone": [{"from": 0, "to": 16000, "step": 125, "visible": "absent"}],
+  "attention": [
+    {"from": 0, "to": 5000, "step": 100, "direction": "down"},
+    {"from": 12000, "to": 16000, "step": 100, "direction": "center"}
+  ],
+  "finish": 16000,
+  "derivation": [
+    "gaze down 0..4900 opens at 3000 (t_start 0); attention then stops",
+    "attention TTL 1500: first time with W - 4900 > 1500 is the phone sample at 6500 -> close source_lost, t_end 4900",
+    "stale.attention activates at 4900 + 1500 = 6400; monitoring_degraded starts at the data gap (4900); attention returns at 12000 -> gap 7100 ms",
+    "monitoring closes once W - 12000 > merge_gap 3000 (sample 15100) -> [4900, 12000] condition_cleared, low (7100 < 30000)"
+  ],
+  "expected": [
+    {
+      "rule_id": "gaze_prolonged_down", "t_start_ms": 0, "t_end_ms": 4900, "end_reason": "source_lost",
+      "priority": "low", "related_rules": [],
+      "facts": {"gaze_down_ms": 4900.0},
+      "caveats_contain": ["Эпизод прерван"]
+    },
+    {
+      "rule_id": "monitoring_degraded", "t_start_ms": 4900, "t_end_ms": 12000, "end_reason": "condition_cleared",
+      "priority": "low", "related_rules": [],
+      "facts": {"degraded_ms": 7100.0, "stale.attention_ms": 7100.0, "stale.attention.code": "no_observations"},
+      "summary_contains": ["Наблюдение было неполным 7,1 с", "нет данных анализа лица/взгляда"]
+    }
+  ]
+}

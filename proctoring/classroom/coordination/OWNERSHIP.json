@@ -1,0 +1,93 @@
+{
+  "program": "Qorgau Classroom (class server + teacher console)",
+  "coordinator": "T01",
+  "contract": "qorgau.classroom 1.0.0 (teacher API, this repo: classroom/contracts) + qorgau.class.v1 student wire (frozen by A01: proctoring/contracts/class/PROTOCOL_v1.md; additive v1.1 fields documented in classroom/contracts/models.py)",
+  "base": {
+    "integration_branch": "codex/proctor-integration",
+    "integration_commit": "64354c014c4ad51054e8bb67fe841580771d43e5",
+    "integration_contains": "65c8c17 (frozen qorgau.class.v1) + A02 clips + A08 + T02 @ 1363e3c + T03 @ ab3faaf + T04 @ 7518724 (integrated by A01 2026-10-08 15:03 +0500); C2 (codex/class-C2) is based on it",
+    "not_yet_in_base": "T03 @ 37d7078 (1 commit), T05 @ 574136f (2 commits), C2 @ d6752e6 — integrated by T01 in later checkpoints",
+    "t01_branch": "codex/proctor-T01",
+    "t01_baseline_sha": "reported out-of-band after push (a commit cannot contain its own SHA)"
+  },
+  "rules": [
+    "Paths are relative to the repository root. The owner of a file is the owner of the LONGEST matching prefix (carve-outs inside T01's tree are listed explicitly).",
+    "Write only inside your own paths. Shared contracts, shared dependencies (teacher-ui package.json + lockfile), root routing (teacher-ui/src/app), the shared API client (teacher-ui/src/api), the migration mechanism (classroom/server/db.py) and the server composition root are T01's.",
+    "Change requests to T01: proctoring/handoffs/<you>/DEPENDENCIES.txt (what, why, which fixture shows it). Contract changes are additive and versioned.",
+    "Server code plugs in through classroom.server.features (factory(ctx) -> feature). Routes only under the prefixes in route_reservations; tables only with your migration prefix.",
+    "Teacher UI code plugs in as a FeatureModule in teacher-ui/src/features/<your dir>/index.ts (auto-discovered, no shared file edits).",
+    "Student client code (C2) and CV modules (A02-A12) are NOT classroom paths: never edit them from a T-role.",
+    "Self-check before every push: python proctoring/classroom/coordination/verify_ownership.py --agent <Txx> --base <T01 baseline SHA>",
+    "No main, no force-push, no merging other roles' branches; T01 integrates."
+  ],
+  "agents": {
+    "T01": {
+      "role": "Coordinator: class server core, contracts, shared UI shell, simulator, migration mechanism",
+      "paths": [
+        "proctoring/classroom/",
+        "proctoring/handoffs/T01/"
+      ],
+      "provides": [
+        "python -m classroom.server (pairing, teacher PIN auth, heartbeat, event dedup, persistence, command bus, teacher stream, audio signaling relay, feature mounting)",
+        "classroom.contracts (Pydantic) + schema/classroom.v1.schema.json + ts/classroom-v1.generated.ts + fixtures/v1",
+        "teacher-ui shell: routing, login, typed API client, stream subscription, FeatureModule registry",
+        "python -m classroom.simulator (SIMULATED students, labelled)"
+      ]
+    },
+    "T02": {
+      "role": "Class view: student cards, statuses, attention queue, filters",
+      "paths": [
+        "proctoring/class-panel/",
+        "proctoring/classroom/teacher-ui/src/features/class/",
+        "proctoring/handoffs/T02/"
+      ],
+      "server_routes": [],
+      "migration_prefix": null,
+      "stream_events": ["t02.*"],
+      "consumes": ["GET /api/teacher/students", "GET /api/teacher/students/{id}", "WS /ws/teacher (snapshot, student_update, incident, preview, command_update)"]
+    },
+    "T03": {
+      "role": "History of episodes, clips, teacher decisions",
+      "paths": [
+        "proctoring/classreview/",
+        "proctoring/classroom/teacher-ui/src/features/history/",
+        "proctoring/handoffs/T03/"
+      ],
+      "server_routes": ["/api/teacher/history/", "/api/teacher/clips/", "/api/student/clips/", "/api/teacher/students/{student_id}/incidents", "/api/teacher/students/{student_id}/decision"],
+      "migration_prefix": "t03_",
+      "stream_events": ["t03.*"],
+      "consumes": ["feature hooks on_student_message (incident, ack)", "ctx.submit_command(request_clip)", "ctx.student_from_request (clip upload)"]
+    },
+    "T04": {
+      "role": "Exams, policies, teacher commands (policy layer on the T01 command bus)",
+      "paths": [
+        "proctoring/backend/proctor_classctl/",
+        "proctoring/class-control-ui/",
+        "proctoring/classroom/teacher-ui/src/features/exams/",
+        "proctoring/handoffs/T04/"
+      ],
+      "server_routes": ["/api/teacher/control/"],
+      "migration_prefix": "t04_",
+      "stream_events": ["t04.*"],
+      "consumes": ["feature hooks on_student_connected (welcome.exam override), on_student_message, on_student_disconnected, on_command_update, tick", "ctx.submit_command"]
+    },
+    "T05": {
+      "role": "Audio link with a student and its signaling (WebRTC in LAN, no STUN/TURN)",
+      "paths": [
+        "proctoring/class-audio/",
+        "proctoring/classroom/teacher-ui/src/features/audio/",
+        "proctoring/handoffs/T05/"
+      ],
+      "server_routes": ["/api/teacher/audio/"],
+      "migration_prefix": "t05_",
+      "stream_events": ["t05.*"],
+      "consumes": ["commands audio_start/audio_stop via ctx.submit_command or POST /api/teacher/students/{id}/commands", "WS /ws/teacher audio_signal relay", "AudioSession records"]
+    }
+  },
+  "not_classroom": {
+    "C1": "the global OWNERSHIP.json name of this role: C1 = T01 (same path proctoring/classroom/; T01 hands off in proctoring/handoffs/T01/)",
+    "C2": "student uplink: proctoring/backend/proctor/uplink/ (other developer, global OWNERSHIP.json, branch codex/class-C2). Speaks qorgau.class.v1 to /ws/student.",
+    "A01..A12": "local single-student product incl. CV and the student shell (global proctoring/coordination/OWNERSHIP.json)"
+  },
+  "integration_order": [["T01"], ["T02", "T03", "T04", "T05"]]
+}

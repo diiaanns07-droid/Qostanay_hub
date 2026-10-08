@@ -1,0 +1,19 @@
+{
+  "session_id": "cs-0001",
+  "title": "Математика, вариант 1 (пример)",
+  "state": "open",
+  "created_at": "2026-10-09T09:00:00Z",
+  "closed_at": null,
+  "exam": {
+    "exam_id": "exam-cs-0001",
+    "title": "Математика, вариант 1 (пример)",
+    "mode": "url",
+    "allowed_urls": [
+      "https://exam.example.kz/*"
+    ],
+    "allowed_apps": [],
+    "instructions_ru": "Откройте только сайт экзамена."
+  },
+  "join_code": "482915",
+  "students_total": 2
+}

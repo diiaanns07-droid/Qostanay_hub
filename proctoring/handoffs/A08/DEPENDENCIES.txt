@@ -1,0 +1,75 @@
+CURRENT zones delivery (2026-10-08, supersedes historical items below)
+1. A01: integrate the new A08 commit (previous 9090b9a is already included).
+   Verified on codex/proctor-integration @ 78798b7ca83f16552e43a4cf1ae29e81162db44c + A08-only overlay.
+   /v1/sessions/overview route order is FIXED: A01 regression passes and all three REPLAY sessions return 200.
+2. A05 zones are CONNECTED via the public function from d9832a9042f817e560eef26dbad5c45882399a3c.
+   No A05 merge in A08. No copied rule. Three requested clips give green / yellow / red via real CV.
+3. A01: contract 1.1 is still pending by captain decision. Temporary local models/field names stay in evidence/.
+   Send the confirmed contract SHA when released; isolated A08 without fusion still returns zone=None explicitly.
+4. A07: overview and report zones/reasons use zone-rule-1, reviews remain separate. Green can include a pending
+   technical replay-end incident: A05 excludes monitoring_degraded from behavioral counts, A08 raw totals retain it.
+5. Earlier public get_exam request remains optional; no new integration blocker for the tested zones.
+   No LIVE/native-protection or accuracy claim; replay results and hashes are in handoffs/A08/checks/.
+
+HISTORICAL continuation before zones (resolved by the delivery above where stated)
+1. A01: mount A08 static GET /v1/sessions/overview BEFORE /v1/sessions/{session_id}.
+   The current lifespan mount appends A08 routes after the generic GET; a correct handler alone is shadowed.
+   CONFIRMED on scratch de7290509bf558d6488be84d2e0730b2b9ab104a + A08 overlay:
+   404 SESSION_NOT_FOUND, message "session overview not found". Own router alone returns 200.
+2. A01: send confirmed contract 1.1 SHA; local models temporarily include ReviewZone, SessionOverviewRow,
+   SessionSummary.review_zone/review_zone_reasons_ru/review_zone_rule_version. Do not advertise schema 1.1 yet.
+3. A05: send confirmed SHA exposing assess_session_zone(incidents, summary, config).
+   Captain approved current None / uncalculated adapter, no local rule copy. Replace only adapter on delivery.
+4. RESOLVED on A01 de72905 + A08: public context.forget_session is called after successful deletion.
+   Common GET/session and GET/metrics both return 404, as do A08 reads. BOOTSTRAP lacks the hook.
+5. A01: please expose a read-only get_exam() in BackendContext. For now A08 validates HTTP answers against
+   settings.exam_path, falling back to the SAME contracts fixture demo_min as A01. Direct repository writes
+   remain trusted/internal and preserve existing persistence semantics.
+6. A07: overview row exact fields session, review_zone, reasons_ru, incidents_total, incidents_by_priority,
+   pending_reviews. zone=None means 'Зона не рассчитана', not green. No cross-laptop collection/import yet.
+7. QA-WIN-004 / QA-BUG-002 / QA-OBS-003/004/009 regressions pass on this Windows laptop.
+   Final suite: 55 PASS / 1 SKIP (symlink privilege) on A08 and pinned candidate scratch.
+   Real HTTP keep-alive and Chrome render/print pass; no Windows settings were changed.
+   Live CV and Windows restriction acceptance remain A09/A06 tasks; no new claims here.
+
+HISTORICAL REQUESTS (checkpoint 1):
+A08 -> A01 requests (contract qorgau.v1 1.0.0, baseline 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49)
+
+1. [integration, required] Two A01 tests assume proctor.evidence is NOT integrated and fail once it is:
+   * backend/tests/test_lifecycle_api.py::test_health_reports_missing_modules_honestly
+     expects health code "module_not_integrated" for evidence; with A08 it is "ok".
+   * backend/tests/test_lifecycle_api.py::test_live_never_falls_back_to_synthetic
+     expects preflight check "storage" = fail for LIVE; with A08 storage passes (camera/phone/face/fusion/
+     environment_protection still fail, ready stays false - the LIVE guarantee is unchanged).
+   Proposal: drop "evidence" from the loop / from the storage assertion, or parametrize on integrated modules.
+
+2. [export completeness, medium] ExportManifest.models is empty: the store never sees ModelManifest objects nor
+   IncidentEngine.config_snapshot(). Today config_versions are derived from incidents (rule/config_version) and
+   observation producers (version, model_id, model_sha256). Proposal (no wire change): after creating the engine
+   in SessionRuntime.start(), call an optional
+       store.record_session_config(session_id, models: list[ModelManifest], engine_config: dict[str, Any])
+   (A08 adds the method; A01 calls it via hasattr until the Protocol is extended), or expose models via
+   BackendContext.
+
+3. [delete consistency, low] DELETE /v1/sessions/{sid} removes everything in A08, but SessionManager keeps the
+   terminal SessionRuntime in memory, so A01's GET /v1/sessions/{sid} still returns SessionInfo afterwards.
+   Proposal: BackendContext.forget_session(session_id) (A01 drops a terminal runtime); the A08 router calls it
+   after a successful delete.
+
+4. [timing precision, low] SessionInfo has no session-time stamp for pause/resume/finish, so A08 derives those
+   from wall clock at upsert_session(). Exact only for exam start (exam_started_t_ms). If precise pause gaps are
+   needed: either a contract field (e.g. state_changed_t_ms) in v1.1, or an optional
+   store.note_transition(session_id, state, t_session_ms) call from SessionRuntime._update().
+
+5. [snapshots, info for A01/A05] capture_snapshot() is called only for OPENED changes with trigger_frame_id, and
+   capture.get_frame() keeps ~settings.frame_ring_seconds (3 s). Rules that open after a long condition (gaze 5 s+)
+   should set trigger_frame_id to a recent frame, otherwise there is no snapshot (metadata still kept).
+
+6. [stream, info for A07/A01] IncidentMsg on /v1/stream carries A05's incident (review_status=pending,
+   evidence_ids=[]). The UI must refetch REST. Optional: A01 publishes the store-overlaid incident instead.
+
+7. [config, optional] A08 knobs live in EvidenceConfig with env overrides QORGAU_EVIDENCE_<FIELD>
+   (media TTL, limits, coverage gap). If A01 prefers Settings fields, A08 will read them from Settings instead.
+
+8. [dependency, info] JPEG snapshots use cv2 (opencv-contrib-python, `cv` extra). With runtime-only requirements
+   (no cv2) snapshots are skipped (counter snapshot_encoder_unavailable), metadata is still stored. No new deps.
