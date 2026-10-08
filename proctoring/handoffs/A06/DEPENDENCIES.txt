@@ -72,3 +72,12 @@ A06 -> A01 requests (shared files are NOT edited by A06). Baseline: BOOTSTRAP 35
     * startExam/resumeExam of a session whose restrictions cannot be re-engaged (emergency exit, main
       exception during the exam, renderer crash loop) return INVALID_STATE / enforcement_error — show
       "finish or abort", not a retry loop.
+A06-native continuation, 8 October 2026:
+- New branch codex/proctor-A06-native from integration 64354c014c4ad51054e8bb67fe841580771d43e5.
+- Checkpoint 1: Python helper source + 36 fake-hook tests, no SDK or packages installed.
+- .py shell-launch support is being implemented next within environment/native.ts.
+- Captain's explicit yes is REQUIRED before installing any real hook for LIVE dry-run/enforce.
+- A01/A09: QA-WIN-001 remains OPEN; no verified blocked record until a real controlled test.
+- VERIFICATION.json unchanged; Python helper unsigned; Ctrl+Alt+Del and UAC remain available.
+
+Historical dependencies below:
