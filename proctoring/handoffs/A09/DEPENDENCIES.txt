@@ -1,0 +1,25 @@
+A09 → A01 requests (A09 never edits shared files). Product SHA referenced: 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49
+
+1. BUG FIXES (details + repro in proctoring/qa/BUGS.md; tracking tests are xfail(strict=True) in qa/tests)
+   - QA-BUG-003 (medium): map ErrorCode -> HTTP status per CONTRACTS.md §1 in the ProctorError handler
+     (INVALID_ARGUMENT 422, SESSION_MISMATCH 409, MODULE_NOT_INTEGRATED 503 currently arrive as 500).
+   - QA-BUG-002 (medium-low): validate path ids with the contract Id pattern (422) and truncate echoed ids in
+     error messages; today >~990-char ids give 500 + a reset keep-alive connection. Same rule for A08's router.
+   - QA-BUG-001 (low): strip query strings from uvicorn.error WebSocket handshake log lines (token-in-URL misuse
+     is written to stderr).
+
+2. CI / testpaths (no change needed now; decide at integration)
+   - qa/tests is intentionally NOT in pyproject testpaths (≈3 min, spawns real processes).
+     Proposal: on the integration branch run `python qa/run_qa.py --with-baseline --label candidate` as the release
+     gate, keep `python -m pytest -q` fast. No dependency change requested: the suite uses only the pinned
+     dev extras (pytest, httpx, jsonschema) + websockets from runtime.
+
+3. INTEGRATION CANDIDATE
+   - Please send the candidate SHA + list of integrated module SHAs; A09 runs qa/run_qa.py --label candidate on it
+     and the Windows protocol (qa/scenarios/WINDOWS.md) on the demo laptop.
+   - Performance targets (preview 15 FPS, latency p95 <= 500 ms, memory/cold start) are engineering goals in
+     qa/protocols/PERFORMANCE.md — please confirm or change them before measurement.
+
+4. CONTRACT CLARIFICATIONS (QA-OBS-008, no version bump needed)
+   - Document re-entry transitions the code allows: preflight->preflight, calibrating|ready->calibration/start,
+     aborted->abort idempotent; and that a rejected WebSocket is seen by clients as HTTP 403 at handshake (QA-OBS-007).
