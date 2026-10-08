@@ -1,0 +1,16 @@
+{
+  "model_id": "mediapipe-face-landmarker-f16-v1",
+  "module": "attention",
+  "task": "face_landmarker",
+  "file": "attention/face_landmarker.task",
+  "format": "task",
+  "version": "float16/1 (bundle files dated 2023-05-03)",
+  "source_url": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+  "license": "Apache-2.0",
+  "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+  "size_bytes": 3758596,
+  "input_size": [256, 256],
+  "class_names": null,
+  "prepared_at": "2026-10-08T04:41:00Z",
+  "notes": "Downloaded by A04 on 2026-10-08; sha256/size computed on that file. Bundle: face_detector.tflite (BlazeFace short range), face_landmarks_detector.tflite (Face Mesh V2, 478 points incl. iris), face_blendshapes.tflite, geometry_pipeline_metadata_landmarks.binarypb. License Apache-2.0 per the Face Mesh V2, BlazeFace short-range and Blendshape V2 model cards. The cards list as out of scope: identity recognition and surveillance, faces farther than ~2 m, faces turned far from the camera or less than half visible, life-critical decisions. Qorgau uses it only for consented local presence/approximate attention cues reviewed by a teacher, no identification."
+}
