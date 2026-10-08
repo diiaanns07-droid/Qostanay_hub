@@ -61,7 +61,7 @@ try {
     await page.getByText("камера (live)", { exact: true }).click();
     await primary.click();
     await page.getByText("Начать нельзя", { exact: false }).waitFor();
-    assert(await page.getByRole("button", { name: "К калибровке", exact: true }).isDisabled());
+    assert(await page.getByRole("button", { name: "К осмотру рабочего места", exact: true }).isDisabled());
     assert.equal(await page.evaluate(() => window.__gumCalls), 0);
     assert.deepEqual(errors, []);
     results.push({ width, status: "pass", checks: ["consent_gate", "collapsed_settings", "collapsed_diagnostics", "visible_synthetic_label", "visible_class_connection", "visible_protection_warning", "no_overflow", "replay_reason_outside_details", "live_failure_visible", "no_camera", "no_page_errors"] });

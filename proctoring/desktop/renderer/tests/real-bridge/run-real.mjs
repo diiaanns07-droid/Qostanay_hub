@@ -163,7 +163,7 @@ await page.addInitScript(() => {
   };
   window.__gum = 0;
   if (navigator.mediaDevices) navigator.mediaDevices.getUserMedia = async () => { window.__gum += 1; throw new Error("blocked"); };
-  const names = ["getShellState", "getEnvironmentCapabilities", "operatorUnlock", "operatorLock", "requestEmergencyExit", "health", "listSessions", "createSession", "getSession", "runPreflight", "calibrationStart", "calibrationTarget", "calibrationState", "calibrationFinish", "calibrationCancel", "calibrationSkip", "startExam", "pauseExam", "resumeExam", "finishExam", "abortExam", "getExam", "saveAnswer", "listAnswers", "listIncidents", "getIncident", "addReview", "getEvidence", "getSummary", "exportReport", "deleteSession"];
+  const names = ["getShellState", "getEnvironmentCapabilities", "operatorUnlock", "operatorLock", "requestEmergencyExit", "health", "listSessions", "createSession", "getSession", "runPreflight", "calibrationStart", "calibrationTarget", "calibrationState", "calibrationFinish", "calibrationCancel", "calibrationSkip", "getDeskScan", "startDeskScan", "skipDeskScan", "startExam", "pauseExam", "resumeExam", "finishExam", "abortExam", "getExam", "saveAnswer", "listAnswers", "listIncidents", "getIncident", "addReview", "getEvidence", "getSummary", "exportReport", "deleteSession"];
   const bridge = { bridgeVersion: "1.0.0", transport: "electron" };
   for (const n of names) bridge[n] = async (...args) => dec(await window.__qorgauInvoke(n, args));
   bridge.onShellState = shellF.sub;
@@ -211,7 +211,10 @@ try {
   const ready = await page.getByText("Обязательные проверки пройдены").count();
   check("real preflight report rendered", true, ready ? "ready" : "NOT ready");
   await shot("02-preflight-report");
-  await page.getByRole("button", { name: "К калибровке" }).click();
+  await page.getByRole("button", { name: "К осмотру рабочего места" }).click();
+  // A15 desk scan: any final state (clear / objects_found / failed) enables «Далее»
+  await page.getByRole("button", { name: "Начать осмотр" }).click();
+  await page.getByRole("button", { name: "Далее", exact: true }).click({ timeout: 45000 });
   await page.getByText("Калибровка взгляда").waitFor();
   await page.getByRole("button", { name: "Начать калибровку" }).click();  // A07-student: full-screen intro
   await until(() => page.evaluate(() => {

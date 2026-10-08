@@ -6,6 +6,7 @@ import type { BridgeResult, EvidenceBlob, SavedExport, ShellState } from "@contr
 import type {
   AnswerRecord,
   CalibrationState,
+  DeskScanResult,
   EnvironmentCapabilities,
   ExamDefinition,
   HealthReport,
@@ -70,6 +71,9 @@ const ARITY: Record<InvokeName, number> = {
   calibrationFinish: 1,
   calibrationCancel: 1,
   calibrationSkip: 2,
+  getDeskScan: 1,
+  startDeskScan: 2,
+  skipDeskScan: 2,
   startExam: 1,
   pauseExam: 2,
   resumeExam: 1,
@@ -202,6 +206,15 @@ export function createApi(d: ApiDeps): Record<InvokeName, Handler> {
     calibrationCancel: async (sid) => client.json<CalibrationState>("POST", P("sessions", v.id(sid, "session_id"), "calibration", "cancel")),
     calibrationSkip: async (sid, body) =>
       client.json<CalibrationState>("POST", P("sessions", v.id(sid, "session_id"), "calibration", "skip"), v.calibrationSkip(body)),
+    // A15 desk scan: POST returns at once with state "recording"; the renderer polls GET until it ends.
+    getDeskScan: async (sid) => client.json<DeskScanResult>("GET", P("sessions", v.id(sid, "session_id"), "desk-scan")),
+    startDeskScan: async (sid, body) => {
+      const s = v.id(sid, "session_id");
+      const { mode, duration_s } = v.deskScanStart(body);
+      return client.json<DeskScanResult>("POST", `${P("sessions", s, "desk-scan")}?mode=${mode}`, { duration_s });
+    },
+    skipDeskScan: async (sid, body) =>
+      client.json<DeskScanResult>("POST", P("sessions", v.id(sid, "session_id"), "desk-scan", "skip"), v.deskScanSkip(body)),
     startExam: async (sidRaw) => {
       const sid = v.id(sidRaw, "session_id");
       if (machine.state.session_id !== sid) {

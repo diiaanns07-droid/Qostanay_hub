@@ -12,6 +12,7 @@ import { describeError, shellCode } from "./lib/errors";
 import { Banner, Button, Dialog, ErrorBanner, SourceModeBadge } from "./components/ui";
 import { PreflightScreen } from "./screens/Preflight";
 import { CalibrationScreen } from "./screens/Calibration";
+import { DeskScanScreen } from "./screens/DeskScan";
 import { ExamScreen } from "./screens/Exam";
 import { OperatorScreen } from "./screens/Operator";
 import { StudentDone, SummaryScreen } from "./screens/Summary";
@@ -21,8 +22,8 @@ import { useLive as useLiveVersion } from "./lib/liveStore";
 
 const HEALTH_POLL_MS = 5000;
 
-type Step = 0 | 1 | 2 | 3 | 4;
-const STEPS: MsgKey[] = ["step_preflight", "step_calibration", "step_exam", "step_review", "step_summary"];
+type Step = 0 | 1 | 2 | 3 | 4 | 5;
+const STEPS: MsgKey[] = ["step_preflight", "step_desk_scan", "step_calibration", "step_exam", "step_review", "step_summary"];
 
 export function App({ choice }: { choice: BridgeChoice }) {
   if (choice.kind === "missing") return <MissingBridge reason={choice.reason} />;
@@ -51,6 +52,8 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
   const [lang, setLang] = useState<Lang>("ru");
   /** The bound session disappeared or failed because the backend restarted (crash recovery). */
   const [lostSession, setLostSession] = useState<{ sid: string; why: string } | null>(null);
+  /** A15: session whose preflight is done and which now shows «Осмотр рабочего места» (before calibration). */
+  const [deskScanSid, setDeskScanSid] = useState<string | null>(null);
   const sessionRef = useRef<SessionInfo | null>(null);
   const shellRef = useRef<ShellState | null>(null);
   shellRef.current = shell;
@@ -210,17 +213,20 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
         </div>
       </div>
     );
+  } else if (session && st === "preflight" && deskScanSid === session.session_id) {
+    step = 1;
+    screen = <DeskScanScreen key={`desk-${session.session_id}`} onBack={() => setDeskScanSid(null)} />;
   } else if (!session || st === "created" || st === "preflight") {
     step = 0;
-    screen = <PreflightScreen key={session?.session_id ?? "new"} />;
+    screen = <PreflightScreen key={session?.session_id ?? "new"} onDeskScan={(sid) => setDeskScanSid(sid)} />;
   } else if (st === "calibrating" || st === "ready") {
-    step = 1;
+    step = 2;
     screen = <CalibrationScreen key={session.session_id} />;
   } else if (st === "running" || st === "paused") {
-    step = 2;
+    step = 3;
     screen = teacher ? <OperatorScreen key={`live-${session.session_id}`} live /> : <ExamScreen key={session.session_id} />;
   } else if (teacher) {
-    step = teacherTab === "review" ? 3 : 4;
+    step = teacherTab === "review" ? 4 : 5;
     screen =
       teacherTab === "review" ? (
         <OperatorScreen key={`rev-${session.session_id}`} live={false} onSummary={() => setTeacherTab("summary")} />
@@ -228,7 +234,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
         <SummaryScreen key={`sum-${session.session_id}`} onReview={() => setTeacherTab("review")} />
       );
   } else {
-    step = 4;
+    step = 5;
     screen = <StudentDone />;
   }
 
@@ -465,6 +471,7 @@ const FAULT_LABELS: Record<keyof FixtureFaults, string> = {
   answerSaveFails: "Сбой сохранения ответов (диск)",
   calibrationFailsOnce: "Сбой точки «вверх» при калибровке (1 раз)",
   slowSaves: "Медленное сохранение (гонка запросов)",
+  deskScanFindsPhone: "Осмотр места: «замечен телефон»",
 };
 
 function FixturePanel({ fixture }: { fixture: FixtureBridge }) {

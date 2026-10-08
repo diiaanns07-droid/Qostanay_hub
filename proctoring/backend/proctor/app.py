@@ -56,6 +56,7 @@ from proctor_contracts.v1 import (
 )
 
 from .bootstrap.engine import BootstrapIncidentEngine
+from .deskscan import install_desk_scan_routes, preflight_check as desk_scan_check  # A15, contract 1.2
 from .bootstrap.memory_store import MemoryEvidenceStore
 from .bootstrap.synthetic import ScriptedAttentionAnalyzer, ScriptedPhoneAnalyzer, SyntheticCaptureService
 from .session import Pipeline, PipelinePart, SessionManager
@@ -490,6 +491,7 @@ def create_app(
         state["manager"] = SessionManager(settings, registry, hub, load_exam(settings))
         store = registry.router_store()
         state["manager"].health_reporter = health
+        state["manager"].extra_preflight_checks.append(lambda sid: desk_scan_check(desk_scan.known_result(sid)))  # A15
         n_before = len(app.router.routes)
         app.include_router(
             store.create_router(_Context(state["manager"], registry)),
@@ -513,6 +515,7 @@ def create_app(
             if state.get("uplink") is not None:  # C2
                 await asyncio.to_thread(state["uplink"].stop)
             await asyncio.to_thread(state["manager"].shutdown)
+            await asyncio.to_thread(desk_scan.close)  # A15
             await asyncio.to_thread(registry.close)
 
     app = FastAPI(
@@ -566,6 +569,7 @@ def create_app(
 
     api = APIRouter(prefix="/v1", dependencies=[Depends(validate_path_ids)])
     install_audio_routes(api, lambda: state.get("uplink"))
+    desk_scan = install_desk_scan_routes(api, manager, registry)  # A15: /sessions/{id}/desk-scan
 
     @api.post("/class/lock/ack")
     def confirm_class_lock(body: LockReceipt) -> dict[str, Any]:
@@ -731,6 +735,7 @@ def create_app(
     app.state.registry = registry
     app.state.hub = hub
     app.state.proctor = state
+    app.state.desk_scan = desk_scan  # A15
     return app
 
 

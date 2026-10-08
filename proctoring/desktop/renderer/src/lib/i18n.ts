@@ -8,6 +8,7 @@ export type Lang = "ru" | "kk";
 const ru = {
   app_name: "Adal",
   step_preflight: "Подготовка",
+  step_desk_scan: "Осмотр места",
   step_calibration: "Калибровка",
   step_exam: "Экзамен",
   step_review: "Проверка",
@@ -37,6 +38,7 @@ export type MsgKey = keyof typeof ru;
 
 const kk: Partial<Record<MsgKey, string>> = {
   step_preflight: "Дайындық",
+  step_desk_scan: "Орынды тексеру",
   step_calibration: "Калибрлеу",
   step_exam: "Емтихан",
   step_review: "Тексеру",

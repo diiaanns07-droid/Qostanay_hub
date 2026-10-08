@@ -105,7 +105,11 @@ async function run(viewport) {
     await page.getByText("Студент ознакомлен").click();
     await page.getByRole("button", { name: "Проверить устройства" }).click();
     await page.getByText("Обязательные проверки пройдены").waitFor();
-    await page.getByRole("button", { name: "К калибровке" }).click();
+    await page.getByRole("button", { name: "К осмотру рабочего места" }).click();
+    // A15 desk scan (FIXTURE: scripted 12 s scan, no camera/detector), then «Далее» to calibration
+    await page.getByRole("button", { name: "Начать осмотр" }).click();
+    await page.getByText("Стол осмотрен: посторонних предметов не замечено", { exact: true }).waitFor({ timeout: 30_000 });
+    await page.getByRole("button", { name: "Далее", exact: true }).click();
     await page.getByText("Смотрите на точку глазами, голову держите прямо.").waitFor();
     check(`[${tag}] full-screen calibration identifies the fixture`, await page.getByText("FIXTURE · имитация калибровки, без камеры").isVisible());
     await page.getByRole("button", { name: "Пропустить…", exact: true }).click();

@@ -53,7 +53,7 @@ test("live-review policy: only unlocked, only the bound session, never history/e
 test("operator-only actions need the unlock in every mode and policy", () => {
   for (const p of ["review_after_pause", "operator_live_review"] as const) {
     for (const exam of [false, true]) {
-      for (const m of ["listSessions", "pauseExam", "resumeExam", "calibrationSkip", "addReview", "getEvidence", "exportReport", "deleteSession"] as const) {
+      for (const m of ["listSessions", "pauseExam", "resumeExam", "calibrationSkip", "skipDeskScan", "addReview", "getEvidence", "exportReport", "deleteSession"] as const) {
         assert.equal(decideAccess(m, "s1", ctx(exam, false), p).allow, false, `${p} exam=${exam} ${m}`);
       }
     }
@@ -74,7 +74,7 @@ test("during the exam NO session-scoped method reaches another session (answers,
     }
   }
   // the bound session's student methods stay open without the PIN
-  for (const m of ["listAnswers", "saveAnswer", "getExam", "getSession", "finishExam"] as const) {
+  for (const m of ["listAnswers", "saveAnswer", "getExam", "getSession", "finishExam", "getDeskScan", "startDeskScan"] as const) {
     assert.equal(decideAccess(m, "s1", ctx(true, false), "review_after_pause").allow, true, m);
   }
 });
