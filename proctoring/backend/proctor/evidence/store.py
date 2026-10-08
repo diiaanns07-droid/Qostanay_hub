@@ -277,6 +277,11 @@ class SqliteEvidenceStore:
 
         return build_router(self, context)
 
+    def write_error_count(self) -> int:
+        """Monotonic failure signal for the composition root; recording remains non-raising."""
+        with self._db_lock:
+            return int(self._stats["write_errors"])
+
     # ================================================================ recording (never raises)
     def upsert_session(self, info: SessionInfo) -> None:
         try:
