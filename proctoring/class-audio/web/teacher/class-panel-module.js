@@ -19,9 +19,11 @@ function ensureShared() {
   link.rel = "stylesheet";
   link.href = new URL("./audio.css", import.meta.url).href;
   document.head.append(link);
-  const sig = new TeacherSignaling();
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  const sig = new TeacherSignaling({ url: `${proto}//${location.host}/api/teacher/audio/ws` });
   sig.connect();
   shared = { controller: new TeacherAudio({ signaling: sig, audioElement: audio }), sig };
+  window.addEventListener("pagehide", () => { shared?.controller.dispose(); sig.close(); }, { once: true });
   return shared;
 }
 
@@ -38,13 +40,14 @@ export const audioModule = {
     const { controller } = ensureShared();
     const labelOf = (/** @type {string} */ id) => {
       const s = id === ctx.studentId ? ctx.getStudent() : null;
-      return s ? `${s.label ?? s.student_label ?? id}` : id;
+      return s ? `${s.label ?? s.studentLabel ?? s.student_label ?? id}` : id;
     };
-    const unmount = mountAudioPanel(el, { controller, studentId: ctx.studentId, labelOf, isOnline: () => ctx.getStudent()?.connected !== false });
+    const unmount = mountAudioPanel(el, { controller, studentId: ctx.studentId, labelOf, isOnline: () => ctx.getStudent()?.connected === true });
     const unsub = ctx.subscribe(() => controller.nudge());
     return () => {
       unsub();
-      unmount(); // closing the card does NOT end the call; "Завершить связь" does
+      if (controller.state.studentId === ctx.studentId) controller.stop("teacher_stop");
+      unmount(); // No call outlives its visible controls when the teacher closes/switches cards.
     };
   },
 };

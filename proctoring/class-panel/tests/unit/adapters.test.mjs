@@ -113,6 +113,30 @@ test("REAL: incidents of one student via the contract route", async () => {
   assert.equal(urls[0], "/api/teacher/students/st%2F..%2Fx/incidents", "id is encoded, cannot change the route");
 });
 
+test("REAL: review events coalesce metadata refresh without replacing detector evidence", async () => {
+  let calls = 0;
+  const s = store();
+  const a = createRealAdapter({
+    fetchImpl: async () => json(200, [{ student_id: "a", incidents_unreviewed: ++calls === 1 ? 1 : 0 }]),
+    WebSocketImpl: FakeWS,
+  });
+  try {
+    a.start(s);
+    await sleep(30);
+    FakeWS.last.emit({ type: "incident", student_id: "a", incident_id: "i1", priority: "high", state: "closed", origin: "synthetic" });
+    const before = s.incidentsOf("a");
+    for (let i = 0; i < 25; i++) FakeWS.last.emit({ type: "feature_event", feature: "history", event: "history.changed", data: { incident: { priority: "low", origin: "live" } } });
+    await sleep(400);
+    assert.equal(calls, 2, "one refresh per burst, no per-event fetch storm");
+    assert.equal(s.students.get("a").view.unreviewed, 0);
+    assert.deepEqual(s.incidentsOf("a"), before, "decisions do not rewrite original event provenance/severity");
+    FakeWS.last.emit({ type: "feature_event", feature: "history", event: "history.changed" });
+    a.stop();
+    await sleep(400);
+    assert.equal(calls, 2, "queued refresh cancelled on stop");
+  } finally { a.stop(); }
+});
+
 test("DEMO: deterministic for a seed; 2 / 30 / 100 students; zones imitate A05 thresholds", async () => {
   assert.equal(rng(3)(), rng(3)());
   for (const n of [2, 30, 100]) {

@@ -53,3 +53,17 @@ def test_legacy_command_cannot_claim_live_audio(tmp_path):
         with pytest.raises(ClassroomError) as caught:
             app.state.core.submit_command("st-legacy", CommandKind.AUDIO_START, {"direction": "listen"}, issued_by="test")
         assert caught.value.code == "audio_extension_required"
+
+
+def test_teacher_audio_assets_need_auth_and_imports_are_served(tmp_path):
+    app = create_app(ServerConfig(data_dir=tmp_path, teacher_pin="123456"))
+    with TestClient(app, base_url="http://127.0.0.1:8765", client=("127.0.0.1", 50000)) as client:
+        prefix = "/api/teacher/audio/assets/"
+        assert client.get(prefix + "teacher/class-panel-module.js").status_code == 401
+        client.post("/api/teacher/login", json={"pin": "123456"})
+        for asset in ("teacher/class-panel-module.js", "teacher/teacher-audio.js", "teacher/teacher-signaling.js",
+                      "teacher/audio-panel.js", "teacher/audio.css", "shared/media-errors.js"):
+            response = client.get(prefix + asset)
+            assert response.status_code == 200, asset
+            assert "html" not in response.headers["content-type"], asset
+        assert client.get(prefix + "teacher/server.py").status_code == 404

@@ -170,3 +170,23 @@ Additional baseline evidence before shutdown: full A07 fixture flow60/60 passed 
 fixture class46/46; renderer units7/7. Own Vite fixture serverPID5080 stopped. Audio/review/lock test
 processes finished. UI preview18790 may still run until shutdown; restart via class-panel/serve.mjs.
 HTML presentation prompt is already in coordination/launch-prompts/ADAL_HTML_PRESENTATION.txt.
+
+## Resumed integration and parallel work boundary — 2026-10-08
+
+Integrated saved audio/lock/history and upstream proctor-integration2799163 (merge90ce179).
+This brings the friend's A07, A13, A14, native environment work and T03/T04 adapters into one branch.
+It does not certify live CV accuracy, simultaneous physical audio capture, or all of case2.3.
+Root connected production main.ts lock receipts before exam view/renderer forwarding, scoped audio
+IPC/permissions, and recovery hooks. Fixed teacher audio module404 and its wrong signaling route;
+closing a student's card now ends its call. Review changes coalesce a metadata refresh without
+changing detector evidence. Full desktop typecheck passed; combined regression is in progress.
+
+Parallel human/other-agent boundary: use a separate checkout and codex/cv-real-check for
+backend/proctor/phone/**, backend/proctor/attention/** and handoffs/CV-REAL-CHECK/**. Start from the
+published classroom-acceptance checkpoint; own CV real-video false-positive/miss validation.
+Do not modify the integration checkout, desktop, classroom, class-panel, classreview, class-audio,
+class-control-ui, uplink, proctor_classctl, shared contracts/dependencies/launchers. Propose changes
+to fusion/session wiring in the CV handoff for root to integrate. No private exam videos in GitHub.
+
+Current isolated workers: review production tests, external exam state preservation, and teacher
+controls plus C1 lock confirmation fields. Root owns production wiring/audio UI assets/real adapter.
