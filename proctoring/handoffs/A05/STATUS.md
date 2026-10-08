@@ -58,7 +58,7 @@ Remote access (spec: high): there is no remote-access observation in contracts v
 ## Real camera clips through the engine (observation on 4 clips, NOT accuracy)
 Scratch (not committed): A02 `7921bdd` capture + A03 `c0275a2` + A04 `4014444` + this fusion, A01 `create_app`, A01 memory
 store; models from `%LOCALAPPDATA%\QorgauExam\models` (A03/A04 tools, sha256 OK); clips (consented, outside Git)
-from `%LOCALAPPDATA%\QorgauExameplay`, REPLAY realtime. Zone = `assess_session_zone` with an APPROXIMATE coverage
+from `%LOCALAPPDATA%\QorgauExam\replay`, REPLAY realtime. Zone = `assess_session_zone` with an APPROXIMATE coverage
 (1 − monitoring gaps / clip length) because the bootstrap store does not compute coverage (A08 will).
 | Clip | Episodes (start s, length s) | Zone | Expected |
 |---|---|---|---|
