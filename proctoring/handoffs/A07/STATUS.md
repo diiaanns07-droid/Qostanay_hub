@@ -1,99 +1,93 @@
-# A07 — STATUS
+# A07 — STATUS (round 2: connect the UI to the real bridge/backend)
 
-Role: product UI / renderer (Qorgau Exam).
-Branch: `claude/upbeat-gauss-798nt9` (platform-assigned), created from BOOTSTRAP `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`
-(A01, `claude/nifty-ride-ux8e4j`). Contract baseline: `qorgau.v1` 1.0.0, bridge 1.0.0.
-Previous checkpoint: none (first A07 commit). The SHA of this checkpoint is reported out-of-band after push.
-Stage: **checkpoint 1 — full UI flow on a labelled FixtureBridge + first visual polish.**
+Role: product UI / renderer. Branch: `claude/upbeat-gauss-798nt9` (platform-assigned).
+Continuation SHA (previous A07 checkpoint): `3fef6fb80d4106b5faad1609e42f31981401da13`; original BOOTSTRAP
+`35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`. The SHA of this checkpoint is reported out-of-band after push.
+Contract: `qorgau.v1` (A01 r2 docs 1.0.1, wire types unchanged), bridge 1.0.0.
+Read-only references used: A01 r2 `29cadde` (claude/nifty-ride-ux8e4j), A06 `62a7fb1` (shell), A08 `5509950` (storage).
+No A01 integration candidate SHA existed at the time of this checkpoint (A01 branch = r2 backend fixes only).
+Diff: renderer-only (`proctoring/desktop/renderer/`) + this handoff.
 
-## What works (verified on FixtureBridge only)
-Flow: preflight → informed start (consent, mode, retain_media) → checks → calibration (5 targets, backend-driven
-progress, failed target + retry, cancel, skip with reason) → ready → student exam (timer, progress, autosave with
-client_seq, save errors + auto retry, finish confirm, emergency exit) → teacher console via PIN (preview with
-frame_id-synced overlays, mirror toggle, letterbox-safe box, sources/metrics, live timeline by category, filters,
-episode card: explanation facts, caveats, timing, provenance, evidence, append-only review) → pause/resume/finish/abort
-→ post-exam review (auto-selects first pending episode) → summary (coverage: observed/pause/gaps, episodes by rule,
-decisions, limitations, export HTML/JSON, delete with confirm) → new session.
+## What changed (renderer)
+* **Teacher rights follow the shell.** `lib/permissions.ts` mirrors A06 `ipc/api.ts` (BLOCKED_IN_EXAM, OPERATOR_ONLY);
+  a running session counts as exam mode even before the guard engaged (closes a real race seen on the backend).
+  During exam mode the console shows only stream data, says why, and offers no review/materials/export;
+  review works on pause and after finish. PIN: 4–64 alnum (shell validator), shell reasons for wrong / rate-limited /
+  not configured. No built-in PIN anywhere: the product build has **no FixtureBridge code at all** (checked: 0 hits);
+  the fixture uses a random one-time PIN per tab.
+* **Stream vs storage.** `LiveStore` merges A05 stream bodies (by `update_seq`) with A08 REST review/evidence
+  (authoritative): a late `pending`/`[]` from the stream never rolls back a recorded review. Stream changes trigger
+  a debounced `listIncidents` + `getIncident` re-read when the shell allows it; after a review the card and list
+  re-read storage and only then show "записано в хранилище". Session-scoped stream data is accepted only for the
+  bound session; `bindSession` vs `setSession` + `isCurrent()` drop late responses of a cancelled/previous session.
+* **Autosave** (`lib/autosave.ts`): one request in flight per question, newest edit wins by `client_seq`, "saved"
+  only after the backend acknowledged ≥ the latest edit; retryable errors (STORAGE_ERROR, connection) back off
+  1→15 s; while paused/offline edits wait and are re-sent on resume/reconnect; unsent values survive a renderer
+  reload (sessionStorage); restore merges server + stash by seq (no duplicates). Finish flushes and, if something
+  is still unsaved, asks explicitly ("Повторить сохранение" / "Завершить без них").
+* **Timer** from server time: session-clock samples (metrics/observations) or backend wall clock (`sent_at`,
+  `server_time`), re-anchored on every sample, frozen while paused, `paused_total_ms` from SessionInfo.
+* **Failure UX:** backend starting/restarting/failed/stopped/health-down banners; shell errors by `details.shell_code`
+  in Russian (`lib/errors.ts`); evidence reasons (`media_missing`, `ttl_expired`, `hash_mismatch`…); health/gap
+  codes in Russian; capabilities "not measured yet" (retryable) → auto-retry; "Защита частичная" summary from the
+  matrix; a session lost by a backend crash is shown as "Сессия недоступна" with a clean restart; exports show success
+  only when the shell returns `saved: true` (cancel → "файл не записан").
+* **Preview overlays**: drawn from the observation of exactly the shown `frame_id` (ring of 48 per kind); a nearest
+  older one only within 400 ms, dashed and labelled with its lag; older ones are not drawn ("разметка устарела").
+* Polish at 1366×768: timeline shows only lanes with data, negative episode times shown as `−00:00.x`, dialogs keep
+  focus trap/Escape/focus restore, reduced motion respected, readable Russian reasons. No new pages.
 
-Honesty rules implemented:
-* `FIXTURE` strip + badge on every screen when the FixtureBridge is used; `LIVE/REPLAY/SYNTHETIC` badge from
-  `session.source_mode` in the top bar, on the preview and on each episode.
-* FixtureBridge is used ONLY when `window.qorgau` is absent AND (Vite dev server OR `?bridge=fixture`). A packaged
-  build without the preload shows an error screen — no silent fallback (checked).
-* LIVE/REPLAY on the FixtureBridge fail preflight (no camera, modules not integrated); "К калибровке" stays disabled.
-  No green "ready" while a required check is not `pass`.
-* No `getUserMedia` anywhere (checked by an instrumented e2e run: 0 calls). Preview only from `subscribePreview`.
-* No hard-coded metrics: numbers come from `RuntimeMetrics`/`SessionSummary`/`Incident`; `null` → "нет данных"/"—"
-  (e.g. FixtureBridge reports e2e latency `null` → UI says it is not measured). `max_confidence` is labelled
-  "оценка детектора, не вероятность нарушения"; priority is "приоритет проверки".
-* "Нет эпизодов" is never shown as "нарушений нет": empty states point to coverage/sources.
-* Teacher console requires `operatorUnlock(pin)` (checked in main by A06); unlock is cleared at exam start by the shell;
-  skipping calibration also asks for the teacher PIN.
+## Checks — on FIXTURE (not integration)
+`VITE_QORGAU_FIXTURE=1 npx vite build --outDir "$PWD/dist/renderer-fixture"` → `npx vite preview --outDir …` →
+`node renderer/tests/e2e-fixture.mjs <out>` — **44/44 PASS** at 1366×768 and 1920×1080: capabilities retry,
+LIVE blocked, wrong PIN reason, calibration failure/retry, autosave, request race (random 0.2–1.5 s latencies) settles
+on the latest value, disk error → retry, offline answer sent after reconnect, journal closed in exam mode, camera loss
+→ technical episode, review at pause, late stream `pending` does not roll back, finish blocked by an unsaved answer
+until explicit choice, HTML/JSON export downloads, dialog focus trap + Escape + focus restore, no overflow, 0
+`getUserMedia`, 0 console errors.
 
-## Paths (all inside A07 ownership)
-```
-proctoring/desktop/renderer/index.html
-proctoring/desktop/renderer/src/main.tsx                 entry
-proctoring/desktop/renderer/src/App.tsx                  routing by session.state, role, PIN dialog, fixture panel
-proctoring/desktop/renderer/src/bridge/selectBridge.ts   window.qorgau | explicit FixtureBridge | error
-proctoring/desktop/renderer/src/bridge/fixtureBridge.ts  DEV-ONLY QorgauBridge on contract fixtures + fault injection
-proctoring/desktop/renderer/src/bridge/fixtureFrames.ts  synthetic JPEG frames (vector drawing, "FIXTURE" burned in)
-proctoring/desktop/renderer/src/lib/*                    labels (RU), format, i18n (RU + KK draft), liveStore, result
-proctoring/desktop/renderer/src/components/*             ui primitives, PreviewPanel, Timeline, IncidentCard
-proctoring/desktop/renderer/src/screens/*                Preflight, Calibration, Exam, Operator, Summary
-proctoring/desktop/renderer/src/styles.css               system fonts only, no CDN
-proctoring/desktop/renderer/tests/e2e-fixture.mjs        Playwright flow check (fixture)
-```
+## Checks — on the REAL bridge logic + REAL backend (no Electron)
+Local scratch integration (NOT published, NOT a candidate): A01 r2 `29cadde` + merge A06 `62a7fb1` + merge A08
+`5509950` + this renderer; Python 3.12 venv from `requirements/full.txt --require-hashes`.
+Harness `renderer/tests/real-bridge/` runs A06's own `createApi`, `ShellStateMachine`, `BackendSupervisor`,
+`BackendClient`, `BackendSocket`, `OperatorAuth` (scrypt PIN) in Node exactly as `main.ts` wires them; only the IPC
+transport (Playwright `exposeBinding`) and the OS guard (no-op stand-in) differ. Renderer = product build served with
+A06's CSP header. `npm run build:renderer && node renderer/tests/real-bridge/run-real.mjs <out>` — **24/24 PASS**:
+READY handshake, real preflight, calibration from backend samples, exam mode engaged by the real state machine,
+2 answers stored by A08, wrong PIN rejected by OperatorAuth, preview via WS `/v1/preview`, incidents via WS, **0 calls
+rejected by shell gating during the whole run** (only the intentional wrong PIN), review persisted in A08 and shown,
+timer drift 0.46 s after a pause (tolerance 2.5 s), finish releases exam mode, **HTML (13 KB, no `<script>`) and JSON
+(with manifest) written to disk via the shell's saveFile**, restart with a second session, SIGKILL of the backend →
+outage visible → shell restarts it → lost session reported, 0 `getUserMedia`, 0 CSP violations, 0 console errors.
+Data: SYNTHETIC only (bootstrap capture/analyzers/engine — A02–A05 not integrated); labelled in UI and report.
 
-## Interfaces consumed
-`window.qorgau: QorgauBridge` (contracts/ts/bridge.ts) — every method is used: shell state/unlock/lock/emergency exit,
-health, capabilities, lifecycle, calibration (start/target/state/finish/cancel/skip), exam, answers, incidents,
-reviews, evidence, summary, export, delete, `subscribeEvents`, `subscribePreview`. Wire types from
-`@contracts/qorgau-v1.generated`, fixtures from `@contracts/fixtures.generated`. Stream handling: idempotent
-incidents by `(incident_id, update_seq)`, seq-gap / reconnect (`hello`) → REST refetch, foreign-session messages ignored.
+Other: `npm run typecheck` PASS (renderer; in the scratch integration also main/preload); `npm run build:renderer`
+PASS (product bundle has no fixture code); `git diff --check` clean; `verify_ownership --agent A07` vs `3fef6fb` and vs
+`35bea4c` — see commit report.
 
-## Checks (Linux container, Node 22.22.0, Chromium via preinstalled Playwright 1.56.1; no Electron, no camera)
-| Command (from `proctoring/desktop`) | Result |
-|---|---|
-| `npm run typecheck` | PASS contracts, PASS renderer (main SKIP: A06 not present) |
-| `npm run check:contracts` | PASS (part of typecheck) |
-| `npm run build:renderer` | PASS (`dist/renderer`, ~315 kB JS, no external URLs) |
-| `npx vite preview` + `node renderer/tests/e2e-fixture.mjs <out>` | **30/30 PASS** at 1366×768 and 1920×1080 |
-| packaged build without `?bridge=fixture` | error screen, no fixture fallback — PASS |
-| `npx vite` (dev) | renders with FixtureBridge labelled — PASS |
-| `python coordination/verify_ownership.py --agent A07 --base 35bea4c…` | see commit report |
+## NOT run / not verified
+* **Inside Electron** (binary not downloadable here): real IPC, preload, window, `qorgau://` origin with CSP via
+  protocol handler, kiosk/keyboard guard, focus loss events. To do on Windows: `npm ci && npm start`, then the same
+  path by hand (list below).
+* **Windows**, camera, LIVE/REPLAY, real CV (A02–A05), evidence images (synthetic session had `retain_media: false`;
+  evidence rendering is covered only on fixture), long sessions (2 h) and timeline density at that scale.
+* Kazakh dictionary is still a draft without native review.
 
-The e2e covers: fixture label, LIVE preflight blocked, abort at preflight, synthetic preflight ready, calibration
-failure + retry + finish, start, autosave, save failure → visible error → auto-recovery, wrong PIN, operator live
-(preview + overlays + incidents), review recorded, backend loss banner + recovery, camera loss → technical episode,
-pause/resume, finish, review, summary, HTML export NOT_IMPLEMENTED surfaced, JSON export download, no horizontal
-overflow on 4 screens per viewport, 0 `getUserMedia` calls, 0 console errors.
-Screenshots were produced locally (synthetic drawings only, no personal data); not committed.
-
-## Bug found and fixed during checks
-Resuming a paused session closed a "Finish" dialog opened in the meantime and left its button disabled (shared busy
-flag). Now each operator action closes only its own dialog and has its own busy state.
-
-## Not verified / limitations
-* Nothing ran against the real backend or Electron: A06 preload is not on this base. Integration against
-  `python -m proctor serve` needs the shell (the renderer never talks HTTP itself).
-* Kazakh (`KK*`) dictionary covers only UI chrome and is a **draft without native-speaker review**; domain labels stay RU.
-* Preview overlays use the latest observation per kind; matching is by `frame_id`, otherwise age vs. the shown frame
-  (dashed when lagging, hidden when older than 1.5 s). Not validated against real A02/A04 timing.
-* Exam timer uses `started_at` + local clock − `paused_total_ms`; backend does not send remaining time.
-* No CSP meta in `index.html` yet (Vite dev preamble is inline; file:// semantics of `'self'` not testable here).
-  Proposed policy for A06 (header or meta, after testing in Electron):
-  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'`.
-* HTML export/delete/evidence are A08 routes; on the fixture JSON export is a browser download labelled fixture.
-
-## Requests (see DEPENDENCIES.txt)
-exam id before session creation; JS test runner/Playwright pin; shell error codes for backend loss.
+## Manual checks for the Windows demo machine (after A01 candidate)
+1. `npm start`: renderer loads from `qorgau://app/` without CSP errors; production build without preload shows the error page.
+2. Preflight with LIVE: matrix banner shows partial protection honestly; missing model → preflight fail, no green.
+3. Calibration on camera: per-target A04 messages readable (`low_light`, `extreme_pose`…), retry/cancel/skip (PIN).
+4. Exam: autosave while unplugging the network is irrelevant (loopback) — instead kill `python` in Task Manager:
+   banner, answers kept, restart, lost-session screen.
+5. Teacher PIN (`QORGAU_OPERATOR_PIN_HASH`): 5 wrong → rate limit message; console during exam = stream only.
+6. Pause → review with evidence images (`retain_media: true`) → resume → finish → HTML/JSON saved via the dialog;
+   cancel the dialog → "файл не записан".
 
 ## Integration order
-A07 needs A06 (preload exposing `window.qorgau`) to run inside Electron; no change in A01 shared files is required.
-After A06 lands: `npm run build && electron .` → same flow on `synthetic`, then on `replay/live` once A02–A05/A08 merge.
+Renderer depends on A06 (preload) for Electron and on A08 routes for review/report; no shared file change needed.
+A01: take this SHA together with A06 and A08; `renderer/tests/real-bridge/run-real.mjs` is the ready end-to-end
+check for the candidate (needs `.venv` and a Playwright install).
 
 ## Next (A07)
-1. Run the flow through A06 preload against `python -m proctor serve` (synthetic), fix contract mismatches.
-2. Visual polish on real frames: overlay label collision, timeline zoom for long sessions, print-friendly summary.
-3. Demo scripting with A10 (replay scenario) and screenshot set for the pitch.
+Run `run-real.mjs` on the A01 candidate SHA, then on LIVE/REPLAY once A02–A05 are merged; evidence images path;
+Electron manual pass on Windows with A09.

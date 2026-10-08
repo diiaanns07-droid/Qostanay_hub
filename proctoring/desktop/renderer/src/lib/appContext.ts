@@ -13,7 +13,12 @@ export interface AppApi {
   live: LiveStore;
   shell: ShellState | null;
   session: SessionInfo | null;
-  setSession: (s: SessionInfo | null) => void;
+  /** Update the CURRENT session. Snapshots of any other session (late responses) are ignored. */
+  setSession: (s: SessionInfo) => void;
+  /** Switch the UI to a new session (only after createSession / restore). */
+  bindSession: (s: SessionInfo) => void;
+  /** True while `sid` is still the session shown by the UI (guard for late async responses). */
+  isCurrent: (sid: string) => boolean;
   /** Backend process not ready (shell) or calls failing with a connection error. */
   backendLost: boolean;
   /** Effective role: teacher only when the shell reports operator_unlocked. */

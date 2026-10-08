@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   ApiErrorBody,
   EnvironmentCapabilities,
@@ -9,7 +9,7 @@ import type {
 } from "@contracts/qorgau-v1.generated";
 import { useApp } from "../lib/appContext";
 import { call } from "../lib/result";
-import { CAPABILITY, CHECK, CHECK_STATUS, COMPONENT, ENV_ACTION, HEALTH, SOURCE_MODE_RU } from "../lib/labels";
+import { CAPABILITY, CHECK, CHECK_STATUS, COMPONENT, ENV_ACTION, HEALTH, HEALTH_CODE, SOURCE_MODE_RU } from "../lib/labels";
 import { Badge, Banner, Button, Card, Dialog, Dot, ErrorBanner, Spinner, type Tone } from "../components/ui";
 
 const CONSENT_VERSION = "consent-ru-1";
@@ -19,9 +19,10 @@ const checkTone = (c: PreflightCheck): Tone =>
   c.status === "pass" ? "ok" : c.status === "fail" ? (c.required ? "danger" : "warn") : c.status === "warn" ? "warn" : "neutral";
 
 export function PreflightScreen() {
-  const { bridge, session, setSession, live, backendLost, role, requestTeacher } = useApp();
+  const { bridge, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher } = useApp();
   const [health, setHealth] = useState<HealthReport | null>(null);
-  const [caps, setCaps] = useState<EnvironmentCapabilities | null | "none">(null);
+  const [caps, setCaps] = useState<EnvironmentCapabilities | null | { error: ApiErrorBody }>(null);
+  const capsTries = useRef(0);
   const [loadErr, setLoadErr] = useState<ApiErrorBody | null>(null);
   const [report, setReport] = useState<PreflightReport | null>(null);
   const [busy, setBusy] = useState<null | "create" | "preflight" | "calibrate" | "skip" | "abort">(null);
@@ -41,25 +42,37 @@ export function PreflightScreen() {
     const [h, c] = await Promise.all([call(bridge.health()), call(bridge.getEnvironmentCapabilities())]);
     if (h.ok) setHealth(h.data);
     else setLoadErr(h.error);
-    setCaps(c.ok ? c.data : "none");
+    setCaps(c.ok ? c.data : { error: c.error });
   }, [bridge]);
 
   useEffect(() => {
     void loadEnv();
   }, [loadEnv]);
 
+  // The shell measures capabilities at startup (self-test); "not measured yet" is retryable → poll briefly.
+  useEffect(() => {
+    if (!caps || !("error" in caps) || !caps.error.retryable || capsTries.current >= 20) return;
+    const t = setTimeout(async () => {
+      capsTries.current += 1;
+      const c = await call(bridge.getEnvironmentCapabilities());
+      setCaps(c.ok ? c.data : { error: c.error });
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [caps, bridge]);
+
   const runPreflight = useCallback(
     async (sid: string) => {
       setBusy("preflight");
       setActionErr(null);
       const r = await call(bridge.runPreflight(sid));
+      if (!isCurrent(sid)) return; // cancelled / another session meanwhile
       setBusy(null);
       if (!r.ok) return setActionErr({ ctx: "Проверка", error: r.error });
       setReport(r.data);
       const s = await call(bridge.getSession(sid));
       if (s.ok) setSession(s.data);
     },
-    [bridge, setSession],
+    [bridge, setSession, isCurrent],
   );
 
   // A session restored after reload/reconnect in created/preflight: re-run checks so the report is current.
@@ -91,8 +104,7 @@ export function PreflightScreen() {
     );
     setBusy(null);
     if (!r.ok) return setActionErr({ ctx: "Создание сессии", error: r.error });
-    live.reset(r.data.session_id);
-    setSession(r.data);
+    bindSession(r.data);
     await runPreflight(r.data.session_id);
   };
 
@@ -302,7 +314,10 @@ export function PreflightScreen() {
                       <Dot tone={tone} />
                       <span className="comp-name">{COMPONENT[c.component]}</span>
                       <span className="comp-status">{HEALTH[c.status]}</span>
-                      {c.message && <span className="comp-msg">{c.message}</span>}
+                      <span className="comp-msg" title={c.message || undefined}>
+                        {HEALTH_CODE[c.code] ?? c.message}
+                        {typeof c.details.errors === "number" ? ` · ошибок: ${c.details.errors}` : ""}
+                      </span>
                     </li>
                   );
                 })}
@@ -313,13 +328,15 @@ export function PreflightScreen() {
 
           <Card title="Защита среды">
             {caps === null && <Spinner label="Запрашиваем возможности оболочки…" />}
-            {caps === "none" && (
-              <Banner tone="warn" title="Оболочка не сообщила возможности защиты">
+            {caps && "error" in caps && (
+              <Banner tone={caps.error.retryable ? "info" : "warn"} title={caps.error.retryable ? "Оболочка ещё измеряет возможности защиты" : "Оболочка не сообщила возможности защиты"}>
+                {caps.error.retryable && capsTries.current < 20 ? "Повторим запрос автоматически. " : ""}
                 Для LIVE-сессии это обязательная проверка.
               </Banner>
             )}
-            {caps && caps !== "none" && (
+            {caps && !("error" in caps) && (
               <>
+                <ProtectionSummary caps={caps} />
                 <p className="small muted">
                   {caps.platform} · оболочка {caps.shell_version} · режим экзамена {caps.exam_mode_supported ? "поддерживается" : "не поддерживается"}
                 </p>
@@ -376,8 +393,32 @@ export function SkipDialog({ busy, onClose, onSkip }: { busy: boolean; onClose: 
       <p>Без калибровки оценки направления взгляда будут помечены как некалиброванные. Причина попадёт в отчёт.</p>
       <label className="field">
         <span>Причина</span>
-        <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={300} placeholder="например, студент в очках с бликами" />
+        <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={200} placeholder="например, студент в очках с бликами" />
       </label>
     </Dialog>
+  );
+}
+
+/** Honest summary of the capability matrix: partial protection stays visibly partial. */
+function ProtectionSummary({ caps }: { caps: EnvironmentCapabilities }) {
+  const n = (st: string) => caps.items.filter((i) => i.status === st).length;
+  const blocked = n("blocked");
+  const detected = n("detected_only");
+  const open = n("unverified") + n("unsupported");
+  if (!caps.exam_mode_supported) {
+    return (
+      <Banner tone="danger" title="Режим экзамена не поддерживается оболочкой на этом компьютере">
+        LIVE-сессия не пройдёт проверку защиты среды.
+      </Banner>
+    );
+  }
+  if (open === 0 && detected === 0) {
+    return <Banner tone="ok" title={`Все ${blocked} заявленных действий блокируются`}>Проверено оболочкой на этом компьютере.</Banner>;
+  }
+  return (
+    <Banner tone="warn" title="Защита частичная">
+      Блокируется: {blocked} · только фиксируется: {detected} · не проверено или не поддерживается: {open}. Непроверенные действия не
+      считаются защищёнными.
+    </Banner>
   );
 }

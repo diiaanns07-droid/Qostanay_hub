@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { ApiErrorBody, SessionSummary } from "@contracts/qorgau-v1.generated";
 import { useApp } from "../lib/appContext";
 import { call } from "../lib/result";
-import { COMPONENT, REVIEW_STATUS, RULE, SESSION_STATE, SOURCE_MODE_RU, CAL_PHASE } from "../lib/labels";
+import { COMPONENT, GAP_REASON, REVIEW_STATUS, RULE, SESSION_STATE, SOURCE_MODE_RU, CAL_PHASE, human } from "../lib/labels";
+import { can } from "../lib/permissions";
 import { duration, sessionT, wallDate } from "../lib/format";
 import { Badge, Banner, Button, Card, Dialog, ErrorBanner, KV, Spinner } from "../components/ui";
 import type { IncidentRule, ReviewStatus } from "@contracts/qorgau-v1.generated";
@@ -28,7 +29,9 @@ export function StudentDone() {
 }
 
 export function SummaryScreen({ onReview }: { onReview: () => void }) {
-  const { bridge, session, setSession, newSession, backendLost } = useApp();
+  const { bridge, session, newSession, backendLost, shell } = useApp();
+  const exportPerm = can(shell, "export");
+  const deletePerm = can(shell, "delete");
   const sid = session?.session_id ?? "";
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [err, setErr] = useState<ApiErrorBody | null>(null);
@@ -53,7 +56,12 @@ export function SummaryScreen({ onReview }: { onReview: () => void }) {
     const r = await call(bridge.exportReport(sid, format));
     setBusy(null);
     if (!r.ok) return setExportMsg({ ok: false, text: `Экспорт ${format.toUpperCase()} не выполнен`, error: r.error });
-    setExportMsg(r.data.saved ? { ok: true, text: `Сохранено: ${r.data.file_name}` } : { ok: false, text: "Сохранение отменено" });
+    // Success is shown only when the shell confirms the file was written (saved: true).
+    setExportMsg(
+      r.data.saved
+        ? { ok: true, text: `Файл записан: ${r.data.file_name} (папка выбрана в системном диалоге).` }
+        : { ok: false, text: "Сохранение отменено в диалоге — файл не записан." },
+    );
   };
 
   const doDelete = async () => {
@@ -65,7 +73,6 @@ export function SummaryScreen({ onReview }: { onReview: () => void }) {
       return setErr(r.error);
     }
     setConfirmDelete(false);
-    setSession(null);
     newSession();
   };
 
@@ -84,8 +91,10 @@ export function SummaryScreen({ onReview }: { onReview: () => void }) {
     s.started_at && s.finished_at ? Math.max(0, Date.parse(s.finished_at) - Date.parse(s.started_at)) : summary.observed_ms + summary.paused_ms;
   const gapMs = Math.max(0, examMs - summary.observed_ms - summary.paused_ms);
   const pct = (v: number) => (examMs > 0 ? `${Math.max(0, Math.min(100, (v / examMs) * 100))}%` : "0%");
-  const reviewed = Object.values(summary.reviews_by_decision).reduce((a, b) => a + b, 0);
-  const pending = Math.max(0, summary.incidents_total - reviewed);
+  // A08 reports "pending" inside reviews_by_decision; older/fixture data may omit it → derive it.
+  const rbd = summary.reviews_by_decision;
+  const decided = (["confirmed", "dismissed", "inconclusive"] as const).reduce((a, d) => a + (rbd[d] ?? 0), 0);
+  const pending = typeof rbd.pending === "number" ? rbd.pending : Math.max(0, summary.incidents_total - decided);
 
   return (
     <div className="screen summary">
@@ -162,7 +171,9 @@ export function SummaryScreen({ onReview }: { onReview: () => void }) {
                     <td>{COMPONENT[g.component]}</td>
                     <td className="mono">{sessionT(g.t_start_ms - (s.exam_started_t_ms ?? 0))}</td>
                     <td>{g.t_end_ms === null ? "до конца" : duration(g.t_end_ms - g.t_start_ms)}</td>
-                    <td className="small">{g.reason}</td>
+                    <td className="small" title={g.reason}>
+                      {human(GAP_REASON, g.reason)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -218,17 +229,18 @@ export function SummaryScreen({ onReview }: { onReview: () => void }) {
             целостность файлов, но не защищают от владельца компьютера.
           </p>
           <div className="actions">
-            <Button variant="primary" busy={busy === "html"} disabled={backendLost} onClick={() => void doExport("html")}>
+            <Button variant="primary" busy={busy === "html"} disabled={backendLost || !exportPerm.ok || busy !== null} onClick={() => void doExport("html")}>
               Сохранить отчёт HTML
             </Button>
-            <Button busy={busy === "json"} disabled={backendLost} onClick={() => void doExport("json")}>
+            <Button busy={busy === "json"} disabled={backendLost || !exportPerm.ok || busy !== null} onClick={() => void doExport("json")}>
               Экспорт JSON
             </Button>
             <span className="spacer" />
-            <Button variant="danger" disabled={backendLost} onClick={() => setConfirmDelete(true)}>
+            <Button variant="danger" disabled={backendLost || !deletePerm.ok} onClick={() => setConfirmDelete(true)}>
               Удалить данные сессии…
             </Button>
           </div>
+          {!exportPerm.ok && <p className="hint">{exportPerm.reason}</p>}
           {exportMsg &&
             (exportMsg.error ? (
               <ErrorBanner context={exportMsg.text} error={exportMsg.error} onDismiss={() => setExportMsg(null)} />

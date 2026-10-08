@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { ShellState } from "@contracts/bridge";
 import type { ApiErrorBody, SessionInfo } from "@contracts/qorgau-v1.generated";
 import type { BridgeChoice } from "./bridge/selectBridge";
-import { FIXTURE_OPERATOR_PIN, type FixtureBridge, type FixtureFaults } from "./bridge/fixtureBridge";
+import type { FixtureBridge, FixtureFaults } from "./bridge/fixtureBridge";
 import { AppContext, useApp, type AppApi } from "./lib/appContext";
 import { LangContext, translate, type Lang, type MsgKey } from "./lib/i18n";
 import { LiveStore } from "./lib/liveStore";
+import { can } from "./lib/permissions";
 import { call } from "./lib/result";
+import { describeError, shellCode } from "./lib/errors";
 import { Banner, Button, Dialog, ErrorBanner, SourceModeBadge } from "./components/ui";
 import { PreflightScreen } from "./screens/Preflight";
 import { CalibrationScreen } from "./screens/Calibration";
@@ -15,7 +17,6 @@ import { OperatorScreen } from "./screens/Operator";
 import { StudentDone, SummaryScreen } from "./screens/Summary";
 
 const HEALTH_POLL_MS = 5000;
-const TERMINAL = new Set(["finished", "aborted", "failed"]);
 
 type Step = 0 | 1 | 2 | 3 | 4;
 const STEPS: MsgKey[] = ["step_preflight", "step_calibration", "step_exam", "step_review", "step_summary"];
@@ -27,7 +28,7 @@ export function App({ choice }: { choice: BridgeChoice }) {
 
 function MissingBridge({ reason }: { reason: string }) {
   return (
-    <div className="fatal">
+    <div className="fatal" role="alert">
       <Brand />
       <h1>Интерфейс не подключён к оболочке</h1>
       <p>{reason}</p>
@@ -45,25 +46,53 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
   const [pinOpen, setPinOpen] = useState(false);
   const [teacherTab, setTeacherTab] = useState<"review" | "summary">("review");
   const [lang, setLang] = useState<Lang>("ru");
+  /** The bound session disappeared or failed because the backend restarted (crash recovery). */
+  const [lostSession, setLostSession] = useState<{ sid: string; why: string } | null>(null);
   const sessionRef = useRef<SessionInfo | null>(null);
+  const shellRef = useRef<ShellState | null>(null);
+  shellRef.current = shell;
 
-  const setSession = useCallback((s: SessionInfo | null) => {
-    const prev = sessionRef.current;
-    // Ignore stale snapshots of another session (stream may deliver late messages).
-    if (s && prev && s.session_id !== prev.session_id && !TERMINAL.has(prev.state)) return;
+  /** Updates of the current session only: a late response for a previous/other session is dropped. */
+  const setSession = useCallback((s: SessionInfo) => {
+    const cur = sessionRef.current;
+    if (!cur || s.session_id !== cur.session_id) return;
     sessionRef.current = s;
     setSessionState(s);
   }, []);
 
-  const backendLost = (shell !== null && shell.backend !== "ready") || healthDown;
+  const bindSession = useCallback(
+    (s: SessionInfo) => {
+      if (sessionRef.current?.session_id !== s.session_id) live.reset(s.session_id);
+      sessionRef.current = s;
+      setSessionState(s);
+    },
+    [live],
+  );
+
+  const isCurrent = useCallback((sid: string) => sessionRef.current?.session_id === sid, []);
+
+  const backendState = shell?.backend ?? null;
+  const backendLost = (backendState !== null && backendState !== "ready") || healthDown;
 
   const resync = useCallback(async () => {
     const cur = sessionRef.current;
     if (!cur) return;
-    const [s, inc] = await Promise.all([call(bridge.getSession(cur.session_id)), call(bridge.listIncidents(cur.session_id))]);
-    if (s.ok) setSession(s.data);
-    if (inc.ok) live.replaceIncidents(inc.data);
-  }, [bridge, live, setSession]);
+    const sid = cur.session_id;
+    const s = await call(bridge.getSession(sid));
+    if (!isCurrent(sid)) return;
+    if (s.ok) {
+      setSession(s.data);
+      if (s.data.state === "failed" && s.data.last_error?.details?.recovered) {
+        setLostSession({ sid, why: "Сервис был перезапущен после сбоя; сессия остановлена, сохранённые до сбоя данные доступны в итоге." });
+      }
+    } else if (s.error.code === "SESSION_NOT_FOUND") {
+      setLostSession({ sid, why: "После перезапуска сервиса эта сессия ему неизвестна. Начните новую сессию." });
+    }
+    if (can(shellRef.current, "history", sessionRef.current?.state).ok && isCurrent(sid)) {
+      const inc = await call(bridge.listIncidents(sid));
+      if (inc.ok && isCurrent(sid)) live.applyRest(inc.data);
+    }
+  }, [bridge, live, setSession, isCurrent]);
 
   // Shell state + restore the bound session after a renderer reload.
   useEffect(() => {
@@ -73,10 +102,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
       setShell(st);
       if (st.session_id && !sessionRef.current) {
         const r = await call(bridge.getSession(st.session_id));
-        if (r.ok && alive) {
-          live.reset(r.data.session_id);
-          setSession(r.data);
-        }
+        if (r.ok && alive && !sessionRef.current) bindSession(r.data);
       }
     });
     const unsub = bridge.onShellState((st) => setShell(st));
@@ -84,14 +110,11 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
       alive = false;
       unsub();
     };
-  }, [bridge, live, setSession]);
+  }, [bridge, bindSession]);
 
   // Event stream.
   useEffect(() => {
-    live.onSession = (s) => {
-      const cur = sessionRef.current;
-      if (cur && s.session_id === cur.session_id) setSession(s);
-    };
+    live.onSession = (s) => setSession(s);
     live.onResync = () => void resync();
     const unsub = bridge.subscribeEvents((env) => live.ingest(env));
     return () => {
@@ -107,7 +130,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
     const ping = async () => {
       const r = await call(bridge.health());
       if (r.ok) {
-        live.health = live.health ?? r.data;
+        if (!live.health) live.health = r.data;
         if (wasDown) void resync();
         wasDown = false;
         setHealthDown(false);
@@ -120,6 +143,13 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
     const t = setInterval(() => void ping(), HEALTH_POLL_MS);
     return () => clearInterval(t);
   }, [bridge, live, resync]);
+
+  // Backend became ready again (restart after a crash) → re-read the session; it may be gone or failed.
+  const prevBackend = useRef(backendState);
+  useEffect(() => {
+    if (prevBackend.current && prevBackend.current !== "ready" && backendState === "ready") void resync();
+    prevBackend.current = backendState;
+  }, [backendState, resync]);
 
   // Unlock is cleared by the shell when an exam starts → fall back to the student view.
   useEffect(() => {
@@ -135,6 +165,8 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
     shell,
     session,
     setSession,
+    bindSession,
+    isCurrent,
     backendLost,
     role: teacher ? "teacher" : "student",
     requestTeacher: () => {
@@ -146,6 +178,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
       void bridge.operatorLock().then(setShell);
     },
     newSession: () => {
+      setLostSession(null);
       sessionRef.current = null;
       setSessionState(null);
       live.reset(null);
@@ -156,7 +189,22 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
   let step: Step = 0;
   let screen: ReactNode;
   const st = session?.state;
-  if (!session || st === "created" || st === "preflight") {
+  const lostHere = !!lostSession && session?.session_id === lostSession.sid && st !== "failed";
+  if (lostHere && lostSession) {
+    // The backend no longer knows this session: nothing on it can be continued; offer a clean restart.
+    screen = (
+      <div className="screen">
+        <div className="ready-panel">
+          <h1>Сессия недоступна</h1>
+          <p className="lead">{lostSession.why}</p>
+          <p className="small muted mono">{lostSession.sid}</p>
+          <Button variant="primary" onClick={api.newSession}>
+            Новая сессия
+          </Button>
+        </div>
+      </div>
+    );
+  } else if (!session || st === "created" || st === "preflight") {
     step = 0;
     screen = <PreflightScreen key={session?.session_id ?? "new"} />;
   } else if (st === "calibrating" || st === "ready") {
@@ -164,7 +212,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
     screen = <CalibrationScreen key={session.session_id} />;
   } else if (st === "running" || st === "paused") {
     step = 2;
-    screen = teacher ? <OperatorScreen live /> : <ExamScreen key={session.session_id} />;
+    screen = teacher ? <OperatorScreen key={`live-${session.session_id}`} live /> : <ExamScreen key={session.session_id} />;
   } else if (teacher) {
     step = teacherTab === "review" ? 3 : 4;
     screen =
@@ -180,6 +228,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
 
   const examMode = !!shell?.exam_mode_active;
   const t = (k: MsgKey) => translate(lang, k);
+  const shellErr = shell?.last_error ?? null;
 
   return (
     <LangContext.Provider value={lang}>
@@ -188,6 +237,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
           {fixture && (
             <div className="fixture-strip" role="note">
               FIXTURE-режим: данные из FixtureBridge (контрактные fixtures и сценарий в памяти) — не backend, не камера, не CV.
+              Это не интеграционная проверка.
             </div>
           )}
           <header className="topbar">
@@ -204,9 +254,12 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
             </nav>
             <div className="topbar-right">
               <SourceModeBadge mode={session?.source_mode ?? null} fixture={!!fixture} />
-              <span className={`conn ${backendLost ? "conn-down" : "conn-ok"}`} title={backendLost ? t("backend_lost") : "Локальный сервис на связи"}>
+              <span
+                className={`conn ${backendLost ? (backendState === "starting" ? "conn-wait" : "conn-down") : "conn-ok"}`}
+                title={backendLost ? t("backend_lost") : "Локальный сервис на связи"}
+              >
                 <span className="conn-dot" aria-hidden="true" />
-                <span className="conn-l">{backendLost ? "нет связи" : "на связи"}</span>
+                <span className="conn-l">{backendLost ? (backendState === "starting" ? "запуск…" : "нет связи") : "на связи"}</span>
               </span>
               {teacher ? (
                 <Button size="sm" variant="ghost" onClick={api.leaveTeacher} title={t("lock_teacher")}>
@@ -227,11 +280,19 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
             </div>
           </header>
 
-          {backendLost && (
+          {backendLost && <BackendBanner state={backendState} healthDown={healthDown} />}
+          {lostSession && session?.session_id === lostSession.sid && !lostHere && (
             <div className="global-banner">
-              <Banner tone="danger" title={t("backend_lost")}>
-                {shell?.backend === "restarting" ? "Оболочка перезапускает сервис. " : ""}
-                Действия временно недоступны; введённые ответы не теряются и будут отправлены после восстановления.
+              <Banner tone="warn" title="Сессия прервана перезапуском сервиса" actions={<Button size="sm" onClick={api.newSession}>Новая сессия</Button>}>
+                {lostSession.why}
+              </Banner>
+            </div>
+          )}
+          {/* Backend outages have their own banner; this one is for shell failures (e.g. exam mode not engaged). */}
+          {shellErr && shell?.mode === "error" && shellCode(shellErr) !== "backend_unavailable" && (
+            <div className="global-banner">
+              <Banner tone="danger" title={shellCode(shellErr) === "enforcement_error" ? "Режим экзамена не включился" : "Ошибка оболочки"}>
+                {describeError(shellErr)} <span className="small">({shellErr.message})</span> Ограничения сняты.
               </Banner>
             </div>
           )}
@@ -247,7 +308,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
 
           {pinOpen && (
             <PinDialog
-              fixture={!!fixture}
+              fixturePin={fixture?.operatorPin ?? null}
               examMode={examMode}
               onClose={() => setPinOpen(false)}
               onUnlocked={(s) => {
@@ -261,6 +322,36 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
         </div>
       </AppContext.Provider>
     </LangContext.Provider>
+  );
+}
+
+function BackendBanner({ state, healthDown }: { state: ShellState["backend"] | null; healthDown: boolean }) {
+  const keep = "Введённые ответы не теряются: они хранятся в окне и будут отправлены после восстановления.";
+  let tone: "info" | "warn" | "danger" = "danger";
+  let title = "Нет связи с локальным сервисом";
+  let text = `Действия временно недоступны. ${keep}`;
+  if (state === "starting") {
+    tone = "info";
+    title = "Запуск локального сервиса…";
+    text = "Проверки и экзамен станут доступны, когда сервис ответит.";
+  } else if (state === "restarting") {
+    tone = "warn";
+    title = "Сервис перезапускается";
+    text = `Оболочка перезапускает локальный сервис; ограничения экзамена на это время сняты. ${keep}`;
+  } else if (state === "failed") {
+    title = "Локальный сервис не запускается";
+    text = "Оболочка исчерпала попытки перезапуска. Закройте и снова откройте приложение; сообщите преподавателю.";
+  } else if (state === "stopped") {
+    title = "Локальный сервис остановлен";
+  } else if (healthDown) {
+    text = `Сервис не отвечает на проверку состояния. ${keep}`;
+  }
+  return (
+    <div className="global-banner">
+      <Banner tone={tone} title={title} role={tone === "danger" ? "alert" : "status"}>
+        {text}
+      </Banner>
+    </div>
   );
 }
 
@@ -278,13 +369,16 @@ function Brand() {
   );
 }
 
+/** PIN format as validated by the shell: 4–64 letters/digits. The check itself (and its rate limit) is in main. */
+const PIN_RE = /^[0-9A-Za-z]{4,64}$/;
+
 function PinDialog({
-  fixture,
+  fixturePin,
   examMode,
   onClose,
   onUnlocked,
 }: {
-  fixture: boolean;
+  fixturePin: string | null;
   examMode: boolean;
   onClose: () => void;
   onUnlocked: (s: ShellState) => void;
@@ -293,12 +387,18 @@ function PinDialog({
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<ApiErrorBody | null>(null);
+  const valid = PIN_RE.test(pin);
+  const notConfigured = shellCode(err) === "operator_pin_not_configured";
   const submit = async () => {
+    if (!valid) return;
     setBusy(true);
     setErr(null);
     const r = await call(bridge.operatorUnlock(pin));
     setBusy(false);
-    if (!r.ok) return setErr(r.error);
+    if (!r.ok) {
+      setPin("");
+      return setErr(r.error);
+    }
     onUnlocked(r.data);
   };
   return (
@@ -308,7 +408,7 @@ function PinDialog({
       actions={
         <>
           <Button onClick={onClose}>Отмена</Button>
-          <Button variant="primary" busy={busy} disabled={pin.length < 4} onClick={() => void submit()}>
+          <Button variant="primary" busy={busy} disabled={!valid || notConfigured} onClick={() => void submit()}>
             Открыть
           </Button>
         </>
@@ -316,21 +416,32 @@ function PinDialog({
     >
       <p>
         {examMode
-          ? "Идёт экзамен. Режим преподавателя открывается только по PIN, проверка выполняется оболочкой."
-          : "Введите PIN преподавателя. Проверка выполняется оболочкой, а не интерфейсом."}
+          ? "Идёт экзамен. Режим преподавателя открывается только по PIN; журнал и решения во время экзамена закрыты — доступны пауза и завершение."
+          : "Введите PIN преподавателя. Проверка и ограничение числа попыток выполняются оболочкой, а не интерфейсом."}
       </p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (pin.length >= 4) void submit();
+          void submit();
         }}
       >
         <label className="field">
           <span>PIN</span>
-          <input type="password" inputMode="numeric" autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value)} maxLength={12} />
+          <input
+            type="password"
+            autoComplete="off"
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\s/g, ""))}
+            maxLength={64}
+            aria-invalid={pin.length > 0 && !valid}
+            aria-describedby="pin-hint"
+          />
         </label>
+        <p id="pin-hint" className="hint">
+          4–64 символа: цифры или латинские буквы.
+        </p>
       </form>
-      {fixture && <p className="small muted">FIXTURE: PIN для демонстрации — {FIXTURE_OPERATOR_PIN}.</p>}
+      {fixturePin && <p className="small muted">FIXTURE: одноразовый PIN этой вкладки — {fixturePin}.</p>}
       {err && <ErrorBanner context="PIN" error={err} />}
     </Dialog>
   );
@@ -339,8 +450,9 @@ function PinDialog({
 const FAULT_LABELS: Record<keyof FixtureFaults, string> = {
   backendDown: "Потеря связи с сервисом",
   cameraLost: "Потеря источника кадров",
-  answerSaveFails: "Сбой сохранения ответов",
+  answerSaveFails: "Сбой сохранения ответов (диск)",
   calibrationFailsOnce: "Сбой точки «вверх» при калибровке (1 раз)",
+  slowSaves: "Медленное сохранение (гонка запросов)",
 };
 
 function FixturePanel({ fixture }: { fixture: FixtureBridge }) {
@@ -353,7 +465,7 @@ function FixturePanel({ fixture }: { fixture: FixtureBridge }) {
       </button>
       {open && (
         <div className="fx-body">
-          <p className="small">Только для FixtureBridge. Проверка реальных состояний ошибок интерфейса.</p>
+          <p className="small">Только для FixtureBridge. Проверка состояний ошибок интерфейса, не интеграция.</p>
           {(Object.keys(FAULT_LABELS) as Array<keyof FixtureFaults>).map((k) => (
             <label key={k} className="check small">
               <input
@@ -367,7 +479,7 @@ function FixturePanel({ fixture }: { fixture: FixtureBridge }) {
               {FAULT_LABELS[k]}
             </label>
           ))}
-          <p className="small muted">PIN преподавателя: {FIXTURE_OPERATOR_PIN}</p>
+          <p className="small muted">PIN преподавателя (только эта вкладка): {fixture.operatorPin}</p>
         </div>
       )}
     </aside>

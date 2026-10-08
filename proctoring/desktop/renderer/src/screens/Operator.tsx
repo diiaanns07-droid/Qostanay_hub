@@ -1,9 +1,10 @@
 // Teacher console. live=true during running/paused (preview, sources, controls); live=false for post-exam review.
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ApiErrorBody, IncidentCategory, ReviewStatus, SessionSummary } from "@contracts/qorgau-v1.generated";
 import { IncidentCategoryValues } from "@contracts/qorgau-v1.generated";
 import { useApp } from "../lib/appContext";
 import { useLive } from "../lib/liveStore";
+import { can } from "../lib/permissions";
 import { call } from "../lib/result";
 import { CATEGORY, COMPONENT, ENFORCEMENT, ENV_ACTION, HEALTH, PRIORITY_SHORT, REVIEW_STATUS, RULE, SESSION_STATE } from "../lib/labels";
 import { clock, duration, num, sessionT } from "../lib/format";
@@ -15,8 +16,11 @@ import { IncidentCard } from "../components/IncidentCard";
 type ReviewFilter = "all" | "pending" | "reviewed";
 
 export function OperatorScreen({ live: isLive, onSummary }: { live: boolean; onSummary?: () => void }) {
-  const { bridge, session, setSession, live, backendLost } = useApp();
+  const { bridge, session, setSession, isCurrent, live, backendLost, shell } = useApp();
   const ver = useLive(live);
+  const history = can(shell, "history", session?.state);
+  const reviewPerm = can(shell, "review", session?.state);
+  const restAllowed = history.ok && !backendLost;
   const sid = session?.session_id ?? "";
   const [loadErr, setLoadErr] = useState<ApiErrorBody | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -30,35 +34,51 @@ export function OperatorScreen({ live: isLive, onSummary }: { live: boolean; onS
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [now, setNow] = useState(Date.now());
 
+  // REST (A08) is the source of truth for reviews/materials. The shell closes it during the exam (exam mode):
+  // then only the stream (A05) is shown and nothing is requested that the bridge would reject.
+  const [restSeq, setRestSeq] = useState(0);
+  const loadSeq = useRef(0);
   const load = useCallback(async () => {
+    if (!restAllowed) {
+      setLoaded(true);
+      return;
+    }
+    const mySeq = ++loadSeq.current;
     setLoadErr(null);
     const r = await call(bridge.listIncidents(sid));
+    if (mySeq !== loadSeq.current || !isCurrent(sid)) return; // a newer refresh or another session won
     setLoaded(true);
-    if (r.ok) live.replaceIncidents(r.data);
-    else setLoadErr(r.error);
-    if (!isLive) {
+    if (r.ok) {
+      live.applyRest(r.data);
+      setRestSeq((n) => n + 1);
+    } else setLoadErr(r.error);
+    if (!isLive || session?.state === "paused") {
       const s = await call(bridge.getSummary(sid));
-      if (s.ok) setSummary(s.data);
+      if (s.ok && mySeq === loadSeq.current && isCurrent(sid)) setSummary(s.data);
     }
-  }, [bridge, sid, live, isLive]);
+  }, [bridge, sid, live, isLive, restAllowed, isCurrent, session?.state]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Stream changed an incident → re-read storage (debounced) when the shell allows it.
+  useEffect(() => {
+    if (!restAllowed || live.restStaleSeq === 0) return;
+    const t = setTimeout(() => void load(), 600);
+    return () => clearTimeout(t);
+  }, [live.restStaleSeq, restAllowed, load]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  const all = useMemo(
-    () => [...live.incidents.values()].sort((a, b) => a.t_start_ms - b.t_start_ms),
-    [live, ver],
-  );
+  const all = useMemo(() => live.incidents(), [live, ver]);
   const filtered = all.filter(
     (i) => cats.has(i.category) && (rf === "all" || (rf === "pending" ? i.review_status === "pending" : i.review_status !== "pending")),
   );
-  const sel = selected ? live.incidents.get(selected) : undefined;
+  const sel = selected ? live.get(selected) : undefined;
 
   // Review mode: open the first episode that still waits for a decision.
   useEffect(() => {
@@ -141,8 +161,17 @@ export function OperatorScreen({ live: isLive, onSummary }: { live: boolean; onS
       {session.state === "paused" && (
         <Banner tone="warn" title="Пауза">Наблюдение не учитывается, ответы не принимаются, ограничения среды сняты до продолжения. Период войдёт в отчёт как пробел.</Banner>
       )}
+      {!history.ok && (
+        <Banner tone="info" title="Идёт экзамен: показан только поток событий">
+          Оболочка закрывает журнал, решения и материалы, пока действуют ограничения экзамена. Эпизоды ниже пришли из потока
+          и ещё не сверены с хранилищем; принять решение можно на паузе или после завершения.
+        </Banner>
+      )}
       {live.seqGaps > 0 && isLive && (
-        <Banner tone="info">Поток событий терял сообщения ({live.seqGaps}); список эпизодов перезагружен из хранилища.</Banner>
+        <Banner tone="info">
+          Поток событий терял сообщения ({live.seqGaps}).{" "}
+          {history.ok ? "Список эпизодов перечитан из хранилища." : "Список будет сверен с хранилищем после паузы или завершения."}
+        </Banner>
       )}
 
       <div className="op-grid">
@@ -236,7 +265,11 @@ export function OperatorScreen({ live: isLive, onSummary }: { live: boolean; onS
                           {sessionT(i.t_start_ms - startMs)} · {duration(i.duration_ms)} · приоритет {PRIORITY_SHORT[i.priority]}
                         </span>
                       </span>
-                      <span className={`rs rs-${i.review_status}`}>{REVIEW_STATUS[i.review_status]}</span>
+                      {live.hasRest(i.incident_id) ? (
+                        <span className={`rs rs-${i.review_status}`}>{REVIEW_STATUS[i.review_status]}</span>
+                      ) : (
+                        <span className="rs rs-stream" title="Статус решения известен только хранилищу">из потока</span>
+                      )}
                     </button>
                   </li>
                 ))}
@@ -246,10 +279,15 @@ export function OperatorScreen({ live: isLive, onSummary }: { live: boolean; onS
               {sel ? (
                 <IncidentCard
                   sessionId={sid}
-                  incidentId={sel.incident_id}
-                  updateSeq={sel.update_seq}
+                  incident={sel}
+                  fromStorage={live.hasRest(sel.incident_id)}
+                  restAllowed={restAllowed}
+                  restReason={history.reason}
+                  reviewReason={reviewPerm.reason}
+                  refreshKey={restSeq}
                   examStartMs={startMs}
                   retainMedia={session.retain_media}
+                  onReviewed={() => void load()}
                 />
               ) : (
                 <div className="empty-detail">

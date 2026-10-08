@@ -1720,7 +1720,7 @@ code,
   position: fixed;
   left: 12px;
   bottom: 12px;
-  z-index: 40;
+  z-index: 60; /* dev tool: stays usable above dialogs */
   max-width: 300px;
 }
 .fx-toggle {
@@ -1806,4 +1806,26 @@ code,
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* round 2: connection/sync states */
+.conn-wait {
+  color: var(--info);
+}
+.conn-wait .conn-dot {
+  background: var(--info);
+}
+.warn-text {
+  color: var(--warn-ink);
+}
+.qpill-err {
+  border-color: var(--danger);
+  box-shadow: inset 0 -3px 0 var(--danger);
+}
+.timer-paused .timer-value {
+  color: var(--muted);
+}
+.rs-stream {
+  color: var(--muted);
+  font-weight: 500;
 }

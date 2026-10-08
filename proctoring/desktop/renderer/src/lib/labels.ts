@@ -163,6 +163,19 @@ export const CAL_MESSAGE: Record<string, string> = {
   synthetic_calibration: "Синтетическая калибровка (не CV)",
   fixture_calibration: "FIXTURE-калибровка (не CV)",
   skipped_by_operator: "Пропущена оператором",
+  collecting: "Идёт сбор кадров",
+  select_target: "Выберите точку калибровки",
+  interrupted: "Сбор прерван (нет кадров или сессия изменилась)",
+  no_face: "Лицо не найдено в кадре",
+  no_face_detected: "Лицо не найдено в кадре",
+  no_face_low_light: "Лицо не найдено: слишком темно",
+  no_face_poor_image: "Лицо не найдено: плохое качество изображения",
+  low_light: "Слишком темно: добавьте света спереди",
+  low_face_quality: "Лицо видно нечётко: сядьте ближе и ровнее",
+  small_face: "Лицо слишком маленькое в кадре: сядьте ближе к камере",
+  partial_face: "Лицо видно не полностью",
+  extreme_pose: "Голова сильно повёрнута: смотрите на точку, не поворачивая корпус",
+  timeout: "Не удалось набрать качественные кадры",
 };
 
 export const ENV_ACTION: Record<EnvironmentAction, string> = {
@@ -218,3 +231,45 @@ export const ERROR_HINT: Partial<Record<ErrorCode, string>> = {
   NOT_IMPLEMENTED: "Функция ещё не реализована в этой сборке.",
   INTERNAL: "Внутренняя ошибка или нет связи с локальным сервисом.",
 };
+
+/** Health/pipeline codes (A01 r2, A02, A08) → readable Russian; unknown codes are shown as-is. */
+export const HEALTH_CODE: Record<string, string> = {
+  ok: "в норме",
+  module_not_integrated: "модуль не входит в эту сборку",
+  model_missing: "нет файла модели (подготовьте веса заранее)",
+  model_invalid: "файл модели не совпадает с manifest",
+  analyzer_error: "ошибки анализатора",
+  analyzer_recovered: "анализатор восстановился",
+  fusion_error: "ошибка объединения эпизодов",
+  fusion_recovered: "объединение эпизодов восстановилось",
+  fusion_queue_overflow: "очередь эпизодов переполнена — часть наблюдений пропущена",
+  store_write_failed: "ошибка записи в хранилище",
+  store_recovered: "запись в хранилище восстановилась",
+  storage_unavailable: "хранилище недоступно",
+  storage_write_failed: "ошибка записи в хранилище",
+  store_in_use: "хранилище занято другим процессом",
+  schema_too_new: "база данных новее программы",
+  camera_disconnected: "камера отключилась",
+  camera_unavailable: "камера недоступна",
+  camera_busy: "камера занята другим приложением",
+  camera_denied: "доступ к камере запрещён системой",
+  synthetic_source: "синтетический источник (не камера)",
+  shell_not_reported: "оболочка не сообщила возможности",
+  capabilities_unverified: "возможности защиты не проверены",
+};
+
+export const GAP_REASON: Record<string, string> = {
+  camera_disconnected: "камера отключилась",
+  session_paused: "пауза",
+  paused: "пауза",
+  no_observations: "нет наблюдений",
+  undetermined: "анализ не дал определённого результата",
+  analyzer_error: "ошибка анализатора",
+  fusion_error: "ошибка объединения эпизодов",
+  fusion_queue_overflow: "переполнение очереди",
+  store_write_failed: "ошибка записи",
+  source_lost: "источник потерян",
+};
+
+export const human = (map: Record<string, string>, code: string | null | undefined): string =>
+  code ? (map[code] ?? code) : "—";
