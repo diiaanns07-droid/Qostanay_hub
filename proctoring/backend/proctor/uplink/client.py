@@ -223,7 +223,9 @@ class Uplink:
             if msg.get("type") == "error":
                 code = msg.get("code")
                 log.warning("uplink: server error during hello: %s", code)
-                if code == "join_rejected":
+                # C1 distinguishes a stale resume token from an invalid join code.
+                # Keep join_rejected compatibility with older class servers.
+                if code in ("join_rejected", "resume_rejected"):
                     if token:
                         self.outbox.set_meta("resume_token", None)
                         return "retry_with_code"
