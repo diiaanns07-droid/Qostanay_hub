@@ -1,0 +1,26 @@
+/* Styles of the T04 commands module inside the T02 panel (prefixed t04- to avoid collisions). */
+.t04-mod { display: grid; gap: 6px; font-size: 13.5px; }
+.t04-mod .ico { width: 16px; height: 16px; vertical-align: -3px; flex: none; }
+.t04-status, .t04-sub { color: #5b666c; margin: 0; }
+.t04-sub { font-size: 12.5px; }
+.t04-note { color: #5b666c; margin: 0; padding: 8px 10px; border: 1px dashed #c9cec7; border-radius: 8px; }
+.t04-lock { display: flex; gap: 6px; align-items: flex-start; margin: 0; font-weight: 600; }
+.t04-last { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.t04-chip { display: inline-flex; gap: 4px; align-items: center; padding: 1px 8px 1px 5px; border-radius: 999px; border: 1px solid currentColor; font-weight: 700; font-size: 12px; }
+.t04-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.t04-btn { border: 1px solid #c9cec7; background: #fff; border-radius: 8px; padding: 4px 10px; min-height: 30px; font: inherit; font-weight: 600; cursor: pointer; }
+.t04-btn:disabled { opacity: 0.55; cursor: not-allowed; text-decoration: line-through; }
+.t04-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(15, 111, 104, 0.45); }
+.t04-danger { color: #b42318; border-color: #e3a29b; }
+.t04-why { margin: 0; padding-left: 18px; color: #a8460b; font-size: 12.5px; }
+.t04-why:empty { display: none; }
+.t04-lockform { display: grid; gap: 4px; padding: 8px; border: 1px solid #e0e3de; border-radius: 8px; }
+.t04-lockform textarea { width: 100%; font: inherit; border: 1px solid #c9cec7; border-radius: 6px; padding: 6px; }
+.t04-timer { margin: 0; padding: 6px 8px; border: 2px solid #a8460b; background: #fff0e3; border-radius: 6px; }
+.t04-err { color: #b42318; font-weight: 600; margin: 0; }
+.t04-mod .tone-ok { color: #157a3a; }
+.t04-mod .tone-warn { color: #a8460b; }
+.t04-mod .tone-bad { color: #b42318; }
+.t04-mod .tone-info { color: #2c5b86; }
+.t04-mod .tone-muted { color: #5b666c; }
+.t04-mod [hidden] { display: none !important; }
