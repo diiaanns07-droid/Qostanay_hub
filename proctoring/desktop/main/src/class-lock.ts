@@ -68,12 +68,15 @@ export class ClassLockController {
         if (!r.locked) return !overlay && !app.inert && app.getAttribute('aria-hidden') !== 'true';
         if (!overlay || !app.inert || app.getAttribute('aria-hidden') !== 'true') return false;
         const box = overlay.getBoundingClientRect(), css = getComputedStyle(overlay);
+        // Fixed-position CSS bounds exclude classic scrollbars; innerWidth includes them.
+        const width = document.documentElement.clientWidth, height = document.documentElement.clientHeight;
         return overlay.getAttribute('data-lock-token') === r.request_token
           && document.querySelector('[data-lock-reason]')?.textContent === r.reason_ru
           && css.visibility === 'visible' && css.display !== 'none' && Number(css.opacity) === 1
           // Windows display scaling rounds innerHeight but preserves fractional DOM bounds.
-          && box.left <= 0 && box.top <= 0 && box.right >= innerWidth - 1 && box.bottom >= innerHeight - 1
-          && overlay.contains(document.elementFromPoint(innerWidth / 2, innerHeight / 2));
+          && width > 0 && height > 0
+          && box.left <= 0 && box.top <= 0 && box.right >= width - 1 && box.bottom >= height - 1
+          && overlay.contains(document.elementFromPoint(width / 2, height / 2));
       })()`) === true;
     } catch { /* renderer was destroyed or replaced */ }
     if (serial !== this.requestSerial) return { accepted: false, reason: "request_changed" };
