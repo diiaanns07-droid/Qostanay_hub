@@ -13,3 +13,9 @@ QA fault injection now replaces A14 AudioMonitor before backend startup with `qa
 Validation: **124 passed in 47.66 s** across canonical contract tests, QA harness self-checks and the full fault-injection suite. Ran with the shared Python 3.14 interpreter, explicit own-worktree PYTHONPATH, task-only TEMP/TMP/basetemp, and scoped localhost-process escalation. No device/native interaction performed.
 
 Next: review narrow offline preparation/LAN transport exemptions, prove the runtime audit still blocks public network, run complete QA, and remove only verified obsolete xfail markers. Files in this checkpoint are local; push remains coordinator-owned.
+
+## Checkpoint 2
+
+The static offline gate now reviews exact AST function scopes and call counts for phone/attention/audio/identity preparation and C2 upload/demo-teacher transport. No entire file is exempted; an extra call in an existing allowed scope or a call moved to another function fails. The fully offline runtime guard remains loopback-only, with classroom settings scrubbed by the harness; this does not alter production LAN transport. A real C2 upload call targeting TEST-NET-3 was blocked and logged by the guard before network access. **7 offline/self-check tests passed** (2.02 s).
+
+Independently reran QA-OBS-003 (unknown exam question rejected) and QA-OBS-004 (deleted session inaccessible) with `--runxfail`: **2 passed**, so only those two obsolete markers were removed. Remaining markers still track lax int/bool coercion and uppercase Host behavior; full QA is next. No canonical production behavior was weakened and no network/device configuration was changed.
