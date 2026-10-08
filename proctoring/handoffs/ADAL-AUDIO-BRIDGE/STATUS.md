@@ -42,3 +42,52 @@ Esbuild/test subprocesses needed sandbox escalation here; all commands authorize
 ## Remaining
 Root main.ts hooks + merged full build; final race tests/re-run; panel integration by teacher wave; real two-computer LAN/firewall/mDNS/TURN and physical device quality unverified. No STUN/TURN configured (LAN host candidates only).
 All owned test processes exited normally; fixture finally closed hidden Electron, headless Chrome, C2 and C1. No production app, real capture or OS restrictions launched.
+
+## 2026-10-08 вечер — доводка аудиосвязи на одном ноутбуке (сессия A13, ветки `codex/class-audio` и `codex/class-audio-safe`)
+База: `codex/proctor-integration` @ `2799163`.
+
+Сделано:
+1. `test_persistence_audio.py`: 2 падающих теста (KeyError `command_id`) гоняли аудио через старый REST `audio_start`. Ядро
+   его намеренно отклоняет (422 `audio_extension_required`). Теперь те же гарантии проверяются через расширение T05
+   (`/api/teacher/audio/ws`): сигналинг только для подтверждённой сессии; стоп преподавателя → `audio_stop` студенту и
+   `ended(teacher_stop)`, после этого ничего не пересылается; уход студента → `ended(student_disconnected)`.
+2. `audio_feature.py`: в allowlist добавлен `teacher/class-panel-module.js`, этот файл грузит панель T02. JS/CSS отдаются
+   с явным типом. Баннера «Не удалось загрузить аудиосвязь» больше нет.
+3. `desktop/main/src/main.ts`: подключён мост по разделу «ROOT STILL MUST WIRE» выше (`createClassAudio`: observe / reset /
+   register / installPermissions; запреты device/display-media не тронуты). Экспорт там именованный, не default.
+4. `class-audio/web/teacher/class-panel-module.js`: модуль панели подключался к `/ws/teacher`, это адрес dev-сервера T05.
+   В сервере класса это поток ядра, и «Слушать» уходила в никуда. Теперь `/api/teacher/audio/ws`.
+C2 (`proctor/uplink/audio.py`) не менялся: `ack ok:true` отправляет сам рендерер, только после того как плашка отрисована и
+микрофон получен (`student-endpoint.js` `_start`). Если рендерер не готов, C2 отвечает `ok:false not_supported`.
+
+Проверка на этом ноутбуке. Настоящий C1 (audio + T03 + T04), настоящий Adal (production main, Electron) с **фиктивным
+аудиоустройством Chromium, на вход — сгенерированный тон 440 Гц** (реальный микрофон не использовался, звук не записывался).
+Панель преподавателя — в headless Edge (Playwright).
+* «Слушать» → у студента плашка аудио-модуля и оверлей **«Микрофон включён преподавателем для проверки»**, живой трек
+  микрофона. У преподавателя входящий RTP (≈21–27 пакетов, audioLevel ≈0,03) через 2,3–3,8 с.
+* «Завершить связь» → плашка и оверлей исчезают, трек микрофона остановлен (`readyState=ended`), в карточке
+  `mic_active=false`, всё это за 0–0,5 с.
+* **37 прогонов: 28 успешны, 9 нет.** Причины сбоев:
+  - 3 — отказ до начала связи. Окно Adal было закрыто другими окнами, Chromium на Windows считает его `hidden`, и
+    рендерер намеренно не берёт микрофон, если плашку не видно. Когда окно выводилось вперёд, этот сбой больше не
+    повторился (0 из 20);
+  - 5 — связь завершилась со стороны студента сразу после принятия: окно Adal закрыли (приложение вышло, код 0) или в Adal
+    нажали «Создать сессию» (в логе `mode=preflight session=…` через 2–4 с после «Слушать»). Мост намеренно завершает
+    аудио при смене сессии прокторинга. Скрипт эти кнопки не нажимал; вероятно, всплывающее окно трогал человек. Это не
+    доказано;
+  - 1 — сигналинг прошёл, но RTP за 20 с не пришёл (до вывода окна вперёд; причина не установлена).
+* Регрессии: `classroom` + uplink + хаб T05 — 207 passed; desktop typecheck PASS; main 90/91 (тот же
+  «.py protocol-only helper» падает и на `main.ts` из 2799163); renderer unit 17/17.
+
+Решение (правило «не вливать, если не надёжно»):
+* **`codex/class-audio-safe`** — только пп. 1, 2, 4, без подключения микрофона в Electron. Это можно вливать для видео:
+  панель грузит аудио-модуль без ошибки, а «Слушать» получает честный отказ C2. Проверено без GUI на настоящем сервере
+  и backend: `requested → rejected(not_supported)`. Тесты 207 passed.
+* **`codex/class-audio`** — то же + п. 3 (настоящий микрофон). Вливать после ручной проверки капитаном (1 минута):
+  `Start-AdalClassDemo.ps1` → в панели карточка студента → «Слушать» → у студента плашка «Микрофон включён преподавателем
+  для проверки», преподаватель слышит → «Завершить связь» → плашка исчезла, индикатор микрофона Windows погас.
+  На одном ноутбуке нужны **наушники** (или выключенный звук вкладки панели), иначе будет свист обратной связи.
+  Окно Adal держать на экране.
+
+Осталось: надёжность на двух реальных ПК в LAN (ICE только host-кандидаты, без STUN/TURN; панель для «Слушать» не
+берёт микрофон и отдаёт mDNS-кандидаты); понятное сообщение у преподавателя на отказ «окно студента скрыто».
