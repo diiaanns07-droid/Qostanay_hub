@@ -25,6 +25,7 @@ import {
 } from "electron";
 import type { EnvironmentCapabilities, SessionInfo } from "@contracts/qorgau-v1.generated";
 import { BackendClient } from "./backend/client";
+import { createClassAudio } from "./class-audio";
 import { BackendSupervisor, type BackendConnection } from "./backend/process";
 import { BackendSocket } from "./backend/stream";
 import { loadConfig } from "./config";
@@ -88,6 +89,9 @@ const supervisorTarget = () => {
   return c ? { port: c.port, token: c.token } : null;
 };
 const client = new BackendClient(supervisorTarget);
+// Class audio (T05/C2): fixed IPC route to /v1/class/audio, microphone only for the trusted main frame while the
+// teacher's listen request is active and the student's banner has been painted (handoffs/ADAL-AUDIO-BRIDGE).
+const classAudio = createClassAudio(client, trustedSender, () => mainWindow?.webContents ?? null, devOrigin);
 const operator = new OperatorAuth(process.env);
 
 // session id used for environment events = the bound session
@@ -127,8 +131,12 @@ const examSurface = new ExamSurface(() => mainWindow, (status) => push(EXAM_CHAN
 
 // ---------------------------------------------------------------- backend
 const stream = new BackendSocket("stream", supervisorTarget, {
-  onClose: () => examSurface.setBlocked("backend-stream", true),
+  onClose: () => {
+    examSurface.setBlocked("backend-stream", true);
+    classAudio.reset();
+  },
   onEnvelope: (env) => {
+    classAudio.observe(env);
     const msg = env.message;
     examSurface.consumeClassState(msg);
     if (msg.type === "session_state") void machine.observe(msg.session);
@@ -150,6 +158,7 @@ const supervisor: BackendSupervisor = new BackendSupervisor(
     },
     onReady: (conn) => void onBackendReady(conn),
     onLost: (reason) => {
+      classAudio.reset();
       stream.close();
       preview.close();
       void machine.backendLost(reason);
@@ -232,6 +241,7 @@ function trustedSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
 }
 
 function registerIpc(): void {
+  classAudio.register(ipcMain);
   ipcMain.handle(EXAM_CHANNEL.getStatus, (event) => trustedSender(event) ? examSurface.status : null);
   ipcMain.on(EXAM_CHANNEL.viewport, (event, rect: unknown) => { if (trustedSender(event)) examSurface.setViewport(rect); });
   ipcMain.on(EXAM_CHANNEL.reload, (event) => { if (trustedSender(event)) examSurface.reload(); });
@@ -284,8 +294,9 @@ function registerIpc(): void {
 
 // ---------------------------------------------------------------- web hardening
 function hardenSession(ses: Session): void {
-  ses.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
-  ses.setPermissionCheckHandler(() => false);
+  // Everything stays denied except one case: audio-only "media" for the trusted main frame during an active,
+  // banner-confirmed class listen request (classAudio.installPermissions -> allowClassAudio). No camera, no subframes.
+  classAudio.installPermissions(ses);
   ses.setDevicePermissionHandler(() => false);
   ses.setDisplayMediaRequestHandler((_req, callback) => callback({}));
   ses.setSpellCheckerEnabled(false);
