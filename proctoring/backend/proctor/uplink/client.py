@@ -37,6 +37,8 @@ log = logging.getLogger("proctor.uplink")
 APP_VERSION = "qorgau-exam-uplink-0.1.0"
 MAX_MESSAGE = 256 * 1024
 CLIP_WAIT_ON_REQUEST_S = 15.0
+CLASS_STATE_REPUBLISH_S = 5.0  # class_state is re-published so a renderer that subscribed late still learns it
+AUDIO_NOT_SUPPORTED_RU = "Аудиосвязь в приложении студента ещё не подключена"
 NO_CLIP_RULES = {"monitoring_degraded"}
 
 
@@ -46,10 +48,12 @@ class ClassStateMsg(BaseModel):
     type: Literal["class_state"] = "class_state"
     connection: Literal["connecting", "connected", "reconnecting", "rejected", "stopped"]
     server: str
+    computer_name: str | None = None
+    student_label: str | None = None
     student_id: str | None = None
     locked: bool = False
     lock_reason_ru: str | None = None
-    mic_active: bool = False
+    mic_active: bool = False  # stays False until WebRTC audio exists (audio_start is refused: not_supported)
     audio_direction: Literal["listen", "talk", "both"] | None = None
     exam: dict[str, Any] | None = None  # welcome.exam: exam_id, title, mode, allowed_urls, allowed_apps, instructions_ru
     last_command: dict[str, Any] | None = None  # {"command_id", "kind", "ok"} of the last executed command
@@ -115,6 +119,7 @@ class Uplink:
         self._last_status: dict[str, Any] | None = None
         self._last_status_t = 0.0
         self._last_preview_t = 0.0
+        self._last_state_publish = 0.0
         self._thread: threading.Thread | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._stop: asyncio.Event | None = None
@@ -282,6 +287,8 @@ class Uplink:
                     self._outbox_signal.set()
             except Exception:
                 log.exception("uplink: snapshot failed")
+            if time.monotonic() - self._last_state_publish >= CLASS_STATE_REPUBLISH_S:
+                self._publish_state()
             await asyncio.sleep(self.cfg.poll_interval_s)
 
     async def _ticker(self, ws: Any) -> None:
@@ -379,6 +386,7 @@ class Uplink:
         if cid:
             self._done_commands[cid] = None
         ok, err, code = False, "Неизвестная команда", "unsupported"
+        error_code: str | None = None  # T05 audio ack field
         try:
             if kind == "start_exam":
                 ok, err = await asyncio.to_thread(self.view.start_exam)
@@ -394,15 +402,12 @@ class Uplink:
             elif kind == "unlock":
                 self.locked, self.lock_reason_ru = False, None
                 ok, err = True, None
-            elif kind == "audio_start":
-                direction = payload.get("direction", "listen")
-                if direction in ("listen", "talk", "both"):
-                    self.mic_active, self.audio_direction = True, direction
-                    ok, err = True, None
-                else:
-                    err, code = "direction должен быть listen, talk или both", "invalid"
+            elif kind in ("audio_start", "audio_update"):
+                # No WebRTC in the student app yet: never claim a live microphone (T05: ok:true = mic obtained).
+                ok, err, code = False, AUDIO_NOT_SUPPORTED_RU, "unsupported"
+                error_code = "not_supported"
             elif kind == "audio_stop":
-                self.mic_active, self.audio_direction = False, None
+                self.mic_active, self.audio_direction = False, None  # nothing is captured; stopping is always ok
                 ok, err = True, None
             elif kind == "request_clip":
                 ok, err = await self._upload_clip(str(payload.get("incident_id", "")))
@@ -410,7 +415,7 @@ class Uplink:
         except Exception as exc:  # a failing command must never break the session
             log.exception("uplink: command %s failed", kind)
             ok, err = False, f"Ошибка выполнения: {type(exc).__name__}"
-        if not ok and kind in ("start_exam", "finish_exam", "request_clip", "lock", "audio_start") and code == "unsupported":
+        if not ok and kind in ("start_exam", "finish_exam", "request_clip", "lock") and code == "unsupported":
             code = "failed"
         self.last_command = {"command_id": cid, "kind": kind, "ok": ok}
         if kind in ("lock", "unlock", "audio_start", "audio_stop", "start_exam", "finish_exam"):
@@ -418,6 +423,8 @@ class Uplink:
         ack: dict[str, Any] = {"command_id": cid, "ok": ok}
         if not ok:
             ack.update(error_ru=(err or "Ошибка")[:200], code=code)  # code: additive (T04 R2)
+            if error_code:
+                ack["error_code"] = error_code  # additive (T05 PROTOCOL_AUDIO)
         if kind in ("lock", "unlock", "start_exam", "finish_exam"):
             ack["result"] = {"locked": self.locked, "exam_state": self._snap.exam_state}  # additive (T04 R2)
         if cid:
@@ -449,8 +456,10 @@ class Uplink:
         if self._publish is None:
             return
         try:
+            self._last_state_publish = time.monotonic()
             self._publish(ClassStateMsg(
-                connection=self.connection, server=self.cfg.server, student_id=self.student_id,
+                connection=self.connection, server=self.cfg.server, computer_name=self.cfg.computer_name,
+                student_label=self.cfg.student_label, student_id=self.student_id,
                 locked=self.locked, lock_reason_ru=self.lock_reason_ru, mic_active=self.mic_active,
                 audio_direction=self.audio_direction, exam=self.exam, last_command=self.last_command, message_ru=message_ru,
             ))
