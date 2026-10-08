@@ -36,8 +36,9 @@ export class ExamSurface {
     if (!raw || typeof raw !== "object") return;
     const o = raw as Record<string, unknown>;
     if (o.type !== "class_state") return;
+    this.blockers.delete("backend-stream"); // only a fresh authoritative replay can reopen after socket loss
     this.connected = o.connection === "connected";
-    this.setBlocked("class-state-lock", o.locked === true);
+    if (o.locked === false) this.blockers.delete("class-state-lock"); else this.blockers.add("class-state-lock");
     const config = compileExamPolicy(o.exam);
     const policy = config.kind === "url" ? config.policy : null;
     if (policy?.key !== this.policy?.key || config.kind !== this.config.kind) {
@@ -63,7 +64,7 @@ export class ExamSurface {
     this.refresh();
   }
 
-  /** Synchronous removal and destruction before a lock receipt can be acknowledged. */
+  /** Synchronous hiding and network gate closure; Chromium destruction completes asynchronously. */
   setBlocked(reason: string, blocked: boolean): void {
     if (blocked) this.blockers.add(reason); else this.blockers.delete(reason);
     this.refresh();
@@ -72,7 +73,9 @@ export class ExamSurface {
   setViewport(rect: unknown): void { this.rect = rect; this.refresh(); }
   resized(): void { this.refresh(); }
   reload(): void {
-    if (this.canRun() && this.view && this.currentUrl) this.navigate(this.currentUrl);
+    if (!this.canRun()) return;
+    if (!this.view) this.refresh();
+    else if (this.currentUrl) this.navigate(this.currentUrl);
   }
   dispose(): void { this.connected = false; this.destroyView(); this.clearSession(); this.rect = null; }
   private canRun(): boolean {
@@ -154,6 +157,15 @@ export class ExamSurface {
         this.emit({ origin: new URL(url).origin });
       }
     });
+    wc.on("did-navigate-in-page", (_event, url, isMainFrame) => {
+      if (!isMainFrame || this.view !== view || !this.policy) return;
+      // pushState/replaceState bypass will-navigate: never leave an unapproved SPA URL visible.
+      if (examUrlAllowed(this.policy, url)) this.currentUrl = url;
+      else {
+        this.destroyView();
+        this.emit({ phase: "error", message: "Сайт изменил адрес за пределы разрешённого пути. Повторите загрузку." });
+      }
+    });
     wc.on("did-finish-load", () => { if (this.view === view) this.emit({ phase: "ready" }); });
     wc.on("did-fail-load", (_event, code, _description, _url, isMainFrame) => {
       if (isMainFrame && code !== -3 && this.view === view) this.emit({ phase: "error", message: "Сайт не загрузился. Проверьте связь и разрешённые адреса, затем повторите." });
@@ -182,6 +194,7 @@ export class ExamSurface {
     const view = this.view;
     this.view = null;
     if (view && !view.webContents.isDestroyed()) {
+      view.setVisible(false);
       view.webContents.stop();
       view.webContents.close({ waitForBeforeUnload: false });
     }
