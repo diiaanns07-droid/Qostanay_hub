@@ -5,6 +5,12 @@ Branch: `claude/pensive-pasteur-wnjd2n`. Contract / baseline: `35bea4c7b28d2c622
 qorgau.v1 1.0.0, frozen; no newer A01 baseline received). Previous A02 checkpoint: `7769f13` (pushed).
 Stage (2026-10-08): **checkpoint 4 — first LIVE run on the real Windows demo laptop + fixes for what broke there.**
 
+## 2026-10-08 14:45 — class mode baseline
+Merged captain's baseline `codex/proctor-integration` @ `78798b7ca83f16552e43a4cf1ae29e81162db44c` (merge `--no-ff`, no
+conflicts; `capture/` identical to A02 `e389865`). Protocol `qorgau.class.v1` (contracts/class/PROTOCOL_v1.md).
+Capture tests after merge: 111 passed, 2 skipped (one earlier run under CPU load had 1 failure that did not reproduce
+in 2 reruns — timing-sensitive test, name not captured). Next: incident clips (`export_clip`) for C2.
+
 ## LIVE on the demo laptop (measured 2026-10-08, this machine only)
 Machine: ASUS TUF Gaming A15 FA507NU, **AMD Ryzen 5 7535HS** (6C/12T), 15.2 GB RAM, Windows 11 Home 10.0.26200,
 Python 3.12.14, OpenCV 4.13.0 (opencv-contrib-python 4.13.0.92), env from A01's `uv.lock` (`uv sync --frozen --extra cv
