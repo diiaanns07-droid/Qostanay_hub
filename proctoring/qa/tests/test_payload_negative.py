@@ -117,7 +117,6 @@ def _status_case(backend, api, case):
     return backend.http.post(f"/sessions/{sid}/environment/events", json=_batch("another-session", env_event("shortcut_ctrl_c", 1)))
 
 
-@pytest.mark.xfail(strict=True, reason="QA-BUG-003 (A01): ProctorError raised with a 4xx ErrorCode keeps the base http_status 500 (consent/unknown exam → 500 INVALID_ARGUMENT, SESSION_MISMATCH → 500)")
 @pytest.mark.parametrize("case", ["consent_not_accepted", "unknown_exam", "session_mismatch"])
 def test_error_status_matches_contract(backend, api, case):
     r = _status_case(backend, api, case)
@@ -151,7 +150,6 @@ def test_unknown_or_illegal_session_ids_are_404_or_422(backend, sid):
         contract.api_error(r, {404, 422}, {"SESSION_NOT_FOUND", "NOT_FOUND", "INVALID_ARGUMENT"})
 
 
-@pytest.mark.xfail(strict=True, reason="QA-BUG-002 (A01): ids longer than the contract Id (128) are not rejected; >~990 chars the error message overflows ApiErrorBody → 500 INTERNAL + keep-alive connection reset")
 def test_overlong_session_id_is_rejected_cleanly(backend):
     with httpx.Client(base_url=backend.base, headers=backend.auth, timeout=10) as c:
         r = c.get("/sessions/" + "A" * 1000)
@@ -159,7 +157,6 @@ def test_overlong_session_id_is_rejected_cleanly(backend):
         assert c.get("/health").status_code == 200, "connection must stay usable after a 4xx"
 
 
-@pytest.mark.xfail(strict=True, reason="QA-BUG-002 (A01 bootstrap router; same rule for A08): question_id > 128 chars → AnswerRecord validation → 500 INTERNAL")
 def test_overlong_question_id_is_rejected_cleanly(backend, api):
     sid = api.running_session()
     with httpx.Client(base_url=backend.base, headers=backend.auth, timeout=10) as c:
@@ -167,7 +164,6 @@ def test_overlong_question_id_is_rejected_cleanly(backend, api):
         contract.api_error(r, {404, 422})
 
 
-@pytest.mark.xfail(strict=True, reason="QA-BUG-002 (A01 bootstrap router; same rule for A08): incident_id ~1000 chars → 500 INTERNAL")
 def test_overlong_incident_id_is_rejected_cleanly(backend, api):
     sid = api.running_session()
     with httpx.Client(base_url=backend.base, headers=backend.auth, timeout=10) as c:

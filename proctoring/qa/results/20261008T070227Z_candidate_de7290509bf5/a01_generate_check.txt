@@ -1,0 +1,2 @@
+$ C:\Qostanay_hub-codex-proctoring-prompts\worktrees\candidate\proctoring\.venv\Scripts\python.exe contracts/tools/generate.py --check
+contracts qorgau.v1 1.0.0: generated files up to date

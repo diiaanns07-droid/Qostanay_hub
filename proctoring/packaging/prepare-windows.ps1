@@ -15,11 +15,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Pinned Python installation failed.' }
     $pythonExe = Join-Path $projectRoot '.venv\Scripts\python.exe'
     if ($FetchModels) {
-        foreach ($moduleName in @('phone','attention')) {
-            if (-not (Test-Path -LiteralPath (Join-Path $projectRoot "backend\proctor\$moduleName\model_tool.py"))) { throw "Missing A01 module: $moduleName" }
-            & $pythonExe -m "proctor.$moduleName.model_tool" fetch
-            if ($LASTEXITCODE -ne 0) { throw "Model preparation failed: $moduleName" }
-        }
+        & $pythonExe -m proctor.phone.prepare --download
+        if ($LASTEXITCODE -ne 0) { throw 'Model preparation failed: phone' }
+        & $pythonExe -m proctor.attention.model_tool fetch
+        if ($LASTEXITCODE -ne 0) { throw 'Model preparation failed: attention' }
     }
     if ($BackendOnly) {
         & $pythonExe (Join-Path $PSScriptRoot 'preflight.py') --profile backend
@@ -28,6 +27,8 @@ try {
         Set-Location -LiteralPath (Join-Path $projectRoot 'desktop')
         & npm.cmd ci
         if ($LASTEXITCODE -ne 0) { throw 'npm ci failed.' }
+        & node node_modules/electron/install.js
+        if ($LASTEXITCODE -ne 0) { throw 'Pinned Electron binary installation failed.' }
         & npm.cmd run typecheck
         if ($LASTEXITCODE -ne 0) { throw 'Type checking failed.' }
         & npm.cmd run build

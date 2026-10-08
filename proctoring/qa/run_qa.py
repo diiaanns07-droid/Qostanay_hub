@@ -5,7 +5,7 @@
     python qa/run_qa.py --with-baseline      # + A01 checks (pytest, generate --check, smoke)
     python qa/run_qa.py --label candidate    # results land in qa/results/<date>_<label>_<sha12>/
 
-Writes summary.json + summary.md + pytest.txt (+ junit.xml). Statuses are PASS / FAIL / XFAIL
+Writes summary.json + summary.md + pytest.txt (+ junit.xml). Statuses are PASS / FAIL / XPASS / XFAIL
 (known, tracked bug or observation) / SKIP / NOT_RUN. Nothing is converted into PASS.
 Logs contain no token (tests redact it) and no camera frames.
 """
@@ -50,7 +50,8 @@ def _junit_rows(path: Path) -> list[dict[str, str]]:
         status, detail = "PASS", ""
         for child in case:
             if child.tag in ("failure", "error"):
-                status, detail = "FAIL", (child.get("message") or "")[:300]
+                detail = (child.get("message") or "")[:300]
+                status = "XPASS" if detail.startswith("[XPASS(strict)]") else "FAIL"
             elif child.tag == "skipped":
                 kind = child.get("type", "")
                 msg = child.get("message") or ""
@@ -137,7 +138,7 @@ def main() -> int:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
     summary["suites"]["a09_qa"] = {"status": "PASS" if rc == 0 else "FAIL", "exit_code": rc, "counts": counts, "log": "pytest.txt"}
     summary["known_issues"] = sorted({m.group(0) for r in rows if r["status"] == "XFAIL" for m in [re.match(r"QA-(BUG|OBS)-\d+", r["detail"])] if m})
-    summary["failures"] = [r for r in rows if r["status"] == "FAIL"]
+    summary["failures"] = [r for r in rows if r["status"] in {"FAIL", "XPASS"}]
     # tokens are 64 hex chars: any such string in the written logs is treated as a leak
     summary["hex64_strings_in_logs"] = [
         p.name for p in sorted(out.iterdir()) if p.suffix in (".txt", ".xml") and re.search(r"\b[0-9a-f]{64}\b", p.read_text(encoding="utf-8", errors="replace"))
@@ -155,7 +156,7 @@ def main() -> int:
     md += ["", "Known issues (XFAIL, tracked in qa/BUGS.md): " + (", ".join(summary["known_issues"]) or "none")]
     md += [f"Token-like strings in logs: {summary['hex64_strings_in_logs'] or 'none'}", ""]
     if summary["failures"]:
-        md += ["## FAIL", *[f"- `{f['test']}` — {f['detail']}" for f in summary["failures"]], ""]
+        md += ["## FAIL / strict XPASS", *[f"- `{f['test']}` — {f['detail']}" for f in summary["failures"]], ""]
     md += ["## Environment", *[f"- {k}: {v}" for k, v in summary["environment"].items()]]
     (out / "summary.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     print(f"results: {out.relative_to(ROOT)}  a09_qa={summary['suites']['a09_qa']['status']} {counts}")

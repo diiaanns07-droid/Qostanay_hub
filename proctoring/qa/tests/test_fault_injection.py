@@ -197,7 +197,6 @@ def test_storage_unwritable_blocks_live(faked):
     be.http.post(f"/sessions/{sid}/abort", json={"reason": "qa"})
 
 
-@pytest.mark.xfail(strict=True, reason="QA-BUG-004 (A01): in the fusion loop store.record_observation() runs before engine.consume() in one try-block, so a failing store drops EVERY observation from fusion: no episodes and no visible signal")
 def test_storage_write_failure_does_not_silence_episode_detection(faked):
     be = faked(evidence="record_raises")
     with StreamRecorder(be.ws_url("/stream"), headers=be.auth) as rec:
@@ -209,7 +208,6 @@ def test_storage_write_failure_does_not_silence_episode_detection(faked):
     assert opened, "a storage failure must not stop episode detection"
 
 
-@pytest.mark.xfail(strict=True, reason="QA-BUG-005 (A01): fusion/store exceptions are only counted internally; /health keeps fusion+evidence 'ok', so a broken pipeline looks like 'no violations' (unknown ≠ all-clear)")
 @pytest.mark.parametrize("spec", [{"evidence": "record_raises"}, {"fusion": "consume_raises"}], ids=["store_writes_fail", "engine_consume_fails"])
 def test_pipeline_errors_are_visible_in_health(faked, spec):
     be = faked(**spec)

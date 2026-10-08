@@ -238,7 +238,6 @@ def test_websocket_token_in_query_rejected(fresh_backend, path):
     be.stop()
 
 
-@pytest.mark.xfail(strict=True, reason="QA-BUG-001 (A01, low): uvicorn.error logs the full WS URL incl. query, so a token a client wrongly puts in ?token= is written to backend stderr")
 def test_token_misplaced_in_ws_query_is_not_logged(fresh_backend):
     be = fresh_backend()
     _assert_ws_rejected(be.ws_url("/stream", f"token={be.token}"), 4401)
