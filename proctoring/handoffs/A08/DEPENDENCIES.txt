@@ -1,3 +1,21 @@
+CURRENT continuation (2026-10-08, supersedes resolved items below)
+1. A01: mount A08 static GET /v1/sessions/overview BEFORE /v1/sessions/{session_id}.
+   The current lifespan mount appends A08 routes after the generic GET; a correct handler alone is shadowed.
+2. A01: send confirmed contract 1.1 SHA; local models temporarily include ReviewZone, SessionOverviewRow,
+   SessionSummary.review_zone/review_zone_reasons_ru/review_zone_rule_version. Do not advertise schema 1.1 yet.
+3. A05: send confirmed SHA exposing assess_session_zone(incidents, summary, config).
+   Captain approved current None / uncalculated adapter, no local rule copy. Replace only adapter on delivery.
+4. A01: public context.forget_session is now called after successful deletion. Verify common GET/session/metrics
+   routes return 404 too. BOOTSTRAP cannot do this; candidate de72905 provides the hook.
+5. A01: please expose a read-only get_exam() in BackendContext. For now A08 validates HTTP answers against
+   settings.exam_path, falling back to the SAME contracts fixture demo_min as A01. Direct repository writes
+   remain trusted/internal and preserve existing persistence semantics.
+6. A07: overview row exact fields session, review_zone, reasons_ru, incidents_total, incidents_by_priority,
+   pending_reviews. zone=None means '???? ?? ??????????', not green. No cross-laptop collection/import yet.
+7. QA-WIN-004 / QA-BUG-002 / QA-OBS-003/004/009 regressions pass on this Windows laptop.
+   Live CV and Windows restriction acceptance remain A09/A06 tasks; no new claims here.
+
+HISTORICAL REQUESTS (checkpoint 1):
 A08 -> A01 requests (contract qorgau.v1 1.0.0, baseline 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49)
 
 1. [integration, required] Two A01 tests assume proctor.evidence is NOT integrated and fail once it is:

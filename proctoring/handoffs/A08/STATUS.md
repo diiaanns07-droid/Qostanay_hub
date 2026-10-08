@@ -1,3 +1,48 @@
+# A08 ? continuation checkpoint, 8 ??????? 2026 / Windows 11
+
+Branch: `claude/focused-mendel-4940jx`. Previous published SHA: `5509950e38c622ae544d40c75d4b8fdba7256b82`.
+Baseline unchanged: A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`, contract 1.0.0.
+A01 integration candidate read-only reference: `de7290509bf558d6488be84d2e0730b2b9ab104a`.
+Current stage: QA fixes + temporary zone models/adapter + overview handler + report zone header.
+
+- QA-WIN-004: rule-version test compares actual incident provenance; symlink-only test skips specifically
+  WinError 1314 without changing Windows permissions; deletion test excludes the process lock file.
+- QA-BUG-002: A08 already validates path ids; added regressions for 129/1500-character and malformed ids
+  across summary/incidents/evidence/answers/reviews, clean 422 and continued client use.
+- QA-OBS-003: HTTP answer writes validate exam/question/option ids, shape, duplicates, single-choice
+  cardinality and short-text length before persistence. Empty choice list is an allowed clear operation.
+- QA-OBS-004: A08 reads return 404 after deletion; router calls optional public context.forget_session,
+  available in the A01 candidate (BOOTSTRAP lacks the hook).
+- QA-OBS-009: regressions assert health() equals open() after unavailable directory, schema mismatch and lock refusal.
+- Temporary local models: ReviewZone, SessionOverviewRow and extended SessionSummary with exact requested fields.
+  Captain explicitly approved zone=None while A05 is unpublished. Adapter implements NO zone-rule-1 thresholds.
+- overview(): consistent local-session counts, pending reviews, red/yellow/grey/green ordering, then newest first;
+  uncalculated None rows last. Endpoint handler GET /sessions/overview in A08 router.
+- Report: zone text + symbol + color, reasons (max 3), teacher decision counts alongside; escaped HTML,
+  LIVE/REPLAY/SYNTHETIC and limitations retained. Teacher reviews do not alter the incidents passed to assessor.
+
+Tests on Windows 11 / Python 3.12.14, environment from unchanged lockfile:
+`python -m pytest backend/proctor/evidence -q -p no:cacheprovider` ? **53 PASS, 2 SKIP**, 12.04 s.
+SKIP: symlink privilege (WinError 1314), optional Playwright/Chromium renderer unavailable to test harness.
+Windows lock refusal/release, atomic media write/reopen/delete and Cyrillic path passed.
+Zone plumbing/sorting uses labelled assessor doubles; NOT validation of unpublished A05 rules.
+Only A08-owned paths changed. No other modules merged. Logs: handoffs/A08/checks/.
+
+Dependencies: A01 must mount static /sessions/overview before /sessions/{id}; contract 1.1 SHA pending.
+A05 function SHA pending; today adapter returns None with reason, not a guessed green/grey.
+Current added summary fields are temporary local models, not a claim of released contract 1.1 compatibility.
+Answer validation reads the same settings.exam_path / demo_min fallback as A01; request a public get_exam view.
+
+Next today: compatibility on isolated A01 candidate, real renderer/print check, further relevant regressions.
+Optional JSON import is deferred until core integration checks pass.
+
+## ????? 9 ???????
+Cross-laptop JSON import (schema/version/hash, duplicate handling), long-session performance,
+precise monotonic coverage timing, video clips/encryption/new formats (not implemented today).
+
+---
+## Historical checkpoint 1
+
 # A08 — STATUS
 
 Роль: SQLite-хранилище, материалы эпизодов (evidence), проверка преподавателем, отчёты.

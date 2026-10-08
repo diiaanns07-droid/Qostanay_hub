@@ -66,7 +66,6 @@ from proctor_contracts.v1 import (
     ReviewStatus,
     SessionInfo,
     SessionState,
-    SessionSummary,
     SourceMode,
     utc_now,
 )
@@ -86,6 +85,8 @@ from .coverage import (
     total,
 )
 from .media import JPEG_SOI, MediaPathError, MediaVault, encode_jpeg
+from . import review_zones
+from .review_zones import SessionSummary, SessionOverviewRow, ZONE_ORDER
 
 log = logging.getLogger("proctor.evidence")
 
@@ -543,6 +544,26 @@ class SqliteEvidenceStore:
         with self._read() as conn:
             rows = conn.execute("SELECT info_json FROM sessions ORDER BY created_at_us DESC, session_id DESC").fetchall()
         return [SessionInfo.model_validate_json(r[0]) for r in rows]
+
+    def overview(self) -> list[SessionOverviewRow]:
+        """Local sessions only; one DB lock keeps reviews/deletion/counts consistent."""
+        rows = []
+        with self._read() as conn:
+            for session in self.list_sessions():
+                summary = self.summary(session.session_id)
+                priorities = {p: 0 for p in ("low", "medium", "high")}
+                for incident in self.list_incidents(session.session_id):
+                    priorities[incident.priority.value] += 1
+                rows.append(SessionOverviewRow(
+                    session=session, review_zone=summary.review_zone,
+                    reasons_ru=summary.review_zone_reasons_ru,
+                    incidents_total=summary.incidents_total, incidents_by_priority=priorities,
+                    pending_reviews=summary.reviews_by_decision.get("pending", 0),
+                ))
+        rows.sort(key=lambda r: r.session.session_id, reverse=True)
+        rows.sort(key=lambda r: r.session.created_at, reverse=True)
+        rows.sort(key=lambda r: ZONE_ORDER[r.review_zone])
+        return rows
 
     def get_session(self, session_id: str) -> SessionInfo | None:
         with self._read() as conn:
@@ -1302,7 +1323,7 @@ class SqliteEvidenceStore:
         ).fetchone()[0]
         counters = self._counters(conn, session_id)
         retained = conn.execute("SELECT COUNT(*) FROM evidence WHERE session_id=? AND purged_at IS NULL", (session_id,)).fetchone()[0]
-        return SessionSummary(
+        summary = SessionSummary(
             session=info,
             observed_ms=coverage["observed_ms"],
             paused_ms=coverage["paused_ms"],
@@ -1312,6 +1333,15 @@ class SqliteEvidenceStore:
             reviews_by_decision=dict(sorted(by_decision.items())),
             limitations_ru=limitations(info, coverage, counters, recovered, open_left, retained),
         )
+        # Raw incidents deliberately exclude the human-review overlay: teacher decisions
+        # never change the automatic review-priority zone.
+        incidents = [Incident.model_validate_json(r[0]) for r in conn.execute(
+            "SELECT body_json FROM incidents WHERE session_id=? ORDER BY t_start_ms, incident_id", (session_id,))]
+        assessment = review_zones.assess_session_zone(incidents, summary, None)
+        return summary.model_copy(update={
+            "review_zone": assessment.zone, "review_zone_reasons_ru": assessment.reasons_ru,
+            "review_zone_rule_version": assessment.rule_version,
+        })
 
     # ---------------------------------------------------------------- process lock
     def _acquire_process_lock(self) -> bool:

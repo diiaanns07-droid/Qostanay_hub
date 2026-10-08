@@ -23,11 +23,12 @@ from proctor_contracts.v1 import (
     IncidentDetail,
     SessionInfo,
     SessionState,
-    SessionSummary,
 )
 
 from . import report
 from .store import SqliteEvidenceStore
+from .answers import load_exam, validate_answer
+from .review_zones import SessionOverviewRow, SessionSummary
 
 ID_PATTERN = r"^[A-Za-z0-9._:-]{1,128}$"
 SessionId = Annotated[str, Path(pattern=ID_PATTERN)]
@@ -38,6 +39,7 @@ NO_STORE = {"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"}
 
 def build_router(store: SqliteEvidenceStore, context: BackendContext) -> APIRouter:
     router = APIRouter()
+    exam = load_exam(store.settings)
 
     def live_info(session_id: str) -> SessionInfo | None:
         """Most recent SessionInfo from the lifecycle owner (A01), if it still knows the session."""
@@ -49,6 +51,10 @@ def build_router(store: SqliteEvidenceStore, context: BackendContext) -> APIRout
     @router.get("/sessions", response_model=list[SessionInfo])
     def list_sessions() -> list[SessionInfo]:
         return store.list_sessions()
+
+    @router.get("/sessions/overview", response_model=list[SessionOverviewRow])
+    def overview() -> list[SessionOverviewRow]:
+        return store.overview()
 
     @router.get("/sessions/{session_id}/incidents", response_model=list[Incident])
     def list_incidents(session_id: SessionId) -> list[Incident]:
@@ -85,6 +91,9 @@ def build_router(store: SqliteEvidenceStore, context: BackendContext) -> APIRout
                 f"answers are accepted only while running (session is {info.state.value})",
                 state=info.state.value,
             )
+        # Require persisted metadata too: an A01 runtime must not resurrect a deleted row.
+        stored = store.require_session(session_id)
+        validate_answer(exam, stored.exam_id, question_id, body)
         return store.save_answer(session_id, question_id, body)
 
     @router.get("/sessions/{session_id}/answers", response_model=list[AnswerRecord])
@@ -125,6 +134,9 @@ def build_router(store: SqliteEvidenceStore, context: BackendContext) -> APIRout
         if context.active_session_id() == session_id:
             raise InvalidStateError(ErrorCode.SESSION_ACTIVE, "finish or abort the session before deleting it")
         store.delete_session(session_id)
+        forget = getattr(context, "forget_session", None)
+        if callable(forget):
+            forget(session_id)  # available on A01 candidate de72905; optional on BOOTSTRAP
         return {"deleted": True}
 
     return router

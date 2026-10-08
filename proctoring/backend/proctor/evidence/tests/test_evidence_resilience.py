@@ -141,6 +141,7 @@ def test_second_backend_on_same_data_dir_is_refused(tmp_path, make_store):
     assert a.open().code == "ok"
     health = b.open()
     assert health.status.value == "error" and health.code == "store_in_use"
+    assert b.health() == health  # QA-OBS-009: preflight and later health agree.
     with pytest.raises(itf.StorageError):
         b.list_sessions()
 
@@ -204,6 +205,7 @@ def test_unusable_data_dir_reports_error(tmp_path, make_store, fx):
     store = make_store(blocker)
     health = store.open()  # never raises
     assert health.status.value == "error" and health.code == "storage_unavailable"
+    assert store.health() == health
     with pytest.raises(itf.StorageError):
         store.list_sessions()
     store.upsert_session(fx.session_info("s"))  # recording on a broken store is counted, never raised
@@ -220,6 +222,7 @@ def test_schema_newer_than_code_is_not_touched(tmp_path, make_store):
     store = make_store(data)
     health = store.open()
     assert health.code == "schema_too_new"
+    assert store.health() == health
     conn = sqlite3.connect(data / "qorgau-evidence.sqlite3")
     assert conn.execute("PRAGMA user_version").fetchone()[0] == 99
     conn.close()

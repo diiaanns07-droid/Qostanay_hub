@@ -20,8 +20,8 @@ from proctor_contracts.v1 import (
     HumanReviewCreate,
     IncidentDetail,
     SessionInfo,
-    SessionSummary,
 )
+from proctor.evidence.review_zones import SessionSummary
 
 EVIL = [
     "<script>alert('x')</script>",
@@ -115,7 +115,7 @@ def test_report_content_is_honest(evil_snapshot):
         "только зафиксировано",
     ):
         assert needle in page, needle
-    assert "вероятность списывания»" in page  # only inside the disclaimer that it is NOT that
+    assert "вероятность списывания" not in page
     assert page.count("data:image/jpeg;base64,") == 1
 
 
