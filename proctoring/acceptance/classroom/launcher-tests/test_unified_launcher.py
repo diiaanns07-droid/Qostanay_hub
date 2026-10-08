@@ -67,10 +67,11 @@ class UnifiedLauncher(unittest.TestCase):
                 source = source.replace("if ($Library) { return }", LIBRARY_STUB)
             target.write_text(source, encoding="utf-8-sig")
         desktop = self.root / "desktop"
-        for directory in ("main/src", "preload/src", "renderer/src", "../contracts/ts"):
+        for directory in ("main/src", "preload/src", "renderer/src", "shared", "../contracts/ts", "../class-audio/web"):
             (desktop / directory).mkdir(parents=True, exist_ok=True)
         inputs = ("package.json", "package-lock.json", "vite.config.ts", "renderer/index.html", "tsconfig.json",
-                  "tsconfig.main.json", "tsconfig.renderer.json", "scripts/build-electron.mjs", "main/src/main.ts")
+                  "tsconfig.main.json", "tsconfig.renderer.json", "scripts/build-electron.mjs", "main/src/main.ts",
+                  "shared/class-lock.ts", "../class-audio/web/shared/student-endpoint.js", "../class-audio/web/shared/media-errors.js")
         for relative in inputs:
             file = desktop / relative
             file.parent.mkdir(parents=True, exist_ok=True)
@@ -157,6 +158,22 @@ class UnifiedLauncher(unittest.TestCase):
         self.assertIn("npm run build", output)
         self.assertNotIn("STUB_DESKTOP", output)
         self.invoke("-Role", "Standalone", "-CheckOnly", success=False)
+
+    def test_shared_and_transitive_audio_changes_require_rebuild(self):
+        self.invoke(*self.student_args(), "-CheckOnly") # positive control: fixture build is initially fresh
+        for relative in ("shared/class-lock.ts", "../class-audio/web/shared/student-endpoint.js",
+                         "../class-audio/web/shared/media-errors.js"):
+            with self.subTest(dependency=relative):
+                file = self.root / "desktop" / relative
+                os.utime(file, (time.time() + 30, time.time() + 30))
+                try:
+                    for args in (self.student_args(), ("-Role", "Standalone")):
+                        output = self.invoke(*args, "-CheckOnly", success=False)
+                        self.assertIn("npm run build", output)
+                        self.assertNotIn("STUB_DESKTOP", output)
+                finally:
+                    os.utime(file, (1000, 1000)) # each dependency must independently invalidate the old build
+        self.invoke(*self.student_args(), "-CheckOnly")
 
     def test_missing_models_block_standalone_without_app(self):
         self.env["ADAL_TEST_FAIL_ASSETS"] = "1"

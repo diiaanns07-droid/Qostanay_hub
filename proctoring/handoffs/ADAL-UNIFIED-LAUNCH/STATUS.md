@@ -26,3 +26,11 @@ Checkpoint commit: `a5ff87044096ee14d0bc35673652cb6079b6c3b1`.
 No real Electron, camera, microphone, native hook, service deployment, firewall change or physical Enforce test was executed. Enforce remains a request; actual native blocking and simultaneous LIVE CV require the restored manual target-machine checklist. Standalone's strict assets preflight is tested with the copied process fixture here; this isolated checkout has no installed desktop/model assets, so no full standalone launch is claimed.
 
 Next: coordinator integrates this branch (checkpoint plus final handoff commit), rebuilds the integrated desktop, publishes the integration branch and uses the single Start-Adal entrypoint for explicitly authorized manual LIVE+Enforce acceptance. No push by this agent.
+
+## Incremental follow-up — shared build dependencies
+
+After coordinator integrated through `a8205eb`, audited esbuild/Vite entries and actual imports: main/preload/renderer consume `desktop/shared/class-lock.ts`; renderer consumes `class-audio/web/shared/student-endpoint.js`, which imports `media-errors.js`. Added `desktop/shared/**` and `class-audio/web/**` to the existing recursive freshness scan. No node_modules or native runtime probing was added.
+
+Added a positive/negative fixture sequence: an initially fresh build passes; making each of the lock, audio endpoint and transitive audio error files newer independently causes both Student and Standalone CheckOnly to refuse with `npm run build`; restoring timestamps makes the build valid again. All process creation remains stubbed. Updated only the classroom guide's Adal heading and pointer to canonical Start-Adal instructions.
+
+Validation: complete stub-only suite **12/12 PASS on Windows PowerShell 5.1** and **12/12 PASS on PowerShell 7**; BOM/parser checks and `git diff --check` PASS. No real guard, app, network, camera or microphone. Incremental commit reported separately for coordinator cherry-pick; no push.

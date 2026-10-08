@@ -78,7 +78,8 @@ try {
             if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) { throw "Сборка студента отсутствует. В '$desktop' выполните npm run build." }
         }
         $oldestBuild = ($artifacts | Get-Item | Sort-Object LastWriteTimeUtc | Select-Object -First 1).LastWriteTimeUtc
-        $inputs = @(@('main\src', 'preload\src', 'renderer\src', '..\contracts\ts') |
+        # Bundled imports also cross into shared lock contracts and the class-audio web modules.
+        $inputs = @(@('main\src', 'preload\src', 'renderer\src', 'shared', '..\contracts\ts', '..\class-audio\web') |
             ForEach-Object { Get-ChildItem -LiteralPath (Join-Path $desktop $_) -File -Recurse })
         $inputs += @('package.json', 'package-lock.json', 'vite.config.ts', 'renderer\index.html', 'tsconfig.json',
             'tsconfig.main.json', 'tsconfig.renderer.json', 'scripts\build-electron.mjs') |
