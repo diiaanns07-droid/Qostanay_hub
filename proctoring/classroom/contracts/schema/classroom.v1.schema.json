@@ -1171,6 +1171,54 @@
           "default": null,
           "title": "Locked"
         },
+        "lock_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "unconfirmed",
+                "requested",
+                "applied",
+                "failed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock State"
+        },
+        "lock_confirmed": {
+          "default": false,
+          "title": "Lock Confirmed",
+          "type": "boolean"
+        },
+        "lock_requested": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock Requested"
+        },
+        "lock_scope": {
+          "anyOf": [
+            {
+              "const": "app_overlay",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock Scope"
+        },
         "mic_active": {
           "anyOf": [
             {
@@ -2451,6 +2499,61 @@
           "title": "Locked",
           "type": "boolean"
         },
+        "lock_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "unconfirmed",
+                "requested",
+                "applied",
+                "failed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock State"
+        },
+        "lock_confirmed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock Confirmed"
+        },
+        "lock_requested": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock Requested"
+        },
+        "lock_scope": {
+          "anyOf": [
+            {
+              "const": "app_overlay",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock Scope"
+        },
         "mic_active": {
           "default": false,
           "title": "Mic Active",
@@ -2734,6 +2837,54 @@
           ],
           "default": null,
           "title": "Locked"
+        },
+        "lock_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "unconfirmed",
+                "requested",
+                "applied",
+                "failed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock State"
+        },
+        "lock_confirmed": {
+          "default": false,
+          "title": "Lock Confirmed",
+          "type": "boolean"
+        },
+        "lock_requested": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock Requested"
+        },
+        "lock_scope": {
+          "anyOf": [
+            {
+              "const": "app_overlay",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lock Scope"
         },
         "mic_active": {
           "anyOf": [

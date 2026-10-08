@@ -126,7 +126,7 @@ export function createDrawer(store, registry, o) {
         ])),
         row("Без решения преподавателя", h("span", {}, [v.unreviewed === null ? "нет данных (сервер не передаёт)" : String(v.unreviewed)])),
         row("Последнее событие", h("span", {}, [v.lastEventAt === null ? "нет" : ago(v.lastEventAt, now)])),
-        row("Экран студента", h("span", {}, [yesNo(v.locked, "заблокирован преподавателем", "не заблокирован")])),
+        row("Экран студента", h("span", {}, [d.lockLabel])),
         row("Микрофон", h("span", {}, [yesNo(v.micActive, "включён преподавателем", "выключен")])),
       );
       const p = y.entry.preview;

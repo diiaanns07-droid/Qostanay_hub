@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, model_validator
 
 CONTRACT_ID = "qorgau.classroom"
 CONTRACT_VERSION = "1.1.0"
@@ -273,6 +273,11 @@ class Status(_Envelope):
     incidents_total: Annotated[int, Field(ge=0)] = 0
     incidents_by_priority: IncidentsByPriority = Field(default_factory=IncidentsByPriority)
     locked: bool = False
+    # Optional scoped UI receipt state. A legacy locked=false is NOT a confirmed unlock.
+    lock_state: Literal["unconfirmed", "requested", "applied", "failed"] | None = None
+    lock_confirmed: StrictBool | None = None
+    lock_requested: StrictBool | None = None
+    lock_scope: Literal["app_overlay"] | None = None
     mic_active: bool = False
     source_mode: SourceMode | None = None  # v1.2: determines current card origin
     source_session_id: Id | None = None
@@ -448,6 +453,10 @@ class DeviceStatus(_Out):
     incidents_total: Annotated[int, Field(ge=0)] = 0
     incidents_by_priority: IncidentsByPriority = Field(default_factory=IncidentsByPriority)
     locked: bool | None = None  # None = never reported
+    lock_state: Literal["unconfirmed", "requested", "applied", "failed"] | None = None
+    lock_confirmed: bool = False  # only a fresh receipt on the current connection
+    lock_requested: bool | None = None
+    lock_scope: Literal["app_overlay"] | None = None
     mic_active: bool | None = None
     stale: bool = True  # no status for > status_stale_s (or never)
 
@@ -482,6 +491,10 @@ class StudentCard(_Out):
     incidents_total: Annotated[int, Field(ge=0)] = 0
     incidents_by_priority: IncidentsByPriority = Field(default_factory=IncidentsByPriority)
     locked: bool | None = None
+    lock_state: Literal["unconfirmed", "requested", "applied", "failed"] | None = None
+    lock_confirmed: bool = False
+    lock_requested: bool | None = None
+    lock_scope: Literal["app_overlay"] | None = None
     mic_active: bool | None = None
     stale: bool = True
     # times and counters
