@@ -1,4 +1,40 @@
-# A06-native — checkpoint 2, Python launch + controlled-test preparation
+# A06-native — checkpoint 3, controlled Windows LIVE passed
+
+Branch: `codex/proctor-A06-native`. Base: `64354c014c4ad51054e8bb67fe841580771d43e5`.
+Helper tested from pushed code `29778e9f23200132427c7a31d10098e044464c92`; this checkpoint changes
+verification/evidence/documentation only. No runtime changes after the LIVE test.
+
+Captain explicitly approved both modes in chat: «Да, готов проверить оба режима».
+Actual machine: Windows 11, `platform=win32`, `os_release=10.0.26200`, Python 3.12.14, standard user.
+Both runs used `live_console.py`, each with `--max-minutes 2`, separate from Electron.
+
+- Dry-run: real `ready` / hook; Win, Alt+Tab, PrtScn each emitted `swallowed=false`.
+  Foreground events showed SearchHost / explorer / Code / SnippingTool (basenames only).
+  Captain reported exit after Ctrl+Alt+Shift+F12; log ends with `bye:emergency_hotkey`.
+- Enforce: all three shortcuts emitted `swallowed=true`. Captain confirmed their Windows actions
+  were suppressed and that text input, Win, Alt+Tab and window focus worked after emergency exit.
+  Log ends with `bye:emergency_hotkey`; no helper error. Subsequent process check found no A06 test helper.
+- `VERIFICATION.json`: three `blocked` records and one `detected_only` foreground record for this exact
+  platform/release. No promotion from self-check/ready alone; native blocked records still require
+  available helper + explicit `QORGAU_SHELL_NATIVE_ENFORCE=1` in the shell.
+- Evidence and exact scope: [checks/live-2026-10-08/RESULTS.md](checks/live-2026-10-08/RESULTS.md).
+- After recording LIVE: `node main/tests/run.mjs capabilities native` → **21 PASS** (fakes only).
+  Actual VERIFICATION.json parsed as 4 valid records; exact platform/release and length limits PASS.
+  Capability checks PASS for matching enforce, dry-run, absent helper, other OS release and other platform.
+
+QA-WIN-001: **standalone native-helper LIVE PASS** for Win/Alt+Tab/PrtScn and emergency release.
+No P0 observed in these checks. A01/A09 still need acceptance from the actual integrated Electron exam;
+do not treat this helper test as a full application PASS or close the integrated acceptance item solely on it.
+Not LIVE-tested: Alt+Esc, Ctrl+Esc, individual LWin/RWin, `stop`, EOF, heartbeat loss, parent death,
+max-duration expiration, console-close cleanup, hook failure/queue overflow. Lifecycle and key mappings
+have automated fake-hook coverage (checkpoint 2: 41 Python PASS, 33 Node PASS; typecheck/build PASS).
+
+Limits unchanged: unsigned Python prototype; Ctrl+Alt+Del and UAC are not blocked; Windows may silently
+remove a slow hook. No SDK/compiler/packages installed, no Windows settings changed, no other processes killed.
+A01: integrate this branch and preserve the opt-in. A09: exercise actual Electron start/pause/finish/recovery.
+
+---
+## Historical checkpoint 2 — Python launch + controlled-test preparation
 
 Previous checkpoint pushed: `94b1c81042ea0ac13aa29c882411c5200e380ad4` (before 17:00).
 Same branch/base/scope as checkpoint 1 below; no foreign paths changed.

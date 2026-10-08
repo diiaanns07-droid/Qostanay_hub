@@ -73,13 +73,18 @@ A06 -> A01 requests (shared files are NOT edited by A06). Baseline: BOOTSTRAP 35
       exception during the exam, renderer crash loop) return INVALID_STATE / enforcement_error — show
       "finish or abort", not a retry loop.
 A06-native continuation, 8 October 2026:
+- Checkpoint 3: captain approved and performed LIVE dry-run/enforce on win32 / 10.0.26200.
+  Win, Alt+Tab, PrtScn suppression + emergency release + restored keyboard/focus confirmed.
+  VERIFICATION.json now records exactly those checks and foreground detection; evidence in checks/live-2026-10-08/.
+- A01/A09: integrate codex/proctor-A06-native and test the actual Electron exam lifecycle.
+  QA-WIN-001 standalone-helper scope PASS; full integrated acceptance still pending.
 - Checkpoint 2: .py launcher, 41 Python tests / 33 Node tests, typecheck/build PASS. Existing dependencies reused.
-- Controlled-test console and Russian exit instructions are ready; LIVE needs explicit captain approval.
+- Controlled-test console and Russian exit instructions are ready; the two completed LIVE runs were explicitly approved.
 - New branch codex/proctor-A06-native from integration 64354c014c4ad51054e8bb67fe841580771d43e5.
 - Checkpoint 1: Python helper source + 36 fake-hook tests, no SDK or packages installed.
 - .py shell-launch support is implemented within environment/native.ts (checkpoint 2).
-- Captain's explicit yes is REQUIRED before installing any real hook for LIVE dry-run/enforce.
-- A01/A09: QA-WIN-001 remains OPEN; no verified blocked record until a real controlled test.
-- VERIFICATION.json unchanged; Python helper unsigned; Ctrl+Alt+Del and UAC remain available.
+- Explicit captain approval remains required for LIVE hook testing; the existing approval covered both completed modes.
+- Alt+Esc/Ctrl+Esc, separate LWin/RWin and other cleanup paths were not tested LIVE; fake-hook tests cover them.
+- Python helper unsigned; Ctrl+Alt+Del and UAC remain available. No dependency installation needed for this prototype.
 
 Historical dependencies below:
