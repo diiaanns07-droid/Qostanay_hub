@@ -243,6 +243,9 @@ class SessionRuntime:
         self._queue: queue.Queue[Observation | _Control] = queue.Queue(maxsize=FUSION_QUEUE_MAX)
         self._fusion_thread: threading.Thread | None = None
         self._accepting = False  # observations go to fusion only while running and not closing
+        self._accepting_metadata = False  # health/environment continue during pause
+        self._pending_incidents: dict[str, IncidentChange] = {}
+        self._next_store_retry = 0.0
         self._env_seqs: set[int] = set()
         self._pause_started_ms: float | None = None
         self._timeline_max_ms = 0.0
@@ -269,11 +272,7 @@ class SessionRuntime:
             info = self._info
             store = self.pipeline.store.impl
             if store is not None:
-                try:
-                    store.upsert_session(info)
-                except Exception as exc:
-                    # Report without re-entering _update (non-reentrant lock, no recursive store write).
-                    self._store_failed(exc, report_via_session=False)
+                if not self._store_call("upsert_session", info, report_via_session=False):
                     error = self._fault_error(Component.EVIDENCE, ErrorCode.STORAGE_ERROR)
                     if error is not None:
                         self._info = info = info.model_copy(update={"last_error": error})
@@ -292,6 +291,23 @@ class SessionRuntime:
         )
 
     # ---------------------------------------------------- pipeline faults
+    def _store_call(self, method: str, *args: Any, report_via_session: bool = True) -> bool:
+        """Handle raising stores and A08's non-raising, counted write failures alike."""
+        store = self.pipeline.store.impl
+        if store is None:
+            return True
+        counter = getattr(store, "write_error_count", None)
+        try:
+            before = counter() if callable(counter) else None
+            getattr(store, method)(*args)
+            if before is not None and counter() > before:
+                raise OSError("evidence store reported a write failure")
+        except Exception as exc:
+            self._store_failed(exc, report_via_session=report_via_session)
+            return False
+        self._store_ok()
+        return True
+
     def _store_failed(self, exc: BaseException, *, report_via_session: bool = True) -> None:
         """Store write failed: count, log (rate-limited), make visible. Never writes to the store again here."""
         self.counters["store_errors"] += 1
@@ -338,7 +354,14 @@ class SessionRuntime:
                 )
             )
         if via_session:  # visible in GET /sessions/{id} and session_state on the stream
-            self._update(last_error=self._fault_error(component, code))
+            if component == Component.EVIDENCE:
+                # Do not synchronously write a diagnostic back into the store that just failed.
+                with self._info_lock:
+                    self._info = self._info.model_copy(update={"last_error": self._fault_error(component, code)})
+                    info = self._info
+                self._bus.publish(SessionStateMsg(session=info), self.session_id)
+            else:
+                self._update(last_error=self._fault_error(component, code))
         self._publish_health_report()
 
     def _inject_health(self, health: Health) -> None:
@@ -618,7 +641,10 @@ class SessionRuntime:
             self.counters["session_mismatch"] += 1
             return
         self._bus.publish(ObservationMsg(observation=obs), self.session_id)
-        if not self._accepting:
+        metadata = isinstance(obs, (HealthObservation, EnvironmentObservation))
+        if not self._accepting and not (metadata and self._accepting_metadata):
+            return
+        if not metadata and self._info.exam_started_t_ms is not None and obs.t_session_ms < self._info.exam_started_t_ms:
             return
         try:
             self._queue.put_nowait(obs)
@@ -707,10 +733,12 @@ class SessionRuntime:
             self._record_session_config()
             self._fusion_thread = threading.Thread(target=self._fusion_loop, name=f"fusion-{self.session_id}", daemon=True)
             self._fusion_thread.start()
-            self._accepting = True
             t = self.clock.now_ms()
-            self._notify_exam_started(t)
             info = self._update(state=SessionState.RUNNING, started_at=utc_now(), exam_started_t_ms=t)
+            self._accepting = self._accepting_metadata = True
+            self._notify_exam_started(t)
+            if self.pipeline.capture.impl is not None:
+                self._on_capture_health(self.pipeline.capture.impl.health())
             self._start_audio()
             return info
 
@@ -781,6 +809,8 @@ class SessionRuntime:
             self._control(_Control("resume", t))
             self._accepting = True
             info = self._update(state=SessionState.RUNNING, paused_total_ms=self._info.paused_total_ms + paused)
+            if self.pipeline.capture.impl is not None:
+                self._on_capture_health(self.pipeline.capture.impl.health())
             self._start_audio()
             return info
 
@@ -803,6 +833,7 @@ class SessionRuntime:
             self._release_capture()
             # 2) drain queued observations, then close all open incidents
             self._accepting = False
+            self._accepting_metadata = False
             if self._fusion_thread is not None:
                 ctl = _Control("finish", t, reason)
                 self._control(ctl)
@@ -810,6 +841,7 @@ class SessionRuntime:
                     log.error("fusion thread did not finish in time")
                 self._fusion_thread.join(2.0)
                 self._fusion_thread = None
+            self._retry_incident_writes(force=True)
             for comp, _ in self._frame_analyzers():
                 if comp.impl is not None:
                     try:
@@ -891,8 +923,7 @@ class SessionRuntime:
                 store = self.pipeline.store.impl
                 if store is not None:
                     try:
-                        store.record_observation(item)
-                        self._store_ok()
+                        self._store_call("record_observation", item)
                     except Exception as exc:
                         self._store_failed(exc)
             if time.monotonic() >= next_tick:
@@ -907,16 +938,21 @@ class SessionRuntime:
     def _emit(self, changes: list[IncidentChange]) -> None:
         store: EvidenceStore | None = self.pipeline.store.impl
         capture: CaptureService | None = self.pipeline.capture.impl
+        self._retry_incident_writes()
         for change in changes:
             if change.incident.session_id != self.session_id:
                 self.counters["session_mismatch"] += 1
                 continue
             if store is not None:
-                try:
-                    store.record_incident_change(change)
-                    self._store_ok()
-                except Exception as exc:
-                    self._store_failed(exc)
+                key = change.incident.incident_id
+                if self._store_call("record_incident_change", change):
+                    self._pending_incidents.pop(key, None)
+                else:
+                    old = self._pending_incidents.get(key)
+                    if old is None and len(self._pending_incidents) >= FUSION_QUEUE_MAX:
+                        self._store_failed(RuntimeError("incident retry buffer full"))
+                    elif old is None or change.incident.update_seq > old.incident.update_seq:
+                        self._pending_incidents[key] = change.model_copy(deep=True)
                 frame_id = change.incident.trigger_frame_id
                 if (
                     change.change == IncidentChangeType.OPENED
@@ -927,10 +963,20 @@ class SessionRuntime:
                     try:
                         frame = capture.get_frame(frame_id)
                         if frame is not None and frame.session_id == self.session_id:
-                            store.capture_snapshot(self.session_id, change.incident.incident_id, frame)
+                            self._store_call("capture_snapshot", self.session_id, change.incident.incident_id, frame)
                     except Exception as exc:
                         self._store_failed(exc)
             self._bus.publish(IncidentMsg(change=change), self.session_id)
+
+    def _retry_incident_writes(self, *, force: bool = False) -> None:
+        """Bounded retries of the newest immutable state, before terminal persistence."""
+        now = time.monotonic()
+        if not force and now < self._next_store_retry:
+            return
+        self._next_store_retry = now + 1.0
+        for key, change in list(self._pending_incidents.items())[:32]:
+            if self._store_call("record_incident_change", change):
+                self._pending_incidents.pop(key, None)
 
     # ----------------------------------------------------------- environment
     def environment_events(self, batch: EnvironmentEventBatch) -> EnvironmentEventAck:
@@ -973,7 +1019,7 @@ class SessionRuntime:
                     store = self.pipeline.store.impl
                     if store is not None:
                         try:
-                            store.record_observation(obs)
+                            self._store_call("record_observation", obs, report_via_session=False)
                         except Exception as exc:
                             self._store_failed(exc, report_via_session=False)
                 accepted += 1
@@ -1044,11 +1090,18 @@ class SessionManager:
 
     def get(self, session_id: str) -> SessionInfo | None:
         rt = self._sessions.get(session_id)
-        return rt.info if rt is not None else None
+        if rt is not None:
+            return rt.info
+        router_store = getattr(self._provider, "router_store", None)
+        store = router_store() if callable(router_store) else None
+        reader = getattr(store, "get_session", None)
+        return reader(session_id) if callable(reader) else None
 
     def runtime(self, session_id: str) -> SessionRuntime:
         rt = self._sessions.get(session_id)
         if rt is None:
+            if self.get(session_id) is not None:
+                raise InvalidStateError(ErrorCode.INVALID_STATE, "persisted session has no active runtime")
             raise NotFoundError(ErrorCode.SESSION_NOT_FOUND, f"session {session_id} not found")
         return rt
 

@@ -350,6 +350,17 @@ class FusionEngine:
             self._stats["duplicate"] += 1
             return []
         if self._paused:
+            if isinstance(obs, HealthObservation):
+                # Metadata continues during pause; remember recovery without opening an episode.
+                component = obs.health.component.value
+                stream = f"health.{component}"
+                if obs.t_session_ms >= self._last_t.get(stream, -1.0):
+                    self._remember(obs.observation_id)
+                    self._last_t[stream] = obs.t_session_ms
+                    if obs.health.status in BAD_HEALTH:
+                        self._health_bad[component] = obs.health.code
+                    elif obs.health.status == HealthStatus.OK:
+                        self._health_bad.pop(component, None)
             self._stats["while_paused"] += 1
             return []
         self._remember(obs.observation_id)

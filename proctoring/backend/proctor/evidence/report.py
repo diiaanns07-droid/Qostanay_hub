@@ -319,10 +319,10 @@ def render_html(snap: ExportSnapshot) -> str:
     w(f'<meta http-equiv="Content-Security-Policy" content="{esc(CSP)}">')
     w('<meta name="viewport" content="width=device-width, initial-scale=1">')
     w('<meta name="referrer" content="no-referrer">')
-    w(f"<title>Qorgau Exam — отчёт {esc(info.session_id)}</title>")
+    w(f"<title>Adal — отчёт {esc(info.session_id)}</title>")
     w(f"<style>{STYLE}</style></head><body>")
     w("<header>")
-    w("<h1>Qorgau Exam — отчёт о сессии экзамена</h1>")
+    w("<h1>Adal — отчёт о сессии экзамена</h1>")
     w(f'<div class="muted">Сессия <span class="mono">{esc(info.session_id)}</span> · экспортировано {esc(fmt_dt(snap.exported_at))}</div>')
     cls, title, text = MODE_BANNER[info.source_mode]
     w(f'<div class="banner {cls}"><strong>{esc(title)}</strong>{esc(text)}</div>')
@@ -354,7 +354,7 @@ def render_html(snap: ExportSnapshot) -> str:
 
     _integrity_section(w, snap)
     w('<footer class="muted"><p>')
-    w(esc(f"Qorgau Exam backend {BACKEND_VERSION} · контракт qorgau.v1 {CONTRACT_VERSION} · формат {REPORT_FORMAT}. "
+    w(esc(f"Adal backend {BACKEND_VERSION} · контракт qorgau.v1 {CONTRACT_VERSION} · формат {REPORT_FORMAT}. "
           "Локальный отчёт: без сетевых ресурсов и скриптов."))
     w("</p></footer></body></html>")
     return "\n".join(out)
