@@ -1,0 +1,7 @@
+
+> qorgau-exam-desktop@0.1.0 typecheck
+> node scripts/typecheck.mjs
+
+PASS  tsconfig.contracts.json
+PASS  tsconfig.main.json
+PASS  tsconfig.renderer.json

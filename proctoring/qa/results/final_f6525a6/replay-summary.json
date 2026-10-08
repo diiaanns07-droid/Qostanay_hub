@@ -1,0 +1,203 @@
+{
+  "recorded_at": "2026-10-08T14:44:07.417Z",
+  "platform": "win32",
+  "scope": "product renderer + real main API + real backend/CV; Chromium transport, no OS guard or native save dialog",
+  "backend_sha": "f6525a6f7bd46c2347a5d7a7e010060c39191cfb",
+  "backend_dirty": "",
+  "checks": [
+    {
+      "name": "real backend READY through A06 BackendSupervisor",
+      "ok": true,
+      "detail": "pid 8668"
+    },
+    {
+      "name": "product renderer, no FixtureBridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 1128 ms"
+    },
+    {
+      "name": "zone_a_green_01: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: expected green",
+      "ok": true,
+      "detail": "actual green"
+    },
+    {
+      "name": "zone_a_green_01: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 446 ms"
+    },
+    {
+      "name": "zone_b_yellow_02: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: expected yellow",
+      "ok": true,
+      "detail": "actual yellow"
+    },
+    {
+      "name": "zone_b_yellow_02: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 564 ms"
+    },
+    {
+      "name": "zone_c_red_01: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: expected red",
+      "ok": true,
+      "detail": "actual red"
+    },
+    {
+      "name": "zone_c_red_01: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "renderer never opens camera/microphone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no CSP violations",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "backend checkout stayed at the recorded revision",
+      "ok": true,
+      "detail": "f6525a6f7bd46c2347a5d7a7e010060c39191cfb"
+    }
+  ],
+  "cases": [
+    {
+      "replay_id": "zone_a_green_01",
+      "expected": "green",
+      "actual": "green",
+      "session_id": "s-20261008-194216-c7dc5af8",
+      "media_sha256": "6352319b66ce6c984ded5237d2ad5143de053b98412bd924a4126d3cc3e30a93",
+      "start_delay_ms": 1128,
+      "html_title": "Adal — отчёт s-20261008-194216-c7dc5af8",
+      "visible_adal": true,
+      "html_zone": true,
+      "qorgau_internal_identifiers_visible": true,
+      "old_product_brand_visible": false,
+      "brand_note": "Adal in title/header/footer; qorgau.v1 and qorgau.report.v1 are unchanged internal contract/format identifiers."
+    },
+    {
+      "replay_id": "zone_b_yellow_02",
+      "expected": "yellow",
+      "actual": "yellow",
+      "session_id": "s-20261008-194248-2887ba35",
+      "media_sha256": "35ce7af762900a1c1478d8f2ccace57830e08c5bd08758971ac47a8162f38ce7",
+      "start_delay_ms": 446,
+      "html_title": "Adal — отчёт s-20261008-194248-2887ba35",
+      "visible_adal": true,
+      "html_zone": true,
+      "qorgau_internal_identifiers_visible": true,
+      "old_product_brand_visible": false,
+      "brand_note": "Adal in title/header/footer; qorgau.v1 and qorgau.report.v1 are unchanged internal contract/format identifiers."
+    },
+    {
+      "replay_id": "zone_c_red_01",
+      "expected": "red",
+      "actual": "red",
+      "session_id": "s-20261008-194325-7bb817ce",
+      "media_sha256": "3cf25248c9b57c310be4dbc0a4502150d59cc32896b11ca5c074cb0ff4f83787",
+      "start_delay_ms": 564,
+      "html_title": "Adal — отчёт s-20261008-194325-7bb817ce",
+      "visible_adal": true,
+      "html_zone": true,
+      "qorgau_internal_identifiers_visible": true,
+      "old_product_brand_visible": false,
+      "brand_note": "Adal in title/header/footer; qorgau.v1 and qorgau.report.v1 are unchanged internal contract/format identifiers."
+    }
+  ]
+}

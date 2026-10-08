@@ -1,0 +1,20 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________________ test_audio_ends_when_student_goes_offline __________________
+
+server = <classroom.server.tests.harness.ServerProcess object at 0x000001EEED360350>
+teacher = <httpx.Client object at 0x000001EEED360980>
+session = {'session_id': 'cs-d6840d4b79e1fa05', 'join_code': '348418', 'session': {'session_id': 'cs-d6840d4b79e1fa05', 'title': 'Тест', 'state': 'open', 'created_at': '2026-10-08T14:12:50.946784Z', ...}}
+students = <function students.<locals>.make at 0x000001EEED406200>
+
+    def test_audio_ends_when_student_goes_offline(server, teacher, session, students):
+        s = students()
+        sid = s.hello(join_code=session["join_code"])["student_id"]
+>       start = teacher.post(f"/api/teacher/students/{sid}/commands", json={"kind": "audio_start", "payload": {"direction": "talk"}}).json()["command_id"]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'command_id'
+
+classroom\server\tests\test_persistence_audio.py:120: KeyError
+=========================== short test summary info ===========================
+FAILED classroom/server/tests/test_persistence_audio.py::test_audio_ends_when_student_goes_offline
+1 failed in 1.31s

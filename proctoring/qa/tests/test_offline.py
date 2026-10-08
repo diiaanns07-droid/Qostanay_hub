@@ -111,7 +111,8 @@ DOWNLOAD_PATTERNS = re.compile(
 REVIEWED_NETWORK_USES = {
     "phone/prepare.py": {("", "import urllib.request"): 1, ("_iter_url", "urllib.request.urlopen"): 1},
     "attention/model_tool.py": {("", "import urllib.request"): 1, ("fetch", "urllib.request.urlopen"): 1},
-    "audio/prepare.py": {("", "import urllib.request"): 1, ("download", "urllib.request.urlopen"): 2},
+    "audio/prepare.py": {("", "import urllib.request"): 1, ("download", "urllib.request.urlopen"): 2,
+                         ("download_yamnet", "urllib.request.urlopen"): 2},
     "identity/prepare.py": {("", "import urllib.request"): 1, ("_iter_url", "urllib.request.urlopen"): 1},
     "uplink/client.py": {("", "import urllib.request"): 1, ("http_post_file", "urllib.request.Request"): 1,
                          ("http_post_file", "urllib.request.urlopen"): 1},
@@ -194,6 +195,27 @@ def test_reviewed_network_scopes_cannot_hide_new_runtime_calls():
     # A second download in an already reviewed function is also a change, not an exemption.
     source = "import urllib.request\ndef _iter_url(url):\n    urllib.request.urlopen(url)\n    urllib.request.urlopen(url)\n"
     assert _unreviewed_network_uses(source, "phone/prepare.py")
+    source = (root / "audio/prepare.py").read_text(encoding="utf-8")
+    changed = source.replace("def download_yamnet(directory: Path) -> Path:",
+                             "def download_yamnet(directory: Path) -> Path:\n    urllib.request.urlopen('https://example.invalid')")
+    assert changed != source
+    assert _unreviewed_network_uses(changed, "audio/prepare.py")
+
+
+@pytest.mark.parametrize("entry", ["cli", "classifier"])
+def test_missing_yamnet_model_never_downloads_at_runtime(tmp_path, entry):
+    log = tmp_path / "yamnet-guard.jsonl"
+    directory = str(tmp_path / "absent-model")
+    if entry == "cli":
+        code = ("import sys; from proctor.audio.prepare import main; "
+                f"sys.argv=['prepare', '--check', '--model', 'yamnet', '--model-dir', {directory!r}]; main()")
+    else:
+        code = ("from pathlib import Path; from proctor.audio.yamnet import YamnetClassifier; "
+                f"YamnetClassifier(Path({directory!r}))")
+    result = _guard(code, log)
+    assert result.returncode != 0, "missing local model must not become ready"
+    assert "FileNotFoundError" in result.stderr or "audio model unavailable" in result.stderr
+    assert log.read_text() == "", "missing model triggered network activity"
 
 
 def test_reviewed_classroom_uploader_still_cannot_access_public_network(tmp_path):

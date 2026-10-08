@@ -1,0 +1,3 @@
+manifest: models.manifest.json model=yolo11n-coco-onnx license=AGPL-3.0 sha256=634279b40c07...
+[model_ok] models/phone/yolo11n.onnx verified (sha256 634279b40c07...)
+[model_loaded] provider=CPUExecutionProvider phone_classes={67: 'cell phone'} input=640 rect=True warmup_ms=35.7 meta={'version': '8.3.237', 'date': '2025-12-12T19:47:40.765629', 'license': 'AGPL-3.0 License (https://ultralytics.com/license)', 'imgsz': '[640, 640]', 'author': 'Ultralytics'}

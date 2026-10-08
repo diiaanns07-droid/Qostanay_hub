@@ -1,5 +1,28 @@
 # Reproducible findings for module owners (A09 does not patch other modules)
 
+## Финальная QA 2026-10-08 (a883e96 → f12cea4 → f6525a6 → 0bb070a)
+
+Подробные команды, каждый FAIL и отдельные повторы: [FINAL_QA.md](../handoffs/FINAL_QA.md).
+Код продукта не исправлялся. Старые записи ниже не являются актуальным списком открытых P0.
+
+| ID / приоритет | Владелец | Наблюдение и следующий шаг |
+|---|---|---|
+| QA-FINAL-001 / CLOSED в f6525a6 | T01/T05 | На a883e96/f12cea4 два legacy audio_start теста стабильно FAIL отдельно. Поставка integration обновила ожидания; повтор на f6525a6 PASS (в составе 112 PASS изменённых путей). |
+| QA-FINAL-002 / P1 тестового запуска | A06/A01 | `desktop/main/src/main.ts` создаёт NativeHelper с `maxMinutes: 240`, конфигурации лимита нет. Для QA по требованию капитана нужен максимум 2 минуты. Просьба добавить параметр длительности; текущая проверка использует отдельный QA-only adapter без изменения продукта. |
+| QA-FINAL-003 / CLOSED в 0bb070a | A01/A08/A09 | Схема summary и проверка READY согласованы поставкой integration. Свежий полный run_qa: synthetic/offline flow и чтение маршрутов во всех состояниях PASS. Исторические FAIL и повторы сохранены. |
+| QA-FINAL-004 / CLOSED в 0bb070a | A09 | Поставка integration фильтрует capture health и заменяет реальный audio в тестовой fixture. Отключение камеры и весь fault-injection набор PASS в свежем run_qa. |
+| QA-FINAL-005 / P2 harness, частично исправлен | A09 / сверка A14 | В 0bb070a статический аудит стал точным по функциям, но не учёл `audio/prepare.py::download_yamnet`: две разрешённые операции urlopen модели и лицензии. Два offline-теста FAIL отдельно; динамический offline flow PASS. Проверить и добавить только эту явную подготовку в reviewed scopes, не исключать весь файл и не ослаблять запрет runtime-сети. |
+| QA-FINAL-006 / P2 отчёт harness | A09 | run_qa JUnit parser теряет non-strict XPASS: пишет PASS=356 вместо pytest PASS=354, XPASS=2. Исправленные QA-OBS-003/004 нельзя скрывать в PASS; отчёт FINAL_QA приводит фактические статусы. |
+| QA-WIN-003 / прежний P2 | A03 | Прежние Windows FAIL повторились отдельно. Последующий C2-тест падает из-за отложенного BaseEventLoop.__del__, отдельно PASS: известный плавающий эффект no_network/Windows, а не доказанный дефект C2. |
+| QA-FINAL-007 / P1 тестовой приёмки | A03 | С реальными весами 7 дополнительных FAIL: phone_only/4 boxes_map/prepadded создают несовместимую с новой object-веткой конфигурацию (`object_class_names must not repeat phone classes`); deterministic ожидает 2 ONNX-вызова, фактически 8 при одинаковом итоговом результате. Все повторились отдельно. Обновить реальные тесты с учётом нескольких проходов и раздельных наборов классов; качество модели из этих FAIL не следует. |
+| QA-FINAL-008 / P2 теста UI | T03 | E2E ожидает bundled Chromium, которого нет. С QA-only выбором установленного Chrome он получает карточку/red/клип HTTP 206, но падает на strict locator `.t3-test-label`: после добавления provenance теперь 2 элемента. Уточнить селектор; оставшиеся шаги и рестарт этим прогоном не проверены. |
+| QA-FINAL-009 / CLOSED в 0bb070a | A01/A06 | В f6525a6 TS18047 dsDone possibly null повторялся отдельно. Integration добавила проверку; свежий typecheck contracts/main/renderer PASS, build PASS, shell 113 PASS + 1 Windows SKIP. |
+| QA-FINAL-010 / P2 метрик, FLAKY | A03 | f6525a6, `test_real_latency_p50_from_runtime_stats`: FAIL в общем прогоне, PASS отдельно. Порог скорости не нарушен; `process_ms_p50=31.0 < infer_ms_p50=32.72`. Analyzer использует monotonic_ns, detector — perf_counter; владельцу проверить согласованность и разрешение часов Windows, не ослабляя проверку вслепую. |
+
+| QA-FINAL-011 / P2 сценария REPLAY | A07/A09 | Новый 0bb070a: `ShellStateMachine.bind` сбрасывает operator_unlocked. Старый run-replay.mjs после создания сессии открывает PIN вместо ожидаемой причины пропуска калибровки. QA adapter `qa/tools/replay-current-auth.mjs` повторяет вход тем же одноразовым PIN через UI после preflight; исходные проверки сохранены, продукт не меняется. Нужна синхронизация штатного сценария/инструкции A07. |
+
+P0 проверенного видео-сценария не подтверждены. LIVE preflight и калибровка PASS по капитану на f6525a6. На 0bb070a REPLAY с повторным PIN — 33/33 PASS; full pytest — 1474 PASS / 13 FAIL / 10 SKIP (12 FAIL повторились, 1 флейк прошёл отдельно); run_qa — 381 PASS / 2 FAIL / 4 XFAIL / 0 XPASS / 1 SKIP. Подробности и границы LIVE — в FINAL_QA.md.
+
 ## Adal alignment verification at 361e2445153de5c3035234331a616ee6e5887fa4
 
 Full QA: **380 PASS, 1 SKIP, 4 XFAIL, no failures or XPASS**; evidence in
@@ -10,7 +33,7 @@ markers are removed. This does not independently verify every historical option/
 in QA-OBS-003. QA-OBS-005 (three coercion cases) and QA-OBS-006 still reproduce and remain marked.
 Historical Windows/device/release findings below were not retested by this scoped automated run.
 
-## Актуально: кандидат de7290509bf558d6488be84d2e0730b2b9ab104a, Windows 11
+## История: кандидат de7290509bf558d6488be84d2e0730b2b9ab104a, Windows 11
 
 Исходный прогон: `results/20261008T070227Z_candidate_de7290509bf5/`.
 Повтор с исправленным только A09 harness: `results/20261008T072100Z_candidate_a09_reviewed_de7290509bf5/`.

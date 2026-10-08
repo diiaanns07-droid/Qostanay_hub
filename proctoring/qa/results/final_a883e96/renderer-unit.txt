@@ -1,0 +1,25 @@
+✔ health metadata distinguishes absent server from unknown and configured (1.3612ms)
+✔ class state accepts the C2 fields and explicit unlock (0.3177ms)
+✔ malformed flags cannot silently become unlock or hide the microphone banner (0.1914ms)
+✔ invalid class state preserves a previous lock (1.0889ms)
+✔ class state survives session changes and valid unlock still works (0.2096ms)
+✔ class messages participate in envelope sequence without false resyncs (0.142ms)
+✔ stale unlock is ignored; reconnect resets sequence for fresh class state (0.2009ms)
+✔ before camera consent, module readiness does not claim a working camera or missing 1.1 modules (1.5575ms)
+✔ camera readiness follows preflight and a later health failure wins (0.3831ms)
+✔ keys keep separate blocked, detected-only, unsupported and unverified statuses (0.2617ms)
+✔ no capabilities, unsupported exam mode and backend loss cannot claim protection (1.1096ms)
+✔ synthetic and replay never claim to use the live camera (0.3936ms)
+✔ present audio/identity honor module health rather than the class mic flag (0.2304ms)
+✔ identity row says what it is: same person as at the start, local, not identification (0.3486ms)
+✔ REPLAY end reaches the main UI and never leaks into another session (4.2844ms)
+✔ summary shows each reported zone without classifying incidents (0.7864ms)
+✔ missing or malformed zone is never shown as green (0.1723ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 103.8108

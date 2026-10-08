@@ -1,0 +1,120 @@
+{
+  "source": "actual production Electron + proctor/C2 + C1; CREATED synthetic sessions",
+  "nativeGuard": false,
+  "camera": false,
+  "microphone": false,
+  "results": [
+    {
+      "name": "production IPC creates synthetic session without starting exam",
+      "pass": true
+    },
+    {
+      "name": "two independent real C2 identities and synthetic provenance",
+      "pass": true
+    },
+    {
+      "name": "legacy initial false is not a confirmed unlock",
+      "pass": true
+    },
+    {
+      "name": "failure",
+      "pass": false,
+      "reason": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-adal-lock]') to be visible\u001b[22m\n"
+    }
+  ],
+  "diagnostics": {
+    "observations": [
+      {
+        "state": "requested",
+        "requested": true,
+        "locked": false,
+        "error": null
+      },
+      {
+        "visible": "visible",
+        "inert": true,
+        "hidden": "true",
+        "reason": "Проверка преподавателя: уберите учебник со стола",
+        "box": {
+          "left": 0,
+          "top": 0,
+          "right": 1251.2000732421875,
+          "bottom": 763.2000122070312
+        },
+        "viewport": {
+          "w": 1266,
+          "h": 763,
+          "clientWidth": 1251,
+          "clientHeight": 763
+        },
+        "css": {
+          "visibility": "visible",
+          "display": "grid",
+          "opacity": "1"
+        },
+        "hit": true
+      },
+      {
+        "state": "failed",
+        "requested": false,
+        "locked": false,
+        "error": "Приложение не смогло показать запрошенный экран"
+      },
+      {
+        "state": "failed",
+        "requested": false,
+        "locked": false,
+        "error": "Приложение не смогло показать запрошенный экран"
+      },
+      {
+        "state": "failed",
+        "requested": false,
+        "locked": false,
+        "error": "Приложение не смогло показать запрошенный экран"
+      },
+      {
+        "state": "failed",
+        "requested": false,
+        "locked": false,
+        "error": "Приложение не смогло показать запрошенный экран"
+      },
+      {
+        "state": "failed",
+        "requested": false,
+        "locked": false,
+        "error": "Приложение не смогло показать запрошенный экран"
+      },
+      {
+        "state": "failed",
+        "requested": false,
+        "locked": false,
+        "error": "Приложение не смогло показать запрошенный экран"
+      },
+      {
+        "state": "failed",
+        "requested": false,
+        "locked": false,
+        "error": "Приложение не смогло показать запрошенный экран"
+      }
+    ],
+    "cards": [
+      {
+        "label": "Backend B — без интерфейса",
+        "connected": true,
+        "stale": false,
+        "locked": false,
+        "lock_state": "unconfirmed",
+        "lock_confirmed": false
+      },
+      {
+        "label": "Electron A — SYNTHETIC",
+        "connected": true,
+        "stale": false,
+        "locked": false,
+        "lock_state": "failed",
+        "lock_confirmed": false
+      }
+    ],
+    "controls": "Класс: Синтетическая проверка цепочкиПриложение не подтвердило последний запрос экрана.Закрыть экран — Команда не выполнена. Приложение не смогло показать запрошенный экранНачать экзаменЗакрыть экран…Открыть экранЗавершить экзамен…Причина для студентаУберите телефон и дождитесь преподавателяУберите посторонние материалы и дождитесь преподавателяДождитесь проверки преподавателяЭкран закрывается внутри Adal. Это не блокировка Windows. Таймер внешнего сайта может продолжать идти.Закрыть экран AdalЗавершить локальный экзамен и наблюдение этого студента? Это не отправляет ответы на внешнем сайте.Подтвердить завершение"
+  }
+}

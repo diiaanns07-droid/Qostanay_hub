@@ -1,0 +1,9 @@
+
+> qorgau-exam-desktop@0.1.0 typecheck
+> node scripts/typecheck.mjs
+
+PASS  tsconfig.contracts.json
+main/src/__tests__/backend.integration.test.ts(151,63): error TS18047: 'dsDone' is possibly 'null'.
+main/src/__tests__/backend.integration.test.ts(152,17): error TS18047: 'dsDone' is possibly 'null'.
+FAIL  tsconfig.main.json
+PASS  tsconfig.renderer.json

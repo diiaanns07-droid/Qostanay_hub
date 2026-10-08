@@ -43,7 +43,11 @@ function fanout<A extends unknown[]>(channel: string, onCountChange?: (count: nu
 }
 
 const onShellState = fanout<[ShellState]>(PUSH.shellState);
-const subscribeEvents = fanout<[StreamEnvelope]>(PUSH.streamEvent);
+// Notify only after the listener was inserted. Audio and React subscribe separately;
+// each later subscriber needs current class state, without replaying audio commands.
+const subscribeEvents = fanout<[StreamEnvelope]>(PUSH.streamEvent, (count) =>
+  ipcRenderer.send(SEND.eventsSubscribed, count > 0),
+);
 const subscribePreview = fanout<[PreviewFrameMeta, Uint8Array]>(PUSH.previewFrame, (count) =>
   ipcRenderer.send(SEND.previewSubscribed, count > 0),
 );

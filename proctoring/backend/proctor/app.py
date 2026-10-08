@@ -26,7 +26,7 @@ from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.requests import HTTPConnection
 
-from proctor_contracts.interfaces import ProctorError
+from proctor_contracts.interfaces import NotFoundError, ProctorError
 from proctor_contracts.v1 import (
     AbortRequest,
     ApiError,
@@ -616,7 +616,10 @@ def create_app(
 
     @api.get("/sessions/{session_id}", response_model=SessionInfo)
     def get_session(session_id: str, mgr: SessionManager = Depends(manager)) -> SessionInfo:
-        return mgr.runtime(session_id).info
+        info = mgr.get(session_id)
+        if info is None:
+            raise NotFoundError(ErrorCode.SESSION_NOT_FOUND, f"session {session_id} not found")
+        return info
 
     @api.post("/sessions/{session_id}/preflight", response_model=PreflightReport)
     def preflight(session_id: str, mgr: SessionManager = Depends(manager)) -> PreflightReport:
@@ -668,7 +671,8 @@ def create_app(
 
     @api.get("/sessions/{session_id}/exam", response_model=ExamDefinition)
     def exam(session_id: str, mgr: SessionManager = Depends(manager)) -> ExamDefinition:
-        mgr.runtime(session_id)
+        if mgr.get(session_id) is None:
+            raise NotFoundError(ErrorCode.SESSION_NOT_FOUND, f"session {session_id} not found")
         return mgr.exam
 
     @api.get("/sessions/{session_id}/metrics", response_model=RuntimeMetrics)

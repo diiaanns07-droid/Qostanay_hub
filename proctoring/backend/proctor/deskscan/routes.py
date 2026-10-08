@@ -7,7 +7,8 @@ from typing import Annotated, Any, Callable, Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
-from proctor_contracts.v1 import DeskScanRequest, DeskScanResult
+from proctor_contracts.interfaces import NotFoundError
+from proctor_contracts.v1 import DeskScanRequest, DeskScanResult, ErrorCode
 
 from .clip import write_desk_scan_clip
 from .service import DeskScanService, preflight_check
@@ -47,15 +48,13 @@ def install_desk_scan_routes(api: APIRouter, manager: Callable[[], Any], registr
 
     @api.get("/sessions/{session_id}/desk-scan", response_model=DeskScanResult)
     def get_desk_scan(session_id: str) -> DeskScanResult:
+        # The manager checks both live and persisted sessions. Deleted metadata
+        # must not be exposed through the service's in-memory result cache.
+        if manager().get(session_id) is None:
+            raise NotFoundError(ErrorCode.SESSION_NOT_FOUND, f"session {session_id} not found")
         known = service.known_result(session_id)
         if known is not None:
             return known
-        mgr = manager()
-        if mgr.get(session_id) is None:  # e.g. after a backend restart: the stored result, else 404
-            res = service.result(session_id, store())
-            if res.scan_id is None:
-                mgr.runtime(session_id)  # raises SESSION_NOT_FOUND
-            return res
         service.warm_up()  # the student opened the step: load the model before "Начать осмотр"
         return service.result(session_id, store())
 

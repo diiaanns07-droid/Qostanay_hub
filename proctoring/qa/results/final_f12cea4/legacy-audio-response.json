@@ -1,0 +1,11 @@
+{
+  "tested_sha": "f12cea4b92d3e6308c99ff493f80fdd9999bf182",
+  "legacy_audio_start_status": 422,
+  "body": {
+    "error": {
+      "code": "audio_extension_required",
+      "message_ru": "Используйте проверенную аудиосвязь панели преподавателя",
+      "details": {}
+    }
+  }
+}

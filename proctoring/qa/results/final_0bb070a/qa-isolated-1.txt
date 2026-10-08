@@ -1,0 +1,27 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+______________ test_no_download_calls_in_backend_runtime_source _______________
+
+    def test_no_download_calls_in_backend_runtime_source():
+        """Heuristic gate: only explicitly reviewed preparation/classroom calls are allowed.
+
+        Scans proctoring/backend/proctor (excluding tests and the A01 smoke client, which talks to
+        127.0.0.1 only). A hit is not automatically a bug; it must be justified or removed.
+        """
+        hits = []
+        root = PROCTORING_ROOT / "backend" / "proctor"
+        for path in root.rglob("*.py"):
+            rel = path.relative_to(root).as_posix()
+            if "/tests/" in f"/{rel}" or rel.endswith("bootstrap/smoke.py"):
+                continue
+            hits.extend(_unreviewed_network_uses(path.read_text(encoding="utf-8"), rel))
+>       assert not hits, "\n".join(hits)
+E       AssertionError: audio/prepare.py: network operation download_yamnet:urllib.request.urlopen expected 0, got 2
+E         audio/prepare.py:26: with urllib.request.urlopen(yamnet.MODEL_URL, timeout=60) as response:
+E         audio/prepare.py:29: with urllib.request.urlopen(yamnet.LICENSE_URL, timeout=30) as response:
+E       assert not ['audio/prepare.py: network operation download_yamnet:urllib.request.urlopen expected 0, got 2', 'audio/prepare.py:26:...out=60) as response:', 'audio/prepare.py:29: with urllib.request.urlopen(yamnet.LICENSE_URL, timeout=30) as response:']
+
+qa\tests\test_offline.py:182: AssertionError
+=========================== short test summary info ===========================
+FAILED qa/tests/test_offline.py::test_no_download_calls_in_backend_runtime_source
+1 failed in 0.64s

@@ -1,0 +1,16 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_________ test_reviewed_network_scopes_cannot_hide_new_runtime_calls __________
+
+    def test_reviewed_network_scopes_cannot_hide_new_runtime_calls():
+        root = PROCTORING_ROOT / "backend" / "proctor"
+        for rel in REVIEWED_NETWORK_USES:
+            source = (root / rel).read_text(encoding="utf-8")
+>           assert not _unreviewed_network_uses(source, rel)
+E           assert not ['audio/prepare.py: network operation download_yamnet:urllib.request.urlopen expected 0, got 2', 'audio/prepare.py:26:...out=60) as response:', 'audio/prepare.py:29: with urllib.request.urlopen(yamnet.LICENSE_URL, timeout=30) as response:']
+E            +  where ['audio/prepare.py: network operation download_yamnet:urllib.request.urlopen expected 0, got 2', 'audio/prepare.py:26:...out=60) as response:', 'audio/prepare.py:29: with urllib.request.urlopen(yamnet.LICENSE_URL, timeout=30) as response:'] = _unreviewed_network_uses('"""Explicit setup command. This is the only audio module allowed to download."""\nimport argparse\nimport hashlib\nim...1, f"audio model unavailable: {exc}\\n")\n    return 0\n\n\nif __name__ == "__main__":\n    raise SystemExit(main())\n', 'audio/prepare.py')
+
+qa\tests\test_offline.py:189: AssertionError
+=========================== short test summary info ===========================
+FAILED qa/tests/test_offline.py::test_reviewed_network_scopes_cannot_hide_new_runtime_calls
+1 failed in 0.10s

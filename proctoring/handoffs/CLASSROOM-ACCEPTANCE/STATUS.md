@@ -245,3 +245,63 @@ expired-command and silent-client tests pass with thread exceptions promoted to 
 
 Published checkpoint426b9d958eaf39e44b14b5d2e2802948c634a705 was verified against the GitHub remote
 tip. Later fixes are committed/published separately; do not infer their availability from this entry.
+
+### A11 and final backend QA checkpoint
+
+Integrated A11 ee232707 (merge0f7405ff3dff32cfa4bf1c9828c3923bd0d58db8): store write failures now
+surface to session/health; bounded latest-incident retry protects transiently lost CLOSED updates;
+pre-start CV timestamps are filtered; paused metadata is retained; persisted sessions can be read
+after restart without recreating devices/runtime. Visible HTML reports now use Adal. Worker regression:
+123 PASS, two explicitly skipped media/browser checks. The 17-row disposition remains in
+handoffs/ADAL-A11-CLOSEOUT/STATUS.md; F04/F11/F12/F13 and F15 reason detail are still open/partial.
+
+Root full QA on clean committed source0f7405ff3dff32cfa4bf1c9828c3923bd0d58db8:
+380 PASS, one SKIP, four known XFAIL, zero FAIL/XPASS, 135.24 seconds; no token-like strings in logs.
+Evidence: qa/results/20261008T143608Z_adal_a11_integrated_r2_0f7405ff3dff/. The previous local attempt
+failed fixture setup because root passed a Windows backslash path through PYTEST_ADDOPTS; it did not
+exercise the product. Its original report is preserved under ignored desktop/out/qa-invalid-temp-path-
+20261008T143446Z. Corrected invocation uses forward slashes; no test expectation was changed.
+
+Also integrated e116626's test-only local FakeAudioMonitor: ordinary backend lifecycle pytest now
+needs no custom injection launcher, and 16 lifecycle tests passed in the worker. No physical audio,
+camera or native guard acceptance is implied. The renderer-reload lock recovery remains the active
+integration task; successful initial lock/unlock and process restart do not close that gap.
+
+## Current integrated candidate — software acceptance stage complete
+
+Root integrated3b53958's renderer-subscription recovery as8696f6a8eced89fd11562fe96f3c99149105365f.
+Main now waits for renderer-loss invalidation, asks the backend for fresh scoped recovery after the
+trusted preload has listeners, and replays only current unexpired class state to late subscribers.
+No fabricated receipt, weaker DOM check or longer acknowledgement deadline was introduced.
+
+Root independently ran the complete actual control chain on that combined source (including A11):
+22/22 PASS, zero skips/failures, process exit0. Evidence: INTEGRATED_CONTROL_CHAIN.json. This used the
+production Electron main/preload/React, actual C1, two real backend/C2 processes and teacher Chrome UI.
+Lock/unlock, custom reason, pending/confirmed, wrong-target isolation, hidden/no-renderer refusal,
+teacher feed loss/reconnect, renderer reload, full app/backend restart and persisted identity passed.
+Both sessions remained SYNTHETIC/CREATED; no cameras, microphones or native restrictions activated.
+Raw ephemeral test profiles/databases remain outside the checkout and were not committed.
+
+Recovery worker's full shell suite:111 PASS, one expected platform skip. Root TypeScript(all three
+configs) and complete production build passed. Prior root backend QA380PASS belongs to the exact
+backend source recorded above; subsequent product changes were the independently tested desktop
+recovery. No broader physical-release claim is made. All active worker coding assignments for this
+integration stage are complete. Remaining acceptance requires actual Windows LIVE+Enforce, physical
+media and the three-PC LAN/Wi-Fi pilot; native application allowlisting is still unavailable.
+
+### Four Claude quality prompts: published evidence audit
+
+Fetched all origin branches and inspected GitHub PR search. Found two independent offline deliveries:
+codex/adal-offline-kit@dde05215d8681bd886e10022538cff51ef455944 and
+codex/adal-offline-kit-2@03b3a3dc07b5f01317f058d0cbc247fe98014f44. Both start at2974f64 and replace
+the same utility/test paths with incompatible CLIs/manifests. They are NOT merged into this candidate.
+Useful artifacts include inventory/hash/platform/model checks, bundle assembly, installation checks;
+branch1 also has a three-PC rehearsal and model/integration notes, branch2 adds cache/helper/proxy
+checks. Read-only audit did not rerun their tests. User reports additional Linux/strace tests and local
+files; STATUS.md and those last evidence files were absent at the published tips. No real three-PC
+offline pilot or prepared binary kit is confirmed. Curate one implementation before any integration.
+
+No published CV-PHONE-QUALITY/CV-GAZE-QUALITY/ADAL-KAZAKH-PACK handoffs or their named task branches
+were found. Other existing A03/A04 work must not be credited as completion of these new prompts.
+The user's pasted agent messages establish duplicate offline work and an initially rejected push;
+the second branch is now present remotely, so at least those two deliveries are saved.

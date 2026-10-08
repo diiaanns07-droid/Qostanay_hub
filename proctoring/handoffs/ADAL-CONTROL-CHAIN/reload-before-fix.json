@@ -1,0 +1,145 @@
+{
+  "source": "actual production Electron + proctor/C2 + C1; CREATED synthetic sessions",
+  "nativeGuard": false,
+  "camera": false,
+  "microphone": false,
+  "skipped": [],
+  "results": [
+    {
+      "name": "production IPC creates synthetic session without starting exam",
+      "pass": true
+    },
+    {
+      "name": "two independent real C2 identities and synthetic provenance",
+      "pass": true
+    },
+    {
+      "name": "legacy initial false is not a confirmed unlock",
+      "pass": true
+    },
+    {
+      "name": "actual C1 → C2 → production Electron → UI receipt ACK",
+      "pass": true
+    },
+    {
+      "name": "teacher UI shows confirmed only after real application receipt",
+      "pass": true
+    },
+    {
+      "name": "pending appears before application confirmation",
+      "pass": true
+    },
+    {
+      "name": "custom reason shown and underlying application inert",
+      "pass": true
+    },
+    {
+      "name": "targeted lock leaves other actual backend untouched",
+      "pass": true
+    },
+    {
+      "name": "actual teacher feed loss invalidates current card lock status",
+      "pass": true
+    },
+    {
+      "name": "teacher reconnect restores confirmation from actual fresh C1 state",
+      "pass": true
+    },
+    {
+      "name": "actual unlock removes overlay and restores interaction",
+      "pass": true
+    },
+    {
+      "name": "backend without renderer fails truthfully without fabricated ACK",
+      "pass": true
+    },
+    {
+      "name": "failed command to B cannot lock A",
+      "pass": true
+    },
+    {
+      "name": "hidden Electron window cannot confirm lock",
+      "pass": true
+    },
+    {
+      "name": "new visible request receives genuine renderer confirmation",
+      "pass": true
+    },
+    {
+      "name": "failure",
+      "pass": false,
+      "reason": "Timed out: lock recovery after renderer reload"
+    }
+  ],
+  "diagnostics": {
+    "observations": [
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      },
+      {
+        "visible": "visible",
+        "inert": true,
+        "hidden": "true",
+        "reason": "Проверка после возвращения окна",
+        "box": {
+          "left": 0,
+          "top": 0,
+          "right": 1251.2000732421875,
+          "bottom": 763.2000122070312
+        },
+        "viewport": {
+          "w": 1266,
+          "h": 763,
+          "clientWidth": 1251,
+          "clientHeight": 763
+        },
+        "css": {
+          "visibility": "visible",
+          "display": "grid",
+          "opacity": "1"
+        },
+        "hit": true
+      },
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      },
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      },
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      }
+    ],
+    "cards": [
+      {
+        "label": "Backend B — без интерфейса",
+        "connected": true,
+        "stale": false,
+        "locked": false,
+        "lock_state": "failed",
+        "lock_confirmed": false
+      },
+      {
+        "label": "Electron A — SYNTHETIC",
+        "connected": true,
+        "stale": false,
+        "locked": false,
+        "lock_state": "failed",
+        "lock_confirmed": false
+      }
+    ],
+    "controls": "Класс: Синтетическая проверка цепочкиПриложение не подтвердило последний запрос экрана.Закрыть экран — Команда подтверждена экраном приложения при выполнении.Начать экзаменЗакрыть экран…Открыть экранЗавершить экзамен…Причина для студентаУберите телефон и дождитесь преподавателяУберите посторонние материалы и дождитесь преподавателяДождитесь проверки преподавателяЭкран закрывается внутри Adal. Это не блокировка Windows. Таймер внешнего сайта может продолжать идти.Закрыть экран AdalЗавершить локальный экзамен и наблюдение этого студента? Это не отправляет ответы на внешнем сайте.Подтвердить завершение"
+  }
+}
