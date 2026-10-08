@@ -127,6 +127,9 @@ async function flow(page, tag, shot, consoleErrors) {
   await retry.first().waitFor({ timeout: 20000 });
   check(`[${tag}] calibration failure surfaced`, await page.getByText("Качество кадров недостаточно").isVisible());
   check(`[${tag}] failed dot shown with text`, (await page.locator('.calfs-dot[data-state="failed"]').count()) === 1 && (await page.getByText("не собрано").count()) >= 1);
+  // A01 f46565c: "up" is optional -> the walk continues to "down" while "up" is failed
+  await page.locator('.calfs-dot[data-target="down"][data-state="collecting"]').waitFor({ timeout: 10000 }).then(() => true, () => false)
+    .then((ok) => check(`[${tag}] failed «вверх» does not stop the walk to «вниз»`, ok));
   await shot("05-calibration-failed-target");
   await retry.first().click();
   await page.waitForFunction(() => {

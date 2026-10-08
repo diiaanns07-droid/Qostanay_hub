@@ -967,8 +967,14 @@ export class FixtureBridge implements QorgauBridge {
       const s = this.requireActive(sessionId, "выбрать точку калибровки", "calibrating");
       if ("code" in s) return s;
       if (this.cal.phase !== "collecting") return err("INVALID_STATE", "Калибровка не в фазе сбора");
+      // Mirrors A04 CalibrationSession.select(): a target interrupted while collecting goes back to pending.
+      const prev = this.cal.current_target;
       this.cal.targets = this.cal.targets.map((t) =>
-        t.target === target ? { ...t, state: "collecting", samples: 0, quality: null, message_code: null } : t,
+        t.target === target
+          ? { ...t, state: "collecting", samples: 0, quality: null, message_code: null }
+          : t.target === prev && t.state === "collecting"
+            ? { ...t, state: "pending", samples: 0, quality: null, message_code: "interrupted" }
+            : t,
       );
       this.cal.current_target = target;
       return this.calChanged();
