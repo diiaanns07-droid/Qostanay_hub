@@ -144,7 +144,12 @@ class StudentClient:
             with self._lock:
                 self.messages.append(msg)
             if msg.get("type") == "ping" and self.auto_pong and not self.silent:
-                self.send("pong")
+                try:
+                    self.send("pong")
+                except ConnectionClosed as exc:
+                    # The test owner may close the socket after recv() returns a ping.
+                    self.closed = exc
+                    return
 
     def send(self, type_: str, **fields: Any) -> None:
         if self.silent:

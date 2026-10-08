@@ -231,3 +231,17 @@ cameras, full case 2.3 completion, or a fully validated release is made.
 Parallel Claude tasks are the four ADAL-QUALITY prompts published at 8ae332f, using baseline
 2974f643d669afc3219eac44192025008bad1617. Phone and attention work remain isolated from integration;
 the other two tasks own offline acceptance and Kazakh localization respectively.
+
+### Real control-chain defect found during acceptance
+
+The worker's actual production Electron run exposed a false lock-receipt rejection: Windows' classic
+scrollbar makes innerWidth larger than the fixed overlay's content viewport. The overlay, reason,
+inert state and aria-hidden were present, but main reported failed. Root commit52a6ed9 checks the
+positive-sized document content viewport instead. Six focused lock tests (including execution of the
+actual DOM predicate with scrollbar and incomplete-overlay geometry), full TypeScript checks and
+Electron main/preload build pass. Actual chain rerun is still pending; this is app-overlay confirmation,
+not proof of OS-wide blocking. Separate test-only pong-close race is handled as a closed socket;
+expired-command and silent-client tests pass with thread exceptions promoted to errors (2/2).
+
+Published checkpoint426b9d958eaf39e44b14b5d2e2802948c634a705 was verified against the GitHub remote
+tip. Later fixes are committed/published separately; do not infer their availability from this entry.
