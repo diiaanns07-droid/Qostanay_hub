@@ -792,6 +792,15 @@ class CoverageGap(Wire):
     reason: Code  # "paused", "camera_disconnected", "model_unavailable", ...
 
 
+class ReviewZone(StrEnum):
+    """Review queue priority; grey is insufficient coverage, never clearance or guilt."""
+
+    GREEN = "green"
+    YELLOW = "yellow"
+    RED = "red"
+    GREY = "grey"
+
+
 class SessionSummary(Wire):
     session: SessionInfo
     observed_ms: Annotated[float, Field(ge=0)]
@@ -801,6 +810,10 @@ class SessionSummary(Wire):
     incidents_by_rule: dict[str, int] = Field(default_factory=dict)
     reviews_by_decision: dict[str, int] = Field(default_factory=dict)
     limitations_ru: list[str] = Field(default_factory=list)
+    # Contract 1.1: A05 assessment as served by A08; null means not calculated.
+    review_zone: ReviewZone | None = None
+    review_zone_reasons_ru: list[str] = Field(default_factory=list, max_length=3)
+    review_zone_rule_version: str | None = None
 
 
 class HealthReport(Wire):

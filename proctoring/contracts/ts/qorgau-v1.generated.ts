@@ -676,6 +676,12 @@ export const ReviewPriorityValues = ["low", "medium", "high"] as const;
 export type ReviewStatus = "pending" | "confirmed" | "dismissed" | "inconclusive";
 export const ReviewStatusValues = ["pending", "confirmed", "dismissed", "inconclusive"] as const;
 
+/**
+ * Review queue priority; grey is insufficient coverage, never clearance or guilt.
+ */
+export type ReviewZone = "green" | "yellow" | "red" | "grey";
+export const ReviewZoneValues = ["green", "yellow", "red", "grey"] as const;
+
 export interface RuntimeMetrics {
   session_id: string | null;
   t_session_ms: number | null;
@@ -732,6 +738,9 @@ export interface SessionSummary {
   incidents_by_rule: Record<string, number>;
   reviews_by_decision: Record<string, number>;
   limitations_ru: Array<string>;
+  review_zone: ReviewZone | null;
+  review_zone_reasons_ru: Array<string>;
+  review_zone_rule_version: string | null;
 }
 
 export type SignalState = "present" | "absent" | "unknown" | "insufficient_evidence";

@@ -78,6 +78,9 @@ def test_doubles_drive_a_complete_live_session(faked):
         obs = [m["message"]["observation"] for m in rec.snapshot() if m["message"]["type"] == "observation"]
     frame_obs = [o for o in obs if o["kind"] in ("phone", "attention")]
     assert frame_obs and all(o["producer"]["module"].startswith("qa.fake_") for o in frame_obs)
+    audio = [o for o in obs if o["kind"] == "health" and o["health"]["component"] == "audio"]
+    assert audio and all(o["producer"]["module"] == "qa.fake_audio" for o in audio)
+    assert all(o["health"]["code"] == "qa_audio_isolated" for o in audio)
 
 
 # ------------------------------------------------------------------ camera
@@ -126,7 +129,10 @@ def test_camera_unplugged_mid_exam_is_visible_and_session_survives(faked):
         api = Api(be.http)
         be.http.post(f"/sessions/{sid}/calibration/skip", json={"reason": "qa"})
         api.start(sid)
-        health_obs = rec.wait(lambda ms: [m["message"]["observation"] for m in ms if m["message"]["type"] == "observation" and m["message"]["observation"]["kind"] == "health"], 10)
+        health_obs = rec.wait(lambda ms: [m["message"]["observation"] for m in ms
+            if m["message"]["type"] == "observation" and m["message"]["observation"]["kind"] == "health"
+            and m["message"]["observation"]["health"]["component"] == "capture"
+            and m["message"]["observation"]["health"]["code"] == "camera_disconnected"], 10)
         assert health_obs, "camera loss must be published as a HealthObservation"
         h = health_obs[-1]
         assert h["health"]["code"] == "camera_disconnected" and h["status"] == "degraded" and h["source_mode"] == "live" and h["frame_id"] is None

@@ -3641,6 +3641,17 @@
       "title": "ReviewStatus",
       "type": "string"
     },
+    "ReviewZone": {
+      "description": "Review queue priority; grey is insufficient coverage, never clearance or guilt.",
+      "enum": [
+        "green",
+        "yellow",
+        "red",
+        "grey"
+      ],
+      "title": "ReviewZone",
+      "type": "string"
+    },
     "RuntimeMetrics": {
       "additionalProperties": false,
       "properties": {
@@ -3983,6 +3994,37 @@
           },
           "title": "Limitations Ru",
           "type": "array"
+        },
+        "review_zone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewZone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "review_zone_reasons_ru": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Review Zone Reasons Ru",
+          "type": "array"
+        },
+        "review_zone_rule_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Review Zone Rule Version"
         }
       },
       "required": [

@@ -63,7 +63,7 @@ def run_full_flow(be: BackendProcess, phone_timeout: float = 45.0) -> Rows:
     rows = Rows()
     http = be.http
     api = Api(http)
-    rows.check("ready_line_contract", be.ready.get("contract") == "qorgau.v1" and be.ready.get("contract_version") == "1.0.0", be.ready_line.strip()[:200])
+    rows.check("ready_line_contract", contract.ready_matches_contract(be.ready), be.ready_line.strip()[:200])
 
     health = _try(rows, "health", lambda: contract.ok(http.get("/health"), "HealthReport"))
     if health is not None:
