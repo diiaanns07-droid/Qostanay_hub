@@ -93,6 +93,7 @@ class BackendView:
     def __init__(self, manager_getter: Callable[[], Any]):
         self._manager = manager_getter
         self._last_sid: str | None = None  # keep reporting a session after it finished
+        self._preview_cache: tuple[tuple[Any, ...], tuple[bytes, dict[str, Any]]] | None = None
 
     # ------------------------------------------------------------------ sessions
     def _runtime(self) -> Any | None:
@@ -202,11 +203,16 @@ class BackendView:
         if latest is None:
             return None
         metadata, data = latest
+        key = (metadata.session_id, getattr(metadata, "frame_id", None), metadata.wall_time, _val(metadata.source_mode))
+        if self._preview_cache is not None and self._preview_cache[0] == key:
+            return self._preview_cache[1]
         jpeg = shrink_jpeg(data, MODE_MARK_RU.get(_val(metadata.source_mode)))
         if jpeg is None:
             return None
-        return jpeg, {"source_mode": _val(metadata.source_mode), "source_session_id": metadata.session_id,
-                      "frame_wall": metadata.wall_time.isoformat()}
+        packet = jpeg, {"source_mode": _val(metadata.source_mode), "source_session_id": metadata.session_id,
+                        "frame_wall": metadata.wall_time.isoformat()}
+        self._preview_cache = key, packet  # exactly one encoded frame; never retain a frame history
+        return packet
 
     def export_clip(self, t_start_ms: float, before_s: float, after_s: float) -> Path:
         rt = self._runtime()

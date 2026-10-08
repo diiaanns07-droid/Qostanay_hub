@@ -3,7 +3,7 @@
 Runs in its own daemon thread with its own asyncio loop, so the network can never block or crash the
 local exam backend. Lifecycle per connection: ``hello`` → ``welcome`` (resume_token persisted, never
 logged) → periodic ``status`` (2 s + on change), ``incident`` (open/close, queued with ``seq``),
-``preview`` (320×240 ≤ 30 KB every 2 s while running), ``pong`` on ``ping``, ``ack`` for every command.
+``preview`` (320×240 ≤ 30 KB, default every 2 s; configurable 0.5–5 FPS), ``pong`` on ``ping``, ``ack`` for every command.
 Reconnect with backoff 1 → 2 → 4 → 8 → 15 s using the resume_token; a wrong join code stops the uplink
 (state ``rejected``) and the exam continues locally.
 
@@ -41,6 +41,7 @@ APP_VERSION = "qorgau-exam-uplink-0.1.0"
 MAX_MESSAGE = 256 * 1024
 CLIP_WAIT_ON_REQUEST_S = 15.0
 CLASS_STATE_REPUBLISH_S = 5.0  # class_state is re-published so a renderer that subscribed late still learns it
+PREVIEW_SEND_TIMEOUT_S = 1.0  # abandon a stalled connection instead of building a video backlog
 AUDIO_NOT_SUPPORTED_RU = "Аудиосвязь в приложении студента ещё не подключена"
 NO_CLIP_RULES = {"monitoring_degraded"}
 
@@ -137,7 +138,6 @@ class Uplink:
         self._outbox_signal: asyncio.Event | None = None
         self._last_status: dict[str, Any] | None = None
         self._last_status_t = 0.0
-        self._last_preview_t = 0.0
         self._last_state_publish = 0.0
         self._thread: threading.Thread | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -280,7 +280,8 @@ class Uplink:
     async def _session(self, ws: Any) -> None:
         self._last_status = None  # a fresh status right after (re)connect
         self._last_status_t = 0.0
-        tasks = [asyncio.create_task(self._receiver(ws)), asyncio.create_task(self._ticker(ws)), asyncio.create_task(self._stop.wait())]
+        tasks = [asyncio.create_task(self._receiver(ws)), asyncio.create_task(self._ticker(ws)),
+                 asyncio.create_task(self._preview_pump(ws)), asyncio.create_task(self._stop.wait())]
         try:
             done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             for t in done:
@@ -300,7 +301,8 @@ class Uplink:
         self._remember(msg)
 
     def _remember(self, msg: dict[str, Any]) -> None:
-        self.sent.append(msg)
+        # Diagnostics retain metadata, not thousands of base64 images at the faster preview cadence.
+        self.sent.append({k: v for k, v in msg.items() if k != "jpeg_b64"} if msg.get("type") == "preview" else msg)
         if len(self.sent) > 2000:
             del self.sent[:1000]
 
@@ -348,21 +350,50 @@ class Uplink:
             if status != self._last_status or now - self._last_status_t >= self.cfg.status_interval_s:
                 await self._send(ws, envelope("status", **status))
                 self._last_status, self._last_status_t = status, now
-            if snap.exam_state == "running" and now - self._last_preview_t >= self.cfg.preview_interval_s:
-                self._last_preview_t = now
-                if hasattr(self.view, "preview_packet"):
-                    packet = await asyncio.to_thread(self.view.preview_packet)
-                else:  # legacy view adapters have no frame provenance; never infer it from status
-                    jpeg = await asyncio.to_thread(self.view.preview_jpeg)
-                    packet = (jpeg, {"source_mode": "unknown", "source_session_id": None, "frame_wall": _now()}) if jpeg else None
-                if packet:
-                    jpeg, metadata = packet
-                    await self._send(ws, envelope("preview", jpeg_b64=base64.b64encode(jpeg).decode("ascii"), **metadata))
             self._outbox_signal.clear()
             try:
                 await asyncio.wait_for(self._outbox_signal.wait(), timeout=self.cfg.poll_interval_s)
             except asyncio.TimeoutError:
                 pass
+
+    def _preview_backpressured(self, ws: Any) -> bool:
+        assert self._send_lock is not None
+        transport = getattr(ws, "transport", None)
+        return self._send_lock.locked() or (transport is not None and transport.get_write_buffer_size() > 0)
+
+    async def _preview_pump(self, ws: Any) -> None:
+        """One freshest frame per period, independent of status/SQLite polling; no preview queue or catch-up burst."""
+        last_key: tuple[Any, ...] | None = None
+        while True:
+            started = time.monotonic()
+            last_key = await self._preview_once(ws, last_key)
+            await asyncio.sleep(max(0.0, self.cfg.preview_interval_s - (time.monotonic() - started)))
+
+    async def _preview_once(self, ws: Any, last_key: tuple[Any, ...] | None) -> tuple[Any, ...] | None:
+        snap = self._snap
+        if snap.exam_state != "running" or self._preview_backpressured(ws):
+            return last_key
+        if hasattr(self.view, "preview_packet"):
+            packet = await asyncio.to_thread(self.view.preview_packet)
+        else:  # legacy adapters have no frame identity; never infer provenance from status
+            jpeg = await asyncio.to_thread(self.view.preview_jpeg)
+            packet = (jpeg, {"source_mode": "unknown", "source_session_id": None, "frame_wall": _now()}) if jpeg else None
+        if not packet or self._snap.exam_state != "running" or self._snap.session_id != snap.session_id:
+            return last_key
+        jpeg, metadata = packet
+        source_session = metadata.get("source_session_id")
+        if source_session is not None and source_session != snap.session_id:
+            return last_key  # do not leak a cached frame across local sessions
+        key = (source_session, metadata.get("frame_wall"), metadata.get("source_mode"))
+        if key == last_key or self._preview_backpressured(ws):
+            return last_key
+        msg = envelope("preview", jpeg_b64=base64.b64encode(jpeg).decode("ascii"), **metadata)
+        assert self._send_lock is not None
+        async with self._send_lock:
+            # Timeout propagates to _session, which closes this connection and reconnects with the newest frame.
+            await asyncio.wait_for(ws.send(json.dumps(msg, ensure_ascii=False)), timeout=PREVIEW_SEND_TIMEOUT_S)
+        self._remember(msg)
+        return key
 
     # ================================================================== incidents + clips
     def _diff_incidents(self, snap: Snapshot) -> bool:

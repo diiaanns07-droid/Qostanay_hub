@@ -3,12 +3,14 @@
     QORGAU_CLASS_SERVER   host:port of the class server (qorgau.class.v1), e.g. 192.168.1.10:8765
     QORGAU_CLASS_CODE     6-digit join code from the teacher
     QORGAU_CLASS_LABEL    optional student label shown to the teacher (default: computer name)
+    QORGAU_CLASS_PREVIEW_FPS  0.5–5 (default 0.5); the teacher's preview rate limit also applies
 
 Both SERVER and CODE must be set, otherwise the uplink is disabled and the backend works locally.
 """
 
 from __future__ import annotations
 
+import math
 import os
 import platform
 import re
@@ -59,4 +61,11 @@ def config_from_env(data_dir: Path, environ: dict[str, str] | None = None) -> Up
         raise ValueError("QORGAU_CLASS_CODE must be 6 digits")
     computer = (platform.node() or "student-pc")[:64]
     label = (env.get("QORGAU_CLASS_LABEL") or computer).strip()[:64]
-    return UplinkConfig(server=server, join_code=code, student_label=label, computer_name=computer, state_dir=Path(data_dir) / "class_uplink")
+    try:
+        preview_fps = float(env.get("QORGAU_CLASS_PREVIEW_FPS", "0.5"))
+    except (TypeError, ValueError):
+        raise ValueError("QORGAU_CLASS_PREVIEW_FPS must be a number from 0.5 to 5") from None
+    if not math.isfinite(preview_fps) or not 0.5 <= preview_fps <= 5.0:
+        raise ValueError("QORGAU_CLASS_PREVIEW_FPS must be a number from 0.5 to 5")
+    return UplinkConfig(server=server, join_code=code, student_label=label, computer_name=computer,
+                        state_dir=Path(data_dir) / "class_uplink", preview_interval_s=1.0 / preview_fps)

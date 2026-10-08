@@ -32,6 +32,7 @@ import { fail, shellError } from "./errors";
 import { buildCapabilities, parseVerificationRecords, summarize, type NativeHelperInfo, type PlatformInfo, type ProbeResults, type VerificationRecord } from "./environment/capabilities";
 import { EnvironmentEventQueue } from "./environment/events";
 import { ExamGuard, type GuardPlatform } from "./environment/guard";
+import { applyCalibrationFullscreen } from "./environment/window-fullscreen";
 import { withDisplayCheck, withRemoteCheck } from "./environment/preflight";
 import { checkRemoteEnvironment } from "./environment/remote";
 import { checkVm, unknownVm, withVmCheck } from "./environment/vm";
@@ -357,8 +358,7 @@ function registerIpc(): void {
   ipcMain.on(SEND.windowFullscreen, (event, flag: unknown) => {
     const w = mainWindow;
     if (!trustedSender(event) || typeof flag !== "boolean" || !w || w.isDestroyed()) return;
-    if (!flag && machine.state.exam_mode_active) return;
-    w.setFullScreen(flag);
+    applyCalibrationFullscreen(w, flag, guard.active, machine.state.exam_mode_active);
   });
 }
 
