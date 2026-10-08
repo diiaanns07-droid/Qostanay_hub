@@ -36,6 +36,11 @@ class LockReceipt(BaseModel):
     reason_ru: str | None = Field(default=None, max_length=200)
 
 
+class LockUiLost(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    backend_instance_id: str = Field(min_length=1, max_length=128)
+
+
 @dataclass
 class PendingLock:
     request: dict[str, Any]
@@ -57,6 +62,7 @@ class LockCoordinator:
                                           backend_instance_id=self.instance_id)
         self._pending: PendingLock | None = None
         self._locked = False
+        self._confirmed = False
         self._reason: str | None = None
         self._state = "unconfirmed"
         self._detail: str | None = None
@@ -69,6 +75,9 @@ class LockCoordinator:
     def snapshot(self) -> dict[str, Any]:
         with self._mutex:
             return {"locked": self._locked, "lock_reason_ru": self._reason,
+                    "lock_confirmed": self._confirmed,
+                    "lock_requested": self._pending.request["locked"] if self._pending else bool(self._active),
+                    "lock_requested_reason_ru": self._pending.request["reason_ru"] if self._pending else self._active.get("reason_ru") if self._active else None,
                     "lock_state": self._state, "lock_error_ru": self._detail,
                     "lock_request": dict(self._pending.request) if self._pending else None,
                     "backend_instance_id": self.instance_id,
@@ -84,6 +93,7 @@ class LockCoordinator:
             self._finish_locked(refusal("failed", "Сессия изменилась до подтверждения экрана"))
             self._scope = scope
             self._locked, self._reason, self._state = False, None, "unconfirmed"
+            self._confirmed = False
             # A previously confirmed lock is re-rendered after restart/session change,
             # but is never reported effective before a receipt from this process.
             active = self._active
@@ -148,7 +158,12 @@ class LockCoordinator:
         return self._pending
 
     def wait(self, pending: PendingLock) -> dict[str, Any]:
-        pending.event.wait(max(0, pending.deadline - time.monotonic()))
+        # Windows waits may return fractionally before a monotonic deadline.
+        while not pending.event.is_set():
+            remaining = pending.deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            pending.event.wait(remaining)
         self.expire()
         return pending.result or refusal("failed", "Экран приложения не подтвердил команду")
 
@@ -172,6 +187,7 @@ class LockCoordinator:
                 self._finish_locked(refusal("failed", "Приложение не смогло показать запрошенный экран"))
             else:
                 self._locked, self._reason = receipt.locked, pending.request["reason_ru"]
+                self._confirmed = True
                 self._active = {**self._scope, "command_id": receipt.command_id, "reason_ru": self._reason} if self._locked else None
                 self.outbox.set_meta("lock_active_v1", json.dumps(self._active))
                 self._finish_locked({"ok": True})
@@ -190,3 +206,15 @@ class LockCoordinator:
     def stop(self) -> None:
         with self._mutex:
             self._finish_locked(refusal("failed", "Приложение завершает работу"))
+
+    def renderer_lost(self, instance_id: str) -> dict[str, Any]:
+        with self._mutex:
+            if instance_id != self.instance_id:
+                return {"accepted": False, "reason": "stale_backend"}
+            self._finish_locked(refusal("failed", "Интерфейс приложения перезапускается"))
+            self._locked, self._reason, self._state = False, None, "unconfirmed"
+            self._confirmed = False
+            if self._active:
+                self._start_locked(self._active["command_id"], True, self._active["reason_ru"], self.timeout_s, recovery=True)
+        self.changed()
+        return {"accepted": True}

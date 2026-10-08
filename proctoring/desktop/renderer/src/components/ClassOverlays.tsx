@@ -10,7 +10,7 @@ export function LockScreen({ state }: { state: ClassState }) {
   const ref = useRef<HTMLDivElement>(null);
   const request = state.lock_request;
   const requested = request?.locked && Date.parse(request.expires_at) > Date.now();
-  const reason = requested ? request.reason_ru : state.lock_reason_ru;
+  const reason = requested ? request.reason_ru : state.lock_reason_ru ?? state.lock_requested_reason_ru;
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     ref.current?.focus();

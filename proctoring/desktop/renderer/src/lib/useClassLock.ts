@@ -7,7 +7,7 @@ export function useClassLock(state: ClassState | null, transport: string): boole
   const [, refresh] = useState(0);
   const request = state?.lock_request;
   const live = !!request && Date.parse(request.expires_at) > Date.now();
-  const locked = live ? request.locked : !!state?.locked;
+  const locked = live ? request.locked : !!state?.locked || (!!state?.lock_requested && !state.lock_confirmed);
   useEffect(() => {
     if (!request || !live) return;
     let cancelled = false;

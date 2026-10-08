@@ -56,3 +56,12 @@ test("reset rejects old renderer replies and malformed messages cannot release",
   assert.equal((await controller.confirmApplied(receiptFor(r, true))).accepted, false);
   assert.equal(calls.length, 0);
 });
+test("renderer loss blocks immediately and invalidates only the current backend", async () => {
+  const { controller, calls, blocked } = setup();
+  controller.consumeClassState({ type: "class_state", locked: true, lock_request: request() });
+  await controller.rendererLost();
+  assert.equal(blocked.at(-1), true);
+  assert.deepEqual(calls[0], ["POST", "/v1/class/lock/lost", { backend_instance_id: "backend-1" }, 2500]);
+  controller.consumeClassState({ type: "class_state", locked: false, lock_requested: true, lock_confirmed: false, lock_request: null });
+  assert.equal(blocked.at(-1), true);
+});
