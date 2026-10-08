@@ -1,0 +1,13 @@
+{
+  "type": "preview",
+  "seq": 5,
+  "sent_at": "2026-10-09T09:00:04.200000Z",
+  "student_id": "st-0001",
+  "preview_seq": 3,
+  "frame_wall": "2026-10-09T09:00:04.200000Z",
+  "received_at": "2026-10-09T09:00:04.200000Z",
+  "byte_length": 9300,
+  "url": "/api/teacher/students/st-0001/preview.jpg?seq=3",
+  "origin": "simulated",
+  "jpeg_b64": null
+}

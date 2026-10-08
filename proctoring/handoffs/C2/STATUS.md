@@ -5,6 +5,18 @@ Branch: `codex/class-C2`, created from `codex/proctor-integration` @ `64354c014c
 (frozen 2026-10-08 14:45, not changed by C2). Paths: `proctoring/backend/proctor/uplink/`, `proctoring/handoffs/C2/`
 + the minimal `backend/proctor/app.py` change allowed by A01 (below).
 
+## Обновление 08.10 ~17:00 (по запросу капитана)
+* **Аудио: никогда не заявлять живой микрофон.** Пока WebRTC в приложении студента нет, `audio_start` и
+  `audio_update` → `ack {ok:false, error_code:"not_supported", code:"unsupported", error_ru:"Аудиосвязь в приложении
+  студента ещё не подключена"}`; `mic_active` НЕ поднимается (ни в `status`, ни в `class_state`). `audio_stop` → ok.
+  Раньше было `ok:true` + `mic_active=true` без захвата звука — по T05 это ложное «микрофон получен».
+* `class_state` теперь содержит `computer_name` и `student_label` (из конфигурации uplink: имя компьютера,
+  `QORGAU_CLASS_LABEL`).
+* `class_state` публикуется **каждые 5 с** (и при каждом изменении) из постоянно работающего цикла uplink, в том числе
+  без связи с сервером: окно, подписавшееся на `/v1/stream` позже, получает состояние не позже чем через 5 с.
+* Тесты: `pytest backend/proctor/uplink` **16 passed** (+ отказ audio_start/audio_update без mic_active, повторная
+  публикация с `computer_name` онлайн и офлайн).
+
 ## How to run
 ```powershell
 $env:QORGAU_CLASS_SERVER = "192.168.1.10:8765"   # teacher PC, host:port
@@ -53,10 +65,12 @@ lock/unlock/audio/start/finish command.
   "type": "class_state",
   "connection": "connecting | connected | reconnecting | rejected | stopped",
   "server": "192.168.1.10:8765",
+  "computer_name": "STUDENT-PC-07",
+  "student_label": "Студент 1",
   "student_id": "st-1 | null",
   "locked": true,
   "lock_reason_ru": "Телефон на столе | null",
-  "mic_active": false,
+  "mic_active": false,              // always false until WebRTC exists (audio_start -> not_supported)
   "audio_direction": "listen | talk | both | null",
   "exam": {"exam_id": "...", "title": "...", "mode": "url|app", "allowed_urls": [], "allowed_apps": [], "instructions_ru": "..."},
   "last_command": {"command_id": "uuid", "kind": "lock", "ok": true},

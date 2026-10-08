@@ -196,14 +196,6 @@ export class LiveStore {
     this.lastMessageAt = Date.now();
     this.sampleWall(env.sent_at);
     const m = env.message;
-    if ((m as { type: string }).type === "class_state") {
-      const cs = parseClassState(m);
-      if (cs) {
-        this.classState = cs;
-        this.bump("main");
-      }
-      return;
-    }
     if (m.type === "hello") {
       this.lastSeq = env.seq;
       const reconnect = this.helloAt !== null;
@@ -213,11 +205,21 @@ export class LiveStore {
       if (reconnect) this.onResync?.();
       return;
     }
+    const isClassState = (m as { type: string }).type === "class_state";
+    if (isClassState && (!Number.isSafeInteger(env.seq) || env.seq <= this.lastSeq)) return;
     if (this.lastSeq > 0 && env.seq > this.lastSeq + 1) {
       this.seqGaps += 1;
       this.onResync?.();
     }
     this.lastSeq = env.seq;
+    if (isClassState) {
+      const cs = parseClassState(m);
+      if (cs) {
+        this.classState = cs;
+        this.bump("main");
+      }
+      return;
+    }
     const mine = (sid: string | null | undefined) => !!this.sessionId && sid === this.sessionId;
     switch (m.type) {
       case "session_state":

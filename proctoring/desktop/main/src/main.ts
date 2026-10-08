@@ -5,7 +5,7 @@
 // the fixed window.qorgau bridge (IPC with sender + argument validation), exam-mode guard driven by
 // the session state, guaranteed release on finish/abort/pause/backend loss/renderer crash/quit.
 import { readFile, writeFile } from "node:fs/promises";
-import { release as osRelease, version as osVersion } from "node:os";
+import { hostname, release as osRelease, version as osVersion } from "node:os";
 import { join } from "node:path";
 import {
   app,
@@ -218,6 +218,10 @@ function registerIpc(): void {
     machine,
     operator,
     capabilities: () => capabilities,
+    healthMetadata: () => ({
+      computer_name: hostname().slice(0, 64),
+      class_configured: !!(process.env.QORGAU_CLASS_SERVER?.trim() && process.env.QORGAU_CLASS_CODE?.trim()),
+    }),
     emergencyExit,
     flushEvents: () => events.flush(),
     accessPolicy: cfg.accessPolicy,
@@ -327,7 +331,7 @@ function createWindow(ses: Session): BrowserWindow {
     minWidth: 960,
     minHeight: 640,
     show: false,
-    title: "Qorgau Exam",
+    title: "ADAL",
     backgroundColor: "#ffffff",
     autoHideMenuBar: true,
     webPreferences: {

@@ -38,7 +38,9 @@ async function run(viewport) {
 
     // 4. Class block: no data yet -> each connection state as text + badge
     await page.getByRole("heading", { name: "Класс" }).waitFor();
-    check(`[${tag}] class block without data says so`, await page.getByText("Состояние подключения к классу ещё не получено").isVisible());
+    await page.getByText("Сервер класса не настроен.", { exact: false }).waitFor();
+    check(`[${tag}] class block reports no server from health`, await page.getByText("нет сервера", { exact: true }).isVisible());
+    check(`[${tag}] computer name is available without uplink`, await page.getByTestId("class-computer").textContent() === "FIXTURE-PC");
     const states = { connected: "подключено", reconnecting: "переподключение: сервер класса не отвечает", rejected: "неверный код подключения", connecting: "подключение…" };
     for (const [value, text] of Object.entries(states)) {
       await panel(page, () => page.getByLabel("Связь с классом (FIXTURE)").selectOption(value));
@@ -51,6 +53,7 @@ async function run(viewport) {
     }
     await panel(page, () => page.getByLabel("Связь с классом (FIXTURE)").selectOption("connected"));
     check(`[${tag}] class block shows server`, await page.getByText("fixture-class:8765").isVisible());
+    check(`[${tag}] computer name remains after class_state without computer_name`, await page.getByTestId("class-computer").textContent() === "FIXTURE-PC");
     await shot("01-class-block");
 
     // 2. Lock screen
@@ -103,6 +106,17 @@ async function run(viewport) {
     await page.getByText("Обязательные проверки пройдены").waitFor();
     await page.getByRole("button", { name: "К калибровке" }).click();
     await page.getByText("Смотрите на точку глазами, голову держите прямо.").waitFor();
+    check(`[${tag}] full-screen calibration identifies the fixture`, await page.getByText("FIXTURE · имитация калибровки, без камеры").isVisible());
+    await page.getByRole("button", { name: "Пропустить…", exact: true }).click();
+    await page.getByLabel("PIN", { exact: true }).waitFor();
+    const pinOnTop = await page.getByLabel("PIN", { exact: true }).evaluate((input) => {
+      const r = input.getBoundingClientRect();
+      return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === input;
+    });
+    check(`[${tag}] teacher PIN appears above full-screen calibration`, pinOnTop);
+    await page.keyboard.press("Escape");
+    await page.getByLabel("PIN", { exact: true }).waitFor({ state: "detached" });
+    check(`[${tag}] dismissing PIN keeps calibration available`, await page.getByRole("button", { name: "Начать калибровку", exact: true }).isVisible());
     await panel(page, () => page.getByLabel("Заблокировать экзамен").check());
     await lock.waitFor();
     const onCal = await page.evaluate(() => !!document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest(".lockscreen"));
