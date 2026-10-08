@@ -13,6 +13,11 @@ const val = (f, d) => {
 };
 const say = (obj) => process.stdout.write(JSON.stringify(obj) + "\n");
 
+if (has("--vm-check")) {
+  say({ type: "vm", state: has("--vm-found") ? "detected" : "not_detected", platform: has("--vm-found") ? "Hyper-V" : null });
+  process.exit(0);
+}
+
 if (has("--environment-check")) {
   say({ type: "environment", processes: has("--remote-found") ? ["anydesk.exe"] : [], remote_session: has("--rdp") });
   process.exit(0);

@@ -575,6 +575,19 @@ class SessionRuntime:
         for item in caps.items:
             counts[item.status.value] = counts.get(item.status.value, 0) + 1
         ok = caps.exam_mode_supported and counts.get("blocked", 0) > 0
+        vm_warning = next((i for i in caps.items if i.mechanism in (
+            "native.vm_check.detected", "native.vm_check.unknown")), None)
+        if ok and vm_warning is not None:
+            # VM/VDI is advisory. Hard environment failures were handled above;
+            # preserve their required gate while making only this warning optional.
+            return PreflightCheck(
+                check_id=PreflightCheckId.ENVIRONMENT_PROTECTION,
+                status=CheckStatus.WARN, required=False,
+                message_code="virtual_machine_" + vm_warning.mechanism.rsplit(".", 1)[-1],
+                message_ru=vm_warning.note_ru or "Не удалось определить виртуальную машину",
+                details={"vm_state": vm_warning.mechanism.rsplit(".", 1)[-1],
+                         "platform": caps.platform, **{f"count_{k}": v for k, v in counts.items()}},
+            )
         status = CheckStatus.WARN if ok and len(counts) > 1 else (CheckStatus.PASS if ok else CheckStatus.FAIL)
         if required and status == CheckStatus.WARN:
             status = CheckStatus.PASS  # partial protection is visible in details, not hidden
