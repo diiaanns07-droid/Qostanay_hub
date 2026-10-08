@@ -45,6 +45,8 @@ const SOURCE = {
   test: "ТЕСТОВЫЙ КЛИП",
   unspecified: "источник не указан",
 };
+const EVENT_SOURCE = { live: "Камера (заявлено клиентом)", synthetic: "СИНТЕТИЧЕСКИЙ ЭПИЗОД", replay: "ВОСПРОИЗВЕДЕНИЕ ЗАПИСИ", unknown: "ИСТОЧНИК НЕИЗВЕСТЕН" };
+const eventSource = (e) => e.origin === "simulated" ? EVENT_SOURCE.synthetic : EVENT_SOURCE[e.source_mode] ?? EVENT_SOURCE.unknown;
 
 /**
  * @param {string} tag
@@ -284,6 +286,7 @@ function mountReview(root, studentId, o) {
               h("span", { class: "t3-dur" }, [e.state === "open" ? "идёт" : duration(e.duration_ms)]),
               e.decision ? h("span", { class: `t3-badge t3-dec-${e.decision}` }, [DECISION[e.decision]?.label ?? e.decision]) : h("span", { class: "t3-badge t3-dec-none" }, ["не проверено"]),
               clipBadge(e),
+              h("span", { class: "t3-badge t3-source" }, [eventSource(e)]),
             ],
           ),
         ]);
@@ -315,11 +318,13 @@ function mountReview(root, studentId, o) {
     detail.replaceChildren(
       h("h4", {}, [ruleLabel(e.rule_id)]),
       h("p", { class: "t3-expl" }, [e.explanation_ru || "Описание не передано."]),
+      h("p", { class: "t3-test-label" }, [eventSource(e)]),
       h("dl", { class: "t3-facts" }, [
         h("dt", {}, ["Начало"]), h("dd", {}, [dateTime(e.t_start_wall)]),
         h("dt", {}, ["Длительность"]), h("dd", {}, [e.state === "open" ? `идёт (${duration(e.duration_ms)})` : duration(e.duration_ms)]),
         h("dt", {}, ["Приоритет"]), h("dd", {}, [`${p.icon} ${p.label}`]),
         h("dt", {}, ["Категория"]), h("dd", {}, [CATEGORY[e.category] ?? e.category]),
+        h("dt", {}, ["Сессия источника"]), h("dd", {}, [e.source_session_id ?? "не передана"]),
       ]),
       clipArea(e, sameClip ? keepVideo : null),
       decisionArea(e),

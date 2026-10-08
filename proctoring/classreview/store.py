@@ -155,7 +155,8 @@ class ReviewStore:
             )
 
     # ------------------------------------------------------------------ ingestion (from /ws/student)
-    def ingest_incident(self, student_id: str, msg: dict[str, Any], *, class_session_id: str) -> IngestResult:
+    def ingest_incident(self, student_id: str, msg: dict[str, Any], *, class_session_id: str,
+                        canonical_event: dict[str, Any] | None = None) -> IngestResult:
         """Validate and store one `incident` message. Re-delivery of the same (student_id, seq) is a
         no-op; an older seq for an episode never overwrites a newer one (closed stays closed)."""
         if not ID_RE.fullmatch(student_id or ""):
@@ -165,6 +166,14 @@ class ReviewStore:
         now = now_utc()
         with self._lock:
             conn = self.conn
+            if canonical_event is not None:
+                # C1 has already resolved wire sequence reuse across runs and conflicts. Its immutable
+                # event ID, not the wire seq, is the identity. Allocate a local ordering key atomically.
+                if conn.execute("SELECT 1 FROM canonical_events WHERE student_id=? AND event_id=?",
+                                (student_id, canonical_event["event_id"])).fetchone():
+                    return IngestResult("duplicate", None)
+                f["seq"] = conn.execute("SELECT COALESCE(MAX(seq),0)+1 FROM seen_seq WHERE student_id=?",
+                                         (student_id,)).fetchone()[0]
             if conn.execute("SELECT 1 FROM seen_seq WHERE student_id=? AND seq=?", (student_id, f["seq"])).fetchone():
                 return IngestResult("duplicate", None)
             row = conn.execute(
@@ -184,6 +193,9 @@ class ReviewStore:
                         "INSERT INTO seen_seq(student_id, seq, incident_id, received_at) VALUES (?,?,?,?)",
                         (student_id, f["seq"], f["incident_id"], now.isoformat()),
                     )
+                    if canonical_event is not None:
+                        conn.execute("INSERT INTO canonical_events VALUES (?,?,?,?,?)",
+                                     (student_id, canonical_event["event_id"], f["incident_id"], f["seq"], to_json(canonical_event)))
                     if row is not None and row["last_seq"] > f["seq"]:
                         status = "stale"
                     elif row is not None and row["state"] == "closed" and f["state"] == "open":
@@ -273,11 +285,14 @@ class ReviewStore:
         }
 
     # ------------------------------------------------------------------ clip requests (teacher command)
-    def note_clip_requested(self, student_id: str, incident_id: str, command_id: str | None) -> dict[str, Any]:
+    def note_clip_requested(self, student_id: str, incident_id: str, command_id: str | None,
+                            *, requested_at: datetime | None = None) -> dict[str, Any]:
         """Called by the class server when it sends `request_clip` to the student."""
         now = now_utc()
         with self._lock:
             self._require_incident(student_id, incident_id)
+            if command_id and self.conn.execute("SELECT 1 FROM clip_requests WHERE command_id=?", (command_id,)).fetchone():
+                return self.get_incident(student_id, incident_id)
             if self.conn.execute(
                 "SELECT 1 FROM clips WHERE student_id=? AND incident_id=?", (student_id, incident_id)
             ).fetchone():
@@ -291,7 +306,8 @@ class ReviewStore:
         self._emit(student_id, incident_id)
         return self.get_incident(student_id, incident_id)
 
-    def note_command_ack(self, command_id: str, ok: bool, error_ru: str | None = None) -> None:
+    def note_command_ack(self, command_id: str, ok: bool, error_ru: str | None = None,
+                         reason_code: str = "student_refused") -> None:
         """`ack` for a request_clip command. ok=false -> the clip is shown as unavailable with the reason."""
         if ok:
             return  # the upload itself completes the request
@@ -304,9 +320,9 @@ class ReviewStore:
                 return
             with db.transaction(self.conn):
                 self.conn.execute(
-                    "UPDATE clip_requests SET status='failed', reason_code='student_refused', reason_ru=?, updated_at=?"
+                    "UPDATE clip_requests SET status='failed', reason_code=?, reason_ru=?, updated_at=?"
                     " WHERE request_id=?",
-                    ((error_ru or "Компьютер студента не смог отправить клип")[:300], now_utc().isoformat(), row["request_id"]),
+                    (reason_code, (error_ru or "Компьютер студента не смог отправить клип")[:300], now_utc().isoformat(), row["request_id"]),
                 )
         self._emit(row["student_id"], row["incident_id"])
 
@@ -323,6 +339,19 @@ class ReviewStore:
         sha = hashlib.sha256(data).hexdigest()
         with self._lock:
             self._require_incident(student_id, incident_id, status=404)
+            provenance = self._provenance(student_id, incident_id)
+            if provenance:
+                # A transport header cannot turn an unknown/replay/synthetic incident into live video.
+                original = provenance[0]
+                mode = original.get("source_mode")
+                if original["origin"] == "simulated" or mode == "synthetic":
+                    source = "synthetic"
+                elif mode == "replay":
+                    source = "replay"
+                elif mode != "live" or original["origin"] != "real":
+                    source = "unspecified"
+                elif source not in ("synthetic", "test", "replay"):
+                    source = "live"
             existing = self.conn.execute(
                 "SELECT sha256 FROM clips WHERE student_id=? AND incident_id=?", (student_id, incident_id)
             ).fetchone()
@@ -525,6 +554,8 @@ class ReviewStore:
 
     def _view(self, r: sqlite3.Row) -> dict[str, Any]:
         sid, iid = r["student_id"], r["incident_id"]
+        provenance = self._provenance(sid, iid)
+        first = provenance[0] if provenance else {}
         history = [
             {
                 "decision_id": d["decision_id"],
@@ -559,8 +590,37 @@ class ReviewStore:
             "clip": self._clip_state(r),
             "snapshot_available": bool(r["snapshot_file"]),
             "class_session_id": r["class_session_id"],
+            "session_id": r["class_session_id"],
+            "origin": first.get("origin", "unknown"),
+            "source_mode": first.get("source_mode", "unknown"),
+            "source_session_id": first.get("source_session_id"),
+            "event_provenance": provenance,
             "updated_at": r["updated_at"],
         }
+
+    def _provenance(self, student_id: str, incident_id: str) -> list[dict[str, Any]]:
+        events = [json.loads(row["event_json"]) for row in self.conn.execute(
+            "SELECT event_json FROM canonical_events WHERE student_id=? AND incident_id=? ORDER BY review_seq",
+            (student_id, incident_id))]
+        return [{"event_id": e["event_id"], "client_run_id": e.get("client_run_id"), "seq": e.get("seq"),
+                 "session_id": e.get("session_id"), "origin": e.get("origin", "unknown"),
+                 "source_mode": e.get("payload", {}).get("source_mode") or "unknown",
+                 "source_session_id": e.get("payload", {}).get("source_session_id"),
+                 "received_at": e.get("received_at"), "seq_conflict": e.get("seq_conflict", False)} for e in events]
+
+    def expire_requests(self) -> None:
+        """Persist timeout states and publish them, even when no teacher is polling."""
+        now = requested_at or now_utc()
+        with self._lock:
+            rows = self.conn.execute("SELECT DISTINCT student_id,incident_id FROM clip_requests WHERE status='pending'"
+                                     " AND requested_at_us < ?", (_us(now) - int(self.config.clip_request_timeout_s * 1e6),)).fetchall()
+            with db.transaction(self.conn):
+                self.conn.execute("UPDATE clip_requests SET status='failed',reason_code='upload_timeout',"
+                                  " reason_ru='Клип не получен вовремя. Можно запросить снова.',updated_at=?"
+                                  " WHERE status='pending' AND requested_at_us < ?",
+                                  (now.isoformat(), _us(now) - int(self.config.clip_request_timeout_s * 1e6)))
+        for row in rows:
+            self._emit(row["student_id"], row["incident_id"])
 
     def _clip_state(self, r: sqlite3.Row) -> dict[str, Any]:
         sid, iid = r["student_id"], r["incident_id"]
