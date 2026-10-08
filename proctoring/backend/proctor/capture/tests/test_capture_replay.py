@@ -152,11 +152,24 @@ def test_trim_beyond_media_is_invalid(make_service, clip):
 def test_sidecar_validation(settings, clip):
     d = settings.replay_dir
     clip("sc")
-    (d / "media" / "sc.ts.json").write_text(json.dumps({"pts_ms": [0, 40, 40, 80]}))
+    (d / "media" / "sc.ts.json").write_text(json.dumps({"pts_ms": [0, 40, 30, 80]}))  # going back = corrupt
     doc = json.loads((d / "sc.json").read_text())
     doc["media"].update(timestamps="sidecar", timestamps_path="media/sc.ts.json")
     (d / "sc.json").write_text(json.dumps(doc))
     _expect_invalid(settings, "sc", "sidecar_invalid")
+
+
+def test_sidecar_equal_timestamps_are_untied_not_rejected(settings, clip):
+    """Measured on the Windows demo laptop: Python 3.12 time.monotonic ticks every 15.6 ms, so
+    record wrote equal neighbours (4–6 per 30–40 s clip) and every real clip was rejected."""
+    d = settings.replay_dir
+    clip("tie")
+    (d / "media" / "tie.ts.json").write_text(json.dumps({"pts_ms": [0, 47, 47, 78, 78, 78, 109]}))
+    doc = json.loads((d / "tie.json").read_text())
+    doc["media"].update(timestamps="sidecar", timestamps_path="media/tie.ts.json")
+    (d / "tie.json").write_text(json.dumps(doc))
+    r = load_replay(d, "tie")
+    assert r.sidecar == [0, 47, 48, 78, 79, 80, 109] and r.sidecar_ties == 3
 
 
 # ------------------------------------------------------------------ playback

@@ -74,10 +74,17 @@ def rss_bytes() -> int | None:
                     ("PeakPagefileUsage", ctypes.c_size_t),
                 ]
 
+            # explicit prototypes: with ctypes' default int the pseudo-handle -1 is passed as a 32-bit
+            # value on x64 and GetProcessMemoryInfo fails (measured: RSS was always None on Windows 11)
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            psapi = ctypes.WinDLL("psapi", use_last_error=True)
+            kernel32.GetCurrentProcess.argtypes = []
+            kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+            psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(PMC), wintypes.DWORD]
+            psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
             pmc = PMC()
             pmc.cb = ctypes.sizeof(PMC)
-            handle = ctypes.windll.kernel32.GetCurrentProcess()
-            if ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(pmc), pmc.cb):
+            if psapi.GetProcessMemoryInfo(kernel32.GetCurrentProcess(), ctypes.byref(pmc), pmc.cb):
                 return int(pmc.WorkingSetSize)
         else:
             import resource
@@ -97,6 +104,14 @@ def hardware_info() -> dict[str, Any]:
                     if line.startswith("model name"):
                         cpu = line.split(":", 1)[1].strip()
                         break
+        except OSError:
+            pass
+    elif sys.platform == "win32":  # platform.processor() is only "AMD64 Family ..., AuthenticAMD" here
+        try:
+            import winreg
+
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") as key:
+                cpu = str(winreg.QueryValueEx(key, "ProcessorNameString")[0]).strip() or cpu
         except OSError:
             pass
     return {

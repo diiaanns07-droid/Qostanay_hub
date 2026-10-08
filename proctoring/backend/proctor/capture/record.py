@@ -18,12 +18,12 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from proctor_contracts.interfaces import FramePacket, SessionClock
 from proctor_contracts.v1 import SourceConfig
 
-from .replay import REPLAY_FORMAT, REPLAY_ID_RE, ReplayManifest, sha256_file
+from .replay import REPLAY_FORMAT, REPLAY_ID_RE, SIDECAR_TIE_STEP_MS, ReplayManifest, sha256_file
 from .service import CAPTURE_VERSION, FrameCaptureService
 from .sources import cv2
 
@@ -34,6 +34,7 @@ class _Writer:
         self.fps = fps
         self.writer: Any = None
         self.pts: list[float] = []
+        self.ties = 0
         self.first_t: float | None = None
         self.size: tuple[int, int] | None = None
         self.lock = threading.Lock()
@@ -54,7 +55,11 @@ class _Writer:
             if (frame.image.shape[1], frame.image.shape[0]) != self.size:
                 return  # resolution changed after a reconnect: keep the clip consistent
             self.writer.write(frame.image)
-            self.pts.append(round(frame.t_session_ms - (self.first_t or 0.0), 3))
+            t = round(frame.t_session_ms - (self.first_t or 0.0), 3)
+            if self.pts and t <= self.pts[-1]:  # same clock tick (15.6 ms on Windows/Python 3.12)
+                t = round(self.pts[-1] + SIDECAR_TIE_STEP_MS, 3)
+                self.ties += 1
+            self.pts.append(t)
 
     def close(self) -> None:
         with self.lock:
@@ -62,7 +67,21 @@ class _Writer:
                 self.writer.release()
 
 
-def record(settings: Any, source: SourceConfig, replay_id: str, seconds: float, *, consent: str, title: str = "", overwrite: bool = False) -> dict[str, Any]:
+def record(
+    settings: Any,
+    source: SourceConfig,
+    replay_id: str,
+    seconds: float,
+    *,
+    consent: str,
+    title: str = "",
+    overwrite: bool = False,
+    countdown_s: int = 0,
+    tick: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
+    """``countdown_s``: the camera is opened first, then the countdown runs, then writing starts,
+    so t = 0 of the clip is the moment "REC" is shown (the person in front of the camera can
+    follow a timed script). ``tick`` gets the countdown and one line per recorded second."""
     if cv2 is None:
         raise SystemExit("OpenCV is required for recording")
     if not REPLAY_ID_RE.match(replay_id):
@@ -78,13 +97,23 @@ def record(settings: Any, source: SourceConfig, replay_id: str, seconds: float, 
     if not overwrite and (manifest_path.exists() or video.exists()):
         raise SystemExit(f"{manifest_path.name} or its media already exists (use --overwrite)")
     writer = _Writer(video, fps=float(source.fps))
+    say = tick or (lambda _msg: None)
     svc = FrameCaptureService(settings)
-    svc.add_consumer("recorder", writer)
     svc.open(f"record-{replay_id}", source, SessionClock())
-    started = time.monotonic()
     try:
+        for n in range(max(0, int(countdown_s)), 0, -1):
+            say(f"recording starts in {n} s ...")
+            time.sleep(1.0)
+        svc.add_consumer("recorder", writer)
+        started = time.monotonic()
+        say(f"REC t = 0 s (of {seconds:g} s)")
+        shown = 0
         while time.monotonic() - started < seconds and writer.error is None:
-            time.sleep(0.2)
+            time.sleep(0.1)
+            elapsed = int(time.monotonic() - started)
+            if elapsed > shown:
+                shown = elapsed
+                say(f"REC t = {elapsed} s")
         health = svc.health()
         metrics = svc.metrics()
     finally:
@@ -121,6 +150,7 @@ def record(settings: Any, source: SourceConfig, replay_id: str, seconds: float, 
             "backend": str(health.details.get("backend", "")),
             "frames": len(writer.pts),
             "skipped_by_writer": int(rec.frames_skipped) if rec else 0,
+            "timestamp_ties_plus_1ms": writer.ties,
             "consent": consent.strip()[:300],
         },
     }

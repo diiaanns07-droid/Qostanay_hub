@@ -11,7 +11,7 @@ import time
 import pytest
 
 from proctor.capture.sources import CameraSource
-from proctor.capture.tests.helpers import camera_kwargs, wait_until
+from proctor.capture.tests.helpers import FakeDevice, camera_kwargs, wait_until
 from proctor_contracts.interfaces import CaptureError, SessionClock
 from proctor_contracts.v1 import ErrorCode, HealthStatus, SourceConfig, SourceMode
 
@@ -62,6 +62,45 @@ def test_opened_but_no_frames_is_busy(make_service, device, thread_baseline):
     err = _open_error(svc)
     assert err.code == ErrorCode.CAMERA_BUSY and err.details["reason"] == "camera_no_frames" and err.retryable
     assert device.active_handles == 0  # released after the failed probe
+
+
+def test_dshow_busy_black_placeholder_is_busy_not_a_picture(make_service, device, thread_baseline):
+    """Measured on Windows 11 (UVC webcam, OpenCV 4.13): with the camera held by another app DSHOW
+    opens and returns ok=True + an all-black frame once per ~1 s. Before the fix open() succeeded
+    and analyzers got black frames (-> false face_missing)."""
+    device.mode = "busy_black"
+    svc = make_service(camera_kwargs=camera_kwargs(device, backends=[101, 202], probe_timeout_s=3.0))
+    t0 = time.monotonic()
+    err = _open_error(svc)
+    assert err.code == ErrorCode.CAMERA_BUSY and err.details["reason"] == "camera_no_frames"
+    assert err.details["backends_tried"] == "101:busy_placeholder"  # 202 (MSMF, ~5 s to open) not tried
+    assert time.monotonic() - t0 < 3.0 and device.active_handles == 0
+    assert svc.health().code == "camera_no_frames"
+
+
+def test_busy_placeholder_while_running_is_a_lost_frame(make_service, device):
+    svc = make_service(camera_kwargs=camera_kwargs(device))
+    got = []
+    svc.add_consumer("a", lambda p: got.append(float(p.image.mean())))
+    svc.open("s-cam", LIVE, SessionClock())
+    assert wait_until(lambda: len(got) >= 3)
+    device.mode = "busy_black"
+    assert wait_until(lambda: svc.health().code == "camera_disconnected", timeout=5.0)
+    assert min(got) > 1.0  # no black placeholder ever reached a consumer
+    assert svc.metrics().frames_dropped >= 1
+    device.mode = "bgr"
+    assert wait_until(lambda: svc.health().code == "running", timeout=8.0)
+    svc.close()
+
+
+def test_slow_but_real_dark_frame_is_not_busy():
+    import numpy as np
+
+    src = CameraSource(0, 640, 480, 30, **camera_kwargs(FakeDevice()))
+    dim = np.full((480, 640, 3), 6, np.uint8)  # lens covered / dark room: dim, not zero
+    assert not src._is_busy_placeholder(dim, 1.0)
+    assert not src._is_busy_placeholder(np.zeros((480, 640, 3), np.uint8), 0.03)  # black but on time
+    assert src._is_busy_placeholder(np.zeros((480, 640, 3), np.uint8), 1.0)
 
 
 def test_backend_fallback(make_service, device):

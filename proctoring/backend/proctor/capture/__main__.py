@@ -70,7 +70,17 @@ def _cmd_record(args: argparse.Namespace) -> int:
 
     settings = _settings(args)
     source = parse_source(args.source, args.width, args.height, args.fps)
-    result = record(settings, source, args.replay_id, args.seconds, consent=args.consent, title=args.title, overwrite=args.overwrite)
+    result = record(
+        settings,
+        source,
+        args.replay_id,
+        args.seconds,
+        consent=args.consent,
+        title=args.title,
+        overwrite=args.overwrite,
+        countdown_s=args.countdown,
+        tick=lambda msg: print(msg, flush=True),
+    )
     print(json.dumps(result, indent=2))
     print("Media stays outside Git. Add labels to the manifest before using it for evaluation.")
     return 0
@@ -170,6 +180,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--title", default="")
     p.add_argument("--source", default="live", help="live | live:<index> | synthetic (tests)")
     p.add_argument("--overwrite", action="store_true")
+    p.add_argument("--countdown", type=int, default=3, help="seconds between camera open and REC t = 0 (0 = none)")
     size_args(p)
     p.set_defaults(func=_cmd_record)
 

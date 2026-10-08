@@ -73,6 +73,8 @@ def test_record_then_replay_roundtrip(settings):
     m = resolved.manifest
     assert m.media.timestamps == "sidecar" and m.provenance["consent"].startswith("synthetic")
     assert len(resolved.sidecar) == out["frames"] and resolved.sidecar[0] == 0.0
+    raw = json.loads((settings.replay_dir / "media" / "rec_test.ts.json").read_text())["pts_ms"]
+    assert all(b > a for a, b in zip(raw, raw[1:]))  # written strictly increasing even with a 15.6 ms clock
     assert Path(out["media"]).suffix == ".avi"  # git-ignored media type
 
 
@@ -84,6 +86,26 @@ def test_cli_replay_check_and_hash(settings, clip, capsys):
     media = settings.replay_dir / "media" / f"{rid}.avi"
     assert main(["replay-hash", str(media)]) == 0
     assert capsys.readouterr().out.strip() == load_replay(settings.replay_dir, rid).manifest.media.sha256
+
+
+def test_record_countdown_starts_clip_after_countdown(settings):
+    lines: list[str] = []
+    out = record(settings, parse_source("synthetic", 160, 120, 20), "rec_cd", 1.2, consent="synthetic frames, nobody recorded", countdown_s=1, tick=lines.append)
+    assert lines[0] == "recording starts in 1 s ..." and lines[1].startswith("REC t = 0 s")
+    assert any(line == "REC t = 1 s" for line in lines)
+    assert load_replay(settings.replay_dir, "rec_cd").sidecar[0] == 0.0 and out["duration_ms"] < 1500
+
+
+def test_rss_and_cpu_name_are_measured_on_supported_platforms():
+    import sys
+
+    from proctor.capture.measure import hardware_info, rss_bytes
+
+    if sys.platform == "win32" or sys.platform.startswith("linux"):
+        rss = rss_bytes()
+        assert rss is not None and rss > 1_000_000  # was always None on Windows (ctypes prototypes)
+    if sys.platform == "win32":
+        assert "Family" not in hardware_info()["cpu"]  # model name, not "AMD64 Family 25 ..."
 
 
 def test_parse_source():

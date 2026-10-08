@@ -64,7 +64,7 @@ usually `media/` — media files are git-ignored (`*.avi`, `*.mp4`, …). Exampl
 * `replay_id`: `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`, equal to the file name.
 * `media.kind`: `video` (any FFmpeg-decodable file) or `image_sequence` (directory of .jpg/.png/.bmp, name order).
 * `media.timestamps`: `container` (decoder PTS) · `fps` (`index·1000/fps`) · `sidecar` (`{"pts_ms": [...]}`,
-  strictly increasing, written by `record`). Non-increasing values are repaired (+1 interval) and counted.
+  non-decreasing, written by `record`; equal neighbours → +1 ms, counted). Other non-increasing values are repaired (+1 interval) and counted.
 * `t_session_ms = replay_start_t_ms + media_pts_ms` (relative to `start_ms`, + loop period), `frame_id` = media
   index from 0 → identical across runs.
 * `pacing`: `realtime` (default; late frames dropped and counted, never silently) or `lockstep` (deterministic:
