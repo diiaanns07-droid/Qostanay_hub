@@ -5,6 +5,20 @@ Branch: `claude/pensive-pasteur-wnjd2n`. Contract / baseline: `35bea4c7b28d2c622
 qorgau.v1 1.0.0, frozen; no newer A01 baseline received). Previous A02 checkpoint: `7769f13` (pushed).
 Stage (2026-10-08): **checkpoint 4 — first LIVE run on the real Windows demo laptop + fixes for what broke there.**
 
+## 2026-10-08 14:45 — class mode baseline
+Merged captain's baseline `codex/proctor-integration` @ `78798b7ca83f16552e43a4cf1ae29e81162db44c` (merge `--no-ff`, no
+conflicts; `capture/` identical to A02 `e389865`). Protocol `qorgau.class.v1` (contracts/class/PROTOCOL_v1.md).
+Capture tests after merge: 111 passed, 2 skipped (one earlier run under CPU load had 1 failure that did not reproduce
+in 2 reruns — timing-sensitive test, name not captured). Incident clips for class mode — DONE (`capture/clips.py`, `FrameCaptureService.export_clip`), interface for C2:
+`CLIPS_FOR_C2.md`. Rolling 10 s JPEG buffer fitted into 640×360 (aspect kept), ~15 FPS, hard cap 24 MB / 600 frames;
+`export_clip(t_center_session_ms, before_s=5, after_s=5) -> Path` waits for after_s (bounded), writes MJPG `.avi`
+≤ 8 MB into `%TEMP%\qorgau-clips` (outside Git), explicit `ClipError(code)`. Measured: real camera frames 2.1–2.3 MB
+buffer per 10 s, `add()` 1.1–1.5 ms/frame, 10 s clip 3.8–4.3 MB; LIVE export waited 5.3 s, 127 frames, 2.8 MB.
+Tests: `tests/test_capture_clips.py` 11 (synthetic). Capture suite: 122 passed, 2 skipped. Whole repo on this laptop:
+918 passed, 4 failed — all in A03 phone tests and identical on the clean baseline `78798b7` (Windows path separator
+`phone\m.onnx`, ProactorEventLoop) → not caused by A02; for A01/A03.
+
+
 ## LIVE on the demo laptop (measured 2026-10-08, this machine only)
 Machine: ASUS TUF Gaming A15 FA507NU, **AMD Ryzen 5 7535HS** (6C/12T), 15.2 GB RAM, Windows 11 Home 10.0.26200,
 Python 3.12.14, OpenCV 4.13.0 (opencv-contrib-python 4.13.0.92), env from A01's `uv.lock` (`uv sync --frozen --extra cv
