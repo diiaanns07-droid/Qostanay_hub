@@ -39,6 +39,7 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}
 .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px}.icon-btn:hover{background:var(--surface-2)}
 .toggle[aria-pressed="true"]{background:var(--info-soft);border-color:var(--accent);color:var(--accent)}
 .workspace-toolbar{margin:0 32px 20px}.filters{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.module-notice{margin:0 32px 16px;color:var(--orange);font-size:12px}
 .chips,.toolbar{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;border:1px solid transparent;border-radius:6px;padding:6px 10px;background:transparent;font-size:12px;white-space:nowrap}
 .chip:hover{background:#e9edf2}.chip[aria-pressed="true"]{background:var(--surface);border-color:var(--line-strong)}
