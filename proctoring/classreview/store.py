@@ -448,6 +448,17 @@ class ReviewStore:
             ).fetchall()
             return [self._view(r) for r in rows]
 
+    def list_students(self) -> list[dict[str, Any]]:
+        """Students that have episodes in the store (survives restarts; the class server keeps the live cards)."""
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT student_id, MAX(class_session_id) AS class_session_id, COUNT(*) AS incidents_total,"
+                " SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM decisions d WHERE d.student_id=i.student_id"
+                " AND d.incident_id=i.incident_id) THEN 1 ELSE 0 END) AS incidents_unreviewed"
+                " FROM incidents i GROUP BY student_id ORDER BY student_id"
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     def get_incident(self, student_id: str, incident_id: str) -> dict[str, Any]:
         with self._lock:
             return self._view(self._require_incident(student_id, incident_id))

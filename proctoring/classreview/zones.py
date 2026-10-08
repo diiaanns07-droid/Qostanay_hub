@@ -51,7 +51,10 @@ def zone_after_review(
     if fn is None:
         result["reasons_ru"] = ["Зона после проверки не рассчитана: модуль зон A05 недоступен на сервере."]
         return result
-    t0 = session_started_at
+    starts = [datetime.fromisoformat(i["t_start_wall"].replace("Z", "+00:00")) for i in incidents]
+    # times in reasons are "mm:ss from the class session start"; an episode reported before the session
+    # start (clock skew, re-joined student) moves the origin back instead of collapsing to 00:00
+    t0 = min([session_started_at, *starts]) if session_started_at else (min(starts) if starts else None)
     rows = []
     for i in counted:
         start = datetime.fromisoformat(i["t_start_wall"].replace("Z", "+00:00"))
