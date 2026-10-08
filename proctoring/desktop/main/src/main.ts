@@ -50,7 +50,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 app.enableSandbox();
 if (!app.requestSingleInstanceLock()) {
-  log.warn("another Qorgau Exam instance is running; exiting");
+  log.warn("another Adal instance is running; exiting");
   app.quit();
 }
 
@@ -235,7 +235,7 @@ function registerIpc(): void {
     ipcMain.handle(INVOKE[name], async (event, ...args: unknown[]) => {
       if (!trustedSender(event)) {
         log.warn(`IPC ${name} from an untrusted sender rejected`);
-        return fail(shellError("FORBIDDEN_ORIGIN", "untrusted_sender", "IPC sender is not the Qorgau window"));
+        return fail(shellError("FORBIDDEN_ORIGIN", "untrusted_sender", "IPC sender is not the Adal window"));
       }
       return api[name](...args);
     });
@@ -327,7 +327,7 @@ function createWindow(ses: Session): BrowserWindow {
     minWidth: 960,
     minHeight: 640,
     show: false,
-    title: "Qorgau Exam",
+    title: "Adal",
     backgroundColor: "#ffffff",
     autoHideMenuBar: true,
     webPreferences: {

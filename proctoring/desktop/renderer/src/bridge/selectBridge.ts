@@ -30,6 +30,6 @@ export async function selectBridge(): Promise<BridgeChoice> {
   }
   return {
     kind: "missing",
-    reason: "Оболочка Qorgau (window.qorgau) недоступна: приложение нужно запускать через Electron. Тестовые данные в этой сборке не подставляются.",
+    reason: "Оболочка Adal (window.qorgau) недоступна: приложение нужно запускать через Electron. Тестовые данные в этой сборке не подставляются.",
   };
 }

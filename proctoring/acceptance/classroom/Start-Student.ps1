@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-Запуск текущей сборки Qorgau Exam и C2 uplink. -CheckOnly не запускает приложение.
+Запуск текущей сборки Adal и C2 uplink. -CheckOnly не запускает приложение.
 .EXAMPLE
 .\Start-Student.ps1 -Server '192.168.1.10:8765' -JoinCode '123456' -Label 'PC2'
 #>
@@ -88,7 +88,7 @@ try {
         Wait-QorgauProcess $child 'backend' $student.Timeout $student.StopAfter $false @($token, $student.JoinCode)
     } else {
         if ($student.StopAfter) { throw '-StopAfterSeconds применяется только с -BackendOnly. Electron завершайте через окно приложения.' }
-        Write-Host 'Открывается Qorgau Exam. Подключение к классу смотрите в блоке «Класс». Нативное перехватывание клавиш выключено.'
+        Write-Host 'Открывается Adal. Подключение к классу смотрите в блоке «Класс». Нативное перехватывание клавиш выключено.'
         Write-Host 'Завершить: закройте приложение; аварийный выход из экзамена: Ctrl+Alt+Shift+F12.'
         $child = Start-QorgauProcess $pythonExe $root $environment @{kind='desktop'; electron=$electron; desktop=$desktop}
         Wait-QorgauProcess $child 'desktop' $student.Timeout 0 $false @($student.JoinCode)

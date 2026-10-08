@@ -104,16 +104,16 @@ export function isTrustedUrl(url: string, devOrigin: string | null): boolean {
 }
 
 export const FALLBACK_HTML = `<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><title>Qorgau Exam</title>
+<html lang="ru"><head><meta charset="utf-8"><title>Adal</title>
 <style>body{font-family:system-ui,sans-serif;margin:3rem;max-width:44rem;color:#1b1b1b;background:#fff}
 code{background:#f1f1f1;padding:.1rem .3rem}</style></head>
-<body><h1>Qorgau Exam — оболочка запущена</h1>
+<body><h1>Adal — оболочка запущена</h1>
 <p>Интерфейс (renderer, A07) ещё не собран: нет <code>desktop/dist/renderer/index.html</code>.</p>
 <p>Соберите его командой <code>npm run build</code>. Экзаменационный режим не включается без явного начала сессии.</p>
 </body></html>`;
 
 export const PROBE_HTML = `<!doctype html>
-<html><head><meta charset="utf-8"><title>qorgau self-test</title><script src="__probe.js"></script></head>
+<html><head><meta charset="utf-8"><title>Adal self-test</title><script src="__probe.js"></script></head>
 <body><input id="field" autofocus value=""></body></html>`;
 
 /** Counts keydown events that reach the page (the self-test checks that blocked keys never do). */

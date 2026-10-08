@@ -1,8 +1,9 @@
 {
   "name": "qorgau-exam-desktop",
+  "productName": "Adal",
   "version": "0.1.0",
   "private": true,
-  "description": "Qorgau Exam desktop: Electron shell (A06: main/, preload/, native/) + React renderer (A07: renderer/). Shared config/lockfile owner: A01.",
+  "description": "Adal desktop: Electron shell (A06: main/, preload/, native/) + React renderer (A07: renderer/). Shared config/lockfile owner: A01.",
   "license": "Apache-2.0",
   "main": "dist/main/main.cjs",
   "engines": {

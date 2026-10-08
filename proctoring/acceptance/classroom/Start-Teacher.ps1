@@ -251,7 +251,7 @@ function Wait-QorgauProcess($Child, [string]$Mode, [int]$Timeout, [int]$StopAfte
     }
     if ($process.ExitCode -ne 0) { throw "Процесс завершился с кодом $($process.ExitCode). Проверьте сообщение выше." }
     if (-not $isDesktop -and $null -eq $readyAt) { throw 'Процесс завершился до готовности.' }
-    Write-Host 'Qorgau остановлен.'
+    Write-Host 'Adal остановлен.'
 }
 
 if ($Library) { return }

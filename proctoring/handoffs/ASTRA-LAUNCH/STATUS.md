@@ -124,3 +124,27 @@ New evidence directory (outside Git):
 `C:/Users/LEGION/.codex/visualizations/2026/10/08/01a1199e-0be4-7bc2-9a7d-ff0fe11cfb02/session-real-e2e-dom-mask/`.
 Use these screenshots for further review. Previous evidence was not silently overwritten.
 Next: coordinator cherry-picks this isolated fix after `7c6de2c`.
+
+## Checkpoint 5 — Adal display branding (local handoff; coordinator publishes)
+
+New explicit assignment: use the confirmed user-facing name **Adal** for student desktop and Windows launch text.
+Clean isolated branch fast-forwarded to coordinator base `6a2e0ac` before edits. Root checkout was not modified.
+Scope: only display text in `desktop/renderer`, actual Electron shell `desktop/main`, product display metadata in
+`desktop/package.json`, two launcher messages/help text, and this handoff. No student flow/layout refactor.
+
+- Renderer Brand, document title, no-JavaScript text, app-name dictionary and missing-shell explanation use Adal.
+- Electron window/fallback/probe titles and visible shell diagnostic labels use Adal.
+- Added `productName: "Adal"`; internal npm package name remains `qorgau-exam-desktop`.
+- Launcher startup/shutdown text uses Adal. Function names and machine-readable readiness markers are unchanged.
+- `window.qorgau`, protocols/schemes/partitions, QORGAU environment variables, data paths, package/file identifiers,
+  shared contracts, dependency lockfile and old reports are preserved.
+
+Validation: `npm run typecheck` **PASS** for contracts, main and renderer; `npm run build` **PASS** for Electron
+main/preload plus production renderer. First sandbox build could not read an ancestor directory; approved build
+outside that filesystem restriction passed. Installed dependency files were copied into this worktree's ignored
+`node_modules` (Electron binary/cache excluded), so build outputs/cache stayed here. No install or device/guard/
+Electron launch occurred. Both PowerShell launchers parse successfully; `git diff --check` clean.
+
+This checkpoint is committed locally only, **not pushed**, per coordinator instruction; coordinator publishes.
+Next: cherry-pick its single branding commit over current integration/A07 source. Renderer App.tsx has a one-line
+Brand text edit; no preflight/calibration/student behavior overlap. SHA reported in the completion message.
