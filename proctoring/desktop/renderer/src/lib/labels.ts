@@ -32,6 +32,11 @@ export const RULE: Record<IncidentRule, string> = {
   environment_blocked_action: "Заблокированное действие",
   environment_escape: "Выход из окна экзамена",
   monitoring_degraded: "Наблюдение ухудшено",
+  background_speech: "Возможная речь рядом",
+  headphones_visible: "Видны наушники",
+  identity_mismatch: "Лицо не совпадает с началом экзамена",
+  foreign_object_visible: "Посторонний предмет в кадре",
+  second_screen_visible: "Второй экран или ноутбук в кадре",
 };
 
 export const RULE_HINT: Partial<Record<IncidentRule, string>> = {
@@ -48,6 +53,9 @@ export const CATEGORY: Record<IncidentCategory, string> = {
   presence: "Присутствие",
   environment: "Среда",
   technical: "Техника",
+  audio: "Звук",
+  identity: "Личность",
+  objects: "Предметы",
 };
 
 export const PRIORITY: Record<ReviewPriority, string> = {
@@ -126,6 +134,8 @@ export const COMPONENT: Record<Component, string> = {
   fusion: "Эпизоды",
   evidence: "Хранилище",
   environment: "Среда",
+  audio: "Микрофон",
+  identity: "Сверка лица",
 };
 
 export const HEALTH: Record<HealthStatus, string> = {
