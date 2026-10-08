@@ -2,15 +2,15 @@
 // Overlays: normalized coordinates of the UNMIRRORED frame; when the preview is mirrored, x' = 1 − x.
 // The image box keeps the frame aspect ratio, so overlays line up under letterboxing.
 import { useEffect, useRef, useState } from "react";
-import type { BBox, PreviewFrameMeta } from "@contracts/qorgau-v1.generated";
+import type { AttentionObservation, BBox, PhoneObservation, PreviewFrameMeta } from "@contracts/qorgau-v1.generated";
 import { useApp } from "../lib/appContext";
 import { useLive } from "../lib/liveStore";
 import { num, sessionT } from "../lib/format";
 import { SOURCE_MODE } from "../lib/labels";
 import { Badge } from "./ui";
 
-/** Observations older than this relative to the shown frame are not drawn (shown as stale). */
-const STALE_MS = 1500;
+/** An older observation is drawn (dashed, labelled with its lag) only within this window; otherwise hidden. */
+const LAG_DRAW_MS = 400;
 const NO_FRAME_MS = 3000;
 
 interface Frame {
@@ -50,17 +50,20 @@ export function PreviewPanel({ sessionId }: { sessionId: string }) {
 
   const frozen = frame !== null && now - frame.receivedAt > NO_FRAME_MS;
   const meta = frame?.meta;
-  const att = live.attention;
-  const phone = live.phone;
-
-  const rel = (t: number | null | undefined, fid: number | null | undefined) => {
-    if (!meta || t === null || t === undefined) return { draw: false, sync: false, age: null as number | null };
-    const sync = fid === meta.frame_id;
-    const age = meta.t_session_ms - t;
-    return { draw: sync || Math.abs(age) <= STALE_MS, sync, age };
+  // Pick the observation made on exactly the shown frame (frame_id); analyzers skip frames, so otherwise take
+  // the nearest older one and draw it only if it is recent, dashed and labelled — never as if it were this frame.
+  const pick = (kind: "attention" | "phone") => {
+    if (!meta) return { obs: null, exact: false, lagMs: null as number | null, draw: false };
+    const r = live.observationFor(kind, meta.frame_id, meta.t_session_ms);
+    const draw = !!r.obs && (r.exact || (r.lagMs !== null && r.lagMs <= LAG_DRAW_MS));
+    return { ...r, draw };
   };
-  const attRel = rel(att?.t_session_ms, att?.frame_id);
-  const phoneRel = rel(phone?.t_session_ms, phone?.frame_id);
+  const a = pick("attention");
+  const p = pick("phone");
+  const att = a.obs as AttentionObservation | null;
+  const phone = p.obs as PhoneObservation | null;
+  const attRel = { draw: a.draw, sync: a.exact, age: a.lagMs };
+  const phoneRel = { draw: p.draw, sync: p.exact, age: p.lagMs };
 
   const box = (b: BBox) => {
     const x = mirror ? 1 - b.x_max : b.x_min;
@@ -112,6 +115,7 @@ export function PreviewPanel({ sessionId }: { sessionId: string }) {
                   return (
                     <span key={`fl${i}`} className={`ov-tag ${f.is_primary ? "tag-face" : "tag-face2"}`} style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%` }}>
                       {f.is_primary ? "лицо" : "2-е лицо"}
+                      {attRel.sync ? "" : ` · −${Math.round(attRel.age ?? 0)} мс`}
                     </span>
                   );
                 })}
@@ -121,6 +125,7 @@ export function PreviewPanel({ sessionId }: { sessionId: string }) {
                   return (
                     <span key={`pl${i}`} className="ov-tag tag-phone" style={{ left: `${r.x * 100}%`, top: `${(r.y + r.h) * 100}%` }}>
                       телефон {num(d.confidence, 2)}
+                      {phoneRel.sync ? "" : ` · −${Math.round(phoneRel.age ?? 0)} мс`}
                     </span>
                   );
                 })}
@@ -146,14 +151,8 @@ export function PreviewPanel({ sessionId }: { sessionId: string }) {
         <span className="mono small">
           {meta ? `кадр ${meta.frame_id} · ${sessionT(meta.t_session_ms)} · ${meta.width}×${meta.height}` : "кадр —"}
         </span>
-        <span className="small">
-          {att
-            ? attRel.sync
-              ? "лица: синхронно с кадром"
-              : attRel.age !== null
-                ? `лица: ${attRel.draw ? "отстают на" : "устарели,"} ${Math.round(Math.abs(attRel.age))} мс`
-                : "лица: нет данных"
-            : "лица: нет данных"}
+        <span className="small" aria-live="off">
+          {overlayNote("лица", attRel)} · {overlayNote("телефон", phoneRel)}
         </span>
         <label className="check small">
           <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} />
@@ -162,4 +161,11 @@ export function PreviewPanel({ sessionId }: { sessionId: string }) {
       </div>
     </div>
   );
+}
+
+function overlayNote(label: string, r: { draw: boolean; sync: boolean; age: number | null }): string {
+  if (r.sync) return `${label}: этот кадр`;
+  if (r.age === null) return `${label}: нет разметки`;
+  if (r.draw) return `${label}: кадр −${Math.round(r.age)} мс (пунктир)`;
+  return `${label}: разметка устарела (${Math.round(r.age)} мс), не показана`;
 }

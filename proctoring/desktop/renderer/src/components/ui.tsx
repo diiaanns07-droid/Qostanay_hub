@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import type { ApiErrorBody, SourceMode } from "@contracts/qorgau-v1.generated";
-import { ERROR_HINT, SOURCE_MODE, SOURCE_MODE_RU } from "../lib/labels";
+import { SOURCE_MODE, SOURCE_MODE_RU } from "../lib/labels";
+import { describeError } from "../lib/errors";
 
 export type Tone = "neutral" | "accent" | "ok" | "warn" | "danger" | "info";
 
@@ -91,11 +92,11 @@ export function ErrorBanner({
   onDismiss?: () => void;
   context?: string;
 }) {
-  const hint = ERROR_HINT[error.code];
+  const hint = describeError(error);
   return (
     <Banner
       tone="danger"
-      title={context ? `${context}: ${hint ?? "ошибка"}` : (hint ?? "Ошибка")}
+      title={context ? `${context}: ${hint}` : hint}
       actions={
         <>
           {onRetry && error.retryable && (

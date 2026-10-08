@@ -61,7 +61,14 @@ import type {
 import { CalibrationTargetValues } from "@contracts/qorgau-v1.generated";
 import { FRAME_H, FRAME_W, renderFixtureFrame } from "./fixtureFrames";
 
-export const FIXTURE_OPERATOR_PIN = "0000";
+/** Mirrors A06 ipc/api.ts so the fixture rejects exactly what the real shell rejects. */
+type Gated = "listSessions" | "listIncidents" | "getIncident" | "addReview" | "getEvidence" | "getSummary" | "exportReport" | "deleteSession" | "pauseExam" | "resumeExam";
+const BLOCKED_IN_EXAM = new Set<Gated>(["listSessions", "listIncidents", "getIncident", "addReview", "getEvidence", "getSummary", "exportReport", "deleteSession"]);
+const OPERATOR_ONLY = new Set<Gated>(["pauseExam", "resumeExam", "addReview", "getEvidence", "exportReport", "deleteSession"]);
+
+function shellErr(code: ErrorCode, shellCode: string, message: string, retryable = false): ApiErrorBody {
+  return { code, message, retryable, details: { shell_code: shellCode, source: "fixture" } };
+}
 
 export interface FixtureFaults {
   /** Every call fails, streams go quiet, shell.backend = "restarting". */
@@ -72,6 +79,8 @@ export interface FixtureFaults {
   answerSaveFails: boolean;
   /** Calibration target "up" fails once with low_quality before succeeding on retry. */
   calibrationFailsOnce: boolean;
+  /** saveAnswer latency 0.2–1.5 s in random order (request races). */
+  slowSaves: boolean;
 }
 
 const TERMINAL: SessionState[] = ["finished", "aborted", "failed"];
@@ -137,7 +146,14 @@ export class FixtureBridge implements QorgauBridge {
     cameraLost: false,
     answerSaveFails: false,
     calibrationFailsOnce: true,
+    slowSaves: false,
   };
+
+  /** One-time PIN of this tab (never a built-in constant); shown only in the FIXTURE panel/dialog. */
+  readonly operatorPin = String(100000 + Math.floor(Math.random() * 900000));
+  private pinFailures = 0;
+  private pinLockedUntil = 0;
+  private capsAskedAt: number | null = null;
 
   private shell: ShellState = {
     mode: "normal",
@@ -217,7 +233,17 @@ export class FixtureBridge implements QorgauBridge {
   }
 
   private downError(): ApiErrorBody {
-    return err("INTERNAL", "Нет связи с локальным сервисом (FIXTURE: имитация сбоя)", true, { shell: "backend_restarting" });
+    return shellErr("INTERNAL", "backend_unavailable", "Local backend is not available (FIXTURE: simulated)", true);
+  }
+
+  private gate(name: Gated): ApiErrorBody | null {
+    if (this.shell.exam_mode_active && BLOCKED_IN_EXAM.has(name)) {
+      return shellErr("INVALID_STATE", "exam_mode_active", `${name} is not available during the exam`);
+    }
+    if (OPERATOR_ONLY.has(name) && !this.shell.operator_unlocked) {
+      return shellErr("INVALID_STATE", "operator_locked", `${name} requires the operator (teacher) unlock`);
+    }
+    return null;
   }
 
   private async respond<T>(fn: () => T | ApiErrorBody, latency = 140): Promise<BridgeResult<T>> {
@@ -238,6 +264,10 @@ export class FixtureBridge implements QorgauBridge {
 
   private emit(message: StreamPayload): void {
     if (this.faults.backendDown) return;
+    // A05 semantics: the stream never knows reviews or materials (A08 does) → pending / [] on the wire.
+    if (message.type === "incident") {
+      message = { ...message, change: { ...message.change, incident: { ...message.change.incident, review_status: "pending", evidence_ids: [] } } };
+    }
     this.seq += 1;
     const env: StreamEnvelope = {
       contract: "qorgau.v1",
@@ -784,12 +814,26 @@ export class FixtureBridge implements QorgauBridge {
   }
 
   getEnvironmentCapabilities(): Promise<BridgeResult<EnvironmentCapabilities>> {
+    // Like the shell: the matrix is "not measured yet" for a moment after start (retryable).
+    this.capsAskedAt ??= performance.now();
+    if (performance.now() - this.capsAskedAt < 1500) {
+      return this.respond<EnvironmentCapabilities>(() => shellErr("NOT_FOUND", "enforcement_error", "Environment capabilities are not measured yet", true));
+    }
     return this.respond(() => this.caps);
   }
 
   async operatorUnlock(pin: string): Promise<BridgeResult<ShellState>> {
     await sleep(250);
-    if (pin !== FIXTURE_OPERATOR_PIN) return { ok: false, error: err("UNAUTHORIZED", "Неверный PIN") };
+    if (!/^[0-9A-Za-z]{4,64}$/.test(pin)) return { ok: false, error: shellErr("INVALID_ARGUMENT", "invalid_argument", "pin: 4-64 letters/digits") };
+    if (Date.now() < this.pinLockedUntil) {
+      return { ok: false, error: shellErr("UNAUTHORIZED", "operator_pin_rate_limited", "Too many attempts, wait and retry", true) };
+    }
+    if (pin !== this.operatorPin) {
+      this.pinFailures += 1;
+      if (this.pinFailures >= 5) this.pinLockedUntil = Date.now() + 30_000;
+      return { ok: false, error: shellErr("UNAUTHORIZED", "operator_pin_wrong", "Wrong operator PIN") };
+    }
+    this.pinFailures = 0;
     this.setShell({ operator_unlocked: true });
     return { ok: true, data: clone(this.shell) };
   }
@@ -807,7 +851,7 @@ export class FixtureBridge implements QorgauBridge {
       console.warn("[fixture] emergency exit:", reason);
       this.endSession("aborted");
     }
-    this.setShell({ mode: "normal", exam_mode_active: false, session_id: null });
+    this.setShell({ mode: "normal", exam_mode_active: false });
     return { ok: true, data: clone(this.shell) };
   }
 
@@ -817,7 +861,7 @@ export class FixtureBridge implements QorgauBridge {
   }
 
   listSessions(): Promise<BridgeResult<SessionInfo[]>> {
-    return this.respond(() => [...this.sessions].reverse());
+    return this.respond(() => this.gate("listSessions") ?? [...this.sessions].reverse());
   }
 
   createSession(body: SessionCreate): Promise<BridgeResult<SessionInfo>> {
@@ -947,7 +991,7 @@ export class FixtureBridge implements QorgauBridge {
       const s = this.requireActive(sessionId, "пропустить калибровку", "preflight", "calibrating");
       if ("code" in s) return s;
       if (!this.preflightReport?.ready) return err("PREFLIGHT_FAILED", "Обязательные проверки не пройдены");
-      if (!body.reason.trim()) return err("INVALID_ARGUMENT", "Укажите причину пропуска калибровки");
+      if (!body.reason.trim() || body.reason.length > 200) return err("INVALID_ARGUMENT", "Причина пропуска: 1–200 символов");
       this.cal = { ...this.cal, phase: "skipped", current_target: null, message_code: "skipped_by_operator" };
       const cal = this.calChanged();
       this.update({ state: "ready" });
@@ -971,7 +1015,8 @@ export class FixtureBridge implements QorgauBridge {
 
   pauseExam(sessionId: string, body: PauseRequest): Promise<BridgeResult<SessionInfo>> {
     return this.respond(() => {
-      if (!this.shell.operator_unlocked) return err("UNAUTHORIZED", "Пауза доступна только преподавателю");
+      const denied = this.gate("pauseExam");
+      if (denied) return denied;
       const s = this.requireActive(sessionId, "пауза", "running");
       if ("code" in s) return s;
       console.info("[fixture] pause:", body.reason);
@@ -985,6 +1030,8 @@ export class FixtureBridge implements QorgauBridge {
 
   resumeExam(sessionId: string): Promise<BridgeResult<SessionInfo>> {
     return this.respond(() => {
+      const denied = this.gate("resumeExam");
+      if (denied) return denied;
       const s = this.requireActive(sessionId, "продолжить", "paused");
       if ("code" in s) return s;
       const paused = this.pausedAtMs !== null ? this.t() - this.pausedAtMs : 0;
@@ -1062,7 +1109,7 @@ export class FixtureBridge implements QorgauBridge {
       m.set(questionId, rec);
       this.answers.set(sessionId, m);
       return rec;
-    }, 180);
+    }, this.faults.slowSaves ? 200 + Math.random() * 1300 : 180);
   }
 
   listAnswers(sessionId: string): Promise<BridgeResult<AnswerRecord[]>> {
@@ -1071,6 +1118,8 @@ export class FixtureBridge implements QorgauBridge {
 
   listIncidents(sessionId: string): Promise<BridgeResult<Incident[]>> {
     return this.respond(() => {
+      const denied = this.gate("listIncidents");
+      if (denied) return denied;
       const s = this.find(sessionId);
       if ("code" in s) return s;
       return [...(this.incidents.get(sessionId) ?? [])].sort((a, b) => a.t_start_ms - b.t_start_ms);
@@ -1079,6 +1128,8 @@ export class FixtureBridge implements QorgauBridge {
 
   getIncident(sessionId: string, incidentId: string): Promise<BridgeResult<IncidentDetail>> {
     return this.respond(() => {
+      const denied = this.gate("getIncident");
+      if (denied) return denied;
       const inc = (this.incidents.get(sessionId) ?? []).find((x) => x.incident_id === incidentId);
       if (!inc) return err("NOT_FOUND", `Эпизод ${incidentId} не найден`);
       return {
@@ -1094,6 +1145,8 @@ export class FixtureBridge implements QorgauBridge {
 
   addReview(sessionId: string, incidentId: string, body: HumanReviewCreate): Promise<BridgeResult<HumanReview>> {
     return this.respond(() => {
+      const denied = this.gate("addReview");
+      if (denied) return denied;
       const inc = (this.incidents.get(sessionId) ?? []).find((x) => x.incident_id === incidentId);
       if (!inc) return err("NOT_FOUND", `Эпизод ${incidentId} не найден`);
       if (!body.operator.trim()) return err("INVALID_ARGUMENT", "Укажите проверяющего");
@@ -1119,6 +1172,8 @@ export class FixtureBridge implements QorgauBridge {
 
   getEvidence(sessionId: string, evidenceId: string): Promise<BridgeResult<EvidenceBlob>> {
     return this.respond(() => {
+      const denied = this.gate("getEvidence");
+      if (denied) return denied;
       const e = this.evidence.get(evidenceId);
       if (!e || e.item.session_id !== sessionId) return err("NOT_FOUND", "Материал не найден");
       return { media_type: e.item.media_type, bytes: e.bytes };
@@ -1127,6 +1182,8 @@ export class FixtureBridge implements QorgauBridge {
 
   getSummary(sessionId: string): Promise<BridgeResult<SessionSummary>> {
     return this.respond(() => {
+      const denied = this.gate("getSummary");
+      if (denied) return denied;
       const s = this.find(sessionId);
       if ("code" in s) return s;
       const incs = this.incidents.get(sessionId) ?? [];
@@ -1134,7 +1191,7 @@ export class FixtureBridge implements QorgauBridge {
       const byDecision: Record<string, number> = {};
       for (const i of incs) {
         byRule[i.rule_id] = (byRule[i.rule_id] ?? 0) + 1;
-        if (i.review_status !== "pending") byDecision[i.review_status] = (byDecision[i.review_status] ?? 0) + 1;
+        byDecision[i.review_status] = (byDecision[i.review_status] ?? 0) + 1; // A08 includes "pending"
       }
       const gaps = clone(this.gaps.get(sessionId) ?? []);
       const startT = s.exam_started_t_ms;
@@ -1164,10 +1221,18 @@ export class FixtureBridge implements QorgauBridge {
 
   exportReport(sessionId: string, format: "html" | "json"): Promise<BridgeResult<SavedExport>> {
     return this.respond(() => {
+      const denied = this.gate("exportReport");
+      if (denied) return denied;
       const s = this.find(sessionId);
       if ("code" in s) return s;
+      const incs = this.incidents.get(sessionId) ?? [];
       if (format === "html") {
-        return err("NOT_IMPLEMENTED", "HTML-отчёт формирует A08; в FixtureBridge доступен только JSON-экспорт");
+        const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+        const rows = incs
+          .map((i) => `<tr><td>${esc(i.rule_id)}</td><td>${(i.duration_ms / 1000).toFixed(1)} s</td><td>${esc(i.review_status)}</td></tr>`)
+          .join("");
+        const html = `<!doctype html><meta charset="utf-8"><title>FIXTURE ${esc(sessionId)}</title><h1>FIXTURE report — not an A08 report</h1><p>${esc(sessionId)} · synthetic</p><table>${rows}</table>`;
+        return this.download(`${sessionId}.fixture.html`, html, "text/html");
       }
       const payload = {
         fixture: true,
@@ -1177,19 +1242,24 @@ export class FixtureBridge implements QorgauBridge {
         reviews: [...this.reviews.values()].flat().filter((r) => r.session_id === sessionId),
         answers: [...(this.answers.get(sessionId)?.values() ?? [])],
       };
-      const file_name = `${sessionId}.fixture.json`;
-      const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file_name;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      return { file_name, saved: true };
+      return this.download(`${sessionId}.fixture.json`, JSON.stringify(payload, null, 2), "application/json");
     });
+  }
+
+  private download(file_name: string, text: string, type: string): SavedExport {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file_name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return { file_name, saved: true };
   }
 
   deleteSession(sessionId: string): Promise<BridgeResult<{ deleted: true }>> {
     return this.respond(() => {
+      const denied = this.gate("deleteSession");
+      if (denied) return denied;
       const s = this.find(sessionId);
       if ("code" in s) return s;
       if (!TERMINAL.includes(s.state)) return err("SESSION_ACTIVE", "Нельзя удалить активную сессию");

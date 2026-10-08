@@ -1,7 +1,7 @@
 // Session timeline: one lane per category, x = t_session_ms. Bars are buttons (keyboard reachable).
 import type { CoverageGap, Incident, IncidentCategory } from "@contracts/qorgau-v1.generated";
 import { IncidentCategoryValues } from "@contracts/qorgau-v1.generated";
-import { CATEGORY, RULE, REVIEW_STATUS } from "../lib/labels";
+import { CATEGORY, GAP_REASON, RULE, REVIEW_STATUS, human } from "../lib/labels";
 import { clock, duration } from "../lib/format";
 
 export function Timeline({
@@ -25,7 +25,11 @@ export function Timeline({
   const pct = (t: number) => `${Math.max(0, Math.min(100, ((t - startMs) / span) * 100))}%`;
   const width = (a: number, b: number) => `${Math.max(0.6, Math.min(100, ((b - a) / span) * 100))}%`;
   const ticks = 5;
-  const lanes = IncidentCategoryValues.filter((c) => categories.has(c));
+  // Only lanes that have something to show (less clutter); technical lane also carries coverage gaps.
+  const lanes = IncidentCategoryValues.filter(
+    (c) => categories.has(c) && (incidents.some((i) => i.category === c) || (c === "technical" && gaps.length > 0)),
+  );
+  if (lanes.length === 0) return <p className="empty small">На шкале пока нечего показать.</p>;
 
   return (
     <div className="timeline" role="group" aria-label="Временная шкала эпизодов">
@@ -46,7 +50,7 @@ export function Timeline({
                   key={`g${i}`}
                   className="tl-gap"
                   style={{ left: pct(g.t_start_ms), width: width(g.t_start_ms, g.t_end_ms ?? endMs) }}
-                  title={`Пробел наблюдения: ${g.reason}`}
+                  title={`Пробел наблюдения: ${human(GAP_REASON, g.reason)}`}
                 />
               ))}
             {incidents

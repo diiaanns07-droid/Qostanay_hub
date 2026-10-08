@@ -41,11 +41,12 @@ export function clock(ms: number): string {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-/** Session-relative timestamp "+01:23.4". */
+/** Session-relative timestamp "+01:23.4" ("−00:00.1" when before the reference point). */
 export function sessionT(ms: number | null | undefined): string {
   if (ms === null || ms === undefined || !Number.isFinite(ms)) return NO_DATA;
-  const tenths = Math.floor((ms % 1000) / 100);
-  return `+${clock(ms)}.${tenths}`;
+  const a = Math.abs(ms);
+  const tenths = Math.floor((a % 1000) / 100);
+  return `${ms < 0 && a >= 50 ? "−" : "+"}${clock(a)}.${tenths}`;
 }
 
 /** Local wall time HH:MM:SS from an ISO timestamp (display only). */

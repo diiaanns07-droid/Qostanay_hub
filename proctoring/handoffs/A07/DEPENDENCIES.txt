@@ -1,19 +1,32 @@
-A07 requests to A01 (contracts/config owner). No shared file was edited.
+A07 requests (round 2). No shared file was edited. Baseline: A07 3fef6fb (continuation), BOOTSTRAP 35bea4c.
 
-1. Exam id before session creation (contract).
-   What: SessionCreate requires exam_id, but the renderer can only read the exam via GET /sessions/{sid}/exam,
-   i.e. after creation. Today the UI defaults to "demo-exam-1" (editable field) and shows INVALID_ARGUMENT otherwise.
-   Ask: expose the configured exam id/title before creation, e.g. `exam_id` in HealthReport or GET /v1/exam (+ bridge
-   method). Fixture showing it: ExamDefinition.demo_min (exam_id "demo-exam-1").
+To A01 + A06 — teacher access flow (proposal; the renderer already follows the current shell rules):
+1. Keep: PIN checked in main (scrypt, 5 failures -> lockout), no PIN in the renderer, no built-in demo PIN in
+   production (QORGAU_SHELL_DEMO_OPERATOR one-time PIN on the operator's terminal is fine for demos).
+2. History reads are not operator-only today: listSessions/listIncidents/getIncident/getSummary are allowed for
+   anyone once exam mode is off (e.g. the student after finish). The UI hides them behind the teacher role, but the
+   bridge permits them. Proposal: add them to OPERATOR_ONLY (they are already BLOCKED_IN_EXAM).
+3. Re-lock the operator automatically: on createSession (new student) and after N minutes without operator
+   actions. Today unlock survives finish and lasts until the next exam start.
+4. During exam mode the teacher console on the student's machine shows only the live stream + pause/finish/abort
+   (renderer implements this). Decisions/materials/export only on pause or after finish. Please confirm this is the
+   intended product rule (it matches BLOCKED_IN_EXAM).
 
-2. Renderer test runner (dependency).
-   What: renderer/tests/e2e-fixture.mjs uses Playwright from a global install (cloud image has 1.56.1 + Chromium).
-   Ask: pin a devDependency for renderer e2e (e.g. @playwright/test or playwright-core, version >= 2 weeks old) and an
-   npm script, or confirm A09 owns browser e2e. No unit-test runner is needed by A07 right now.
+To A06:
+5. After a backend crash the shell stays in mode "error" with last_error backend_unavailable even when the restarted
+   backend is "ready". The renderer now ignores that combination, but please return to normal/preflight (and clear
+   last_error) once the backend is ready again, or document it.
+6. bridge.ts: document details.shell_code values (A06 DEPENDENCIES #5). The renderer switches on them
+   (lib/errors.ts).
 
-3. Shell error codes for backend loss (bridge, with A06).
-   What: bridge.ts says "plus shell codes" but none are listed. The UI treats ShellState.backend !== "ready" and
-   failed health() as "backend lost" and shows ApiErrorBody.code verbatim.
-   Ask: list the shell-side codes (e.g. BACKEND_UNAVAILABLE / BACKEND_RESTARTING) in bridge.ts so the UI can map them.
-
-4. CSP for the renderer (with A06): see STATUS.md "Not verified" for the proposed policy; A06 to apply/test in Electron.
+To A01:
+7. Exam id before session creation (still open from round 1): SessionCreate needs exam_id, the UI can read the exam
+   only after creation. Expose the configured exam id/title before creation (HealthReport field or GET /v1/exam).
+8. Test dependency: renderer/tests use a global Playwright (1.56.1 in the cloud image). Please pin a devDependency
+   (playwright-core or @playwright/test, >= 2 weeks old) and scripts, e.g.
+     "test:renderer": "node renderer/tests/e2e-fixture.mjs dist/e2e-fixture"
+     "test:renderer:real": "node renderer/tests/real-bridge/run-real.mjs dist/e2e-real"
+   or confirm that A09 owns browser e2e. renderer/tests/real-bridge/ needs A06 main/src in the same checkout.
+9. After a backend restart GET /v1/sessions/{sid} returns SESSION_NOT_FOUND for the session that was active (A01
+   session manager is in memory) while A08 marks it failed+recovered. The UI handles both, but a single behaviour
+   (e.g. A01 falling back to A08's SessionInfo) would let the teacher open the summary of the crashed session.
