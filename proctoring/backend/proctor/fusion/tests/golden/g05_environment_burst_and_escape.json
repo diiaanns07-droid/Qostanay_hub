@@ -1,0 +1,42 @@
+{
+  "name": "g05_environment_burst_and_escape",
+  "requirement": "2.3a-c: restricted actions merged into one burst incident; focus loss / foreign window as one escape incident",
+  "mode": "synthetic",
+  "phone": [{"from": 0, "to": 30000, "step": 125, "visible": "absent"}],
+  "attention": [{"from": 0, "to": 30000, "step": 100, "direction": "center"}],
+  "events": [
+    {"t": 2000, "kind": "environment", "action": "shortcut_alt_tab", "enforcement": "blocked"},
+    {"t": 2500, "kind": "environment", "action": "shortcut_alt_tab", "enforcement": "blocked"},
+    {"t": 4000, "kind": "environment", "action": "shortcut_ctrl_c", "enforcement": "blocked"},
+    {"t": 9000, "kind": "environment", "action": "shortcut_print_screen", "enforcement": "detected_only"},
+    {"t": 12000, "kind": "environment", "action": "focus_lost", "enforcement": "detected_only"},
+    {"t": 13500, "kind": "environment", "action": "focus_regained", "enforcement": "allowed"},
+    {"t": 15000, "kind": "environment", "action": "focus_lost", "enforcement": "detected_only"},
+    {"t": 15800, "kind": "environment", "action": "foreign_window_foreground", "enforcement": "detected_only", "process_name": "chrome.exe"},
+    {"t": 21000, "kind": "environment", "action": "focus_regained", "enforcement": "allowed"}
+  ],
+  "finish": 30000,
+  "derivation": [
+    "restricted actions at 2000, 2500, 4000, 9000: consecutive gaps <= env_burst_gap 10000 -> one incident [2000, 9000], closed when W - 9000 > 10000",
+    "3 blocked + 1 detected_only -> base low raised one level (not_blocked) -> medium; 4 < env_repeat_count 5",
+    "focus lost 12000-13500 (1500 ms) and 15000-21000 (6000 ms); second loss 1500 ms after regain <= escape merge gap 3000 -> same incident [12000, 21000]",
+    "focus_lost_ms 7500 >= env_escape_long_ms 5000 -> medium raised to high; 2 losses < repeat_segments 3"
+  ],
+  "expected": [
+    {
+      "rule_id": "environment_blocked_action", "t_start_ms": 2000, "t_end_ms": 9000, "end_reason": "condition_cleared",
+      "priority": "medium", "observation_count": 4, "related_rules": [],
+      "facts": {"actions_total": 4, "burst_ms": 7000.0, "action.shortcut_alt_tab": 2, "action.shortcut_ctrl_c": 1,
+                "action.shortcut_print_screen": 1, "enforcement.blocked": 3, "enforcement.detected_only": 1,
+                "priority_basis": "base_low,not_blocked"},
+      "summary_contains": ["Ограниченные в экзамене действия: 4 за 7,0 с", "Alt+Tab ×2", "заблокировано: 3", "только зафиксировано: 1"]
+    },
+    {
+      "rule_id": "environment_escape", "t_start_ms": 12000, "t_end_ms": 21000, "end_reason": "condition_cleared",
+      "priority": "high", "related_rules": [],
+      "facts": {"focus_lost_ms": 7500.0, "focus_lost_count": 2, "foreign_window_count": 1, "processes": "chrome.exe",
+                "priority_basis": "base_medium,long_episode"},
+      "summary_contains": ["Окно экзамена теряло фокус: 2 раз(а), всего 7,5 с", "chrome.exe"]
+    }
+  ]
+}

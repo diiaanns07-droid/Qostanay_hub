@@ -1,0 +1,34 @@
+{
+  "name": "g10_unknown_does_not_clear",
+  "requirement": "unknown (low light) neither clears nor extends an episode; long unknown -> source_lost + coverage incident",
+  "mode": "synthetic",
+  "phone": [{"from": 0, "to": 18000, "step": 125, "visible": "absent"}],
+  "attention": [
+    {"from": 0, "to": 1000, "step": 100, "direction": "center"},
+    {"from": 1000, "to": 5000, "step": 100, "direction": "down"},
+    {"from": 5000, "to": 6000, "step": 100, "status": "unknown", "face_count": null, "quality": 0.1},
+    {"from": 6000, "to": 8000, "step": 100, "direction": "down"},
+    {"from": 8000, "to": 12000, "step": 100, "status": "unknown", "face_count": null, "quality": 0.1},
+    {"from": 12000, "to": 18000, "step": 100, "direction": "center"}
+  ],
+  "finish": 18000,
+  "derivation": [
+    "gaze down 1000..4900 opens at 4000; 1 s of unknown does not clear it (no false sample) and is within TTL 1500 -> down again 6000..7900 continues the SAME incident (gap 1100 recorded as data gap)",
+    "unknown from 8000: no determinate sample after 7900; first W with W - 7900 > 1500 is the phone sample 9500 -> source_lost, t_end 7900, duration 6900",
+    "unknown observations INSIDE the incident interval [1000, 7900]: 10 (5000..5900); the unknown tail after the last down sample (8000..) lies outside it",
+    "attention undetermined from 8000; reaches undetermined_ms 3000 at 11000 -> monitoring_degraded from 8000; determinate again at 12000 -> 4000 ms; closed after merge gap -> [8000, 12000]"
+  ],
+  "expected": [
+    {
+      "rule_id": "gaze_prolonged_down", "t_start_ms": 1000, "t_end_ms": 7900, "end_reason": "source_lost",
+      "priority": "low", "related_rules": [],
+      "facts": {"gaze_down_ms": 6900.0, "unknown_observations": 10, "max_data_gap_ms": 1100.0},
+      "caveats_contain": ["Эпизод прерван", "неопределённой"]
+    },
+    {
+      "rule_id": "monitoring_degraded", "t_start_ms": 8000, "t_end_ms": 12000, "end_reason": "condition_cleared",
+      "priority": "low", "related_rules": [],
+      "facts": {"undetermined.attention_ms": 4000.0, "undetermined.attention.code": "status_unknown"}
+    }
+  ]
+}

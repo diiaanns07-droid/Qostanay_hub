@@ -1,0 +1,83 @@
+A05 → requests / integration notes (2026-10-08). No shared file was edited by A05.
+Base: BOOTSTRAP 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49 (A01, branch claude/nifty-ride-ux8e4j), contracts qorgau.v1 1.0.0.
+
+=== To A01 (owner of backend/tests, Settings, composition) ===
+
+[A01-1] BLOCKING FOR GREEN `pytest -q` ON ANY BRANCH THAT ADDS A MODULE (not a defect of proctor.fusion)
+  backend/tests/test_lifecycle_api.py assumes that NO module package exists:
+    * test_health_reports_missing_modules_honestly: asserts codes["fusion"] == "module_not_integrated"
+    * test_live_never_falls_back_to_synthetic: asserts preflight check "fusion" == "fail" for a live session
+  With proctor.fusion present the registry imports it, so health says fusion "ok" and the live preflight
+  fusion check passes (correct behaviour). On branch claude/zen-mayer-e0tivt these 2 tests fail; all
+  other A01 tests pass and `python -m proctor smoke` passes 34/34 with the A05 engine.
+  The same will happen for A02/A03/A04/A08 branches.
+  Request: make these tests independent of which modules are present, e.g. a registry option /
+  module_overrides sentinel that hides real modules ("fusion": None -> treated as not integrated), or
+  assert against the registry's actual import state.
+
+[A01-2] Persist the effective fusion configuration in the report (requirement: "в отчёте сохраняется
+  использованная конфигурация"). Every Incident carries rule_version + config_version, but the full
+  thresholds are only available from engine.config_snapshot() (JSON-serializable). There is no
+  contract path from A01 to A08 for it yet. Proposal (your choice): at `start`, A01 hands
+  engine.config_snapshot() to the store (new EvidenceStore method or a field next to SessionInfo),
+  and ExportManifest.config_versions gets {"fusion_rules": rule_version, "fusion_config": config_version}.
+
+[A01-3] Optional (not blocking): Settings field `fusion_config_path: Path | None` (JSON object with
+  FusionConfig overrides, validated, unknown keys rejected). Factory already accepts
+  create_incident_engine(..., config=dict|FusionConfig); A01 would read the file once at startup and
+  pass the dict. Until then built-in defaults are used (versioned as a05-default-1+<sha12>).
+
+[A01-4] Health of analyzers. Only capture health reaches fusion as HealthObservation
+  (_on_capture_health). If phone/attention models become UNAVAILABLE/ERROR during a session, please
+  publish a HealthObservation with health.component = phone|attention as well. The engine already
+  turns any component's degraded/unavailable/error/stopped into ONE monitoring_degraded incident
+  (cleared by status ok) and remembers it across pause/resume.
+
+[A01-5] Info (no change needed): replay-mode engines ignore advance() — the recording is the clock, so
+  _timeline_now()/finish(t) in replay cannot create gaps that are not in the data. In live/synthetic,
+  advance(t) drives staleness (TTL phone 2000 ms, attention 1500 ms, 5000 ms startup grace after
+  start/resume).
+
+[A01-6] Contract wording (documentation only, CONTRACTS.md): the engine may emit
+  change="updated" for an incident whose state is already "closed". It happens only when a later,
+  overlapping incident of a linked rule appears; such updates change ONLY related_incident_ids
+  (+ update_seq). Idempotency by (incident_id, update_seq) is unchanged; the bootstrap memory store
+  already handles it.
+
+=== To A08 (evidence/review/report) ===
+  * record_incident_change(): keep the teacher's review_status when later changes arrive — the engine
+    always sends review_status="pending" (it never decides). Latest update_seq wins; post-close
+    "updated" changes only related_incident_ids.
+  * Reports: show priority as "приоритет просмотра" with explanation.facts["priority_basis"], all
+    caveats_ru, max_confidence and mean_quality as separate columns; embed rule_version/config_version
+    (and the config snapshot once [A01-2] exists).
+  * monitoring_degraded incidents are coverage gaps: list them next to SessionSummary.gaps.
+
+=== To A07 (renderer) ===
+  * Priority = очередь просмотра, never a percentage/probability. Show summary_ru + caveats_ru.
+  * related_incident_ids groups one phone episode (visible / raised / possible capture / gaze down).
+  * An "updated" message may arrive for a closed incident (links only): just replace by update_seq.
+  * Fact units: ms (render as seconds with comma), count, ratio, none. Directions are subject-centric.
+
+=== To A03 (phone) — what fusion relies on ===
+  * One PhoneObservation per analysed frame with signal phone_visible present/absent (unknown only when
+    the frame could not be analysed). Missing signal = unknown, never absent.
+  * phone_raised / possible_screen_capture: present/absent, or insufficient_evidence when the camera
+    side is not observable (fusion then adds a caveat to the phone episode, no capture incident).
+  * Put the per-claim score into PhoneSignal.confidence for present signals. Fusion does not
+    re-threshold detections and treats quality < 0.2 as unknown.
+
+=== To A04 (attention) ===
+  * face_count = None when undetermined (status unknown/error + quality_flags such as low_light);
+    face_count = 0 only when analysis ran and found no face. Missing frames are capture health.
+  * gaze.direction (subject-centric) with gaze.calibrated; when gaze is unknown fusion falls back to
+    head_direction and discloses it (fact head_direction_fallback).
+
+=== To A06 (shell) ===
+  * Send focus_lost and focus_regained as a pair, foreign_window_foreground with process basename,
+    exam_mode_engaged / exam_mode_released, enforcement_error. focus_regained without focus_lost is
+    ignored (counted). exam_mode_released during running = monitoring_degraded until exam_mode_engaged.
+
+=== To A09 (QA) ===
+  * Golden scenarios: backend/proctor/fusion/tests/golden/*.json (hand-derived expectations);
+    replay CLI: python -m proctor.fusion.replay <observations.jsonl> [--tick-ms] [--config].
