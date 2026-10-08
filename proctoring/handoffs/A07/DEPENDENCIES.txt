@@ -1,0 +1,19 @@
+A07 requests to A01 (contracts/config owner). No shared file was edited.
+
+1. Exam id before session creation (contract).
+   What: SessionCreate requires exam_id, but the renderer can only read the exam via GET /sessions/{sid}/exam,
+   i.e. after creation. Today the UI defaults to "demo-exam-1" (editable field) and shows INVALID_ARGUMENT otherwise.
+   Ask: expose the configured exam id/title before creation, e.g. `exam_id` in HealthReport or GET /v1/exam (+ bridge
+   method). Fixture showing it: ExamDefinition.demo_min (exam_id "demo-exam-1").
+
+2. Renderer test runner (dependency).
+   What: renderer/tests/e2e-fixture.mjs uses Playwright from a global install (cloud image has 1.56.1 + Chromium).
+   Ask: pin a devDependency for renderer e2e (e.g. @playwright/test or playwright-core, version >= 2 weeks old) and an
+   npm script, or confirm A09 owns browser e2e. No unit-test runner is needed by A07 right now.
+
+3. Shell error codes for backend loss (bridge, with A06).
+   What: bridge.ts says "plus shell codes" but none are listed. The UI treats ShellState.backend !== "ready" and
+   failed health() as "backend lost" and shows ApiErrorBody.code verbatim.
+   Ask: list the shell-side codes (e.g. BACKEND_UNAVAILABLE / BACKEND_RESTARTING) in bridge.ts so the UI can map them.
+
+4. CSP for the renderer (with A06): see STATUS.md "Not verified" for the proposed policy; A06 to apply/test in Electron.
