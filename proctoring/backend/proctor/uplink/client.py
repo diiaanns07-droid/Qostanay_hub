@@ -37,6 +37,7 @@ log = logging.getLogger("proctor.uplink")
 APP_VERSION = "qorgau-exam-uplink-0.1.0"
 MAX_MESSAGE = 256 * 1024
 CLIP_WAIT_ON_REQUEST_S = 15.0
+AUDIO_NOT_SUPPORTED_RU = "Аудиосвязь в приложении студента ещё не подключена"
 NO_CLIP_RULES = {"monitoring_degraded"}
 
 
@@ -49,7 +50,7 @@ class ClassStateMsg(BaseModel):
     student_id: str | None = None
     locked: bool = False
     lock_reason_ru: str | None = None
-    mic_active: bool = False
+    mic_active: bool = False  # No live-media endpoint yet: audio_start/audio_update are refused.
     audio_direction: Literal["listen", "talk", "both"] | None = None
     exam: dict[str, Any] | None = None  # welcome.exam: exam_id, title, mode, allowed_urls, allowed_apps, instructions_ru
     last_command: dict[str, Any] | None = None  # {"command_id", "kind", "ok"} of the last executed command
@@ -389,6 +390,7 @@ class Uplink:
         if cid:
             self._done_commands[cid] = None
         ok, err, code = False, "Неизвестная команда", "unsupported"
+        error_code: str | None = None  # T05 audio refusal field.
         try:
             if kind == "start_exam":
                 ok, err = await asyncio.to_thread(self.view.start_exam)
@@ -404,13 +406,10 @@ class Uplink:
             elif kind == "unlock":
                 self.locked, self.lock_reason_ru = False, None
                 ok, err = True, None
-            elif kind == "audio_start":
-                direction = payload.get("direction", "listen")
-                if direction in ("listen", "talk", "both"):
-                    self.mic_active, self.audio_direction = True, direction
-                    ok, err = True, None
-                else:
-                    err, code = "direction должен быть listen, talk или both", "invalid"
+            elif kind in ("audio_start", "audio_update"):
+                # A command alone cannot prove that media and the visible indicator exist.
+                ok, err, code = False, AUDIO_NOT_SUPPORTED_RU, "unsupported"
+                error_code = "not_supported"
             elif kind == "audio_stop":
                 self.mic_active, self.audio_direction = False, None
                 ok, err = True, None
@@ -420,14 +419,16 @@ class Uplink:
         except Exception as exc:  # a failing command must never break the session
             log.exception("uplink: command %s failed", kind)
             ok, err = False, f"Ошибка выполнения: {type(exc).__name__}"
-        if not ok and kind in ("start_exam", "finish_exam", "request_clip", "lock", "audio_start") and code == "unsupported":
+        if not ok and kind in ("start_exam", "finish_exam", "request_clip", "lock") and code == "unsupported":
             code = "failed"
         self.last_command = {"command_id": cid, "kind": kind, "ok": ok}
-        if kind in ("lock", "unlock", "audio_start", "audio_stop", "start_exam", "finish_exam"):
+        if kind in ("lock", "unlock", "audio_start", "audio_update", "audio_stop", "start_exam", "finish_exam"):
             self._publish_state()
         ack: dict[str, Any] = {"command_id": cid, "ok": ok}
         if not ok:
             ack.update(error_ru=(err or "Ошибка")[:200], code=code)  # code: additive (T04 R2)
+            if error_code:
+                ack["error_code"] = error_code  # additive T05 audio error, preserved on redelivery
         if kind in ("lock", "unlock", "start_exam", "finish_exam"):
             ack["result"] = {"locked": self.locked, "exam_state": self._snap.exam_state}  # additive (T04 R2)
         if cid:

@@ -224,13 +224,44 @@ def test_lock_unlock_audio_publish_class_state_and_ack(server, run, tmp_path):
     bad = server.send_command("lock", {"reason_ru": ""})
     assert wait_for(lambda: bad in server.acks()) and server.acks()[bad]["ok"] is False and server.acks()[bad]["error_ru"]
     a = server.send_command("audio_start", {"direction": "listen"})
-    assert wait_for(lambda: a in server.acks()) and events[-1].mic_active is True and events[-1].audio_direction == "listen"
+    assert wait_for(lambda: a in server.acks()) and server.acks()[a]["ok"] is False
+    assert events[-1].mic_active is False and events[-1].audio_direction is None
     for kind in ("audio_stop", "unlock"):
         c = server.send_command(kind)
         assert wait_for(lambda: c in server.acks()) and server.acks()[c]["ok"]
     assert events[-1].locked is False and events[-1].mic_active is False
     u = server.send_command("format_disk")
     assert wait_for(lambda: u in server.acks()) and server.acks()[u]["ok"] is False
+
+
+@pytest.mark.parametrize("kind", ["audio_start", "audio_update"])
+@pytest.mark.parametrize("direction", ["listen", "talk", "both"])
+def test_audio_refused_until_media_endpoint_exists(server, run, tmp_path, kind, direction):
+    """A teacher command cannot turn a boolean into proof of microphone capture."""
+    events: list[ClassStateMsg] = []
+    up, _ = run(make_cfg(tmp_path, server.address), events=events)
+    assert wait_for(lambda: up.connection == "connected")
+    payload = {"direction": direction}
+    cid = server.send_command(kind, payload)
+    assert wait_for(lambda: cid in server.acks())
+    ack = server.acks()[cid]
+    assert ack["ok"] is False
+    assert ack["code"] == "unsupported" and ack["error_code"] == "not_supported"
+    assert "не подключена" in ack["error_ru"]
+    assert up.mic_active is False and up.audio_direction is None
+    assert all(not e.mic_active and e.audio_direction is None for e in events)
+
+    # A fresh status after refusal stays honest, including talk-only requests.
+    statuses = len(server.of_type("status"))
+    assert wait_for(lambda: len(server.of_type("status")) > statuses)
+    assert all(m["mic_active"] is False for m in server.of_type("status"))
+
+    # A redelivered command repeats the refusal without starting anything.
+    server.send_command(kind, payload, command_id=cid)
+    assert wait_for(lambda: len(server.all_acks(cid)) == 2)
+    repeated = server.all_acks(cid)[-1]
+    assert all(repeated[k] == ack[k] for k in ("ok", "code", "error_code", "error_ru"))
+    assert up.mic_active is False and all(not e.mic_active for e in events)
 
 
 def test_clip_exported_at_incident_open_and_uploaded_on_request(server, run, tmp_path):

@@ -147,3 +147,38 @@ Real backend, synthetic sessions, FakeGuard; no Electron/device/native hooks.
   inside passing tests, not unexpected process failures.
 
 Root should merge this checkpoint and rerun its complete shell suite.
+
+## Subsequent checkpoint — refuse audio until the media endpoint exists
+
+Base: clean worktree fast-forwarded to integration `6a2e0ac`. Root authorized
+only the audio truthfulness fix from upstream C2 `73f3b7a`; no device access,
+guard changes or server adapter work. This checkpoint is local for root to
+publish as part of the integrated branch.
+
+`audio_start` previously returned success and raised `mic_active` immediately,
+despite no WebRTC endpoint, microphone track or renderer confirmation. The
+uplink now rejects `audio_start` and `audio_update` with `ok:false`,
+`code:unsupported`, the T05 additive `error_code:not_supported`, and a clear
+Russian explanation. `audio_stop` remains idempotently successful. Published
+and wire state remain `mic_active:false`, with no audio direction.
+
+Only this semantic fix was ported; upstream's periodic 5-second class-state
+republishing was not copied. Existing sticky replay, resume-token recovery and
+per-message provenance are preserved. Lock acknowledgements still precede
+renderer confirmation: that separate gap is unchanged and was reported to root.
+There is still no live audio feature; this fix prevents its false appearance.
+
+Validation (existing Python 3.12 dependency environment, explicit PYTHONPATH
+to this checkout, loopback fake server and synthetic inputs, no devices):
+
+- Audio regressions before production edit: **7 failed** (false start success
+  and missing T05 error on update). After: **7 passed**.
+- Six parameter combinations cover start/update and listen/talk/both, status
+  and renderer events never claiming microphone activity, and idempotent
+  command redelivery. The existing lock/unlock/audio-stop checks remain.
+- Full `backend/proctor/uplink` plus C1 `test_persistence_audio.py`: **32 passed**
+  in 35.00 s, including recovery/provenance and actual synthetic backend tests.
+  Warnings: existing Starlette TestClient deprecation and test-harness pong
+  after normal socket close (`ConnectionClosedOK`) during C1 restart.
+- Initial pytest attempt hit the sandbox's denied shared Temp directory;
+  reruns use fresh unique basetemp directories under the writable scratch root.
