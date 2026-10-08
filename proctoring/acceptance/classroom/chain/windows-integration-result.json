@@ -1,0 +1,226 @@
+{
+  "schema": "qorgau.acceptance.chain.v1",
+  "source_mode": "synthetic",
+  "started_at": "2026-10-08T11:35:01.069300+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python_version": "3.12.14",
+  "limitations": [
+    "Loopback only; no LAN/Wi-Fi load proof",
+    "Scripted synthetic observations; no CV accuracy proof",
+    "No Electron, native enforcement, webcam or microphone",
+    "Core C1/C2 only; optional T03/T04/T05 features are not mounted"
+  ],
+  "source_commit": "67ac5574354c08f90e72760a889f10f4fb514312",
+  "checks": {
+    "source_checkout": {
+      "status": "pass",
+      "evidence": {
+        "modules": [
+          "backend\\proctor\\__init__.py",
+          "classroom\\__init__.py",
+          "contracts\\python\\proctor_contracts\\__init__.py"
+        ],
+        "source_commit": "67ac5574354c08f90e72760a889f10f4fb514312"
+      },
+      "duration_s": 0.328
+    },
+    "three_processes_ready": {
+      "status": "pass",
+      "evidence": {
+        "launcher_pids": [
+          58564,
+          51140,
+          22772
+        ],
+        "backend_pids": [
+          64076,
+          65272,
+          34420
+        ],
+        "distinct": true
+      },
+      "duration_s": 0.0
+    },
+    "two_distinct_students": {
+      "status": "pass",
+      "evidence": {
+        "student_ids": [
+          "st-0c815da56487b29b",
+          "st-a03f69f36ec9286c"
+        ],
+        "same_computer_name": true
+      },
+      "duration_s": 0.015
+    },
+    "synthetic_sessions_preflight": {
+      "status": "pass",
+      "evidence": {
+        "local_session_ids": [
+          "s-20261008-173504-50fffec2",
+          "s-20261008-173504-df33850e"
+        ],
+        "source_modes": [
+          "synthetic",
+          "synthetic"
+        ]
+      },
+      "duration_s": 0.219
+    },
+    "targeted_start_isolation": {
+      "status": "pass",
+      "evidence": {
+        "student_a": "running",
+        "student_b": "ready",
+        "student_b_incidents": 0
+      },
+      "duration_s": 0.047
+    },
+    "student_a_incident_and_preview": {
+      "status": "pass",
+      "evidence": {
+        "student_id": "st-0c815da56487b29b",
+        "incident_count": 1,
+        "jpeg_bytes": 4247
+      },
+      "duration_s": 4.469
+    },
+    "student_b_incident_and_preview": {
+      "status": "pass",
+      "evidence": {
+        "student_id": "st-a03f69f36ec9286c",
+        "incident_count": 1,
+        "jpeg_bytes": 4217
+      },
+      "duration_s": 1.297
+    },
+    "targeted_finish_isolation": {
+      "status": "pass",
+      "evidence": {
+        "student_a": "finished",
+        "student_b": "running"
+      },
+      "duration_s": 0.047
+    },
+    "incident_identity_and_counts": {
+      "status": "pass",
+      "evidence": [
+        {
+          "student_id": "st-0c815da56487b29b",
+          "incidents": 1,
+          "events": 2,
+          "priorities": {
+            "low": 0,
+            "medium": 1,
+            "high": 0
+          }
+        },
+        {
+          "student_id": "st-a03f69f36ec9286c",
+          "incidents": 1,
+          "events": 2,
+          "priorities": {
+            "low": 0,
+            "medium": 1,
+            "high": 0
+          }
+        }
+      ],
+      "duration_s": 0.625
+    },
+    "teacher_stream": {
+      "status": "pass",
+      "evidence": {
+        "teacher_messages": 42,
+        "types": {
+          "hello": 1,
+          "snapshot": 1,
+          "command_update": 12,
+          "ack": 4,
+          "student_update": 15,
+          "preview": 4,
+          "incident": 5
+        },
+        "contiguous_seq": true
+      },
+      "duration_s": 0.0
+    },
+    "synthetic_provenance": {
+      "status": "pass",
+      "evidence": [
+        {
+          "student_id": "st-0c815da56487b29b",
+          "actual_origins": [
+            "simulated"
+          ]
+        },
+        {
+          "student_id": "st-a03f69f36ec9286c",
+          "actual_origins": [
+            "simulated"
+          ]
+        }
+      ],
+      "duration_s": 0.031
+    },
+    "server_crash_resume": {
+      "status": "pass",
+      "evidence": {
+        "students": 2,
+        "same_ids": true,
+        "reconnect_s": 1.141
+      },
+      "duration_s": 0.391
+    },
+    "durable_events_and_commands": {
+      "status": "pass",
+      "evidence": {
+        "stored_events_preserved": 4,
+        "late_clip_ready_events": 1,
+        "commands_succeeded": 4
+      },
+      "duration_s": 0.094
+    },
+    "student_restart_identity": {
+      "status": "pass",
+      "evidence": {
+        "same_student_id": true,
+        "new_pid": 34528,
+        "roster_size": 2
+      },
+      "duration_s": 1.14
+    },
+    "cleanup": {
+      "status": "pass",
+      "processes": [
+        {
+          "name": "student-1-restarted",
+          "pid": 34528,
+          "exit_code": 0
+        },
+        {
+          "name": "class-server",
+          "pid": 63804,
+          "exit_code": 0
+        },
+        {
+          "name": "student-2",
+          "pid": 22772,
+          "exit_code": 0
+        },
+        {
+          "name": "student-1",
+          "pid": 51140,
+          "exit_code": 0
+        },
+        {
+          "name": "class-server",
+          "pid": 58564,
+          "exit_code": 1
+        }
+      ],
+      "temporary_data_removed": true
+    }
+  },
+  "duration_s": 13.391,
+  "passed": true
+}

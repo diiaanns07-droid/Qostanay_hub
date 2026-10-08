@@ -41,7 +41,7 @@ export class OperatorAuth {
       const pin = String(randomInt(0, 1_000_000)).padStart(6, "0");
       const salt = Buffer.from(Array.from({ length: 16 }, () => randomInt(0, 256)));
       this.stored = parseHash(hashPin(pin, salt));
-      process.stderr.write(`\n[Qorgau DEMO] one-time operator PIN for this run: ${pin}\n\n`);
+      process.stderr.write(`\n[Adal DEMO] one-time operator PIN for this run: ${pin}\n\n`);
     } else {
       this.stored = null;
     }

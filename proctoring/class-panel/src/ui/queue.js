@@ -18,8 +18,8 @@ export function createQueue(store, o) {
   const list = h("ol", { class: "q-list" });
   const empty = h("p", { class: "q-empty" });
   const root = h("aside", { class: "queue", "aria-labelledby": "q-title" }, [
-    h("div", { class: "q-head" }, [h("h2", { id: "q-title" }, ["Требуют внимания "]), count]),
-    h("p", { class: "q-note" }, ["Очередь строится только по данным: зона из анализа на компьютере студента, связь и камера. Решение принимает преподаватель."]),
+    h("div", { class: "q-head" }, [h("h2", { id: "q-title" }, ["Очередь проверки"]), count]),
+    h("p", { class: "q-note" }, ["Сначала — высокий приоритет"]),
     list,
     empty,
   ]);
@@ -108,7 +108,7 @@ export function createQueue(store, o) {
           ? "Нет связи с сервером класса: очередь недоступна, пока данные не станут актуальными."
           : store.students.size === 0
             ? "Студентов пока нет."
-            : "Сейчас никто не требует внимания по полученным данным.",
+            : "Новых поводов для проверки нет.",
     );
     if (!first && added.length > 0 && store.feedLive) {
       const names = added.map((id) => byId.get(id)).filter(Boolean).map((x) => displayName(/** @type {any} */ (x).entry.view));

@@ -37,13 +37,25 @@ const server = spawn(process.execPath, [resolve(panelDir, "serve.mjs"), "--port"
 await sleep(400);
 const BASE = `http://127.0.0.1:${port}/`;
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {});
 
 async function newPage(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 768 }, locale: "ru-RU", ...opts });
   const page = await ctx.newPage();
   const errors = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  page.on("console", async (m) => {
+    if (m.type() !== "error") return;
+    // Some Windows antivirus installs rewrite page CSP. Record that separately only when the
+    // injected origin is visible in the actual DOM; never discard application errors wholesale.
+    if (m.text().includes("Content-Security-Policy directive 'child-src'") && m.text().includes("'none' alongside")) {
+      const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content").catch(() => "");
+      if (csp?.includes("kaspersky-labs.com")) {
+        measured.antivirusCspWarnings = (measured.antivirusCspWarnings ?? 0) + 1;
+        return;
+      }
+    }
+    errors.push(m.text());
+  });
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.addInitScript(() => {
     window.__lt = [];
@@ -76,7 +88,7 @@ async function demoChecks() {
     await noOverflow(page, `${n} students`);
     await page.screenshot({ path: `${OUT}/demo-${n}.png` });
     if (n === 100) {
-      // measured, headless Chromium in a cloud container (not a target-PC number)
+      // Measured on the machine running this script with synthetic DEMO data.
       await page.evaluate(() => (window.__lt = []));
       const samples = [];
       const flush0 = await page.evaluate(() => window.__classPanel.store.flushCount);
@@ -96,6 +108,7 @@ async function demoChecks() {
         dom_nodes: (await page.evaluate(() => window.__classPanel.metrics())).domNodes,
       };
       check("[100] render per flush p95 < 16 ms (measured, headless)", measured.flush100.render_ms_p95 < 16, JSON.stringify(measured.flush100));
+      await page.getByText("Вид и порядок", { exact: true }).click();
       await page.getByRole("button", { name: "Превью", exact: true }).click();
       await sleep(600);
       await page.screenshot({ path: `${OUT}/demo-100-compact.png` });
@@ -124,6 +137,7 @@ async function demoChecks() {
     const flushes = (await page.evaluate(() => window.__classPanel.store.flushCount)) - f0;
     measured.stability = { order_changes_in_10s: changes, ui_updates_in_10s: flushes };
     check("cards do not jump on every event (≤ 7 order changes in 10 s at 100 students, busy)", changes <= 7 && flushes > 20, JSON.stringify(measured.stability));
+    await page.getByText("Вид и порядок", { exact: true }).click();
     await page.getByRole("button", { name: /Закрепить порядок/ }).click();
     prev = await order();
     let pinnedChanges = 0;
@@ -220,16 +234,18 @@ async function demoChecks() {
     const b = await page.evaluate(() => document.activeElement?.dataset.id);
     const domOrder = await page.evaluate(() => [...document.querySelectorAll(".grid > li.card")].map((e) => e.dataset.id));
     check("arrow keys move focus across cards (roving tabindex)", a !== b && domOrder.indexOf(b) === domOrder.indexOf(a) + 1);
+    const columns = await page.locator(".grid").evaluate(el => getComputedStyle(el).gridTemplateColumns.split(" ").length);
     await page.keyboard.press("ArrowDown");
     const c = await page.evaluate(() => document.activeElement?.dataset.id);
-    check("ArrowDown moves one row", domOrder.indexOf(c) === domOrder.indexOf(b) + 4, `${domOrder.indexOf(b)}→${domOrder.indexOf(c)}`);
+    check("ArrowDown moves one row", domOrder.indexOf(c) === domOrder.indexOf(b) + columns, `${domOrder.indexOf(b)}→${domOrder.indexOf(c)}; ${columns} columns`);
     await page.keyboard.press("Enter");
     await page.locator(".drawer").waitFor();
     check("Enter opens the student dialog, focus on 'Закрыть'", (await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))) === "Закрыть карточку");
     for (let i = 0; i < 12; i++) await page.keyboard.press("Tab");
     check("Tab stays inside the dialog", await page.evaluate(() => !!document.activeElement?.closest(".drawer")));
     const slots = await page.locator(".dr-slot h3").allTextContents();
-    check("dialog has history / commands / audio places", slots.length === 3, slots.join(" | "));
+    check("dialog shows history and omits uninstalled command/audio controls", slots.length === 1 && slots[0] === "История событий", slots.join(" | "));
+    check("dialog makes background controls inert", await page.locator("#app").evaluate(el => [...el.children].filter(child => !child.classList.contains("drawer-overlay")).every(child => child.inert)));
     await page.locator(".ep-list li").first().waitFor({ timeout: 3000 }).catch(() => {});
     await page.screenshot({ path: `${OUT}/demo-dialog.png` });
     await page.keyboard.press("Escape");
@@ -253,6 +269,7 @@ async function demoChecks() {
     await page.locator(".q-ack").first().click();
     await sleep(300);
     check("'Просмотрено' removes the entry from the queue", (await page.locator(".q-item").count()) === qBefore - 1, `${qBefore}→${await page.locator(".q-item").count()}`);
+    await page.getByText("Вид и порядок", { exact: true }).click();
     await page.selectOption("#sort", "computer");
     await sleep(300);
     const names = await page.evaluate(() => [...document.querySelectorAll(".grid > li.card .computer")].slice(0, 3).map((e) => e.textContent));
@@ -297,6 +314,7 @@ async function realAdapterChecks() {
       { student_id: "st-2", computer_name: "ПК-02", student_label: "Студент 02", exam_state: "running", camera: "unknown", monitoring: "degraded", zone: "yellow", zone_reasons_ru: ["Телефон в кадре — 10:01"], incidents_total: 1, incidents_by_priority: { low: 0, medium: 1, high: 0 }, locked: false, mic_active: false },
     ];
     await page.route("**/api/teacher/students", (r) => r.fulfill({ json: cards }));
+    await page.route("**/api/teacher/session", (r) => r.fulfill({ json: null }));
     await page.route("**/api/teacher/students/*/incidents", (r) => r.fulfill({ json: [] }));
     let wsRef = null;
     await page.routeWebSocket(/\/ws\/teacher$/, (ws) => {
@@ -341,6 +359,6 @@ try {
 }
 
 const failed = results.filter((r) => !r.ok);
-console.log(`\nMEASURED (headless Chromium, cloud container, DEMO data): ${JSON.stringify(measured)}`);
+console.log(`\nMEASURED (headless Chromium, ${process.platform}/${process.arch}, DEMO data): ${JSON.stringify(measured)}`);
 console.log(`class-panel e2e: ${results.length - failed.length}/${results.length} PASS — screenshots in ${OUT}`);
 process.exit(failed.length ? 1 : 0);

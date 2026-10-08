@@ -76,9 +76,10 @@ async function flow(page, tag, shot, consoleErrors) {
   await noOverflow(page, `${tag} preflight`);
 
   // LIVE must fail preflight on the fixture bridge (no silent substitution).
+  await page.locator(".preflight-settings > summary").click();
   await page.getByText("камера (live)").click();
   await page.getByText("Студент ознакомлен").click();
-  await page.getByRole("button", { name: "Создать сессию и проверить" }).click();
+  await page.getByRole("button", { name: "Проверить устройства" }).click();
   await page.getByText("Начать нельзя").waitFor();
   check(`[${tag}] LIVE preflight blocked`, await page.getByRole("button", { name: "К калибровке" }).isDisabled());
   await shot("02-preflight-live-blocked");
@@ -95,9 +96,10 @@ async function flow(page, tag, shot, consoleErrors) {
   await page.getByRole("button", { name: "Новая сессия" }).click();
 
   // SYNTHETIC session.
+  await page.locator(".preflight-settings > summary").click();
   await page.getByText("синтетический тест").click();
   await page.getByText("Студент ознакомлен").click();
-  await page.getByRole("button", { name: "Создать сессию и проверить" }).click();
+  await page.getByRole("button", { name: "Проверить устройства" }).click();
   await page.getByText("Обязательные проверки пройдены").waitFor();
   await shot("03-preflight-ready");
   await page.getByRole("button", { name: "К калибровке" }).click();

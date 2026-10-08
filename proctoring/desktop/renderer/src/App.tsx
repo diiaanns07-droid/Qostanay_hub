@@ -129,8 +129,11 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
   // Health ping: detects a lost backend even if the shell has not reported it yet; resyncs on recovery.
   useEffect(() => {
     let wasDown = false;
+    let alive = true;
     const ping = async () => {
+      if (backendState !== "ready") return;
       const r = await call(bridge.health());
+      if (!alive) return;
       if (r.ok) {
         if (!live.health) live.health = r.data;
         if (wasDown) void resync();
@@ -143,8 +146,8 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
     };
     void ping();
     const t = setInterval(() => void ping(), HEALTH_POLL_MS);
-    return () => clearInterval(t);
-  }, [bridge, live, resync]);
+    return () => { alive = false; clearInterval(t); };
+  }, [bridge, live, resync, backendState]);
 
   // Backend became ready again (restart after a crash) → re-read the session; it may be gone or failed.
   const prevBackend = useRef(backendState);
@@ -371,7 +374,7 @@ function Brand() {
         <path d="m10.5 16.2 3.8 3.8 7.4-7.6" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <span className="brand-name">
-        ADAL
+        Adal
       </span>
     </div>
   );

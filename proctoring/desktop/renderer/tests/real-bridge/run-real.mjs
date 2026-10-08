@@ -203,9 +203,10 @@ try {
   await shot("01-preflight");
 
   // Synthetic session (only mode the backend can serve without CV modules) — labelled SYNTHETIC.
+  await page.locator(".preflight-settings > summary").click();
   await page.getByText("синтетический тест").click();
   await page.getByText("Студент ознакомлен").click();
-  await page.getByRole("button", { name: "Создать сессию и проверить" }).click();
+  await page.getByRole("button", { name: "Проверить устройства" }).click();
   await page.getByText(/Обязательные проверки пройдены|Начать нельзя/).waitFor({ timeout: 60000 });
   const ready = await page.getByText("Обязательные проверки пройдены").count();
   check("real preflight report rendered", true, ready ? "ready" : "NOT ready");
@@ -338,9 +339,10 @@ try {
 
   // Restart: a new session reaches preflight on the same backend.
   await page.getByRole("button", { name: "Новая сессия" }).click();
+  await page.locator(".preflight-settings > summary").click();
   await page.getByText("синтетический тест").click();
   await page.getByText("Студент ознакомлен").click();
-  await page.getByRole("button", { name: "Создать сессию и проверить" }).click();
+  await page.getByRole("button", { name: "Проверить устройства" }).click();
   await page.getByText(/Обязательные проверки пройдены|Начать нельзя/).waitFor({ timeout: 60000 });
   const sid2 = shell.shellState().session_id;
   check("restart: second session bound", !!sid2 && sid2 !== sid, String(sid2));
@@ -357,7 +359,7 @@ try {
   check("session lost by the crash is reported, not shown as ready", true);
   await shot("11-after-restart");
   await page.getByRole("button", { name: "Новая сессия" }).first().click();
-  await page.getByRole("button", { name: "Создать сессию и проверить" }).waitFor();
+  await page.getByRole("button", { name: "Проверить устройства" }).waitFor();
 
   const gum = await page.evaluate(() => window.__gum);
   check("getUserMedia never called", gum === 0, String(gum));

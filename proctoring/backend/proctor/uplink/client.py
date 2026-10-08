@@ -428,7 +428,7 @@ class Uplink:
         if not ok and kind in ("start_exam", "finish_exam", "request_clip", "lock") and code == "unsupported":
             code = "failed"
         self.last_command = {"command_id": cid, "kind": kind, "ok": ok}
-        if kind in ("lock", "unlock", "audio_start", "audio_stop", "start_exam", "finish_exam"):
+        if kind in ("lock", "unlock", "audio_start", "audio_update", "audio_stop", "start_exam", "finish_exam"):
             self._publish_state()
         ack: dict[str, Any] = {"command_id": cid, "ok": ok}
         if not ok:

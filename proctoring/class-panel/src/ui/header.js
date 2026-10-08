@@ -27,7 +27,8 @@ export function createHeader(store, o) {
   const bannerText = h("span", { class: "banner-text" });
   const retryBtn = h("button", { type: "button", class: "btn btn-small", hidden: true }, ["Повторить сейчас"]);
   retryBtn.addEventListener("click", () => o.onRetry());
-  const banner = h("div", { class: "banner", role: "status", "aria-live": "polite", hidden: true }, [bannerText, retryBtn]);
+  const loginLink = h("a", { class: "btn", href: "/login", hidden: true }, ["Войти"]);
+  const banner = h("div", { class: "banner", role: "status", "aria-live": "polite", hidden: true }, [bannerText, retryBtn, loginLink]);
 
   // zone filter chips
   /** @type {Map<string, {btn: HTMLElement, n: HTMLElement}>} */
@@ -35,7 +36,8 @@ export function createHeader(store, o) {
   const chipRow = h("div", { class: "chips", role: "group", "aria-label": "Фильтр по статусу" });
   for (const z of ZONES) {
     const n = h("span", { class: "chip-n" });
-    const btn = h("button", { type: "button", class: `chip z-${z}`, "aria-pressed": "false", "data-zone": z }, [svg(ICON[z]), h("span", {}, [ZONE_LABEL[z]]), n]);
+    const shortLabels = { red: "Проверить", yellow: "Внимание", grey: "Нет данных", green: "Без замечаний" };
+    const btn = h("button", { type: "button", class: `chip z-${z}`, "aria-pressed": "false", "data-zone": z }, [svg(ICON[z]), h("span", {}, [shortLabels[z]]), n]);
     btn.addEventListener("click", () => {
       const zones = new Set(store.filter.zones);
       if (zones.has(z)) zones.delete(z);
@@ -52,6 +54,14 @@ export function createHeader(store, o) {
     store.setFilter({ zones: new Set(), query: "", link: "all" });
   });
   chipRow.append(clearBtn);
+  const allCount = h("span", { class: "chip-n" });
+  const allBtn = h("button", { type: "button", class: "chip chip-all", "aria-pressed": "true" }, ["Все", allCount]);
+  allBtn.addEventListener("click", () => {
+    search.value = "";
+    linkSel.value = "all";
+    store.setFilter({ zones: new Set(), query: "", link: "all" });
+  });
+  chipRow.prepend(allBtn);
 
   const search = /** @type {HTMLInputElement} */ (h("input", { type: "search", id: "q", placeholder: "Имя или компьютер", autocomplete: "off", spellcheck: "false" }));
   let qTimer = 0;
@@ -85,28 +95,36 @@ export function createHeader(store, o) {
     o.onPreview(on);
   });
 
-  const toolbar = h("div", { class: "toolbar" }, [
-    h("label", { class: "field field-search", for: "q" }, [svg(ICON.search), h("span", { class: "sr-only" }, ["Поиск по имени или компьютеру"]), search]),
+  const viewOptions = h("details", { class: "view-options" }, [h("summary", {}, ["Вид и порядок"]), h("div", { class: "view-options-body" }, [
     h("label", { class: "field", for: "link" }, [h("span", {}, ["Связь"]), linkSel]),
     h("label", { class: "field", for: "sort" }, [h("span", {}, ["Порядок"]), sortSel]),
     pinBtn,
     prevBtn,
+  ])]);
+  const toolbar = h("div", { class: "toolbar" }, [
+    h("label", { class: "field field-search", for: "q" }, [svg(ICON.search), h("span", { class: "sr-only" }, ["Поиск по имени или компьютеру"]), search]),
+    viewOptions,
   ]);
 
+  const controls = h("section", { class: "workspace-toolbar", "aria-label": "Список студентов" }, [
+    h("div", { class: "filters" }, [chipRow, toolbar]),
+  ]);
   const root = h("header", { class: "top" }, [
     h("div", { class: "top-row" }, [
       h("div", { class: "brand" }, [
-        h("h1", {}, ["Qorgau · Класс"]),
+        h("span", { class: "brand-mark", "aria-hidden": "true" }, ["a"]),
+        h("span", { class: "brand-name" }, ["Adal"]),
         h("span", { class: `mode mode-${o.mode}`, title: o.mode === "demo" ? "Все данные на экране имитированы" : "Данные сервера класса" }, [o.modeLabel]),
       ]),
       counters,
     ]),
     banner,
-    h("div", { class: "filters" }, [chipRow, toolbar]),
   ]);
 
   function render() {
     const c = store.counters();
+    setText(allCount, store.loaded ? String(c.total) : "—");
+    setAttr(allBtn, "aria-pressed", String(!store.filter.zones.size && !store.filter.query && store.filter.link === "all"));
     setText(cTotal, store.loaded ? String(c.total) : "—");
     setText(cOnline, store.loaded && store.feedLive ? String(c.online) : "—");
     setText(cOffline, store.loaded && store.feedLive ? String(c.offline) : "—");
@@ -128,7 +146,7 @@ export function createHeader(store, o) {
     else if (conn.status === "reconnecting") {
       const secs = Math.max(0, Math.round((now - conn.since) / 1000));
       const retry = conn.retryAt ? ` Повтор через ${Math.max(0, Math.ceil((conn.retryAt - now) / 1000))} с.` : "";
-      text = `Нет связи с сервером класса ${secs} с. Данные на экране устарели — показаны последние полученные, без статусов «на связи».${retry} ${conn.detail}`;
+      text = `Нет связи с сервером класса · ${secs} с. Показаны последние данные.${retry}`;
       tone = "warn";
     } else if (conn.status === "error") {
       const retry = conn.retryAt ? ` Повтор через ${Math.max(0, Math.ceil((conn.retryAt - now) / 1000))} с.` : "";
@@ -142,7 +160,8 @@ export function createHeader(store, o) {
     banner.className = `banner banner-${tone}`;
     setText(bannerText, text);
     retryBtn.hidden = !(conn.status === "error" || conn.status === "reconnecting");
+    loginLink.hidden = conn.status !== "auth";
   }
 
-  return { root, render, searchInput: search };
+  return { root, controls, render, searchInput: search };
 }

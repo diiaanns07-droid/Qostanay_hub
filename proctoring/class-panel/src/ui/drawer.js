@@ -9,6 +9,7 @@ import {
   displayName,
   EXAM_STATE_LABEL,
   normalizeIncident,
+  ORIGIN_LABEL,
   PRIORITY_LABEL,
   ZONE_LABEL,
 } from "../model.js";
@@ -62,8 +63,8 @@ export function createDrawer(store, registry, o) {
 
   function focusables() {
     return /** @type {HTMLElement[]} */ ([
-      ...dialog.querySelectorAll("button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex='-1'])"),
-    ]).filter((el) => !el.closest("[hidden]"));
+      ...dialog.querySelectorAll("button:not([disabled]), summary, [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex='-1'])"),
+    ]).filter((el) => !el.closest("[hidden]") && el.getClientRects().length > 0);
   }
 
   /** @param {string} label @param {HTMLElement} value */
@@ -80,7 +81,7 @@ export function createDrawer(store, registry, o) {
     const v0 = x.entry.view;
 
     const title = h("h2", { id: "dr-title" }, [displayName(v0)]);
-    const sub = h("p", { class: "dr-sub" }, [v0.computerName ?? "компьютер: нет данных", " · id ", v0.id]);
+    const sub = h("p", { class: "dr-sub" }, [v0.computerName ?? "Компьютер не указан"]);
     const closeBtn = h("button", { type: "button", class: "icon-btn", "aria-label": "Закрыть карточку" }, [svg(ICON.close)]);
     closeBtn.addEventListener("click", () => close());
 
@@ -107,12 +108,13 @@ export function createDrawer(store, registry, o) {
         h("p", { class: "dr-zone-note" }, [
           d.zone === "grey"
             ? "Серый — недостаточно данных, а не «низкий риск»."
-            : "Зона — приоритет проверки из анализа на компьютере студента (A05), не вывод о нарушении.",
+            : "Автоматическое наблюдение. Решение остаётся за преподавателем.",
         ]),
       );
       const now = store.now();
       const yesNo = (/** @type {boolean|null} */ b, /** @type {string} */ yes, /** @type {string} */ no) => (b === null ? "нет данных" : b ? yes : no);
       kv.replaceChildren(
+        row("Источник", h("span", {}, [ORIGIN_LABEL[v.origin]])),
         row("Связь", h("span", {}, [d.link === "online" ? "на связи" : d.link === "offline" ? "нет связи" : "неизвестно (нет связи панели с сервером)"])),
         row("Последний статус", h("span", {}, [v.lastStatusAt === null ? "не получен" : ago(v.lastStatusAt, now)])),
         row("Камера", h("span", {}, [v.camera === null ? "нет данных" : d.stale ? `${CAMERA_LABEL[v.camera]} — устарело (последний статус ${ago(v.lastStatusAt, now)})` : CAMERA_LABEL[v.camera]])),
@@ -134,7 +136,7 @@ export function createDrawer(store, registry, o) {
         if (!img) media.replaceChildren(h("img", { src: p.url, alt: `Превью с компьютера: ${displayName(v)}` }), h("span", { class: "media-note" }));
         else if (img.getAttribute("src") !== p.url) img.src = p.url;
         media.classList.toggle("stale", !fresh);
-        setText(/** @type {HTMLElement} */ (media.querySelector(".media-note")), fresh ? (p.at ? `кадр ${ago(p.at, now)}` : "") : "превью устарело");
+        setText(/** @type {HTMLElement} */ (media.querySelector(".media-note")), [p.origin === "real" ? "" : ORIGIN_LABEL[p.origin], fresh ? (p.at ? `кадр ${ago(p.at, now)}` : "") : "превью устарело"].filter(Boolean).join(" · "));
       } else {
         media.replaceChildren(h("p", { class: "muted" }, ["Превью не получено."]));
       }
@@ -144,7 +146,7 @@ export function createDrawer(store, registry, o) {
     const unsub = store.subscribe(() => renderStatus?.());
     cleanups.push(() => unsub());
 
-    const slots = SLOTS.map((slot) => {
+    const slots = SLOTS.filter(slot => registry.forSlot(slot).length > 0).map((slot) => {
       const box = h("section", { class: `dr-slot slot-${slot}`, "aria-labelledby": `slot-${slot}` });
       const mods = registry.forSlot(slot);
       box.append(h("h3", { id: `slot-${slot}` }, [mods[0]?.title ?? SLOT_TITLE[slot]]));
@@ -177,7 +179,10 @@ export function createDrawer(store, registry, o) {
 
     dialog.append(h("header", { class: "dr-head" }, [h("div", {}, [title, sub]), closeBtn]));
     if (o.mode === "demo") dialog.append(h("p", { class: "demo-note" }, ["DEMO: данные этой карточки имитированы."]));
-    dialog.append(h("div", { class: "dr-grid" }, [h("div", { class: "dr-col" }, [zoneBox, media, ackBtn]), h("div", { class: "dr-col" }, [kv])]), ...slots);
+    const details = h("details", { class: "student-details" }, [h("summary", {}, ["Подключение и состояние компьютера"]), kv]);
+    dialog.append(h("div", { class: "dr-grid" }, [h("div", { class: "dr-col" }, [media]), h("div", { class: "dr-col" }, [zoneBox, ackBtn])]), ...slots, details);
+    const page = document.getElementById("app");
+    if (page) for (const child of page.children) if (child !== overlay && child instanceof HTMLElement) child.inert = true;
     overlay.hidden = false;
     document.body.classList.add("modal-open");
     closeBtn.focus();
@@ -196,6 +201,8 @@ export function createDrawer(store, registry, o) {
     renderStatus = null;
     openId = null;
     overlay.hidden = true;
+    const page = document.getElementById("app");
+    if (page) for (const child of page.children) if (child instanceof HTMLElement) child.inert = false;
     document.body.classList.remove("modal-open");
     dialog.replaceChildren();
     if (restore && returnTo && document.contains(returnTo)) returnTo.focus();
@@ -221,7 +228,7 @@ export function historyModule(store) {
   return {
     id: "builtin-episodes",
     slot: /** @type {const} */ ("history"),
-    title: "Эпизоды (только просмотр)",
+    title: "История событий",
     builtin: true,
     /** @param {HTMLElement} el @param {import("../extensions.js").ModuleContext} ctx */
     mount(el, ctx) {
@@ -245,6 +252,7 @@ export function historyModule(store) {
               ]),
               h("div", { class: "ep-text" }, [i.explanation ?? i.rule ?? "без описания"]),
               h("div", { class: "ep-meta" }, [
+                i.origin === "real" ? "" : `${ORIGIN_LABEL[i.origin]} · `,
                 i.decision ? DECISION_LABEL[i.decision] : "Решение преподавателя не принято",
                 i.clipAvailable ? " · есть клип" : "",
               ]),

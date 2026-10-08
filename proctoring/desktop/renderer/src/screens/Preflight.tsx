@@ -12,7 +12,7 @@ import { useLive } from "../lib/liveStore";
 import { ClassBlock } from "../components/ClassOverlays";
 import { call } from "../lib/result";
 import { CAPABILITY, CHECK, CHECK_STATUS, COMPONENT, ENV_ACTION, HEALTH, HEALTH_CODE, SOURCE_MODE_RU } from "../lib/labels";
-import { Badge, Banner, Button, Card, Dialog, Dot, ErrorBanner, Spinner, type Tone } from "../components/ui";
+import { Badge, Banner, Button, Card, Dialog, Dot, ErrorBanner, SourceModeBadge, Spinner, type Tone } from "../components/ui";
 
 const CONSENT_VERSION = "consent-ru-1";
 const DEFAULT_EXAM_ID = "demo-exam-1";
@@ -21,7 +21,7 @@ const checkTone = (c: PreflightCheck): Tone =>
   c.status === "pass" ? "ok" : c.status === "fail" ? (c.required ? "danger" : "warn") : c.status === "warn" ? "warn" : "neutral";
 
 export function PreflightScreen() {
-  const { bridge, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher, live } = useApp();
+  const { bridge, shell, session, setSession, bindSession, isCurrent, backendLost, role, requestTeacher, live } = useApp();
   useLive(live);
   const [health, setHealth] = useState<HealthReport | null>(null);
   const [caps, setCaps] = useState<EnvironmentCapabilities | null | { error: ApiErrorBody }>(null);
@@ -49,8 +49,10 @@ export function PreflightScreen() {
   }, [bridge]);
 
   useEffect(() => {
-    void loadEnv();
-  }, [loadEnv]);
+    // The renderer can appear before the child service is ready. Refresh after recovery too,
+    // so a startup/restart error never requires a manual retry once the service is available.
+    if (shell?.backend === "ready" && !backendLost) void loadEnv();
+  }, [loadEnv, shell?.backend, backendLost]);
 
   // The shell measures capabilities at startup (self-test); "not measured yet" is retryable → poll briefly.
   useEffect(() => {
@@ -149,6 +151,7 @@ export function PreflightScreen() {
   };
 
   const sessionActive = session && (session.state === "created" || session.state === "preflight");
+  const shownMode = sessionActive ? session.source_mode : mode;
   const requiredFailed = report?.checks.filter((c) => c.required && c.status !== "pass") ?? [];
   const formValid = consent && examId.trim().length > 0 && (mode !== "replay" || replayId.trim().length > 0);
 
@@ -158,91 +161,92 @@ export function PreflightScreen() {
         <div>
           <h1>Подготовка к экзамену</h1>
           <p className="lead">
-            Перед началом проверяем локальный сервис, источник кадров, модели и защиту среды. Всё работает на этом
-            компьютере, без интернета.
+            Укажите имя, ознакомьтесь с условиями и проверьте готовность компьютера к экзамену.
           </p>
         </div>
+        <SourceModeBadge mode={shownMode} fixture={bridge.transport === "fixture"} />
       </div>
 
+      {shownMode !== "live" && (
+        <Banner tone="warn" title={shownMode === "synthetic" ? "SYNTHETIC · тест без камеры" : "REPLAY · записанное видео"}>
+          {shownMode === "synthetic" ? "Наблюдения сгенерированы для проверки приложения. Это не результаты работы камеры." : "Используется выбранная запись, а не камера в реальном времени."}
+        </Banner>
+      )}
       {loadErr && <ErrorBanner context="Состояние сервиса" error={loadErr} onRetry={() => void loadEnv()} />}
       {actionErr && <ErrorBanner context={actionErr.ctx} error={actionErr.error} onDismiss={() => setActionErr(null)} />}
 
-      <div className="grid-2">
+      <div className="preflight-layout">
         <div className="stack">
           {!sessionActive ? (
-            <Card title="1. Информированное начало">
-              <div className="privacy">
-                <div>
-                  <h3>Что обрабатывается</h3>
-                  <ul>
-                    <li>Кадры камеры — только на этом компьютере: телефон в кадре, наличие и число лиц, положение головы.</li>
-                    <li>События окна экзамена: сочетания клавиш, потеря фокуса, посторонние окна (без текста и заголовков окон).</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3>Что сохраняется</h3>
-                  <ul>
-                    <li>Метаданные наблюдений, эпизоды, ответы и решения преподавателя — локально.</li>
-                    <li>
-                      Кадры-доказательства — <b>только</b> если включено ниже. Биометрические шаблоны лица не создаются.
-                    </li>
-                    <li>Решение принимает преподаватель. Автоматических санкций нет.</li>
-                  </ul>
-                </div>
-              </div>
+            <Card title="Перед началом">
+              <label className="field preflight-name">
+                <span>Как вас назвать? <span className="muted">Необязательно</span></span>
+                <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Имя или псевдоним" maxLength={64} autoComplete="off" />
+                <span className="hint">Используйте имя или метку, согласованную с преподавателем.</span>
+              </label>
 
-              <fieldset className="field">
-                <legend>Источник кадров</legend>
-                <div className="segmented" role="radiogroup">
-                  {(["live", "replay", "synthetic"] as const).map((m) => (
-                    <label key={m} className={`seg ${mode === m ? "seg-on" : ""}`}>
-                      <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} />
-                      {SOURCE_MODE_RU[m]}
-                    </label>
-                  ))}
-                </div>
-                <p className="hint">
-                  {mode === "live" && "Камера этого компьютера. Требует все модели и защиту среды; без них начать нельзя."}
-                  {mode === "replay" && "Заранее записанное видео проходит через тот же конвейер. Везде помечается как REPLAY."}
-                  {mode === "synthetic" && "Тестовый режим без камеры и без CV. Везде помечается как SYNTHETIC."}
-                </p>
-              </fieldset>
-
-              {mode === "replay" && (
-                <label className="field">
-                  <span>Идентификатор записи</span>
-                  <input value={replayId} onChange={(e) => setReplayId(e.target.value)} placeholder="например, demo-phone-01" />
-                </label>
-              )}
-              <div className="row-2">
-                <label className="field">
-                  <span>Метка студента (необязательно)</span>
-                  <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="псевдоним, без ФИО" maxLength={64} />
-                </label>
-                <label className="field">
-                  <span>Экзамен</span>
-                  <input value={examId} onChange={(e) => setExamId(e.target.value)} />
-                </label>
+              <div className="preflight-privacy">
+                <h3>Что нужно знать</h3>
+                <p>Приложение анализирует кадры камеры и события окна экзамена. Наблюдения, эпизоды и ответы сохраняются на этом компьютере. Результаты проверяет преподаватель.</p>
+                <p>При подключении к классу преподавателю передаются статусы, эпизоды и превью. Короткие клипы эпизодов передаются по его запросу.</p>
               </div>
               <label className="check">
                 <input type="checkbox" checked={retainMedia} onChange={(e) => setRetainMedia(e.target.checked)} />
-                <span>Сохранять кадры-доказательства для эпизодов (по умолчанию выключено)</span>
+                <span>Сохранять отдельные кадры-доказательства для эпизодов <span className="muted">(необязательно)</span></span>
               </label>
               <label className="check check-strong">
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                <span>Студент ознакомлен с тем, что обрабатывается и сохраняется, и согласен начать (текст {CONSENT_VERSION})</span>
+                <span>Студент ознакомлен с тем, что обрабатывается и сохраняется, и согласен начать.</span>
               </label>
-              <div className="actions">
+              <div className="actions preflight-primary">
                 <Button variant="primary" size="lg" busy={busy === "create" || busy === "preflight"} disabled={!formValid || backendLost} onClick={() => void create()}>
-                  Создать сессию и проверить
+                  Проверить устройства
                 </Button>
-                {!consent && <span className="hint">Нужно согласие участника.</span>}
+                <span className="hint">{!consent ? "Для проверки нужно согласие участника." : "После проверки экзамен ещё не начнётся."}</span>
               </div>
+
+              <details className="preflight-details preflight-settings">
+                <summary>Дополнительные настройки</summary>
+                <p className="hint">Для обычного экзамена оставьте камеру. Запись и синтетический режим нужны для проверки приложения.</p>
+                <fieldset className="field">
+                  <legend>Источник кадров</legend>
+                  <div className="segmented" role="radiogroup">
+                    {(["live", "replay", "synthetic"] as const).map((m) => (
+                      <label key={m} className={`seg ${mode === m ? "seg-on" : ""}`}>
+                        <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} />
+                        {SOURCE_MODE_RU[m]}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="hint">
+                    {mode === "live" && "Камера этого компьютера. Требует все модели и защиту среды; без них начать нельзя."}
+                    {mode === "replay" && "Заранее записанное видео проходит через тот же конвейер. Везде помечается как REPLAY."}
+                    {mode === "synthetic" && "Тестовый режим без камеры и без CV. Везде помечается как SYNTHETIC."}
+                  </p>
+                </fieldset>
+
+                {mode === "replay" && (
+                  <label className="field">
+                    <span>Идентификатор записи</span>
+                    <input value={replayId} onChange={(e) => setReplayId(e.target.value)} placeholder="например, demo-phone-01" />
+                  </label>
+                )}
+                <label className="field">
+                  <span>Идентификатор экзамена</span>
+                  <input value={examId} onChange={(e) => setExamId(e.target.value)} />
+                </label>
+                <p className="hint">Версия условий: {CONSENT_VERSION}</p>
+              </details>
+              {consent && !formValid && (
+                <Banner tone="warn" title="Заполните дополнительные настройки">
+                  {!examId.trim() ? "Не указан идентификатор экзамена. " : ""}
+                  {mode === "replay" && !replayId.trim() ? "Для REPLAY нужен идентификатор записи." : ""}
+                </Banner>
+              )}
             </Card>
           ) : (
             <Card
-              title="2. Проверка готовности"
-              aside={<span className="mono muted">{session.session_id}</span>}
+              title="Проверка готовности"
             >
               {busy === "preflight" && !report && <Spinner label="Выполняем проверки…" />}
               {report && (
@@ -304,33 +308,36 @@ export function PreflightScreen() {
           )}
         </div>
 
-        <div className="stack">
+        <div className="stack preflight-sidebar">
           <ClassBlock state={live.classState} health={health} />
-          <Card title="Компоненты" aside={health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}>
-            {!health && !loadErr && <Spinner label="Запрашиваем состояние…" />}
-            {!health && loadErr && <p className="muted">Нет данных о компонентах.</p>}
-            {health && (
-              <ul className="comp-list">
-                {health.components.map((c) => {
-                  const tone: Tone = c.status === "ok" ? "ok" : c.status === "degraded" || c.status === "starting" ? "warn" : "danger";
-                  return (
-                    <li key={c.component}>
-                      <Dot tone={tone} />
-                      <span className="comp-name">{COMPONENT[c.component]}</span>
-                      <span className="comp-status">{HEALTH[c.status]}</span>
-                      <span className="comp-msg" title={c.message || undefined}>
-                        {HEALTH_CODE[c.code] ?? c.message}
-                        {typeof c.details.errors === "number" ? ` · ошибок: ${c.details.errors}` : ""}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            {health && <p className="small muted">Версия сервиса {health.backend_version} · контракт {health.contract_version}</p>}
-          </Card>
+          <details className="preflight-details preflight-diagnostics">
+            <summary>Диагностика компьютера {health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}</summary>
+            <Card title="Компоненты" aside={health && <Badge tone={health.overall === "ok" ? "ok" : health.overall === "degraded" ? "warn" : "danger"}>{HEALTH[health.overall]}</Badge>}>
+              {!health && !loadErr && <Spinner label="Запрашиваем состояние…" />}
+              {!health && loadErr && <p className="muted">Нет данных о компонентах.</p>}
+              {health && (
+                <ul className="comp-list">
+                  {health.components.map((c) => {
+                    const tone: Tone = c.status === "ok" ? "ok" : c.status === "degraded" || c.status === "starting" ? "warn" : "danger";
+                    return (
+                      <li key={c.component}>
+                        <Dot tone={tone} />
+                        <span className="comp-name">{COMPONENT[c.component]}</span>
+                        <span className="comp-status">{HEALTH[c.status]}</span>
+                        <span className="comp-msg" title={c.message || undefined}>
+                          {HEALTH_CODE[c.code] ?? c.message}
+                          {typeof c.details.errors === "number" ? ` · ошибок: ${c.details.errors}` : ""}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {health && <p className="small muted">Версия сервиса {health.backend_version} · контракт {health.contract_version}</p>}
+            </Card>
+          </details>
 
-          <Card title="Защита среды">
+          <Card title="Готовность компьютера">
             {caps === null && <Spinner label="Запрашиваем возможности оболочки…" />}
             {caps && "error" in caps && (
               <Banner tone={caps.error.retryable ? "info" : "warn"} title={caps.error.retryable ? "Оболочка ещё измеряет возможности защиты" : "Оболочка не сообщила возможности защиты"}>
@@ -341,32 +348,35 @@ export function PreflightScreen() {
             {caps && !("error" in caps) && (
               <>
                 <ProtectionSummary caps={caps} />
-                <p className="small muted">
-                  {caps.platform} · оболочка {caps.shell_version} · режим экзамена {caps.exam_mode_supported ? "поддерживается" : "не поддерживается"}
-                </p>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Действие</th>
-                      <th scope="col">Статус</th>
-                      <th scope="col">Примечание</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {caps.items.map((it) => (
-                      <tr key={it.action}>
-                        <td>{ENV_ACTION[it.action]}</td>
-                        <td>
-                          <Badge tone={it.status === "blocked" ? "ok" : it.status === "detected_only" ? "info" : it.status === "unverified" ? "warn" : "neutral"}>
-                            {CAPABILITY[it.status]}
-                          </Badge>
-                        </td>
-                        <td className="small">{it.note_ru ?? "—"}{it.verified_on ? ` · проверено: ${it.verified_on}` : ""}</td>
+                <details className="preflight-details">
+                  <summary>Возможности защиты</summary>
+                  <p className="small muted">
+                    {caps.platform} · оболочка {caps.shell_version} · режим экзамена {caps.exam_mode_supported ? "поддерживается" : "не поддерживается"}
+                  </p>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Действие</th>
+                        <th scope="col">Статус</th>
+                        <th scope="col">Примечание</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p className="small muted">Перечислено только то, что сообщила оболочка. Остальные действия не заявляются как защищённые.</p>
+                    </thead>
+                    <tbody>
+                      {caps.items.map((it) => (
+                        <tr key={it.action}>
+                          <td>{ENV_ACTION[it.action]}</td>
+                          <td>
+                            <Badge tone={it.status === "blocked" ? "ok" : it.status === "detected_only" ? "info" : it.status === "unverified" ? "warn" : "neutral"}>
+                              {CAPABILITY[it.status]}
+                            </Badge>
+                          </td>
+                          <td className="small">{it.note_ru ?? "—"}{it.verified_on ? ` · проверено: ${it.verified_on}` : ""}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="small muted">Перечислено только то, что сообщила оболочка. Остальные действия не заявляются как защищённые.</p>
+                </details>
               </>
             )}
           </Card>

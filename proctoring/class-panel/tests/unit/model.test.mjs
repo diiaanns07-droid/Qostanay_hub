@@ -88,3 +88,16 @@ test("natural order of computer names", () => {
   assert.ok(naturalCompare("ПК-2", "ПК-10") < 0);
   assert.ok(naturalCompare("Студент 9", "Студент 10") < 0);
 });
+
+test("source provenance survives partial updates and never defaults to real", () => {
+  const initial = normalizeStudent(status({ origin: "simulated" }), NOW).view;
+  const raw = { student_id: "s1", connected: true };
+  assert.equal(mergeStudent(initial, normalizeStudent(raw, NOW).view, raw).origin, "simulated");
+  for (const origin of ["simulated", "replay", "real", "unknown"]) {
+    assert.equal(normalizeStudent(status({ origin }), NOW).view.origin, origin);
+    assert.equal(normalizeIncident({ incident_id: "i1", origin }).origin, origin);
+  }
+  assert.equal(normalizeStudent(status(), NOW).view.origin, "unknown");
+  assert.equal(normalizeStudent(status({ origin: "LIVE" }), NOW).view.origin, "unknown");
+  assert.equal(normalizeIncident({ incident_id: "i1" }).origin, "unknown");
+});
