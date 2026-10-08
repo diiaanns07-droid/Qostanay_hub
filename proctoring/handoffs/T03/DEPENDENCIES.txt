@@ -1,0 +1,57 @@
+T03 -> T01 / T02 / C1 / A05 requests (base 65c8c17, protocol qorgau.class.v1 frozen 2026-10-08 14:45)
+
+1. [T01, required] Register T03 in OWNERSHIP: paths "proctoring/classreview/" and "proctoring/handoffs/T03/".
+   T01 baseline/OWNERSHIP for T roles is not published (T02 notes the same); T03 used only these two prefixes
+   and touched no shared file. verify_ownership.py cannot check T03 until then (checked separately: 0 files
+   outside the two prefixes).
+
+2. [T01 / A01 protocol, additive] Optional upload header "X-Qorgau-Clip-Source: live|replay|synthetic|test".
+   The protocol `incident` message has no source_mode, so the server cannot tell a test clip from a real one.
+   T03 already accepts the header (missing/unknown -> "unspecified", shown as "источник не указан") and the UI
+   labels test/synthetic clips. Alternative: add `source_mode` to the `incident` message.
+
+3. [T01 / A01 protocol, additive] Optional query "?student_id=" on GET /api/teacher/clips/{incident_id}.
+   The protocol path has only incident_id. If two students ever share an incident_id the server answers
+   409 ambiguous_incident without it (incident ids from A05 contain the session id, so a collision is unlikely).
+   T03's UI always sends student_id.
+
+4. [T01 / A01 protocol, additive] Teacher-only extras served by T03 (not in §5):
+   GET /api/teacher/students/{id}/incidents/{incident_id}/snapshot (the ≤40 KB snapshot from the incident message),
+   fields added to each episode of GET .../incidents: decision_note_ru, decision_history[], clip{state,...},
+   snapshot_available, class_session_id, seq, updated_at; and a top-level "review" object (zone after review).
+   T02's normalizeIncident ignores unknown fields, so the panel keeps working.
+
+5. [T01 / A05, decision needed] Dismissed episodes vs the shared zone rule. A05 zones.py says "The teacher's
+   review decision never changes the zone". The T03 assignment requires dismissed events to be accounted for by
+   the shared risk mechanism. T03 does NOT copy the rule: it calls proctor.fusion.zones.assess_session_zone with
+   the dismissed episodes removed and shows BOTH zones ("по сигналам компьютера студента" = the student's own
+   A05 zone, unchanged; "с учётом решений преподавателя" = the recomputed one). Confirmed / needs_followup /
+   unreviewed keep counting. Please confirm this semantics (or tell T03 to show the student zone only).
+
+6. [T01 / A01 protocol, wording] Decision values. The protocol has confirmed | dismissed | needs_followup; the
+   T03 assignment names "подтвердить / отклонить / недостаточно данных". T03 maps "Недостаточно данных" ->
+   needs_followup (T02's label for it is "Нужна дополнительная проверка"). Please confirm one Russian label.
+
+7. [T02, required for the real panel] Two lines in proctoring/class-panel/index.html (checked on T02 b493b47
+   through T02's own serve.mjs proxy, see STATUS.md):
+     * CSP: add  media-src 'self';   (without it Chromium: "Refused to load media ... violates ... default-src 'none'")
+     * load the module:  <script type="module" src="<served path>/register.js"></script>
+   and the class server must serve classreview/ui/{register.js, review-module.js, review.css} (the module loads
+   its CSS itself from the same directory). The T03 module replaces the built-in "История" of the history slot.
+   Observation: on b493b47 in ?adapter=real the page shows stray "null" text at the left edge (outside T03).
+
+8. [C1 (class server), integration] Wiring for the real server (all public, see classreview/__init__.py):
+     store = ReviewStore(ReviewConfig.from_env()); store.open()
+     app.include_router(create_review_router(store, teacher_guard=<loopback + teacher cookie -> operator label>,
+                        student_resolver=<resume_token -> student_id>, status_provider=<student_id -> {zone, monitoring}>))
+     /ws/student `incident` -> store.ingest_incident(student_id, msg, class_session_id=...)   (invalid -> error{code,message_ru})
+     sending request_clip     -> store.note_clip_requested(student_id, incident_id, command_id)
+     ack for that command     -> store.note_command_ack(command_id, ok, error_ru)
+     store.on_change(event)   -> /ws/teacher {"type":"incident","student_id",..."incident":{...}}
+     card counters            -> store.list_students() gives incidents_total / incidents_unreviewed
+     POST /api/teacher/session -> store.open_class_session(class_session_id, started_at)
+   classreview/devserver.py is a labelled DEV harness that does exactly this and can serve as the reference.
+
+9. [dependency, info] No new dependencies. Runtime: fastapi/uvicorn/stdlib only. OpenCV is used only by
+   classreview/testclips.py (tests, DEV harness, fake student). Python websockets (already locked) is used by the
+   fake student example; the reference uploader is stdlib-only.
