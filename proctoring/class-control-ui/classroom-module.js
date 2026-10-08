@@ -28,6 +28,7 @@ export function createClassroomCommands(opts = {}) {
       /** @type {any} */ let card = null;
       /** @type {any[]} */ let commands = [];
       /** @type {any} */ let posted = null;
+      let acceptanceNotice = false;
       const heading = h("p", { class: "t04-sub", "data-testid": "adal-class" }, ["Загружаем текущий класс…"]);
       const lock = h("p", { class: "t04-lock", "data-testid": "adal-lock", role: "status" });
       const last = h("p", { class: "t04-last", "data-testid": "adal-command", role: "status" });
@@ -84,9 +85,13 @@ export function createClassroomCommands(opts = {}) {
         busy = false;
         if (response.ok) {
           posted = response.data;
+          acceptanceNotice = true;
           setHidden(lockForm, true); setHidden(finishForm, true);
           setText(notice, "Команда принята сервером. Это ещё не подтверждение выполнения.");
-        } else setText(notice, response.network ? "Ответ на команду не получен. Проверьте последнюю команду перед повторной отправкой." : response.error?.message ?? "Ответ сервера не получен.");
+        } else {
+          acceptanceNotice = false;
+          setText(notice, response.network ? "Ответ на команду не получен. Проверьте последнюю команду перед повторной отправкой." : response.error?.message ?? "Ответ сервера не получен.");
+        }
         draw(); await poll();
       }
 
@@ -101,6 +106,9 @@ export function createClassroomCommands(opts = {}) {
         else {
           [session, card, commands] = results.map(r => r.data);
           commands = Array.isArray(commands) ? commands.sort((a, b) => Date.parse(b.issued_at) - Date.parse(a.issued_at)) : [];
+          if (acceptanceNotice && commands.some(c => c.command_id === posted?.command_id && ["succeeded", "failed", "expired", "cancelled"].includes(c.status))) {
+            setText(notice, ""); acceptanceNotice = false;
+          }
         }
         draw(); timer = setTimeout(poll, opts.pollMs ?? 1000);
       }

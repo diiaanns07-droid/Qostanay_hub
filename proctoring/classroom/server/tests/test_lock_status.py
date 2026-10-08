@@ -103,3 +103,34 @@ def test_control_assets_and_core_commands(tmp_path):
         teacher.close()
         anonymous.close()
         assert srv.stop() == 0, "".join(srv.stderr[-20:])
+
+
+def test_persisted_receipt_never_revives_on_server_restart(tmp_path):
+    directory = tmp_path / "restart"
+    srv = ServerProcess(directory, {"QORGAU_CLASS_FEATURES": ""})
+    teacher, peer = srv.teacher(), srv.student()
+    try:
+        session = teacher.post("/api/teacher/session", json={"title": "Receipt restart", "mode": "url", "allowed_urls": ["https://exam.example/*"]}).json()
+        welcome = peer.hello(join_code=session["join_code"])
+        url = f"/api/teacher/students/{welcome['student_id']}"
+        peer.status(locked=True, lock_state="applied", lock_confirmed=True, lock_requested=True, lock_scope="app_overlay")
+        wait_for(lambda: teacher.get(url).json()["lock_confirmed"])
+    finally:
+        peer.close()
+        teacher.close()
+        assert srv.stop() == 0
+    srv = ServerProcess(directory, {"QORGAU_CLASS_FEATURES": ""})
+    teacher, peer = srv.teacher(), srv.student()
+    try:
+        card = teacher.get(url).json()
+        assert card["locked"] is True and card["lock_scope"] == "app_overlay", "history is retained"
+        assert card["lock_confirmed"] is False
+        peer.hello(resume_token=welcome["resume_token"])
+        assert teacher.get(url).json()["lock_confirmed"] is False
+        peer.status(locked=False, lock_state="applied", lock_confirmed=True, lock_requested=False, lock_scope="app_overlay")
+        wait_for(lambda: teacher.get(url).json()["lock_confirmed"])
+        assert teacher.get(url).json()["locked"] is False
+    finally:
+        peer.close()
+        teacher.close()
+        assert srv.stop() == 0

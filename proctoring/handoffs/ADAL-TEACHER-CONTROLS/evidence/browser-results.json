@@ -1,0 +1,81 @@
+{
+  "source": "real C1, synthetic WS peer, no hardware",
+  "results": [
+    {
+      "name": "teacher authenticated by real C1",
+      "pass": true
+    },
+    {
+      "name": "C1 enables mounted exams in panel metadata",
+      "pass": true
+    },
+    {
+      "name": "module uses current C1 class without a T04 exam",
+      "pass": true
+    },
+    {
+      "name": "legacy false displays unknown",
+      "pass": true
+    },
+    {
+      "name": "empty reason is rejected",
+      "pass": true
+    },
+    {
+      "name": "preset fills editable student-facing reason",
+      "pass": true
+    },
+    {
+      "name": "accepted command remains pending before receipt",
+      "pass": true
+    },
+    {
+      "name": "fresh receipt confirms Adal screen only",
+      "pass": true
+    },
+    {
+      "name": "current card flag confirms app screen",
+      "pass": true
+    },
+    {
+      "name": "legacy ACK never confirms unlock",
+      "pass": true
+    },
+    {
+      "name": "actual negative ACK shows failed command",
+      "pass": true
+    },
+    {
+      "name": "new valid receipt confirms unlock",
+      "pass": true
+    },
+    {
+      "name": "start uses canonical command delivery",
+      "pass": true
+    },
+    {
+      "name": "mobile layout has no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "finish requires explicit confirmation",
+      "pass": true
+    },
+    {
+      "name": "finish outcome comes from C1 ACK",
+      "pass": true
+    },
+    {
+      "name": "stale status invalidates lock and actions",
+      "pass": true
+    },
+    {
+      "name": "class replacement disables old student controls",
+      "pass": true
+    },
+    {
+      "name": "no application page errors",
+      "pass": true
+    }
+  ]
+}

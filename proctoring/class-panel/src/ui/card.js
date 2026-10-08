@@ -1,7 +1,7 @@
 // @ts-check
 // One student card. Built once, then updated field by field (no re-render, fixed height → no layout jumps).
 // Every status is TEXT + ICON SHAPE + colour. Nothing is shown that the data did not say: an unknown camera
-// is "нет данных", never "работает"; "заблокирован" appears only when the data says locked=true.
+// is "нет данных", never "работает"; an Adal screen lock needs a fresh scoped UI receipt.
 import { ago, CAMERA_LABEL, displayName, EXAM_STATE_LABEL, ORIGIN_LABEL, ZONE_LABEL } from "../model.js";
 import { h, setAttr, setText, svg, toggleClass } from "./dom.js";
 import { ICON } from "./icons.js";
