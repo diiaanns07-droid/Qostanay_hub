@@ -1,0 +1,63 @@
+{
+  "checked_on": "2026-10-08",
+  "purpose": "Pinned published deliveries for six scoped continuation prompts; not independent runtime verification",
+  "deliveries": [
+    {
+      "role": "A01",
+      "branch": "claude/nifty-ride-ux8e4j",
+      "sha": "35bea4c7b28d2c622cf7ba26ff354273cc7b6c49"
+    },
+    {
+      "role": "A02",
+      "branch": "claude/pensive-pasteur-wnjd2n",
+      "sha": "7769f13bc7db83aee0a0d477060292dfb0fc859e"
+    },
+    {
+      "role": "A03",
+      "branch": "claude/focused-babbage-29mbea",
+      "sha": "c0275a2136f19ee7e6e941e904a420ab20e7e370"
+    },
+    {
+      "role": "A04",
+      "branch": "claude/compassionate-goodall-8mxley",
+      "sha": "40144441e4ff36931c4909d2eea5980aad563a6d"
+    },
+    {
+      "role": "A05",
+      "branch": "claude/zen-mayer-e0tivt",
+      "sha": "8f763a1f616263d0ac11ebffcb1ccc8ecddab697"
+    },
+    {
+      "role": "A06",
+      "branch": "claude/inspiring-feynman-h9n9v8",
+      "sha": "62a7fb1e42bc723152f49338ba4f816dfcad9334"
+    },
+    {
+      "role": "A07",
+      "branch": "claude/upbeat-gauss-798nt9",
+      "sha": "3fef6fb80d4106b5faad1609e42f31981401da13"
+    },
+    {
+      "role": "A08",
+      "branch": "claude/focused-mendel-4940jx",
+      "sha": "5509950e38c622ae544d40c75d4b8fdba7256b82"
+    },
+    {
+      "role": "A09",
+      "branch": "codex/proctor-A09",
+      "sha": "e01fff54db0220b963df2282fe3362735f589078"
+    },
+    {
+      "role": "A10",
+      "branch": "codex/proctor-A10",
+      "sha": "de71342df7ac8758e355009004593ef71ca38690"
+    }
+  ],
+  "friend_roles": [
+    "A02",
+    "A05",
+    "A08",
+    "A09",
+    "A10"
+  ]
+}
