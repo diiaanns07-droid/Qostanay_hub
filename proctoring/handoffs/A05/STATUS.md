@@ -55,6 +55,27 @@ Remote access (spec: high): there is no remote-access observation in contracts v
 | `pytest -q` (whole repo) | 183 passed, 2 failed = A01 tests [A01-1] (fusion present ≠ "module_not_integrated") |
 | `contracts/tools/generate.py --check` / `verify_ownership.py --agent A05 --base 35bea4c` | PASS / PASS |
 
+## Real camera clips through the engine (observation on 4 clips, NOT accuracy)
+Scratch (not committed): A02 `7921bdd` capture + A03 `c0275a2` + A04 `4014444` + this fusion, A01 `create_app`, A01 memory
+store; models from `%LOCALAPPDATA%\QorgauExam\models` (A03/A04 tools, sha256 OK); clips (consented, outside Git)
+from `%LOCALAPPDATA%\QorgauExameplay`, REPLAY realtime. Zone = `assess_session_zone` with an APPROXIMATE coverage
+(1 − monitoring gaps / clip length) because the bootstrap store does not compute coverage (A08 will).
+| Clip | Episodes (start s, length s) | Zone | Expected |
+|---|---|---|---|
+| (а) zone_a_green_01 | none (only the end-of-replay gap, not counted) | **green** | green ✓ |
+| (б) zone_b_yellow_01 | gaze_side low (7.0, 4.2) — found only after the head-pose fix; gaze_side low (13.3, 5.9); multiple_faces **high** (32.1, 1.4) — a REAL unscripted person at the frame edge | **red** | yellow ✗ (correct for the content; replaced by v2) |
+| (б) v2 zone_b_yellow_02 | face_missing medium (6.4, 5.7) — near-profile head turn, A04 loses the face; face_missing medium (14.9, 12.4) — left the frame | **yellow** (2 runs, same result) | yellow ✓ |
+| (в) zone_c_red_01 | phone_visible medium (4.7, 9.8); face_missing medium (14.3, 12.5); multiple_faces high (36.6, 3.4) | **red** | red ✓ |
+Episode times match A02's frame review within ~0.5–1 s. Variance seen in realtime: `phone_raised` appeared in one run
+of (в) (5.3 s, medium under 1.0.0) and not in another; phone_visible 10.3 s (→ high) vs 9.8 s (medium). Zone unchanged.
+For repeatable demos use `"pacing": "lockstep"` in the replay manifest (A02 format).
+
+Compatibility A02/A03/A04 → fusion (fields, units, time): observations validate, `t_session_ms`/`frame_id`/`source_mode`
+consistent (replay timeline from the recording), A03 signals present/absent/insufficient_evidence as expected, A04
+`face_count=None` only when undetermined. Divergences (other modules, not fixed by A05): A04 uncalibrated pitch
+(look down 25–30° = "center"), gaze flips left/up at yaw −50° (fusion now prefers the head pose), a near-profile
+turn = no face (face_missing, medium) — the teacher sees «Лицо не видно в кадре» for a strong head turn.
+
 ## Fix from real A04 output (A02 camera clip zone_b_yellow_01, scratch run)
 Head yaw −50° while A04's gaze flips `left`↔`up` every 0.5 s → no continuous 3 s run → no episode. Now: if the head
 direction is left/right/down and the eye estimate is centre/up, the head pose is used (disclosed in the fact
