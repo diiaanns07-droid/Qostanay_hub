@@ -370,6 +370,7 @@ class FusionEngine:
         self._stats[f"accepted_{obs.kind}"] += 1
         self._w = t if self._w is None else max(self._w, t)
         out = self._expire(self._w)
+        out += self._identity_hook(obs, t)  # A05 1.3: identity (A13), kept separate from the kind dispatch below
         if isinstance(obs, PhoneObservation):
             out += self._on_phone(obs, t)
         elif isinstance(obs, AttentionObservation):
@@ -741,6 +742,28 @@ class FusionEngine:
         return []
 
     # ------------------------------------------------------------------ time-driven expiry
+    # ------------------------------------------------------------------ identity (contracts 1.1, A13)
+    def _identity_rule(self) -> "_IntervalRule":
+        """Registered lazily so the engine's generic expiry/pause/finish handle it like any interval rule."""
+        rule = self._rules.get(R.IDENTITY_MISMATCH)
+        if rule is None:
+            rule = _IntervalRule(self, R.IDENTITY_MISMATCH, "attention")  # source only selects a TTL default...
+            rule.ttl = self.cfg.identity_ttl_ms  # ...replaced by the identity stream's own TTL
+            self._rules[R.IDENTITY_MISMATCH] = rule
+        return rule
+
+    def _identity_hook(self, obs: Observation, t: float) -> list[IncidentChange]:
+        """IdentityObservation: same_person = absent -> mismatch, present -> cleared, unknown / not enrolled /
+        unusable -> no evidence (never opens, never clears)."""
+        if getattr(obs, "kind", None) != "identity":
+            return []
+        state = obs.same_person
+        if not obs.enrolled or obs.status not in USABLE or state not in (SignalState.PRESENT, SignalState.ABSENT):
+            value = None
+        else:
+            value = state == SignalState.ABSENT
+        return self._identity_rule().feed(t, value, obs, {"confidence": None})
+
     def _expire(self, w: float) -> list[IncidentChange]:
         cfg = self.cfg
         out: list[IncidentChange] = self._audio.expire(w)
@@ -901,3 +924,7 @@ class FusionEngine:
             update_seq=ep.update_seq,
         )
         return IncidentChange(change=change, incident=incident)
+
+
+# A05 1.3 (contracts 1.1): category of the identity rule, registered here to keep the shared tables untouched
+CATEGORY.setdefault(R.IDENTITY_MISMATCH, IncidentCategory.IDENTITY)

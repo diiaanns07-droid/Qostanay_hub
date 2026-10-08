@@ -8,6 +8,26 @@ Previous A05 checkpoint: `8f763a1` (in A01 candidate `de72905`).
 Stage (2026-10-08): **checkpoint 2 — zones (zone-rule-1), priorities per the zones spec (`a05-rules-1.1.0`),
 audio/headphones rules on plain values, head-pose fix from real A04 output.**
 
+## 2026-10-08: LIVE PASS «взгляд вниз после калибровки» (проверка капитана)
+Сборка `codex/proctor-integration` @ `f46565c` (A04 «вверх» необязательна + полноэкранная калибровка A07), ноутбук
+демо, живая камера, сессия `s-20261008-163941-a7e05cd1`. Калибровка на весь экран: все 5 точек ok (включая «вверх»).
+Во время экзамена A05 выдал: `gaze_prolonged_down` 26,5 с — **high** (вместе с телефоном, корреляция
+phone_visible ↔ gaze down), `phone_visible` 1,1 с — high, `gaze_prolonged_side` вправо 3,5 с и 6,0 с — low
+(3–8 с = low по правилу). По углам A04: голова опущена на 20–32° на 24–51 с — совпадает с действиями человека.
+**Итог: LIVE PASS** (один прогон, одна камера, не точность). Без калибровки тот же наклон A04 считал «центром»
+(замер A02, `handoffs/A02/DEMO_CLIPS.md`, R14).
+
+## 2026-10-08: `identity_mismatch` (контракт 1.1, модуль A13) — `a05-rules-1.3.0`
+* Вход: `IdentityObservation` (`kind="identity"`): `same_person` absent → отличие, present → совпадение,
+  unknown / `enrolled=false` / статус error|unknown → нет данных (не открывает и не закрывает эпизод).
+* Отличие ≥ 3 с (≥ 2 наблюдений, пропуск ≤ 2 с — identity идёт ~1–2 Гц; слияние 3 с) → **high**, без повышения;
+  нет identity-наблюдений 5 с (`identity_ttl_ms`) → открытый эпизод закрывается `source_lost`. Категория `identity`.
+* Объяснение одной строкой: «Лицо не совпадает с лицом в начале экзамена — 01:03, 4 с; требуется проверка
+  преподавателем.» + оговорка «сравнение приблизительное… личность не устанавливается». Подпись зоны — та же фраза.
+* Код отдельными функциями (`_identity_hook`, `_identity_rule` перед `_expire`; одна строка вызова после `_expire`;
+  категория через `CATEGORY.setdefault` в конце файла) — чтобы параллельная правка A14 (звук) в `engine.py`
+  сливалась без конфликтов. Тесты: `tests/test_identity.py` (4).
+
 ## Zones — interface for A08 (exact)
 ```python
 from proctor.fusion.zones import assess_session_zone, ZoneConfig, ZoneAssessment, ZONES, ZONE_LABELS_RU

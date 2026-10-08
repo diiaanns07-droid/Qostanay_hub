@@ -14,7 +14,7 @@ import json
 from dataclasses import asdict, dataclass, field, fields, replace
 from typing import Any
 
-RULE_VERSION = "a05-rules-1.2.0"
+RULE_VERSION = "a05-rules-1.3.0"
 CONFIG_NAME = "a05-default-1"
 
 
@@ -54,6 +54,8 @@ def _priority_base() -> dict[str, str]:
         # contracts 1.1: review-only objects from A03 detections (COCO book / laptop, tv)
         "foreign_object_visible": "medium",
         "second_screen_visible": "medium",
+        # contracts 1.1: A13 identity check (same_person = absent)
+        "identity_mismatch": "high",
     }
 
 
@@ -92,6 +94,10 @@ class FusionConfig:
     # review-only objects (A03 detections, score >= object_min_confidence): visible >= 2 s, medium, no escalation
     foreign_object_visible: IntervalParams = IntervalParams(2000.0, 3, 700.0, 2000.0, None)
     second_screen_visible: IntervalParams = IntervalParams(2000.0, 3, 700.0, 2000.0, None)
+    # A13 identity: face differs from the one enrolled at exam start for >= 3 s (>= 2 observations; identity runs
+    # at ~1-2 Hz, so gaps up to 2 s are tolerated) -> high, no escalation
+    identity_mismatch: IntervalParams = IntervalParams(3000.0, 2, 2000.0, 3000.0, None)
+    identity_ttl_ms: float = 5000.0  # no identity observation this long -> an open episode closes source_lost
 
     # --- objects (A03 detections by class_name) ---
     object_min_confidence: float = 0.5
