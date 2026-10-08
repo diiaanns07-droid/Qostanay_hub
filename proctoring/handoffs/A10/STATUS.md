@@ -2,7 +2,8 @@
 
 Branch: `codex/proctor-A10`. Contract/baseline: A01
 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`, `qorgau.v1`.
-Previous A10 checkpoint: none; no published A10 delivery was found before starting.
+Previous A10 checkpoint: `466b611e495b6228fa755f0ed6772362615359da` (local first delivery).
+No published A10 delivery was found before starting.
 Stage: demo content, executable API rehearsal and pitch package delivered; full candidate pending.
 
 ## Delivered
@@ -29,9 +30,13 @@ Backend product tree remained unmodified; A10 rehearsal/content hashes are in th
 | `python demo/rehearse.py --mode synthetic --expected-sha 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49 --out demo/results/20261008_bootstrap_windows.json` | PASS for automated backend orchestration; 6.30 s |
 | Backend READY, exact demo exam, preflight, answer, scripted phone episode, finish, human review, summary, capture stop, backend shutdown, no token in logs | 12 PASS checks |
 | Calibration, HTML export, JSON export, LIVE camera/gaze, Windows shortcuts | 5 NOT_RUN checks |
+| Final demo question wording + repeat API rehearsal | PASS, 5.75 s, `demo/results/20261008_content_final_windows.json` |
+| Incorrect `--expected-sha` | Rejected before starting backend or writing a result |
 
 This is an API rehearsal using SYNTHETIC signals. It is not a live presentation, real CV measurement,
 Electron test or claim that all three case requirements work together. `product_release_verified=false`.
+The final repetition used backend at commit `466b611` and the content hash recorded in its result;
+only the demo question wording was edited. Initial 6.30 s evidence is retained.
 
 ## Next on A01 candidate
 

@@ -16,7 +16,7 @@ Base: A01 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49; contract qorgau.v1.
    says an OS shortcut is blocked. Current A06 handoff says real Electron/Windows enforcement NOT RUN.
 
 5. A09: attach verified metrics to candidate SHA, equipment and sample size. Do not substitute
-   API-test counts for CV quality. A10's measured synthetic API rehearsal is 6.30 seconds; it does not
+   API-test counts for CV quality. A10's latest measured synthetic API rehearsal is 5.75 seconds; it does not
    measure human presentation duration or runtime performance of the full CV pipeline.
 
 6. Regulation correction: supplied Russian regulation page 4 clause 5.6 gives 3 minutes for

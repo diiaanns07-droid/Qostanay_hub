@@ -1,0 +1,118 @@
+{
+  "tested_sha": "466b611e495b6228fa755f0ed6772362615359da",
+  "contract": "qorgau.v1",
+  "source_mode": "synthetic",
+  "started_at": "2026-10-08T05:59:25.748246+00:00",
+  "exam_sha256": "8d69a434c2d8d1d4530533c824644756002c32fb842e0c2755ed897247549fc0",
+  "rehearsal_script_sha256": "1cfa17aea730d4617984e4987e070cf6f9946e01dce9fd34d9c05f0886b46651",
+  "product_tree_dirty": false,
+  "scope": "Backend API rehearsal. No Electron UI, real camera or OS protection is exercised.",
+  "checks": [
+    {
+      "check": "backend_ready",
+      "status": "PASS",
+      "elapsed_s": 0.77,
+      "detail": ""
+    },
+    {
+      "check": "session_mode",
+      "status": "PASS",
+      "elapsed_s": 0.81,
+      "detail": "synthetic"
+    },
+    {
+      "check": "demo_exam_served",
+      "status": "PASS",
+      "elapsed_s": 0.83,
+      "detail": "4 questions"
+    },
+    {
+      "check": "preflight",
+      "status": "PASS",
+      "elapsed_s": 0.91,
+      "detail": "Inspect source mode; synthetic readiness does not prove CV readiness"
+    },
+    {
+      "check": "calibration",
+      "status": "NOT_RUN",
+      "elapsed_s": 0.91,
+      "detail": "Explicitly skipped for automated rehearsal; do it during LIVE rehearsal"
+    },
+    {
+      "check": "start_and_save_answer",
+      "status": "PASS",
+      "elapsed_s": 0.95,
+      "detail": ""
+    },
+    {
+      "check": "phone_episode",
+      "status": "PASS",
+      "elapsed_s": 5.34,
+      "detail": "Synthetic signal"
+    },
+    {
+      "check": "finish",
+      "status": "PASS",
+      "elapsed_s": 5.48,
+      "detail": ""
+    },
+    {
+      "check": "human_review",
+      "status": "PASS",
+      "elapsed_s": 5.5,
+      "detail": ""
+    },
+    {
+      "check": "summary",
+      "status": "PASS",
+      "elapsed_s": 5.5,
+      "detail": ""
+    },
+    {
+      "check": "report_html",
+      "status": "NOT_RUN",
+      "elapsed_s": 5.5,
+      "detail": "A08 not integrated; HTTP 501"
+    },
+    {
+      "check": "report_json",
+      "status": "NOT_RUN",
+      "elapsed_s": 5.5,
+      "detail": "A08 not integrated; HTTP 501"
+    },
+    {
+      "check": "capture_stopped",
+      "status": "PASS",
+      "elapsed_s": 5.5,
+      "detail": "204"
+    },
+    {
+      "check": "backend_shutdown",
+      "status": "PASS",
+      "elapsed_s": 5.75,
+      "detail": "exit=0"
+    },
+    {
+      "check": "token_not_logged",
+      "status": "PASS",
+      "elapsed_s": 5.75,
+      "detail": ""
+    },
+    {
+      "check": "live_camera_and_gaze",
+      "status": "NOT_RUN",
+      "elapsed_s": 5.75,
+      "detail": "Requires voluntary LIVE rehearsal on A01 candidate"
+    },
+    {
+      "check": "windows_shortcuts_and_emergency_exit",
+      "status": "NOT_RUN",
+      "elapsed_s": 5.75,
+      "detail": "Requires A06 shell and controlled manual test"
+    }
+  ],
+  "product_release_verified": false,
+  "duration_s": 5.75,
+  "automated_rehearsal_status": "PASS",
+  "finished_at": "2026-10-08T05:59:31.499238+00:00"
+}
