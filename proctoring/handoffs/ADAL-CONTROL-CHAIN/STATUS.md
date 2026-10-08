@@ -21,3 +21,9 @@ Run instructions and evidence boundaries: `acceptance/classroom/control-chain/RE
 Root fix `52a6ed9` was cherry-picked as `61618fe`; rebuilt production main/preload. Twelve checks now pass: actual UI lock/receipt/unlock, custom reason, pending, isolated second student, real no-renderer timeout, hidden-window refusal, and a fresh visible request after refusal. `actual-lock.png` was visually inspected; it shows only the synthetic lock and custom reason, no credentials.
 
 The run then exposed a second product recovery issue: reload returns an overlay but leaves the current backend lock failed/unconfirmed. A recovery request is emitted during navigation before the new renderer listens; C2's 5s state republish interval matches its 5s receipt deadline. Root has the report and owns the correction. `reload-before-fix.json` records twelve passes and the exact failed scenario; full restart remains unverified until rerun. The harness now passively observes the new renderer's genuine `recovery=true` request so a stale prior receipt cannot satisfy the reload assertion.
+
+## Independent restart and feed-loss verification
+
+Using the explicit diagnostic `--skip-reload` option, 21 checks pass. This includes full Electron/backend restart with the same C1 identity and persisted lock followed by a new genuine confirmation; unlock after restart; second-backend disconnect isolation; no running exam/fullscreen/kiosk; public audio module mounted without media use. Added actual teacher WebSocket loss/reconnect: the confirmed card label disappears while the real student's overlay and backend confirmation remain; reconnection restores the current card label from real C1 state. Traffic is relayed unchanged and the test closes only its own teacher connection.
+
+`independent-restart.json` explicitly records the single skipped reload scenario. The reload fix is delegated by root to `astra_exam_resume`; no timeout increase or fake ACK is used.

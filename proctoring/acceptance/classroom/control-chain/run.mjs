@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, resolve, join, delimiter } from "node:path";
+import { dirname, resolve, join, delimiter, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
@@ -15,7 +15,9 @@ const proctoring = resolve(here, "../../..");
 const desktop = join(proctoring, "desktop");
 assert.ok(process.argv[2], "An output directory outside the checkout is required");
 const out = resolve(process.argv[2]);
-assert.ok(!out.startsWith(resolve(proctoring, "..")), "Store ephemeral student data outside the checkout");
+const skipReload = process.argv.includes("--skip-reload"); // independent restart diagnosis; reported explicitly
+const fromCheckout = relative(resolve(proctoring, ".."), out);
+assert.ok(fromCheckout.startsWith("..") || isAbsolute(fromCheckout), "Store ephemeral student data outside the checkout");
 mkdirSync(out, { recursive: true });
 const work = mkdtempSync(join(out, "runtime-"));
 const python = process.env.QORGAU_PYTHON;
@@ -25,14 +27,21 @@ Object.assign(env, { PYTHONPATH: [proctoring, join(proctoring, "backend"), join(
 const service = spawn(python, [join(here, "server.py"), work], { cwd: proctoring, env, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
 const serviceExit = new Promise(resolveExit => service.on("exit", resolveExit));
 service.stderr.on("data", () => {}); // no raw logs or credentials saved
+service.stdin.on("error", () => {}); // shutdown after failed startup may already have closed the pipe
 const ready = new Promise((resolveReady, reject) => {
   let buffer = "";
   const timer = setTimeout(() => reject(new Error("C1 + backend B did not become ready")), 45000);
+  const fail = error => { clearTimeout(timer); reject(error); };
   service.stdout.on("data", chunk => {
     buffer += String(chunk);
-    if (buffer.includes("\n")) { clearTimeout(timer); resolveReady(JSON.parse(buffer.split("\n")[0])); }
+    if (buffer.includes("\n")) {
+      clearTimeout(timer);
+      try { resolveReady(JSON.parse(buffer.split("\n")[0])); }
+      catch { fail(new Error("Invalid private service readiness message")); }
+    }
   });
-  service.once("error", reject);
+  service.once("error", fail);
+  service.once("exit", () => fail(new Error("C1/backend helper exited before readiness")));
 });
 const results = [];
 const check = (name, value, details = {}) => { assert.ok(value, name); results.push({ name, pass: true, ...details }); console.log(`PASS ${name}`); };
@@ -43,9 +52,11 @@ async function until(fn, label, timeout = 15000) {
   throw new Error(`Timed out: ${label}`);
 }
 let electron, chrome, student, teacher, context, connection;
+let blockTeacherFeed = false;
+const teacherFeeds = [];
 const errors = [];
 let diagnostics = null;
-const report = () => writeFileSync(join(out, "results.json"), JSON.stringify({ source: "actual production Electron + proctor/C2 + C1; CREATED synthetic sessions", nativeGuard: false, camera: false, microphone: false, results, diagnostics }, null, 2));
+const report = () => writeFileSync(join(out, "results.json"), JSON.stringify({ source: "actual production Electron + proctor/C2 + C1; CREATED synthetic sessions", nativeGuard: false, camera: false, microphone: false, skipped: skipReload ? ["renderer reload (explicit diagnostic option)"] : [], results, diagnostics }, null, 2));
 // Passive production event/DOM observation only; never call the receipt bridge.
 function observeStudent() {
   window.lockObservations = [];
@@ -92,6 +103,11 @@ try {
   connection = await ready;
   chrome = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome" });
   context = await chrome.newContext({ viewport: { width: 1366, height: 900 }, locale: "ru-RU" });
+  await context.routeWebSocket('**/ws/teacher', route => {
+    if (blockTeacherFeed) { void route.close({code: 1001, reason: 'synthetic transport outage'}); return; }
+    // Forward real C1 traffic unchanged. Only close this connection in the loss test.
+    teacherFeeds.push({page: route, server: route.connectToServer()});
+  });
   assert.equal((await context.request.post(`${connection.base}/api/teacher/login`, { data: { pin: connection.pin } })).status(), 200);
   teacher = await context.newPage();
   teacher.setDefaultTimeout(12000);
@@ -120,16 +136,27 @@ try {
   await until(async () => (await getCard(sidA)).lock_confirmed, "actual painted UI lock receipt");
   const actual = (await commands(sidA)).at(-1);
   check("actual C1 → C2 → production Electron → UI receipt ACK", actual.status === "succeeded" && actual.ack.result.lock_state === "applied" && actual.ack.result.lock_scope === "app_overlay");
+  await until(async () => await teacher.locator('[data-testid="adal-lock"]').getAttribute('data-state') === 'locked' && await teacher.locator('[data-testid="adal-command"]').getAttribute('data-state') === 'confirmed', "teacher UI confirmed screen state");
+  check("teacher UI shows confirmed only after real application receipt", true);
   check("pending appears before application confirmation", await teacher.evaluate(() => window.controlStates.includes("pending")));
   check("custom reason shown and underlying application inert", await student.evaluate(expected => document.querySelector('[data-lock-reason]')?.textContent === expected && document.querySelector('[data-adal-app]')?.inert === true, reason));
   check("targeted lock leaves other actual backend untouched", (await commands(sidB)).length === 0 && !(await getCard(sidB)).locked);
   await student.locator('[data-adal-lock]').screenshot({ path: join(out, "actual-lock.png") });
+  blockTeacherFeed = true;
+  await Promise.all(teacherFeeds.flatMap(route => [route.page.close({code:1001}), route.server.close({code:1001})]).map(p => p.catch(() => {})));
+  const cardA = teacher.locator(`.card[data-id="${sidA}"]`);
+  await until(async () => (await cardA.getAttribute('class')).includes('stale') && !(await cardA.textContent()).includes('экран Adal закрыт'), "teacher feed loss invalidates displayed confirmation");
+  check("actual teacher feed loss invalidates current card lock status", (await getCard(sidA)).lock_confirmed && await student.locator('[data-adal-lock]').count() === 1);
+  blockTeacherFeed = false;
+  await until(async () => !(await cardA.getAttribute('class')).includes('stale') && (await cardA.textContent()).includes('экран Adal закрыт'), "teacher feed reconnect restores fresh state");
+  check("teacher reconnect restores confirmation from actual fresh C1 state", true);
   await teacher.locator('[data-action="unlock"]').click();
   await until(async () => { const c = await getCard(sidA); return c.lock_confirmed && c.locked === false; }, "actual unlock receipt");
   check("actual unlock removes overlay and restores interaction", await student.evaluate(() => !document.querySelector('[data-adal-lock]') && !document.querySelector('[data-adal-app]').inert));
   await openStudent(sidB);
   await lock("Без интерфейса нельзя подтвердить закрытие экрана");
   await until(async () => (await commands(sidB)).at(-1)?.status === "failed", "real backend B times out without renderer");
+  await until(async () => await teacher.locator('[data-testid="adal-command"]').getAttribute('data-state') === 'failed', "teacher UI shows actual no-renderer failure");
   check("backend without renderer fails truthfully without fabricated ACK", !(await commands(sidB)).at(-1).ack.ok && !(await getCard(sidB)).lock_confirmed);
   check("failed command to B cannot lock A", await student.locator('[data-adal-lock]').count() === 0);
   await openStudent(sidA);
@@ -141,10 +168,12 @@ try {
   await lock("Проверка после возвращения окна");
   await until(async () => { const c = await getCard(sidA); return c.lock_confirmed && c.locked && c.lock_state === "applied"; }, "new request after visible window");
   check("new visible request receives genuine renderer confirmation", (await commands(sidA)).at(-1).status === "succeeded");
-  await student.reload();
-  await student.locator('[data-adal-lock]').waitFor();
-  await until(async () => { const c = await getCard(sidA); return c.lock_confirmed && c.lock_state === "applied"; }, "lock recovery after renderer reload");
-  check("renderer reload restores lock through a new painted receipt", await student.locator('[data-adal-app]').getAttribute('aria-hidden') === "true" && await student.evaluate(() => window.lockObservations.some(o => o.recovery === true && o.state === "requested")));
+  if (!skipReload) {
+    await student.reload();
+    await student.locator('[data-adal-lock]').waitFor();
+    await until(async () => { const c = await getCard(sidA); return c.lock_confirmed && c.lock_state === "applied"; }, "lock recovery after renderer reload");
+    check("renderer reload restores lock through a new painted receipt", await student.locator('[data-adal-app]').getAttribute('aria-hidden') === "true" && await student.evaluate(() => window.lockObservations.some(o => o.recovery === true && o.state === "requested")));
+  }
   await electron.close(); electron = null;
   await until(async () => !(await getCard(sidA)).connected, "student A disconnect");
   check("student shutdown invalidates current lock confirmation", !(await getCard(sidA)).lock_confirmed);
