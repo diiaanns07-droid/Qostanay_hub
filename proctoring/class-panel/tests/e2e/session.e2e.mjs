@@ -134,10 +134,31 @@ async function login(base) {
 }
 
 async function snapshot(name) {
-  // All screenshots use masks, including failure evidence. No browser trace/storageState is saved.
-  // Paint the mask in the element's own layer so a code behind <dialog> cannot obscure modal controls.
-  await page.screenshot({ path: join(out, `${name}.png`), fullPage: true, animations: "disabled",
-    style: ".join-code { color: transparent !important; background: #222 !important; } #pin { color: transparent !important; }" });
+  // Strict CSP can reject Playwright's screenshot style injection. Redact DOM text directly,
+  // without changing the session model or dispatching input events; restore even if capture fails.
+  // Values remain only in process memory. No browser trace/storageState is saved.
+  const original = await page.evaluate(() => {
+    const codes = [...document.querySelectorAll(".join-code")].map((element) => {
+      const text = element.textContent;
+      element.textContent = "••••••";
+      return text;
+    });
+    const input = document.querySelector("#pin");
+    const pinValue = input?.value ?? null;
+    if (input) input.value = "";
+    return { codes, pinValue };
+  });
+  try {
+    await page.screenshot({ path: join(out, `${name}.png`), fullPage: true, animations: "disabled" });
+  } finally {
+    if (!page.isClosed()) await page.evaluate(({ codes, pinValue }) => {
+      document.querySelectorAll(".join-code").forEach((element, index) => {
+        if (index < codes.length) element.textContent = codes[index];
+      });
+      const input = document.querySelector("#pin");
+      if (input && pinValue !== null) input.value = pinValue;
+    }, original);
+  }
 }
 
 async function geometry(name, dialog = false) {
