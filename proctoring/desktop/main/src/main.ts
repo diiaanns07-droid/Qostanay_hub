@@ -113,6 +113,7 @@ const guardPlatform: GuardPlatform = {
 };
 
 const guard = new ExamGuard(() => mainWindow, events, guardPlatform, {
+  enforce: cfg.nativeEnforce,
   emergencyAccelerator: cfg.emergencyAccelerator,
   onEmergencyHotkey: () => void emergencyExit("emergency_hotkey"),
 });

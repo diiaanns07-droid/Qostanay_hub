@@ -61,6 +61,8 @@ export interface GuardOptions {
   native?: NativeHelperHandle | null;
   /** Re-focus attempts after blur (not counted as prevention). */
   refocus?: boolean;
+  /** Explicit enforce mode only; dry-run must never pull focus back. */
+  enforce?: boolean;
   now?: () => number;
 }
 
@@ -79,6 +81,7 @@ export class ExamGuard implements Guard {
   private refocusTimer: NodeJS.Timeout | null = null;
   private displayTimer: NodeJS.Timeout | null = null;
   private lastDisplayCount: number | null = null;
+  private lastRefocusAt = -Infinity;
   /** Last engage report (for the handoff/diagnostics; no user content). */
   lastEngage: { steps: Record<string, "ok" | "failed" | "skipped">; registrations: ShortcutRegistration[] } | null = null;
 
@@ -211,6 +214,8 @@ export class ExamGuard implements Guard {
     this.activeSession = null;
     if (this.refocusTimer) clearTimeout(this.refocusTimer);
     this.refocusTimer = null;
+    this.blurAt = null;
+    this.lastRefocusAt = -Infinity;
     if (this.displayTimer) clearInterval(this.displayTimer);
     this.displayTimer = null;
     this.lastDisplayCount = null;
@@ -296,26 +301,38 @@ export class ExamGuard implements Guard {
 
   onBlur(): void {
     if (!this.active) return;
-    this.blurAt = (this.opts.now ?? Date.now)();
-    this.emit("focus_lost", "detected_only", "electron.browser_window_blur", "window");
-    if (this.opts.refocus !== false) {
-      if (this.refocusTimer) clearTimeout(this.refocusTimer);
-      this.refocusTimer = setTimeout(() => {
-        this.refocusTimer = null;
-        const w = this.win();
-        if (!this.active || !w || w.isDestroyed() || w.isFocused()) return;
-        try {
-          w.show();
-          w.moveTop();
-          w.focus();
-        } catch (err) {
-          log.debug("refocus failed", err);
-        }
-      }, 100);
+    if (this.blurAt === null) {
+      this.blurAt = (this.opts.now ?? Date.now)();
+      this.emit("focus_lost", "detected_only", "electron.browser_window_blur", "window");
     }
+    this.scheduleRefocus();
+  }
+
+  private scheduleRefocus(): void {
+    if (!this.active || !this.opts.enforce || this.opts.refocus === false || this.refocusTimer) return;
+    const now = (this.opts.now ?? Date.now)();
+    const delay = Math.max(400, this.lastRefocusAt + 500 - now);
+    this.refocusTimer = setTimeout(() => {
+      this.refocusTimer = null;
+      const w = this.win();
+      if (!this.active || !w || w.isDestroyed() || w.isFocused()) return;
+      this.lastRefocusAt = (this.opts.now ?? Date.now)();
+      try {
+        w.moveTop();
+        w.focus();
+      } catch (err) {
+        log.debug("refocus failed", err);
+      }
+      // Windows may refuse focus (secure desktop/elevated foreground). Retry at <=2/s
+      // until focus returns or restrictions are released; no foreign-window manipulation.
+      if (!w.isDestroyed() && !w.isFocused()) this.scheduleRefocus();
+    }, delay);
+    this.refocusTimer.unref();
   }
 
   onFocus(): void {
+    if (this.refocusTimer) clearTimeout(this.refocusTimer);
+    this.refocusTimer = null;
     if (!this.active || this.blurAt === null) return;
     const duration = Math.max(0, (this.opts.now ?? Date.now)() - this.blurAt);
     this.blurAt = null;
@@ -343,7 +360,15 @@ export class ExamGuard implements Guard {
 
   /** Report OS-level observations from the native helper (only while engaged). */
   onNativeObservation(action: EnvironmentAction, enforcement: EnforcementResult, mechanism: string, detail: { shortcut?: string; process_name?: string }): void {
-    if (this.active) this.emit(action, enforcement, mechanism, "os_session", detail);
+    if (!this.active) return;
+    this.emit(action, enforcement, mechanism, "os_session", detail);
+    if (action === "foreign_window_foreground" && mechanism === "native.foreground_watch") {
+      if (this.blurAt === null) {
+        this.blurAt = (this.opts.now ?? Date.now)();
+        this.emit("focus_lost", "detected_only", mechanism, "window", detail);
+      }
+      this.scheduleRefocus();
+    }
   }
 
   /** Diagnostics for STATUS/QA (no user content). */
