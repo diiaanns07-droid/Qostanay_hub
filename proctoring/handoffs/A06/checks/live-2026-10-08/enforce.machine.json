@@ -1,0 +1,9 @@
+{
+  "platform": "win32",
+  "os_release": "10.0.26200",
+  "python": "3.12.14",
+  "mode": "enforce",
+  "max_minutes": 2,
+  "started_at": "2026-10-08T10:40:13.942988+00:00",
+  "acceptance": "NOT_RECORDED: events alone do not prove suppression or restored keyboard"
+}

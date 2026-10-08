@@ -77,7 +77,8 @@ def test_finish_without_samples_fails_explicitly(analyzer, feeder):
     analyzer.calibration_start()
     st = analyzer.calibration_finish()
     assert st.phase == CalibrationPhase.FAILED and st.message_code == "targets_incomplete"
-    assert all(x.state == S.FAILED and x.message_code == "not_collected" for x in st.targets)
+    required = [x for x in st.targets if x.target != T.UP]  # "up" is optional (laptop webcam)
+    assert all(x.state == S.FAILED and x.message_code == "not_collected" for x in required)
 
 
 def test_one_sample_short_is_still_collecting(analyzer, feeder):
@@ -234,3 +235,24 @@ def test_api_threads_and_consumer_thread_concurrently(analyzer, feeder):
     assert not errors
     st = analyzer.calibration_state()
     assert st.phase == CalibrationPhase.COLLECTING and target(st, T.CENTER).samples <= CFG.calibration_required_samples
+
+
+def test_up_is_optional_on_laptop_webcam(analyzer, feeder):
+    """Looking at the top edge barely differs from the center on a webcam above the screen:
+    a failed "up" must not fail the calibration or block "down" (live finding 2026-10-08)."""
+    analyzer.calibration_start()
+    for t in (T.CENTER, T.LEFT, T.RIGHT):
+        run_target(analyzer, feeder, t)
+    st = run_target(analyzer, feeder, T.UP, [synthetic_face(**FACES[T.CENTER])])  # up not distinct
+    assert target(st, T.UP).state == S.FAILED and target(st, T.UP).message_code == "target_not_distinct"
+    run_target(analyzer, feeder, T.DOWN)
+    st = analyzer.calibration_finish()
+    assert st.phase == CalibrationPhase.COMPLETED
+    assert target(st, T.DOWN).state == S.OK
+
+
+def test_up_never_collected_still_completes(analyzer, feeder):
+    analyzer.calibration_start()
+    for t in (T.CENTER, T.LEFT, T.RIGHT, T.DOWN):
+        run_target(analyzer, feeder, t)
+    assert analyzer.calibration_finish().phase == CalibrationPhase.COMPLETED

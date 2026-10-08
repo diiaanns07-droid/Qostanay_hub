@@ -99,6 +99,9 @@ def rest_from_center(samples: list[CalibrationSample], cfg: AttentionConfig) -> 
     )
 
 
+# Targets whose failure does not fail the calibration (the generic span is used instead).
+OPTIONAL_TARGETS = frozenset({CalibrationTarget.UP})
+
 # expected sign of (target - center) along the axis that the target probes
 _AXIS = {
     CalibrationTarget.LEFT: (0, -1.0),  # yaw decreases (subject's left)
@@ -130,14 +133,19 @@ def fit_model(
     samples: dict[CalibrationTarget, list[CalibrationSample]], cfg: AttentionConfig, calibration_id: str
 ) -> tuple[DirectionModel | None, dict[CalibrationTarget, str]]:
     """Fit the per-session direction model. Returns (model or None, problems per target)."""
-    missing = [t for t in TARGET_ORDER if not samples.get(t)]
+    missing = [t for t in TARGET_ORDER if t not in OPTIONAL_TARGETS and not samples.get(t)]
     if missing:
         return None, {t: "no_samples" for t in missing}
     center_samples = samples[CalibrationTarget.CENTER]
     rest = rest_from_center(center_samples, cfg)
-    med_pt = {t: _median_point(samples[t], rest, cfg) for t in TARGET_ORDER}
+    med_pt = {t: _median_point(samples[t], rest, cfg) for t in TARGET_ORDER if samples.get(t)}
     c = med_pt[CalibrationTarget.CENTER]
-    problems = {t: code for t in _AXIS if (code := check_target(t, c, med_pt[t], cfg)) is not None}
+    problems = {t: code for t in _AXIS if t in med_pt and (code := check_target(t, c, med_pt[t], cfg)) is not None}
+    for t in OPTIONAL_TARGETS:
+        # A laptop webcam sits just above the screen, so looking at the top edge barely moves the
+        # eyes/head relative to the center; "up" is not a case requirement. Use the generic span.
+        if t not in med_pt or problems.pop(t, None) is not None:
+            med_pt[t] = (c[0], c[1] + (cfg.default_edge_up_deg - cfg.default_center_pitch_deg))
     if problems:
         return None, problems
     boxes = [s.bbox for s in center_samples]
@@ -245,7 +253,8 @@ class CalibrationController:
             if self._phase not in (CalibrationPhase.COLLECTING, CalibrationPhase.FAILED):
                 raise InvalidStateError(ErrorCode.INVALID_STATE, f"calibration is {self._phase.value}", phase=self._phase.value)
             self._current = None
-            not_ok = [t for t, d in self._targets.items() if d.state != CalibrationTargetState.OK]
+            not_ok = [t for t, d in self._targets.items()
+                      if d.state != CalibrationTargetState.OK and t not in OPTIONAL_TARGETS]
             if not_ok:
                 for t in not_ok:
                     d = self._targets[t]
