@@ -238,7 +238,7 @@ export function IncidentCard({
         <summary>Происхождение и версии</summary>
         <KV
           items={[
-            ["Оценка детектора (макс.)", i.max_confidence === null ? "нет данных" : `${num(i.max_confidence, 2)} — не вероятность нарушения`],
+            ["Оценка детектора (макс.)", i.max_confidence === null ? "нет данных" : `${num(i.max_confidence, 2)} — оценка для проверки преподавателем, не вывод о нарушении`],
             ["Качество входа (среднее)", ratio(i.mean_quality)],
             ["Правило", `${i.rule_id} · ${i.rule_version}`],
             ["Конфигурация", i.config_version],

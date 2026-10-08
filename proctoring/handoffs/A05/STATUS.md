@@ -8,6 +8,14 @@ Previous A05 checkpoint: `8f763a1` (in A01 candidate `de72905`).
 Stage (2026-10-08): **checkpoint 2 — zones (zone-rule-1), priorities per the zones spec (`a05-rules-1.1.0`),
 audio/headphones rules on plain values, head-pose fix from real A04 output.**
 
+## 2026-10-08: формулировки (ветка `codex/proctor-final-wording` от `e66b640`, по поручению капитана)
+Вместо «(не вероятность …)» везде: «оценка для проверки преподавателем, не вывод о нарушении» — A05 `explain.py`
+(подпись `max_confidence`), A08 `evidence/report.py` + перегенерированные `evidence/samples` (`python -m
+proctor.evidence.sample`; заодно в образце Adal, контракт 1.2.0, зона по zone-rule-1), A07
+`renderer/src/components/IncidentCard.tsx`. grep по renderer/backend: «вероятност», «списыва» в видимых текстах — 0;
+«наруш» — только в отрицаниях («не доказательство нарушения», «а не «нарушений нет»», «не вывод о нарушении»).
+Тест A08 `test_report_content_is_honest` проверяет отсутствие «вероятност» / «списыва» / «нарушител».
+
 ## 2026-10-08: ТЗ 2.1 «поднятие телефона / возможная съёмка» — `a05-rules-1.4.0` (ветка `codex/proctor-phone-raised`)
 * `phone_raised`: верх рамки `cell phone` выше линии на 65 % высоты лица A04 (без лица — верхние 35 % кадра) **или**
   сигнал A03; эпизод только если держится **≥ 1 с** (≥ 4 наблюдения, пропуск ≤ 0,6 с, слияние 3 с). Раньше открывался
