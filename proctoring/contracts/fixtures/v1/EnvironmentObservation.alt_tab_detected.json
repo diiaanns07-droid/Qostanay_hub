@@ -1,0 +1,31 @@
+{
+  "observation_id": "fx-env-7",
+  "session_id": "fx-session-0001",
+  "frame_id": null,
+  "t_session_ms": 15000.0,
+  "wall_time": "2026-10-09T09:00:15Z",
+  "source_mode": "synthetic",
+  "producer": {
+    "module": "environment",
+    "version": "fixture-1",
+    "model_id": null,
+    "model_sha256": null,
+    "config_version": null
+  },
+  "status": "ok",
+  "quality": null,
+  "quality_flags": [],
+  "latency_ms": null,
+  "kind": "environment",
+  "action": "shortcut_alt_tab",
+  "enforcement": "detected_only",
+  "mechanism": "electron.blur_event",
+  "scope": "window",
+  "client_seq": 7,
+  "client_wall_time": "2026-10-09T09:00:14.998000Z",
+  "detail": {
+    "process_name": null,
+    "shortcut": "Alt+Tab",
+    "duration_ms": null
+  }
+}

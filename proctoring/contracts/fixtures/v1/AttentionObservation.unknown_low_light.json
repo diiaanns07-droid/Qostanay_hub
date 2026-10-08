@@ -1,0 +1,39 @@
+{
+  "observation_id": "fx-att-300",
+  "session_id": "fx-session-0001",
+  "frame_id": 300,
+  "t_session_ms": 10000.0,
+  "wall_time": "2026-10-09T09:00:10Z",
+  "source_mode": "synthetic",
+  "producer": {
+    "module": "attention",
+    "version": "fixture-1",
+    "model_id": "fixture-face",
+    "model_sha256": null,
+    "config_version": null
+  },
+  "status": "unknown",
+  "quality": 0.1,
+  "quality_flags": [
+    "low_light"
+  ],
+  "latency_ms": null,
+  "kind": "attention",
+  "face_count": null,
+  "faces": [],
+  "primary_face_present": null,
+  "head_pose": null,
+  "head_direction": "unknown",
+  "gaze": {
+    "direction": "unknown",
+    "yaw_deg": null,
+    "pitch_deg": null,
+    "confidence": null,
+    "method": "head_pose_only",
+    "calibrated": true
+  },
+  "calibration_id": null,
+  "reasons": [
+    "landmarks_not_found_low_light"
+  ]
+}

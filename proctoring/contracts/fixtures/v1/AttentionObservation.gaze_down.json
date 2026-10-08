@@ -1,0 +1,52 @@
+{
+  "observation_id": "fx-att-121",
+  "session_id": "fx-session-0001",
+  "frame_id": 121,
+  "t_session_ms": 4033.3,
+  "wall_time": "2026-10-09T09:00:04.033300Z",
+  "source_mode": "synthetic",
+  "producer": {
+    "module": "attention",
+    "version": "fixture-1",
+    "model_id": "fixture-face",
+    "model_sha256": null,
+    "config_version": null
+  },
+  "status": "ok",
+  "quality": 0.75,
+  "quality_flags": [],
+  "latency_ms": 40.0,
+  "kind": "attention",
+  "face_count": 1,
+  "faces": [
+    {
+      "bbox": {
+        "x_min": 0.35,
+        "y_min": 0.15,
+        "x_max": 0.62,
+        "y_max": 0.55
+      },
+      "confidence": 0.93,
+      "is_primary": true
+    }
+  ],
+  "primary_face_present": true,
+  "head_pose": {
+    "yaw_deg": 3.0,
+    "pitch_deg": -24.0,
+    "roll_deg": 1.5
+  },
+  "head_direction": "down",
+  "gaze": {
+    "direction": "down",
+    "yaw_deg": 2.0,
+    "pitch_deg": -28.0,
+    "confidence": 0.6,
+    "method": "fused",
+    "calibrated": true
+  },
+  "calibration_id": "fx-cal-1",
+  "reasons": [
+    "pitch_below_calibrated_down"
+  ]
+}

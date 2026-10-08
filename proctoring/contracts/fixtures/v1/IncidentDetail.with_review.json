@@ -1,0 +1,73 @@
+{
+  "incident": {
+    "incident_id": "fx-inc-1",
+    "session_id": "fx-session-0001",
+    "rule_id": "phone_visible",
+    "category": "phone",
+    "state": "open",
+    "priority": "medium",
+    "t_start_ms": 2400.0,
+    "t_end_ms": null,
+    "wall_start": "2026-10-09T09:00:02.400000Z",
+    "wall_end": null,
+    "duration_ms": 1600.0,
+    "source_mode": "synthetic",
+    "max_confidence": 0.71,
+    "mean_quality": 0.8,
+    "explanation": {
+      "summary_ru": "Телефон виден 1,6 с; требуется проверка преподавателем.",
+      "summary_kk": null,
+      "facts": [
+        {
+          "key": "phone_visible_ms",
+          "value": 1600.0,
+          "unit": "ms",
+          "label_ru": "Телефон виден"
+        }
+      ],
+      "caveats_ru": [
+        "Обнаружение телефона не доказывает фотографирование экрана."
+      ]
+    },
+    "observation_ids": [
+      "fx-phone-120"
+    ],
+    "observation_count": 48,
+    "trigger_frame_id": 120,
+    "related_incident_ids": [],
+    "evidence_ids": [
+      "fx-ev-1"
+    ],
+    "rule_version": "fixture-rules-1",
+    "config_version": "fixture-config-1",
+    "end_reason": null,
+    "update_seq": 1,
+    "review_status": "dismissed"
+  },
+  "reviews": [
+    {
+      "review_id": "fx-rev-1",
+      "session_id": "fx-session-0001",
+      "incident_id": "fx-inc-1",
+      "decision": "dismissed",
+      "comment": "Телефон лежал на столе экраном вниз.",
+      "operator": "teacher-demo",
+      "created_at": "2026-10-09T09:01:00Z",
+      "supersedes_review_id": null
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "fx-ev-1",
+      "session_id": "fx-session-0001",
+      "incident_id": "fx-inc-1",
+      "kind": "snapshot",
+      "frame_id": 120,
+      "t_session_ms": 4000.0,
+      "media_type": "image/jpeg",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 28311,
+      "created_at": "2026-10-09T09:00:04.100000Z"
+    }
+  ]
+}

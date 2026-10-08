@@ -1,0 +1,30 @@
+{
+  "observation_id": "fx-health-1",
+  "session_id": "fx-session-0001",
+  "frame_id": null,
+  "t_session_ms": 20000.0,
+  "wall_time": "2026-10-09T09:00:20Z",
+  "source_mode": "synthetic",
+  "producer": {
+    "module": "capture",
+    "version": "fixture-1",
+    "model_id": null,
+    "model_sha256": null,
+    "config_version": null
+  },
+  "status": "error",
+  "quality": null,
+  "quality_flags": [],
+  "latency_ms": null,
+  "kind": "health",
+  "health": {
+    "component": "capture",
+    "status": "error",
+    "code": "camera_disconnected",
+    "message": "Camera stopped delivering frames",
+    "since_t_session_ms": 20000.0,
+    "details": {
+      "last_frame_id": 599
+    }
+  }
+}

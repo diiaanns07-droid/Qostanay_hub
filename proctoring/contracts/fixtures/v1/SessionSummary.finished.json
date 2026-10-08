@@ -1,0 +1,95 @@
+{
+  "session": {
+    "session_id": "fx-session-0001",
+    "state": "finished",
+    "source": {
+      "mode": "synthetic",
+      "camera_index": 0,
+      "replay_id": null,
+      "width": 640,
+      "height": 480,
+      "fps": 30
+    },
+    "source_mode": "synthetic",
+    "exam_id": "demo-exam-1",
+    "student_label": "student-demo",
+    "retain_media": false,
+    "created_at": "2026-10-09T09:00:00Z",
+    "started_at": "2026-10-09T09:00:30Z",
+    "finished_at": "2026-10-09T09:10:00Z",
+    "exam_started_t_ms": 30000.0,
+    "paused_total_ms": 0.0,
+    "calibration": {
+      "calibration_id": "fx-cal-1",
+      "phase": "skipped",
+      "targets": [
+        {
+          "target": "center",
+          "state": "ok",
+          "samples": 30,
+          "required_samples": 30,
+          "quality": 0.82,
+          "message_code": null
+        },
+        {
+          "target": "left",
+          "state": "collecting",
+          "samples": 12,
+          "required_samples": 30,
+          "quality": 0.7,
+          "message_code": null
+        },
+        {
+          "target": "right",
+          "state": "pending",
+          "samples": 0,
+          "required_samples": 30,
+          "quality": null,
+          "message_code": null
+        },
+        {
+          "target": "up",
+          "state": "pending",
+          "samples": 0,
+          "required_samples": 30,
+          "quality": null,
+          "message_code": null
+        },
+        {
+          "target": "down",
+          "state": "pending",
+          "samples": 0,
+          "required_samples": 30,
+          "quality": null,
+          "message_code": null
+        }
+      ],
+      "current_target": "left",
+      "message_code": "skipped_by_operator",
+      "updated_at": "2026-10-09T09:00:09Z"
+    },
+    "contract_version": "1.0.0",
+    "backend_version": "0.1.0",
+    "last_error": null
+  },
+  "observed_ms": 560000.0,
+  "paused_ms": 0.0,
+  "gaps": [
+    {
+      "t_start_ms": 20000.0,
+      "t_end_ms": 23000.0,
+      "component": "capture",
+      "reason": "camera_disconnected"
+    }
+  ],
+  "incidents_total": 1,
+  "incidents_by_rule": {
+    "phone_visible": 1
+  },
+  "reviews_by_decision": {
+    "dismissed": 1
+  },
+  "limitations_ru": [
+    "Синтетические данные"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "session_id": "fx-session-0001",
+  "source_mode": "synthetic",
+  "checks": [
+    {
+      "check_id": "backend",
+      "status": "pass",
+      "required": true,
+      "message_code": "backend_ok",
+      "message_ru": "Локальный сервис работает",
+      "details": {}
+    },
+    {
+      "check_id": "camera",
+      "status": "pass",
+      "required": true,
+      "message_code": "synthetic_source",
+      "message_ru": "СИНТЕТИЧЕСКИЙ источник кадров (не камера)",
+      "details": {}
+    },
+    {
+      "check_id": "phone_model",
+      "status": "warn",
+      "required": false,
+      "message_code": "synthetic_script",
+      "message_ru": "Сценарные синтетические наблюдения, не CV",
+      "details": {}
+    },
+    {
+      "check_id": "environment_protection",
+      "status": "not_run",
+      "required": false,
+      "message_code": "shell_not_reported",
+      "message_ru": "Оболочка не сообщила возможности защиты",
+      "details": {}
+    }
+  ],
+  "ready": true,
+  "created_at": "2026-10-09T09:00:01Z"
+}

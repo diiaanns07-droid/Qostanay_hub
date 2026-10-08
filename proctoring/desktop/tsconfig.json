@@ -1,0 +1,23 @@
+{
+  // Shared TypeScript base (owner: A01). Path alias "@contracts/*" -> ../contracts/ts/* is
+  // honoured by tsc, esbuild (build-electron.mjs) and Vite (vite.config.ts).
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": false,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "paths": {
+      "@contracts/*": ["../contracts/ts/*"]
+    }
+  },
+  "files": []
+}

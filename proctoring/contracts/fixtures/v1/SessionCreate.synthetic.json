@@ -1,0 +1,18 @@
+{
+  "source": {
+    "mode": "synthetic",
+    "camera_index": 0,
+    "replay_id": null,
+    "width": 640,
+    "height": 480,
+    "fps": 30
+  },
+  "exam_id": "demo-exam-1",
+  "student_label": "student-demo",
+  "consent": {
+    "accepted": true,
+    "text_version": "consent-ru-1",
+    "accepted_at": "2026-10-09T09:00:00Z"
+  },
+  "retain_media": false
+}

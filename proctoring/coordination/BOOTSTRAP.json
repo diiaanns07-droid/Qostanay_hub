@@ -1,0 +1,78 @@
+{
+  "product": "Qorgau Exam",
+  "contract": "qorgau.v1",
+  "contract_version": "1.0.0",
+  "contracts_frozen": true,
+  "state": "bootstrap_published",
+  "prepared_by": "A01",
+  "prepared_on": "2026-10-08",
+  "branch": "claude/nifty-ride-ux8e4j",
+  "baseline_commit": "reported out-of-band by A01 after push (a commit cannot contain its own SHA); use exactly the SHA the user gives you",
+  "start_from": "git fetch origin claude/nifty-ride-ux8e4j && git checkout -b <your-branch> <BOOTSTRAP_SHA>",
+  "read_first": [
+    "proctoring/coordination/BOOTSTRAP.json",
+    "proctoring/coordination/OWNERSHIP.json",
+    "proctoring/coordination/CONTRACTS.md",
+    "proctoring/coordination/DECISIONS.md",
+    "proctoring/README.md"
+  ],
+  "toolchain": {
+    "python": "3.12 x64",
+    "node": "22 LTS (>=22.12)",
+    "electron": "43.7.5",
+    "lock_python": "proctoring/uv.lock + proctoring/requirements/full.txt (hashes)",
+    "lock_node": "proctoring/desktop/package-lock.json"
+  },
+  "setup": [
+    "cd proctoring",
+    "python3.12 -m venv .venv   (Windows: py -3.12 -m venv .venv)",
+    ".venv/bin/python -m pip install --require-hashes -r requirements/full.txt   (Windows: .venv\\Scripts\\python ...)",
+    ".venv/bin/python -m pip install --no-deps -e .",
+    "cd desktop && npm ci   (cloud sandboxes may set ELECTRON_SKIP_BINARY_DOWNLOAD=1)"
+  ],
+  "checks": {
+    "python -m pytest -q": "contracts + A01 lifecycle/API/security tests",
+    "python contracts/tools/generate.py --check": "generated JSON Schema/TS in sync",
+    "python -m proctor smoke": "real backend process, synthetic end-to-end, 34 checks",
+    "python coordination/verify_ownership.py --self-test": "ownership map consistent",
+    "python coordination/verify_ownership.py --agent <Axx> --base <BOOTSTRAP_SHA>": "your diff stays in your paths",
+    "cd desktop && npm run check:contracts": "TS wire types + typed fixtures compile"
+  },
+  "verified_at_bootstrap": {
+    "environment": "Linux x86_64 cloud container, Python 3.12.3, Node 22.22.0, no camera, no Windows, no GPU",
+    "pytest": "64 passed",
+    "smoke": "34/34 PASS (synthetic)",
+    "generate_check": "PASS",
+    "ownership_self_test": "PASS",
+    "npm_check_contracts": "PASS",
+    "cv_imports": "cv2 4.13.0, mediapipe 0.10.35 (Tasks FaceLandmarker present, legacy mp.solutions absent), onnxruntime 1.29.0 CPU — import only, no model run",
+    "not_verified": [
+      "Windows install/run",
+      "camera, any CV model inference",
+      "Electron binary (download failed in the cloud sandbox)",
+      "environment protection"
+    ]
+  },
+  "module_status": {
+    "capture (A02)": "module_not_integrated",
+    "phone (A03)": "module_not_integrated",
+    "attention (A04)": "module_not_integrated",
+    "fusion (A05)": "module_not_integrated",
+    "shell main/preload/native (A06)": "not started",
+    "renderer (A07)": "not started",
+    "evidence (A08)": "module_not_integrated",
+    "qa/packaging (A09)": "not started",
+    "demo/pitch (A10)": "not started"
+  },
+  "first_milestones": {
+    "A02": "create_capture_service: live + replay + synthetic, fan-out with latest-frame mailboxes, clean close/restart",
+    "A03": "create_phone_analyzer: local ONNX (or justified alternative) + manifest; phone_visible observations; missing-model health",
+    "A04": "create_attention_analyzer: Tasks FaceLandmarker num_faces>=2, face_count/primary, head pose, calibration API",
+    "A05": "create_incident_engine: pure consume/advance/finish on contract fixtures, golden tests",
+    "A06": "main/src/main.ts + preload/src/preload.ts: secure window, backend spawn/handshake, QorgauBridge, release on exit",
+    "A07": "renderer/index.html + src/main.tsx: full flow on a labelled FixtureBridge using contract fixtures",
+    "A08": "create_evidence_store: SQLite + router for the A08 routes, review + HTML/JSON report on one test session",
+    "A09": "contract/API integration tests + negative cases against `python -m proctor serve` (synthetic)",
+    "A10": "demo/exams/demo_exam.json (ExamDefinition) + requirement-to-demo matrix + replay manifest plan"
+  }
+}

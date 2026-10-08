@@ -1,0 +1,58 @@
+# Qorgau Exam backend + shared contracts. Owner: A01 (single author of deps/lockfile).
+# Dependency change requests: proctoring/handoffs/Axx/DEPENDENCIES.txt
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qorgau-exam"
+version = "0.1.0"
+description = "Local proctoring prototype: CV (phone, faces, gaze) + exam environment protection"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+dependencies = [
+  "fastapi==0.141.1",
+  "uvicorn==0.53.0",
+  "websockets==17.1",
+  "pydantic==2.13.5",
+  "numpy==2.4.6",
+]
+
+[project.optional-dependencies]
+# CV runtime (CPU). cv2 comes ONLY from opencv-contrib-python (also required by mediapipe);
+# do not add opencv-python / opencv-python-headless next to it (two packages share "cv2").
+cv = [
+  "opencv-contrib-python==4.13.0.92",
+  "mediapipe==0.10.35",
+  "onnxruntime==1.29.0",
+]
+dev = [
+  "pytest==9.1.1",
+  "httpx==0.28.1",
+  "jsonschema==4.26.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["backend", "contracts/python"]
+include = ["proctor*", "proctor_contracts*"]
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+addopts = "--import-mode=importlib -ra"
+pythonpath = ["backend", "contracts/python"]
+testpaths = ["contracts/tests", "backend"]
+markers = [
+  "live: needs a real camera/Windows; never run in CI (select with -m live)",
+  "slow: long-running measurement",
+]
+filterwarnings = [
+  "error::pytest.PytestUnraisableExceptionWarning",
+  "ignore:Using `httpx` with `starlette.testclient` is deprecated:DeprecationWarning",
+]
+
+[tool.uv]
+# Windows x64 is the target; Linux x86_64 is used by cloud agents/CI.
+environments = [
+  "sys_platform == 'win32' and platform_machine == 'AMD64'",
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]

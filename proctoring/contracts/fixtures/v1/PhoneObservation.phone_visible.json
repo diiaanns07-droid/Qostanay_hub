@@ -1,0 +1,66 @@
+{
+  "observation_id": "fx-phone-120",
+  "session_id": "fx-session-0001",
+  "frame_id": 120,
+  "t_session_ms": 4000.0,
+  "wall_time": "2026-10-09T09:00:04Z",
+  "source_mode": "synthetic",
+  "producer": {
+    "module": "phone",
+    "version": "fixture-1",
+    "model_id": "fixture-detector",
+    "model_sha256": null,
+    "config_version": null
+  },
+  "status": "ok",
+  "quality": 0.8,
+  "quality_flags": [],
+  "latency_ms": 85.0,
+  "kind": "phone",
+  "detections": [
+    {
+      "bbox": {
+        "x_min": 0.42,
+        "y_min": 0.55,
+        "x_max": 0.52,
+        "y_max": 0.78
+      },
+      "confidence": 0.71,
+      "class_name": "cell phone",
+      "class_index": 67,
+      "track_id": "trk-1",
+      "track_quality": 0.9,
+      "track_age_ms": 1600.0
+    }
+  ],
+  "signals": [
+    {
+      "name": "phone_visible",
+      "state": "present",
+      "confidence": 0.71,
+      "track_id": "trk-1",
+      "reason": "detected_in_frame",
+      "facts": {
+        "visible_ms": 1600.0
+      }
+    },
+    {
+      "name": "phone_raised",
+      "state": "absent",
+      "confidence": null,
+      "track_id": "trk-1",
+      "reason": "track_below_raise_zone",
+      "facts": {
+        "rise_ratio": 0.03
+      }
+    },
+    {
+      "name": "possible_screen_capture",
+      "state": "insufficient_evidence",
+      "confidence": null,
+      "track_id": null,
+      "reason": "camera_side_not_observable",
+      "facts": {}
+    }
+  ]
+}

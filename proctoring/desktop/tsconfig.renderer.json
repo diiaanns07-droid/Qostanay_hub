@@ -1,0 +1,6 @@
+{
+  // React renderer (A07). Entry point: renderer/index.html -> renderer/src/main.tsx
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "types": ["vite/client"] },
+  "include": ["renderer/src/**/*.ts", "renderer/src/**/*.tsx", "../contracts/ts/*.ts"]
+}

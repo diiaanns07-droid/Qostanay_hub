@@ -1,0 +1,22 @@
+{
+  "reported_at": "2026-10-09T09:00:00.100000Z",
+  "platform": "win32 10.0.22631 (fixture)",
+  "shell_version": "0.1.0",
+  "exam_mode_supported": true,
+  "items": [
+    {
+      "action": "shortcut_ctrl_c",
+      "status": "blocked",
+      "mechanism": "electron.before_input_event",
+      "verified_on": null,
+      "note_ru": "Только внутри окна экзамена"
+    },
+    {
+      "action": "shortcut_alt_tab",
+      "status": "unverified",
+      "mechanism": "none",
+      "verified_on": null,
+      "note_ru": "Нужна проверка на целевой Windows"
+    }
+  ]
+}

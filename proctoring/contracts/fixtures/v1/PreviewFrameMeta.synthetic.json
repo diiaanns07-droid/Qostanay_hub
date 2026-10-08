@@ -1,0 +1,12 @@
+{
+  "session_id": "fx-session-0001",
+  "frame_id": 120,
+  "t_session_ms": 4000.0,
+  "wall_time": "2026-10-09T09:00:04Z",
+  "width": 640,
+  "height": 480,
+  "mirrored": false,
+  "source_mode": "synthetic",
+  "media_type": "image/jpeg",
+  "byte_length": 28311
+}

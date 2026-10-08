@@ -1,0 +1,29 @@
+# Qorgau Exam (owner: A01)
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+desktop/node_modules/
+desktop/dist/
+desktop/out/
+# local data, weights, recordings, secrets: never commit
+models/**
+!models/README.md
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.onnx
+*.pt
+*.task
+*.tflite
+*.mp4
+*.webm
+*.avi
+*.mkv
+.env
+.env.*
+*.log
