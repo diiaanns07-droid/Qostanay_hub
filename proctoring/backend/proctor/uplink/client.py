@@ -497,7 +497,9 @@ class Uplink:
         if not isinstance(clip, Path) or not clip.is_file():
             return False, "Клип для этого эпизода недоступен"
         token = self.outbox.get_meta("resume_token") or ""
-        ok, detail = await asyncio.to_thread(self._http_post, self.cfg.clip_url(incident_id), clip, token, "video/x-msvideo")
+        # A02 writes MJPG .avi today; an .mp4 (H.264, codex/proctor-clips-mp4) is sent as video/mp4 and plays in T02 <video>
+        media_type = "video/mp4" if clip.suffix.lower() == ".mp4" else "video/x-msvideo"
+        ok, detail = await asyncio.to_thread(self._http_post, self.cfg.clip_url(incident_id), clip, token, media_type)
         return (True, None) if ok else (False, f"Не удалось загрузить клип ({detail})")
 
     # ================================================================== Electron state

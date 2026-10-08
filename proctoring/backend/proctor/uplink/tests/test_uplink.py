@@ -295,6 +295,24 @@ def test_clip_exported_at_incident_open_and_uploaded_on_request(server, run, tmp
     assert wait_for(lambda: missing in server.acks()) and server.acks()[missing]["ok"] is False
 
 
+def test_mp4_clip_is_uploaded_as_video_mp4(server, run, tmp_path):
+    """A02 MP4 (H.264, codex/proctor-clips-mp4) must reach T03 as video/mp4 so the panel can play it in <video>."""
+    up, view = run(make_cfg(tmp_path, server.address))
+    assert wait_for(lambda: up.connection == "connected")
+
+    def export_mp4(t_start_ms, before_s, after_s):
+        path = tmp_path / "clip-1.mp4"
+        path.write_bytes(bytes.fromhex("00000018") + b"ftypisom" + b"x" * 3000)
+        return path
+
+    view.export_clip = export_mp4
+    view.add_incident("inc-mp4", t_start_ms=1_000.0)
+    assert wait_for(lambda: any(m["incident_id"] == "inc-mp4" and m["clip_available"] for m in server.accepted if m["type"] == "incident"))
+    cid = server.send_command("request_clip", {"incident_id": "inc-mp4"})
+    assert wait_for(lambda: cid in server.acks()) and server.acks()[cid]["ok"] is True
+    assert server.clips["inc-mp4"]["content_type"] == "video/mp4"
+
+
 def test_start_and_finish_exam_commands_use_the_lifecycle(server, run, tmp_path):
     up, view = run(make_cfg(tmp_path, server.address))
     view.exam_state = "preflight"
