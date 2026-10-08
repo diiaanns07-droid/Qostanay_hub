@@ -1,4 +1,52 @@
-# A08 — продолжение, 8 октября 2026 / Windows 11
+# A08 — A05 zones connected, 8 октября 2026 / Windows 11
+
+Branch: `claude/focused-mendel-4940jx`. Previous published A08: `9090b9ae19bce86f1317b53dea43109af769d1f9`.
+Verified A01 integration: `codex/proctor-integration` @ `78798b7ca83f16552e43a4cf1ae29e81162db44c`.
+Confirmed A05: `claude/zen-mayer-e0tivt` @ `d9832a9042f817e560eef26dbad5c45882399a3c`.
+Both SHAs fetched and checked; fusion paths in the integration match that A05 delivery exactly.
+No A05/A01 code merged into the A08 branch. Integration checks use a detached scratch checkout + A08 overlay.
+
+`review_zones.assess_session_zone` now calls **proctor.fusion.zones.assess_session_zone(incidents, summary, config)**.
+Inputs are forwarded unchanged; only zone/reasons_ru/rule_version are mapped into the temporary local model.
+No thresholds or classification rules in A08. If A05 is absent in an isolated role checkout, the existing
+explicit None / uncalculated fallback remains. Internal A05 import/assessment failures are not hidden.
+Contract remains 1.0.0; local ReviewZone/SessionOverviewRow/SessionSummary fields remain temporary as instructed.
+
+## REPLAY acceptance on the captain's Windows laptop
+
+Actual local recordings and A03/A04 models under `%LOCALAPPDATA%/QorgauExam/`.
+Original manifests, realtime pacing, calibration explicitly skipped, retain_media=false.
+No camera recording, native restriction, Windows setting changes or foreign process termination.
+
+| Replay | Expected / actual | /overview | HTML | Reasons from A05 |
+|---|---|---:|---:|---|
+| zone_a_green_01 | green / green — PASS | 200 | 200 | Эпизодов нет, наблюдение полное |
+| zone_b_yellow_02 | yellow / yellow — PASS | 200 | 200 | Лицо не видно: 00:06, 6 с; 00:14, 12 с |
+| zone_c_red_01 | red / red — PASS | 200 | 200 | Второе лицо: 00:37, 3 с; телефон: 00:05, 10 с; нет лица: 00:14, 13 с |
+
+Summary, overview and JSON agree on zone/reasons; HTML contains the same escaped reasons and zone label/icon/color.
+All use `zone-rule-1`, max 3 reasons, REPLAY banner, teacher decision counts. Overview order: red, yellow, green.
+Capture: 900 / 1052 / 1202 frames, zero capture drops, zero consumer errors; configured consumer sampling remains.
+Each clip has one low-priority technical replay-end incident; A05 deliberately excludes it from the zone rule.
+This explains the green report's one pending technical review. Raw total counts are preserved.
+Three HTML files rendered offline in Chrome: no scripts/network/errors or mobile overflow; A4 print 4/6/7 pages.
+Desktop screenshots of all three visually checked: zone and decisions are on the first screen.
+
+## Regression results
+
+- Isolated A08: `python -m pytest backend/proctor/evidence -q -p no:cacheprovider` → **57 PASS, 2 SKIP**, 21.45 s.
+  SKIP: symlink WinError 1314; real A05 test (module intentionally not in this role's branch).
+- Pinned integration + A08: same command plus `backend/tests/test_route_order.py` → **59 PASS, 1 SKIP**, 20.63 s.
+  SKIP: symlink WinError 1314 only. **0 FAIL / 0 XFAIL / 0 XPASS** on both checkouts.
+- A01 overview route fix confirmed by its regression and all three real REPLAY sessions. Previous 404 dependency resolved.
+- Logs, replay hashes/counts and rendering facts: `checks/zones-*`, `checks/replay-zones-results.json` and `checks/replay-zones-render.json`.
+  Media, model weights, local databases and replay HTML containing session metadata are not committed.
+
+Ready for A01 to integrate this A08 commit. NOT verified: LIVE, accuracy metrics, native Windows protection,
+contract 1.1, symlink with elevated privilege, JSON import across computers. Three REPLAY successes are not accuracy measurement.
+
+---
+## Historical checkpoint — temporary adapter before A05 delivery
 
 Branch: `claude/focused-mendel-4940jx`. Previous published SHA: `5509950e38c622ae544d40c75d4b8fdba7256b82`.
 Baseline unchanged: A01 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`, contract 1.0.0.

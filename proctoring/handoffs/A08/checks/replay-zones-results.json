@@ -1,0 +1,248 @@
+[
+  {
+    "replay_id": "zone_a_green_01",
+    "expected": "green",
+    "actual": "green",
+    "outcome": "PASS",
+    "pacing": "realtime",
+    "manifest_sha256": "5b38cffe6b7230dbe17018d33dc57e23423b40d85dc96f7985a0fc9b0489b486",
+    "media_sha256": "6352319b66ce6c984ded5237d2ad5143de053b98412bd924a4126d3cc3e30a93",
+    "observed_ms": 29875.0,
+    "paused_ms": 0.0,
+    "started_at": "2026-10-08T09:46:15.996851Z",
+    "finished_at": "2026-10-08T09:46:48.128152Z",
+    "rule_version": "zone-rule-1",
+    "reasons_ru": [
+      "Эпизодов нет, наблюдение полное"
+    ],
+    "incidents_total": 1,
+    "incidents_by_priority": {
+      "low": 1,
+      "medium": 0,
+      "high": 0
+    },
+    "pending_reviews": 1,
+    "overview_http": 200,
+    "html_http": 200,
+    "frames_captured": 900,
+    "frames_dropped": 0,
+    "consumers": [
+      {
+        "name": "phone",
+        "processed_fps": 7.4,
+        "frames_processed": 230,
+        "frames_skipped": 669,
+        "errors": 0,
+        "frame_age_ms_p50": 0.0,
+        "frame_age_ms_p95": 50.2,
+        "process_ms_p50": 47.0,
+        "process_ms_p95": 50.2
+      },
+      {
+        "name": "attention",
+        "processed_fps": 12.8,
+        "frames_processed": 384,
+        "frames_skipped": 515,
+        "errors": 0,
+        "frame_age_ms_p50": 16.0,
+        "frame_age_ms_p95": 47.0,
+        "process_ms_p50": 16.0,
+        "process_ms_p95": 16.0
+      },
+      {
+        "name": "preview",
+        "processed_fps": 12.8,
+        "frames_processed": 384,
+        "frames_skipped": 515,
+        "errors": 0,
+        "frame_age_ms_p50": 16.0,
+        "frame_age_ms_p95": 44.75,
+        "process_ms_p50": 0.0,
+        "process_ms_p95": 0.0
+      }
+    ],
+    "incidents": [
+      {
+        "rule_id": "monitoring_degraded",
+        "priority": "low",
+        "t_start_ms": 30562.0,
+        "t_end_ms": 30625.0
+      }
+    ]
+  },
+  {
+    "replay_id": "zone_b_yellow_02",
+    "expected": "yellow",
+    "actual": "yellow",
+    "outcome": "PASS",
+    "pacing": "realtime",
+    "manifest_sha256": "1b5f7b4cb0ba50f578d770a4d75d40203d0a2d0c9f33733f9c35fbcb38236908",
+    "media_sha256": "35ce7af762900a1c1478d8f2ccace57830e08c5bd08758971ac47a8162f38ce7",
+    "observed_ms": 34828.0,
+    "paused_ms": 0.0,
+    "started_at": "2026-10-08T09:46:48.314586Z",
+    "finished_at": "2026-10-08T09:47:24.873452Z",
+    "rule_version": "zone-rule-1",
+    "reasons_ru": [
+      "Лицо не видно в кадре — 00:06, 6 с",
+      "Лицо не видно в кадре — 00:14, 12 с"
+    ],
+    "incidents_total": 3,
+    "incidents_by_priority": {
+      "low": 1,
+      "medium": 2,
+      "high": 0
+    },
+    "pending_reviews": 3,
+    "overview_http": 200,
+    "html_http": 200,
+    "frames_captured": 1052,
+    "frames_dropped": 0,
+    "consumers": [
+      {
+        "name": "phone",
+        "processed_fps": 7.6,
+        "frames_processed": 268,
+        "frames_skipped": 783,
+        "errors": 0,
+        "frame_age_ms_p50": 7.5,
+        "frame_age_ms_p95": 47.0,
+        "process_ms_p50": 31.0,
+        "process_ms_p95": 47.0
+      },
+      {
+        "name": "attention",
+        "processed_fps": 12.6,
+        "frames_processed": 448,
+        "frames_skipped": 603,
+        "errors": 0,
+        "frame_age_ms_p50": 16.0,
+        "frame_age_ms_p95": 46.9,
+        "process_ms_p50": 15.0,
+        "process_ms_p95": 16.0
+      },
+      {
+        "name": "preview",
+        "processed_fps": 12.8,
+        "frames_processed": 448,
+        "frames_skipped": 604,
+        "errors": 0,
+        "frame_age_ms_p50": 16.0,
+        "frame_age_ms_p95": 47.0,
+        "process_ms_p50": 0.0,
+        "process_ms_p95": 0.0
+      }
+    ],
+    "incidents": [
+      {
+        "rule_id": "face_missing",
+        "priority": "medium",
+        "t_start_ms": 6031.0,
+        "t_end_ms": 11734.0
+      },
+      {
+        "rule_id": "face_missing",
+        "priority": "medium",
+        "t_start_ms": 14594.0,
+        "t_end_ms": 27031.0
+      },
+      {
+        "rule_id": "monitoring_degraded",
+        "priority": "low",
+        "t_start_ms": 35094.0,
+        "t_end_ms": 35141.0
+      }
+    ]
+  },
+  {
+    "replay_id": "zone_c_red_01",
+    "expected": "red",
+    "actual": "red",
+    "outcome": "PASS",
+    "pacing": "realtime",
+    "manifest_sha256": "f999adaade330ed7c8278ba791032fcb7a14b4515f7c9fcaccd2e9bb702055c8",
+    "media_sha256": "3cf25248c9b57c310be4dbc0a4502150d59cc32896b11ca5c074cb0ff4f83787",
+    "observed_ms": 39922.0,
+    "paused_ms": 0.0,
+    "started_at": "2026-10-08T09:47:25.060519Z",
+    "finished_at": "2026-10-08T09:48:05.269516Z",
+    "rule_version": "zone-rule-1",
+    "reasons_ru": [
+      "Второе лицо в кадре — 00:37, 3 с",
+      "Телефон в кадре — 00:05, 10 с",
+      "Лицо не видно в кадре — 00:14, 13 с"
+    ],
+    "incidents_total": 4,
+    "incidents_by_priority": {
+      "low": 1,
+      "medium": 2,
+      "high": 1
+    },
+    "pending_reviews": 4,
+    "overview_http": 200,
+    "html_http": 200,
+    "frames_captured": 1202,
+    "frames_dropped": 0,
+    "consumers": [
+      {
+        "name": "phone",
+        "processed_fps": 7.6,
+        "frames_processed": 309,
+        "frames_skipped": 892,
+        "errors": 0,
+        "frame_age_ms_p50": 0.0,
+        "frame_age_ms_p95": 47.0,
+        "process_ms_p50": 47.0,
+        "process_ms_p95": 63.0
+      },
+      {
+        "name": "attention",
+        "processed_fps": 12.8,
+        "frames_processed": 513,
+        "frames_skipped": 689,
+        "errors": 0,
+        "frame_age_ms_p50": 16.0,
+        "frame_age_ms_p95": 32.0,
+        "process_ms_p50": 16.0,
+        "process_ms_p95": 32.0
+      },
+      {
+        "name": "preview",
+        "processed_fps": 12.8,
+        "frames_processed": 513,
+        "frames_skipped": 689,
+        "errors": 0,
+        "frame_age_ms_p50": 16.0,
+        "frame_age_ms_p95": 32.0,
+        "process_ms_p50": 0.0,
+        "process_ms_p95": 0.0
+      }
+    ],
+    "incidents": [
+      {
+        "rule_id": "phone_visible",
+        "priority": "medium",
+        "t_start_ms": 4750.0,
+        "t_end_ms": 14484.0
+      },
+      {
+        "rule_id": "face_missing",
+        "priority": "medium",
+        "t_start_ms": 14281.0,
+        "t_end_ms": 26797.0
+      },
+      {
+        "rule_id": "multiple_faces",
+        "priority": "high",
+        "t_start_ms": 36656.0,
+        "t_end_ms": 40109.0
+      },
+      {
+        "rule_id": "monitoring_degraded",
+        "priority": "low",
+        "t_start_ms": 40109.0,
+        "t_end_ms": 40203.0
+      }
+    ]
+  }
+]

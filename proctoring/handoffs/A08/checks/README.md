@@ -1,5 +1,24 @@
 # A08 — проверка на Windows 11, 8 октября 2026
 
+## Обновление: настоящий A05, сборка 78798b7
+
+`zones-isolated.txt/.xml`: 57 PASS, 2 SKIP; `zones-integration.txt/.xml`: 59 PASS, 1 SKIP.
+Команды: `python -m pytest backend/proctor/evidence -q -p no:cacheprovider`,
+на integration дополнительно `backend/tests/test_route_order.py`. Полные SHA — в STATUS.md.
+
+Реальные ролики проверены в отдельном checkout integration с наложением только A08:
+
+```powershell
+python -m proctor.evidence.tests.replay_zones_check --out <новая-локальная-папка>
+```
+
+Проверка использует публичный create_app и авторизованные API-маршруты, настоящий REPLAY/CV без подмены
+наблюдений. Читает модели и ролики из `%LOCALAPPDATA%/QorgauExam/`. Оригинальные manifests не меняет.
+HTML/JSON и БД остаются в локальной папке; `retain_media=false`. В Git сохранены только факты проверки:
+`replay-zones-results.json` (3 PASS, SHA входных файлов, зоны, причины, счётчики) и
+`replay-zones-render.json` (offline Chrome, mobile 390 px, A4, первый экран desktop).
+Регрессию старого 404 считать закрытой на указанной сборке. Нижние разделы — предыдущий checkpoint.
+
 Первый checkpoint: `c201443f215b58b14f9d79104d4dcc86f3a4b9fd`.
 Финальные логи относятся к следующему commit A08, который включает этот файл.
 Python 3.12.14; окружения созданы `uv sync --frozen --extra cv --extra dev`.

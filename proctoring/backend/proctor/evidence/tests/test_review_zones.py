@@ -1,4 +1,4 @@
-"""A08 zone plumbing only. Named assessments are doubles, not a copy of A05 rules."""
+"""A08 zone adapter and plumbing. Real A05 is tested when the integration supplies it."""
 from datetime import timedelta
 from types import SimpleNamespace
 
@@ -12,7 +12,10 @@ from proctor.evidence import report, review_zones
 from proctor.evidence.review_zones import ZoneAssessment
 
 
-def test_unpublished_a05_is_explicitly_uncalculated(store, fx):
+def test_missing_a05_is_explicitly_uncalculated(store, fx, monkeypatch):
+    def missing(name):
+        raise ModuleNotFoundError(name=name)
+    monkeypatch.setattr(review_zones, 'import_module', missing)
     store.upsert_session(fx.session_info('pending-zone'))
     summary = store.summary('pending-zone')
     assert summary.review_zone is None and summary.review_zone_rule_version is None
@@ -21,6 +24,44 @@ def test_unpublished_a05_is_explicitly_uncalculated(store, fx):
     assert report.build_json(snapshot)['summary']['review_zone'] is None
     assert 'Зона не рассчитана' in report.render_html(snapshot)
     assert 'zone-green' not in report.render_html(snapshot).split('</style>', 1)[1]
+
+
+def test_adapter_forwards_inputs_and_validates_a05_result(store, fx, monkeypatch):
+    calls = []
+    incidents, config = [], object()
+    store.upsert_session(fx.session_info('adapter'))
+    summary = store.summary('adapter')
+    def assess(got_incidents, got_summary, got_config):
+        calls.append((got_incidents, got_summary, got_config))
+        return SimpleNamespace(zone='yellow', reasons_ru=['Причина от A05'], rule_version='delegated-rule',
+                               config_version='extra-A05-field')
+    monkeypatch.setattr(review_zones, 'import_module', lambda name: SimpleNamespace(assess_session_zone=assess))
+    result = review_zones.assess_session_zone(incidents, summary, config)
+    assert len(calls) == 1
+    assert all(got is sent for got, sent in zip(calls[0], (incidents, summary, config)))
+    assert result.model_dump(mode='json') == {
+        'zone': 'yellow', 'reasons_ru': ['Причина от A05'], 'rule_version': 'delegated-rule'}
+
+
+def test_adapter_does_not_hide_broken_a05_dependency(monkeypatch):
+    def missing_dependency(name):
+        raise ModuleNotFoundError(name='broken_dependency')
+    monkeypatch.setattr(review_zones, 'import_module', missing_dependency)
+    with pytest.raises(ModuleNotFoundError):
+        review_zones.assess_session_zone([], None)
+
+
+def test_adapter_matches_real_a05_assessment(store, fx):
+    zones = pytest.importorskip('proctor.fusion.zones', reason='A05 is supplied by the A01 integration checkout')
+    store.upsert_session(fx.session_info('real-assessor', state='finished'))
+    summary = store.summary('real-assessor')
+    incidents = [fx.incident_change('real-assessor', priority='high').incident]
+    config = zones.ZoneConfig(max_reasons=1)
+    expected = zones.assess_session_zone(incidents, summary, config)
+    actual = review_zones.assess_session_zone(incidents, summary, config)
+    assert actual.zone.value == expected.zone == 'red'
+    assert actual.reasons_ru == expected.reasons_ru
+    assert actual.rule_version == expected.rule_version == 'zone-rule-1'
 
 
 def test_overview_sorts_priority_then_newest_and_excludes_deleted(store, fx, monkeypatch):
@@ -62,7 +103,7 @@ def test_overview_router_returns_exact_field_names(store, fx):
     assert response.status_code == 200
     assert set(response.json()[0]) == {'session', 'review_zone', 'reasons_ru', 'incidents_total',
                                       'incidents_by_priority', 'pending_reviews'}
-    assert response.json()[0]['review_zone'] is None
+    assert response.json()[0]['review_zone'] == store.summary('row').model_dump(mode='json')['review_zone']
 
 
 def test_zone_reasons_are_bounded_and_escaped(store, fx, monkeypatch):
