@@ -197,8 +197,10 @@ describe("backend process + bridge API (real backend)", { skip: haveBackend ? fa
       assert.ok(incAfter.ok, "review routes open again after finish");
       await until(() => envelopes.some((e) => e.message.type === "session_state" && (e.message as { session: SessionInfo }).session.state === "finished"));
 
-      // events after finish are dropped by the backend (409) and counted, not retried forever
-      events.emit({ action: "focus_lost", enforcement: "detected_only", mechanism: "electron.browser_window_blur", scope: "window" });
+      // New shortcut actions after finish are rejected (409), counted and never retried.
+      // Do not use focus_lost here: SessionRuntime intentionally accepts final focus/release
+      // notifications during its 5-second shutdown grace period (A06 #6, report tail).
+      events.emit({ action: "shortcut_ctrl_v", enforcement: "blocked", mechanism: "electron.before_input_event", scope: "window", detail: { shortcut: "Ctrl+V" } });
       await events.flush();
       assert.equal(events.pending, 0);
       assert.equal(events.dropped, 1);

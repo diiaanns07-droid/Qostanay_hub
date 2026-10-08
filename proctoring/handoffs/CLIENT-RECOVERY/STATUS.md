@@ -115,3 +115,35 @@ Integration notes:
 3. Re-run the root's complete C1 + two full synthetic-backend acceptance. It
    should now see simulated on cards, incidents, event records and preview HTTP
    headers without any special synthetic environment flag.
+
+## Subsequent checkpoint — shell integration test after session finish
+
+Root assigned `desktop/main/src/__tests__/backend.integration.test.ts` to fix a
+reproduced stale expectation. No shell or backend production code changed.
+
+The test expected `focus_lost` immediately after finish to be rejected and
+counted in `EnvironmentEventQueue.dropped`. Backend `SessionRuntime` explicitly
+accepts final `focus_lost`, `focus_regained`, `exam_mode_released` for 5000 ms
+after finish/abort (`LATE_ENV_ACTIONS`, `LATE_ENV_GRACE_MS`, `environment_events`;
+A06 #6) so those final observations reach the report. The emitted focus event
+was correctly accepted, yielding dropped=0 rather than 1.
+
+The negative-path assertion now emits `shortcut_ctrl_v`, which is forbidden
+after finish both inside and outside that grace period. It still asserts an
+empty queue and exactly one dropped event; no delay, weaker count or production
+behavior change was added. The QA scenario independently uses `shortcut_ctrl_c`
+for the same post-finish 409 check.
+
+Validation: bundled this worktree's source using the pinned esbuild from the
+integration checkout, with `nodePaths` for its existing dependencies. Explicit
+`QORGAU_PYTHON` uses the full dependency venv; `PYTHONPATH` points to this worktree.
+Real backend, synthetic sessions, FakeGuard; no Electron/device/native hooks.
+
+- Before: backend integration file **10 passed, 1 failed, 1 skipped**; identical
+  compiled line 6530, actual dropped=0 expected 1.
+- After: **11 passed, 0 failed, 1 skipped** in 5.60 seconds. The skip is the
+  existing non-Windows SIGTERM-ignoring process test.
+- Expected negative-path logs (missing Python/READY timeout) remain assertions
+  inside passing tests, not unexpected process failures.
+
+Root should merge this checkpoint and rerun its complete shell suite.
