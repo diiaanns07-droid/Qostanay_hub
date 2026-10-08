@@ -3,6 +3,7 @@
   "nativeGuard": false,
   "camera": false,
   "microphone": false,
+  "skipped": [],
   "results": [
     {
       "name": "production IPC creates synthetic session without starting exam",
@@ -21,6 +22,10 @@
       "pass": true
     },
     {
+      "name": "teacher UI shows confirmed only after real application receipt",
+      "pass": true
+    },
+    {
       "name": "pending appears before application confirmation",
       "pass": true
     },
@@ -30,6 +35,14 @@
     },
     {
       "name": "targeted lock leaves other actual backend untouched",
+      "pass": true
+    },
+    {
+      "name": "actual teacher feed loss invalidates current card lock status",
+      "pass": true
+    },
+    {
+      "name": "teacher reconnect restores confirmation from actual fresh C1 state",
       "pass": true
     },
     {
@@ -59,6 +72,56 @@
     }
   ],
   "diagnostics": {
+    "observations": [
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      },
+      {
+        "visible": "visible",
+        "inert": true,
+        "hidden": "true",
+        "reason": "Проверка после возвращения окна",
+        "box": {
+          "left": 0,
+          "top": 0,
+          "right": 1251.2000732421875,
+          "bottom": 763.2000122070312
+        },
+        "viewport": {
+          "w": 1266,
+          "h": 763,
+          "clientWidth": 1251,
+          "clientHeight": 763
+        },
+        "css": {
+          "visibility": "visible",
+          "display": "grid",
+          "opacity": "1"
+        },
+        "hit": true
+      },
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      },
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      },
+      {
+        "state": "failed",
+        "requested": true,
+        "locked": false,
+        "error": "Нет подтверждения экрана приложения в срок"
+      }
+    ],
     "cards": [
       {
         "label": "Backend B — без интерфейса",

@@ -59,6 +59,7 @@ let diagnostics = null;
 const report = () => writeFileSync(join(out, "results.json"), JSON.stringify({ source: "actual production Electron + proctor/C2 + C1; CREATED synthetic sessions", nativeGuard: false, camera: false, microphone: false, skipped: skipReload ? ["renderer reload (explicit diagnostic option)"] : [], results, diagnostics }, null, 2));
 // Passive production event/DOM observation only; never call the receipt bridge.
 function observeStudent() {
+  if (!window.qorgau) { setTimeout(observeStudent, 0); return; }
   window.lockObservations = [];
   window.qorgau.subscribeEvents(({message:m}) => {
     if(m.type === 'class_state' && window.lockObservations.length < 80) window.lockObservations.push({state:m.lock_state, requested:m.lock_requested, locked:m.locked, error:m.lock_error_ru, recovery:m.lock_request?.recovery});
