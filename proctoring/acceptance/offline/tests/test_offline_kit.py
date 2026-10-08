@@ -428,6 +428,29 @@ class OfflineKitTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(by_id(report)["model:phone/yolo.onnx"]["reason"], "pin_changed")
 
+    def test_verify_rejects_pinned_wheel_for_wrong_platform(self):
+        out = self.build()
+        name, version = "numpy", "2.4.6"
+        linux = out / "wheels" / f"{name}-{version}-cp312-cp312-manylinux_2_28_x86_64.whl"
+        data = make_wheel(linux, name, version)
+        req = self.fx.repo / "requirements" / "full.txt"
+        req.write_text(req.read_text(encoding="utf-8").replace(
+            f"--hash=sha256:{sha(self.fx.wheel_bytes[name])}",
+            f"--hash=sha256:{sha(self.fx.wheel_bytes[name])} --hash=sha256:{sha(data)}"), encoding="utf-8")
+        manifest_path = out / kit.MANIFEST_NAME
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for item in manifest["items"]:
+            if item["id"] == f"wheel:{name}=={version}":
+                (out / item["bundle_path"]).unlink()
+                item.update(bundle_path=f"wheels/{linux.name}", sha256=sha(data), size_bytes=len(data))
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        code, report = run_json(self.base + ["verify", "--kit", str(out)])
+        self.assertEqual((code, by_id(report)[f"wheel:{name}=={version}"]["status"]), (1, "WRONG_PLATFORM"))
+
+    def test_build_refuses_drive_root_like_output(self):
+        code, _, err = run_tool(self.base + ["build", "--out", os.path.abspath(os.sep)] + self.fx.inputs_args())
+        self.assertEqual(code, 64, err)
+
     def test_verify_kit_built_for_other_pins(self):
         out = self.build()
         manifest = self.fx.repo / "backend" / "proctor" / "phone" / "models.manifest.json"

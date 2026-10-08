@@ -80,8 +80,14 @@ Expand-Archive -LiteralPath E:\AdalKit\electron\electron-v43.7.5-win32-x64.zip -
 Set-Content -LiteralPath desktop\node_modules\electron\path.txt -Value 'electron.exe' -NoNewline -Encoding ascii
 ```
 
-`npm ci` и `npm run build` без интернета не выполняются (нет npm-кэша в комплекте) — сборку desktop делайте на
-этапе 0. Копировать `.venv` или `desktop\dist` с другого ПК не нужно: проверка распознаёт перенесённый venv.
+`npm ci`/`npm install` без интернета **не запускать**: npm-кэша в комплекте нет, а `npm ci` начинает с удаления
+`node_modules` (документированное поведение npm, здесь не проверено). Сборку desktop делайте на этапе 0. После
+`npm run build` не меняйте исходники и не делайте `git pull`/`checkout`: `Start-Student.ps1:62-70` сравнивает время
+изменения исходников и сборки и откажется запускаться («Исходники новее сборки»); пересборка офлайн возможна только
+если Node и полный `node_modules` этого же ПК уже на месте. Копировать `.venv` или `desktop\dist` с другого ПК не
+нужно: проверка распознаёт перенесённый venv. Альтернатива распаковке Electron: положить архив комплекта в кэш
+`%LOCALAPPDATA%\electron\Cache\2dc4f83cdcc3b8446f9d909bd697caa69bbfef832d7e01faba947002008f886b\` и выполнить
+`node node_modules/electron/install.js` (без сети, но нужен VC++ 2015-2022 x64 runtime для распаковщика).
 
 ## Этап 1. Отключить интернет, сохранив локальную сеть (вручную)
 
@@ -121,7 +127,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\acceptance\classroom\Start
 3. В приложении: согласие → проверка оборудования. Зафиксировать строки preflight: `phone_model`, `face_model` = PASS
    (это загрузка реальных весов), `offline_assets` = NOT_RUN (ожидаемо до интеграции, см. INTEGRATION_REQUEST.md).
    Записать время от нажатия старта проверки до готовности (гипотеза о задержке телеметрии MediaPipe без интернета).
-4. Калибровка → начать экзамен в режиме LIVE (не REPLAY/синтетика).
+4. Калибровка → начать экзамен в режиме LIVE (не REPLAY/синтетика). На Windows старт экзамена проверяет нативный
+   помощник (`desktop/native/qorgau_guard.py --environment-check`, таймаут 3 с, `desktop/main/src/environment/remote.ts:30`).
+   Если старт отклонён с «Не удалось проверить программы удалённого доступа» — записать и повторить (холодный старт
+   Python/антивирус), это не сетевая проблема.
 
 ## Этап 4. Один CV-эпизод
 
@@ -139,8 +148,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\acceptance\classroom\Start
 
 ## Этап 6. Перезапуск
 
-1. PC2: закрыть приложение, снова `Start-Student.ps1 …`; убедиться, что подключение к классу восстановлено,
-   прежняя сессия доступна в истории/отчёте.
+1. PC2: закрыть приложение и убедиться в Диспетчере задач, что `electron.exe` не остался (иначе второй запуск молча
+   завершится из-за single-instance, `desktop/main/src/main.ts:58-61`); снова `Start-Student.ps1 …`; убедиться, что
+   подключение к классу восстановлено, прежняя сессия доступна в истории/отчёте.
 2. PC1: `Ctrl+C`, снова `Start-Teacher.ps1 -Lan -Port 8765`; войти, проверить, что класс/история сохранились
    (данные C1 в `%LOCALAPPDATA%\QorgauClassroom`).
 3. Повторить `check-pc` на PC2 (код 0) — комплект и ПК не изменились от работы приложения.

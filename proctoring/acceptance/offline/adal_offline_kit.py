@@ -860,6 +860,8 @@ def _copy_verified(src: Path, dst: Path, expected: str) -> None:
 
 def check_output_location(out: Path, inputs: Inputs) -> None:
     out = resolved(out)
+    if not out.name:
+        raise UsageError(f"--out {out}: укажите новый подкаталог, а не корень диска (например E:\\AdalKit)")
     if is_within(out, inputs.repo) or is_within(inputs.repo, out):
         raise UsageError(f"--out {out} пересекается с исходниками {inputs.repo}: комплект с весами не должен попасть в git")
     for source in (inputs.models_dir, inputs.audio_dir, inputs.wheelhouse, inputs.electron_zip):
@@ -939,6 +941,7 @@ def verify_kit(kit: Path, repo: Path, roles: tuple[str, ...]) -> tuple[list[Item
                           f"{manifest_path}: {exc}")], None
     # Re-derive what this checkout expects: a kit built for another commit/pin must not pass.
     expected = {i.id: i for i in inventory(Inputs(repo, roles, None, None, None, None, requirements))}
+    pinned_wheels = {(norm_name(r.name), r.version): r.hashes for r in parse_requirements(requirements)}
     recorded = {entry.get("id"): entry for entry in manifest.get("items", []) if isinstance(entry, dict)}
     items: list[Item] = []
     listed: set[str] = {MANIFEST_NAME, SUMS_NAME}
@@ -969,10 +972,17 @@ def verify_kit(kit: Path, repo: Path, roles: tuple[str, ...]) -> tuple[list[Item
             items.append(item.fail(CORRUPT, "pin_changed", f"в комплекте sha256 {str(recorded_sha)[:16]}…, текущий пин "
                                    f"{pinned[:16]}… ({template.pin_source})", "Пересоберите комплект из этой фиксации."))
             continue
-        if template.kind == "wheel" and not _wheel_pinned(requirements, entry):
-            items.append(item.fail(CORRUPT, "pin_changed", f"{rel.name}: sha256 нет среди --hash текущего {requirements.name}",
-                                   "Пересоберите комплект из этой фиксации."))
-            continue
+        if template.kind == "wheel":
+            name, _, version = item_id.removeprefix("wheel:").partition("==")
+            if recorded_sha not in pinned_wheels.get((name, version), set()):
+                items.append(item.fail(CORRUPT, "pin_changed", f"{rel.name}: sha256 нет среди --hash текущего {requirements.name}",
+                                       "Пересоберите комплект из этой фиксации."))
+                continue
+            info = parse_wheel_name(rel.name)
+            if info is None or (info["name"], info["version"]) != (name, version) or not wheel_compatible(info):
+                items.append(item.fail(WRONG_PLATFORM, "wrong_platform", f"{rel.name}: не колесо {name}=={version} для "
+                                       "CPython 3.12 win_amd64", "Пересоберите комплект из этой фиксации."))
+                continue
         path = kit.joinpath(*rel.parts)
         item.bundle_path, item.expected_sha256, item.expected_size = rel.as_posix(), recorded_sha, entry.get("size_bytes")
         if not path.is_file():
@@ -985,6 +995,14 @@ def verify_kit(kit: Path, repo: Path, roles: tuple[str, ...]) -> tuple[list[Item
             item.fail(CORRUPT, "hash_mismatch" if size == entry.get("size_bytes") else "size_mismatch",
                       f"{path}: {size} B sha256 {digest[:16]}…; ожидалось {entry.get('size_bytes')} B {str(recorded_sha)[:16]}…",
                       "Файл повреждён при копировании: скопируйте комплект заново с исходного носителя.")
+        elif template.kind == "wheel":
+            try:
+                item.license, item.license_evidence = wheel_license(path)
+            except (OSError, zipfile.BadZipFile) as exc:
+                item.fail(CORRUPT, "bad_zip", f"{rel.name}: {type(exc).__name__}")
+            else:
+                if not item.license:
+                    item.fail(BLOCKED, "license_unconfirmed", f"{rel.name}: в METADATA нет лицензии")
         items.append(item)
     for path in sorted(p for p in kit.rglob("*") if p.is_file()):
         rel = path.relative_to(kit).as_posix()
@@ -993,12 +1011,6 @@ def verify_kit(kit: Path, repo: Path, roles: tuple[str, ...]) -> tuple[list[Item
                               feature="лишний файл", status=WARN, reason="unexpected_file",
                               detail=f"{rel} не описан в манифесте и не используется"))
     return items, manifest
-
-
-def _wheel_pinned(requirements: Path, entry: dict) -> bool:
-    reqs = parse_requirements(requirements)
-    name, _, version = str(entry.get("id", "")).removeprefix("wheel:").partition("==")
-    return any(norm_name(r.name) == name and r.version == version and entry.get("sha256") in r.hashes for r in reqs)
 
 
 # ---------------------------------------------------------------------------------------------- check a prepared PC
@@ -1318,7 +1330,7 @@ def render(title: str, items: list[Item], status: str, code: int) -> str:
     lines = [title]
     order = {"required": 0, "optional": 1, "info": 2}
     for item in sorted(items, key=lambda i: (order.get(i.requirement, 3), i.status == PASS, i.id)):
-        if item.status == PASS and item.kind in ("wheel", "python") and item.requirement != "info":
+        if item.status == PASS and item.id.startswith(("wheel:", "package:")):
             continue
         tag = LABEL.get(item.status, item.status)
         if item.requirement == "optional" and item.status != PASS:
@@ -1330,7 +1342,7 @@ def render(title: str, items: list[Item], status: str, code: int) -> str:
             lines.append(f"       {item.detail}")
         if item.status != PASS and item.remedy:
             lines.append(f"       Как исправить: {item.remedy}")
-    wheels = [i for i in items if i.kind in ("wheel", "python") and i.requirement != "info"]
+    wheels = [i for i in items if i.id.startswith(("wheel:", "package:"))]
     if wheels:
         ok = sum(i.status == PASS for i in wheels)
         lines.append(f"Python-пакеты/колёса: {ok}/{len(wheels)} OK (показаны только проблемные)")
