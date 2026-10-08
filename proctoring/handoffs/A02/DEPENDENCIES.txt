@@ -5,6 +5,7 @@ R1  A01 | backend/tests/test_lifecycle_api.py::test_health_reports_missing_modul
 R2  A01 | backend/tests/test_lifecycle_api.py::test_live_never_falls_back_to_synthetic и smoke-проверка live_without_capture_module_is_not_ready — не требовать camera=fail; проверять ready==False и details.impl=="module" (ПОДТВЕРЖДЕНО 08.10 на ноутбуке с камерой: 'pass' != 'fail', smoke 33/34).
 R7  A01 | backend/proctor/session.py SessionRuntime._release_capture() — вызвать capture.set_health_listener(None) ДО capture.close() (иначе ложный monitoring_degraded на каждом finish; для зон это лишний low).
 R9  A01/A06 | окружение backend для демо — QORGAU_REPLAY_DIR=%LOCALAPPDATA%\QorgauExam\replay (ролики с людьми вне Git; дефолт proctoring/demo/replay лежит в репозитории).
+R11 A01 | backend/proctor/session.py — в REPLAY по capture stopped/replay_ended автоматически завершать сессию (или оператор жмёт «Завершить» сразу после конца ролика): иначе конец записи = пробел покрытия (+1 low monitoring_degraded, проверено в scratch).
 R3  A01 (после 9.10) | contracts SourceConfig.replay_pacing "realtime"|"lockstep"|null — детерминированный прогон A09 через HTTP без отдельного манифеста.
 R4  A01 (после 9.10) | Settings.capture_backend "auto"|"dshow"|"msmf" — сейчас обход: python -m proctor.capture verify-live --backend msmf. Измерено: MSMF открывается 5–6 с, DSHOW 0,2–1 с.
 R5  A05 FYI | коды health capture (ниже); любое capture status != ok = пробел покрытия, не face_missing.
