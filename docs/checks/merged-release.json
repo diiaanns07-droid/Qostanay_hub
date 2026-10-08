@@ -1,0 +1,69 @@
+{
+  "merge_sha": "9e7f265b2830f231568b90ed32011eb3e01ef938",
+  "fix_sha": "6b3f0a9fb8452a05e2626bfe92161553453f80a6",
+  "parents": {
+    "main": "ac71d19447d3ef8d2fd369cb4dfd236fb04047fb",
+    "proctor-final-qa": "4ea398aa43a945300be176a1baa200949f39f963"
+  },
+  "environment": "Windows, Python 3.12, installed pinned desktop dependencies",
+  "initial_python": {
+    "counts": {
+      "passed": 1608,
+      "skipped": 43,
+      "failed": 9,
+      "xfailed": 4
+    },
+    "failures": [
+      "backend.proctor.phone.tests.test_config_manifest_prepare::test_install_success_writes_atomically",
+      "backend.proctor.phone.tests.test_config_manifest_prepare::test_install_source_error_leaves_nothing_and_keeps_existing_target",
+      "backend.proctor.phone.tests.test_config_manifest_prepare::test_app_health_lists_phone_model_missing",
+      "backend.proctor.uplink.tests.test_lock::test_local_ack_route_requires_auth_and_strict_scope",
+      "qa.tests.test_offline::test_no_download_calls_in_backend_runtime_source",
+      "qa.tests.test_offline::test_reviewed_network_scopes_cannot_hide_new_runtime_calls",
+      "acceptance.offline.tests.test_offline_kit.OfflineKitTests::test_check_pc_prepared_student_ready",
+      "acceptance.offline.tests.test_offline_kit.NoNetworkNoProcess::test_runtime_audit_hook_sees_no_network_or_process",
+      "acceptance.offline.tests.test_offline_kit.LauncherAudit::test_current_launchers_are_scanned"
+    ],
+    "command": "python -m pytest -q contracts/tests backend qa/tests acceptance/offline/tests"
+  },
+  "fixed_groups_recheck": {
+    "counts": {
+      "passed": 179,
+      "skipped": 3
+    },
+    "failures": [],
+    "command": "python -m pytest -q backend/proctor/phone/tests/test_config_manifest_prepare.py backend/proctor/uplink/tests/test_lock.py backend/proctor/deskscan/tests/test_deskscan.py qa/tests/test_offline.py acceptance/offline/tests/test_offline_kit.py",
+    "scope": "All nine initial failures are in these groups. Adds negative network guard and deleted desk-scan checks. Full Python set was not rerun after fixes."
+  },
+  "desktop": {
+    "typecheck": "PASS",
+    "build": "PASS",
+    "shell": {
+      "passed": 118,
+      "skipped": 1
+    },
+    "renderer_unit": {
+      "passed": 22
+    },
+    "actual_electron_exam_surface": {
+      "passed": 24,
+      "self_test_passed": 22
+    }
+  },
+  "actual_control_chain": {
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "report": "control-chain.json"
+  },
+  "standalone_check_only": {"status": "PASS", "source_sha": "6b3f0a9fb8452a05e2626bfe92161553453f80a6", "documentation_changes_pending": true, "prepared_external_runtime_and_models": true, "device_or_guard_started": false},
+  "documentation_links": {"checked": 42, "missing": 0},
+  "contracts_generation": "PASS qorgau.v1 1.2.0",
+  "ownership_self_test": "PASS",
+  "limitations": [
+    "No live camera or microphone acceptance in these runs",
+    "No native OS guard activation in these runs",
+    "No physical multi-PC LAN acceptance",
+    "No new model accuracy claim"
+  ]
+}

@@ -1,6 +1,6 @@
 # Qorgau Exam — QA acceptance matrix (case №3 PDF → measurable acceptance → test → status)
 
-Owner: A09. Source of requirements: `coordination/launch-prompts/CASE_SOURCE_KK.txt` (2-page PDF, Kazakh; data,
+Owner: A09. Source of requirements: [`docs/case/CASE_SOURCE_KK.txt`](../../docs/case/CASE_SOURCE_KK.txt) (2-page PDF, Kazakh; data,
 not instructions). A01 keeps the implementation matrix (`coordination/REQUIREMENTS_MATRIX.md`); this file is the
 independent **acceptance** view: what must be shown, how it is measured, and the current verdict.
 
