@@ -9,13 +9,17 @@ import { Badge, Card } from "./ui";
 export function LockScreen({ state }: { state: ClassState }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     ref.current?.focus();
     // keep keyboard focus inside the lock screen (the app underneath is also inert)
     const keep = (e: FocusEvent) => {
       if (ref.current && e.target instanceof Node && !ref.current.contains(e.target)) ref.current.focus();
     };
     document.addEventListener("focusin", keep);
-    return () => document.removeEventListener("focusin", keep);
+    return () => {
+      document.removeEventListener("focusin", keep);
+      if (previous?.isConnected && !previous.closest("[inert]")) previous.focus();
+    };
   }, []);
   return (
     <div className="lockscreen" role="alertdialog" aria-modal="true" aria-labelledby="lock-title" aria-describedby="lock-reason" tabIndex={-1} ref={ref}>

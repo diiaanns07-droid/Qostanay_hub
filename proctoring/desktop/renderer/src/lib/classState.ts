@@ -22,6 +22,8 @@ export function parseClassState(m: unknown): ClassState | null {
   if (typeof m !== "object" || m === null) return null;
   const o = m as Record<string, unknown>;
   if (o.type !== "class_state" || typeof o.connection !== "string" || !CONNECTIONS.includes(o.connection)) return null;
+  // Missing or mistyped flags must never turn a current lock/banner off.
+  if (typeof o.locked !== "boolean" || typeof o.mic_active !== "boolean" || typeof o.server !== "string") return null;
   const dir = o.audio_direction;
   return {
     connection: o.connection as ClassConnection,
