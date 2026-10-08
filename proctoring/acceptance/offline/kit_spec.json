@@ -1,0 +1,221 @@
+{
+  "schema": "adal.offline-kit-spec/1",
+  "note": "Which artifacts each Adal scenario needs offline, where they come from and under which terms. Expected sizes/hashes are NOT copied here: they are read from the committed module manifests and lockfiles listed in descriptors.",
+  "descriptors": [
+    "backend/proctor/phone/models.manifest.json",
+    "backend/proctor/attention/models.manifest.json",
+    "backend/proctor/identity/models.manifest.json",
+    "backend/proctor/audio/assets.py",
+    "requirements/runtime.txt",
+    "requirements/full.txt",
+    "uv.lock",
+    "desktop/package-lock.json",
+    "acceptance/offline/kit_spec.json"
+  ],
+  "scenarios": {
+    "teacher": {
+      "description": "PC1: acceptance/classroom/Start-Teacher.ps1 -> C1 classroom.server + class-panel in a browser on PC1. No camera, no CV models, no Electron.",
+      "python_requirements": "requirements/runtime.txt",
+      "required_files": [
+        "classroom/__init__.py",
+        "classroom/server/__main__.py",
+        "class-panel/index.html",
+        "class-audio/server/qorgau_class_audio/__init__.py",
+        "classreview/__init__.py",
+        "backend/proctor_classctl/__init__.py"
+      ]
+    },
+    "student": {
+      "description": "PC2/PC3: acceptance/classroom/Start-Student.ps1 -> Electron (desktop/dist) + python backend 'proctor serve' + C2 uplink to C1 over the LAN, LIVE camera session with CV.",
+      "python_requirements": "requirements/full.txt",
+      "required_files": [
+        "backend/proctor/__main__.py",
+        "contracts/python/proctor_contracts/v1.py",
+        "demo/exams/demo_exam.json"
+      ]
+    }
+  },
+  "models": [
+    {
+      "id": "phone",
+      "manifest": "backend/proctor/phone/models.manifest.json",
+      "manifest_kind": "single",
+      "levels": {
+        "teacher": "not-used",
+        "student": "required"
+      },
+      "why": "LIVE preflight row phone_model is required: without a verified file the backend reports UNAVAILABLE model_missing/model_invalid and refuses calibration/start with PREFLIGHT_FAILED (backend/proctor/session.py:415,432,658-700). Phone and the review-only objects book/laptop/tv come from this one file.",
+      "runtime": "<QORGAU_MODELS_DIR or proctoring\\models>\\phone\\yolo11n.onnx, loaded once at backend start (restart after copying)",
+      "prepare_online": "<python> -m proctor.phone.prepare --download --models-dir \"<D>\"",
+      "install": "<python> -m proctor.phone.prepare --from-file \"<kit>\\models\\phone\\yolo11n.onnx\" --models-dir \"<D>\" (без сети; сверяет размер+SHA-256 и загружает модель в onnxruntime)",
+      "license_status": "CONFIRMED",
+      "license_evidence": [
+        "backend/proctor/phone/models.manifest.json: license AGPL-3.0",
+        "ONNX metadata of the file with the manifest SHA-256: license 'AGPL-3.0 License (https://ultralytics.com/license)', author Ultralytics, version 8.3.237"
+      ],
+      "distribution": "BLOCKED_PENDING_DECISION",
+      "distribution_note": "AGPL-3.0; handoffs/A03/DEPENDENCIES.txt (#6): до любого распространения нужно решение команды. По умолчанию комплект этот файл не несёт: каждый ПК скачивает его на онлайн-стадии (--per-pc phone). Включать только после решения: --accept-distribution yolo11n-coco-onnx (записывается в manifest)."
+    },
+    {
+      "id": "attention",
+      "manifest": "backend/proctor/attention/models.manifest.json",
+      "manifest_kind": "single",
+      "levels": {
+        "teacher": "not-used",
+        "student": "required"
+      },
+      "why": "LIVE preflight row face_model is required (session.py:416): no face / second face (num_faces=4) / head pose / gaze and calibration need the MediaPipe FaceLandmarker.",
+      "runtime": "<QORGAU_MODELS_DIR or proctoring\\models>\\attention\\face_landmarker.task; the models dir and its attention subfolder must not be symlinks/junctions (landmarker.resolve_model)",
+      "prepare_online": "<python> -m proctor.attention.model_tool fetch --models-dir \"<D>\"",
+      "install": "скопируйте \"<kit>\\models\\attention\\face_landmarker.task\" в \"<D>\\attention\\\", затем <python> -m proctor.attention.model_tool verify --models-dir \"<D>\" (только размер+SHA-256, mediapipe не загружается)",
+      "license_status": "CONFIRMED",
+      "license_evidence": [
+        "backend/proctor/attention/models.manifest.json: Apache-2.0 per model cards",
+        "Model cards fetched 2026-10-08 state 'LICENSED UNDER Apache License, Version 2.0': Model Card MediaPipe Face Mesh V2 (sha256 c6add060f4ebfb37b2690136b6c711c7e5fcb7038baa2649ae3338b83979565a), MediaPipe BlazeFace Model Card (Short Range) (sha256 cd335c06fc0de7807cd815a0777a697932598bcdb28fa98adaaabf847485f758), Model Card Blendshape V2 (sha256 c8e9cf60a39998f4b341740623917590e050d1c97004e2de4568d84e026445ae), all under https://storage.googleapis.com/mediapipe-assets/"
+      ],
+      "distribution": "PERMITTED_WITH_NOTICE",
+      "distribution_note": "Apache-2.0: при передаче комплекта третьим лицам приложите текст Apache-2.0 и ссылку на model cards; в самом .task лицензии нет."
+    },
+    {
+      "id": "identity",
+      "manifest": "backend/proctor/identity/models.manifest.json",
+      "manifest_kind": "list",
+      "levels": {
+        "teacher": "not-used",
+        "student": "optional:identity"
+      },
+      "why": "Identity (YuNet + SFace) is on by default in LIVE, but it has no preflight row: without weights /v1/health shows identity UNAVAILABLE and no identity_mismatch incident can be raised; the exam is not blocked. Required only when identity checking is part of the demo (--feature identity).",
+      "runtime": "<QORGAU_MODELS_DIR or proctoring\\models>\\identity\\*.onnx. NOTE: proctor.identity.prepare defaults to %LOCALAPPDATA%\\QorgauExam\\models when QORGAU_MODELS_DIR is unset - set QORGAU_MODELS_DIR explicitly",
+      "prepare_online": "<python> -m proctor.identity.prepare --download --models-dir \"<D>\"",
+      "install": "скопируйте \"<kit>\\models\\identity\\*\" в \"<D>\\identity\\\", затем <python> -m proctor.identity.prepare --check --models-dir \"<D>\" (размер+SHA-256 и загрузка в OpenCV)",
+      "license_status": "CONFIRMED",
+      "license_evidence": [
+        "backend/proctor/identity/models.manifest.json: YuNet MIT, SFace Apache-2.0 with license_url",
+        "Upstream LICENSE files fetched 2026-10-08 from raw.githubusercontent.com/opencv/opencv_zoo/main/models/{face_detection_yunet,face_recognition_sface}/LICENSE: 'MIT License, Copyright (c) 2020 Shiqi Yu' and 'Apache License Version 2.0'"
+      ],
+      "distribution": "PERMITTED_WITH_NOTICE",
+      "distribution_note": "MIT/Apache-2.0: сохраняйте уведомления об авторских правах/лицензии. URL источника указывает на ветку main; целостность гарантирует только закоммиченный SHA-256."
+    },
+    {
+      "id": "audio",
+      "manifest": "backend/proctor/audio/assets.py",
+      "manifest_kind": "audio-assets",
+      "levels": {
+        "teacher": "not-used",
+        "student": "optional:audio"
+      },
+      "why": "Silero VAD is used only in LIVE after the exam starts. Without it the backend SILENTLY falls back to an energy heuristic (health DEGRADED energy_fallback) that can still open 'possible speech' incidents. Required only when voice detection is demonstrated (--feature audio).",
+      "runtime": "%LOCALAPPDATA%\\QorgauExam\\models\\audio\\silero_vad.onnx + manifest.json (backend/proctor/audio/assets.py; QORGAU_MODELS_DIR is ignored)",
+      "prepare_online": "<python> -m proctor.audio.prepare --download (каталог всегда %LOCALAPPDATA%\\QorgauExam\\models\\audio)",
+      "install": "скопируйте \"<kit>\\models\\audio\\*\" в \"%LOCALAPPDATA%\\QorgauExam\\models\\audio\\\", затем <python> -m proctor.audio.prepare --check",
+      "license_status": "CONFIRMED",
+      "license_evidence": [
+        "backend/proctor/audio/prepare.py: license MIT, LICENSE_URL pinned to revision be95df9152c0d7618fa1edfeb296fc3dae32376f",
+        "LICENSE at that revision fetched 2026-10-08: 'MIT License, Copyright (c) 2020-present Silero Team' (sha256 2e63e9a38b6e8fc0c7bc37ce174caca1862870856c6daf5697cfb785e925520b)"
+      ],
+      "distribution": "PERMITTED_WITH_NOTICE",
+      "distribution_note": "MIT: передавайте вместе с LICENSE.silero.txt (его пишет audio.prepare).",
+      "companions": [
+        {
+          "file": "audio/manifest.json",
+          "required": true,
+          "written_by": "proctor.audio.prepare --download",
+          "validate": "audio-manifest",
+          "note": "read by audio/assets.check(); without it Silero is not used"
+        },
+        {
+          "file": "audio/LICENSE.silero.txt",
+          "required": false,
+          "written_by": "proctor.audio.prepare --download",
+          "note": "MIT notice for redistribution"
+        }
+      ]
+    }
+  ],
+  "wheels": {
+    "prepare_online": "на ПК Windows x64 с Python 3.12 и интернетом: py -3.12 -m pip download --only-binary=:all: --require-hashes -r proctoring\\{requirements} -d \"<wheels>\"",
+    "install": "py -3.12 -m venv proctoring\\.venv; proctoring\\.venv\\Scripts\\python.exe -m pip install --no-index --find-links \"<kit>\\wheels\" --require-hashes -r proctoring\\{requirements}"
+  },
+  "electron": {
+    "levels": {
+      "teacher": "not-used",
+      "student": "required"
+    },
+    "prepare_online": "в proctoring\\desktop на ПК Windows x64 с интернетом: npm ci (кладёт electron-v<версия>-win32-x64.zip в %LOCALAPPDATA%\\electron\\Cache, сверяя с checksums.json закреплённого пакета electron; tarball electron остаётся в %LOCALAPPDATA%\\npm-cache)",
+    "install": "До отключения на каждом ПК студента: npm ci и npm run build в proctoring\\desktop. Офлайн-вариант: $env:npm_config_update_notifier = \"false\"; $env:electron_config_cache = \"<kit>\\electron-cache\"; npm ci --offline --no-update-notifier --cache \"<kit>\\npm-cache\" (нужен --feature npm-offline), затем npm run build. Не копируйте dist из другой версии.",
+    "license": "MIT (Electron) + Chromium third-party licenses",
+    "license_status": "CONFIRMED",
+    "license_evidence": [
+      "desktop/package-lock.json: electron license MIT",
+      "LICENSE and LICENSES.chromium.html inside the zip (checked by build)"
+    ],
+    "distribution": "PERMITTED_WITH_NOTICE",
+    "distribution_note": "Keep LICENSE and LICENSES.chromium.html (they stay inside the zip)."
+  },
+  "npm_cache": {
+    "levels": {
+      "teacher": "not-used",
+      "student": "optional:npm-offline"
+    },
+    "prepare_online": "на ПК Windows x64 с интернетом: npm ci --cache \"<npm-cache>\" в proctoring\\desktop (кэш npm сохраняет все tarball из package-lock.json для win32-x64)",
+    "install": "$env:npm_config_update_notifier = \"false\"; $env:electron_config_cache = \"<kit>\\electron-cache\"; npm ci --offline --no-update-notifier --cache \"<kit>\\npm-cache\" в proctoring\\desktop"
+  },
+  "desktop": {
+    "build_outputs": [
+      "dist/main/main.cjs",
+      "dist/preload/preload.cjs",
+      "dist/renderer/index.html"
+    ],
+    "build_input_dirs": [
+      "main/src",
+      "preload/src",
+      "renderer/src",
+      "../contracts/ts"
+    ],
+    "build_input_files": [
+      "package.json",
+      "package-lock.json",
+      "vite.config.ts",
+      "renderer/index.html",
+      "tsconfig.json",
+      "tsconfig.main.json",
+      "tsconfig.renderer.json",
+      "scripts/build-electron.mjs"
+    ],
+    "fix": "В proctoring\\desktop выполните npm run build (работает без сети, если есть node_modules; нужен Node >= 22.12). Не копируйте dist из другой версии."
+  },
+  "external_prerequisites": [
+    {
+      "name": "Python 3.12 x64 (CPython)",
+      "how": "установить официальным установщиком python.org до отключения; комплект не содержит интерпретаторов"
+    },
+    {
+      "name": "Node.js >= 22.12 (только ПК студентов, для npm ci / npm run build)",
+      "how": "установить до отключения; во время экзамена не нужен, если node_modules/electron и desktop/dist готовы"
+    },
+    {
+      "name": "Полная копия исходников того же commit",
+      "how": "git clone/fetch до отключения; комплект не содержит исходников, .venv, данных, PIN и токенов"
+    }
+  ],
+  "install_steps": [
+    "Python: py -3.12 -m venv proctoring\\.venv; proctoring\\.venv\\Scripts\\python.exe -m pip install --no-index --find-links \"<kit>\\wheels\" --require-hashes -r proctoring\\requirements\\full.txt (преподаватель: requirements\\runtime.txt)",
+    "Модели: $env:QORGAU_MODELS_DIR = \"$env:LOCALAPPDATA\\QorgauExam\\models\"; скопируйте туда <kit>\\models\\attention и identity (phone — из комплекта, только если он туда включён, иначе python -m proctor.phone.prepare на онлайн-стадии); <kit>\\models\\audio — в %LOCALAPPDATA%\\QorgauExam\\models\\audio",
+    "Electron (только офлайн-установка): $env:npm_config_update_notifier = \"false\"; $env:electron_config_cache = \"<kit>\\electron-cache\"; npm ci --offline --no-update-notifier --cache \"<kit>\\npm-cache\"; npm run build (без --offline/--no-update-notifier npm сам обращается к registry за проверкой обновлений)",
+    "Затем check-install с тем же QORGAU_MODELS_DIR в том же окне PowerShell, из которого запускается launcher"
+  ],
+  "excluded_by_design": [
+    "исходники и история git (используется копия того же commit)",
+    "каталоги .venv / node_modules (зависят от платформы и пути; восстанавливаются из колёс/кэша npm)",
+    "каталоги данных QORGAU, доказательства, клипы, SQLite, логи",
+    "PIN преподавателя, коды класса, токены backend, файлы .env",
+    "личные видео, лица и голоса участников"
+  ],
+  "distribution_note": "technical_ready означает только полноту и целостность файлов для win-x64. Это НЕ лицензионное разрешение: артефакты из conditional и license_unconfirmed требуют решения до передачи комплекта кому-либо вне демонстрационной команды.",
+  "not_verified_by_check": [
+    "камера, микрофон, освещение и калибровка (внутренний preflight приложения)",
+    "фактическая загрузка нативных библиотек MediaPipe/onnxruntime на этом ПК (proctor.phone.prepare --check и preflight приложения)",
+    "доступность PC1 по LAN, правила Windows Firewall, правильность кода класса",
+    "точность CV, защита сочетаний клавиш Windows, реальное поведение на экзамене"
+  ]
+}
