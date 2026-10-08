@@ -147,7 +147,9 @@ def create_app(
         st = core.students.get(student_id)
         if st is None or st.conn is None:
             return False
-        TypeAdapter(m.ServerToStudentMessage).validate_python({**envelope(), **message})  # never send off-contract
+        from .audio_feature import validate_server_audio
+        if not validate_server_audio(message):
+            TypeAdapter(m.ServerToStudentMessage).validate_python({**envelope(), **message})
         return st.conn.enqueue({**envelope(), **message})
 
     ctx = FeatureContext(
@@ -177,6 +179,7 @@ def create_app(
             yield
         finally:
             ticker.cancel()
+            await features.async_close()
             for st in list(core.students.values()):
                 if st.conn is not None:
                     st.conn.request_close(1001, "server_shutdown")
@@ -397,6 +400,10 @@ def create_app(
                 kind = data.get("type") if isinstance(data, dict) else None
             except ValueError:
                 data, kind = None, None
+            if st.conn is not conn or st.session_id != core.current_session_id:
+                return
+            if isinstance(data, dict) and await features.student_extension(st.student_id, data):
+                continue
             if kind not in ("hello", "status", "incident", "preview", "ack", "command_progress", "audio_signal", "pong"):
                 core.counters["unknown_types"] += 1
                 log.info("student %s: ignored message type %r", st.student_id, kind)
