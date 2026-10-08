@@ -1,0 +1,2701 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>try{if(localStorage.getItem("adal-theme")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src 'none'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Adal — интерактивная демонстрация</title>
+<meta name="description" content="Adal: наблюдение за экзаменом в компьютерном классе. Интерактивная презентация для защиты, все данные синтетические.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23131518'/%3E%3Crect x='20' y='20' width='6' height='6' rx='1' fill='%235d84ff'/%3E%3Cpath d='M6 25 12.5 7h3L22 25h-3.4l-1.4-4.2h-6.4L9.4 25zm5.7-7.1h4.6L14 10.6z' fill='%23f2f4f7'/%3E%3C/svg%3E">
+<style>
+/* =========================================================
+   Tokens
+   ========================================================= */
+:root{
+  color-scheme: light;
+  /* light (default) — near-white stage, graphite type, cobalt accent */
+  --bg:#f3f4f6; --bg-raise:#f8f9fb; --surface:#ffffff; --surface-2:#eef0f4; --surface-3:#e2e6ec;
+  --line:#e0e3e8; --line-strong:#c9cfd7;
+  --text:#121418; --text-2:#383e48; --muted:#5c6370;
+  --accent:#2d58e6; --accent-hover:#2149cc; --accent-text:#2448c9; --accent-line:#3d66ee; --accent-soft:rgba(45,88,230,.10);
+  --on-accent:#ffffff;
+  --green:#1f9d63; --green-text:#14713f; --green-soft:rgba(31,157,99,.12);
+  --orange:#e08a12; --orange-text:#924e00; --orange-soft:rgba(224,138,18,.15);
+  --red:#d93a2e; --red-text:#b0221a; --red-soft:rgba(217,58,46,.11);
+  --grey:#8a919c; --grey-text:#4c535e; --grey-soft:rgba(110,118,130,.14);
+  --focus:#1f4fe0;
+  --bar-bg:#ffffff; --progress-done:#a8b8ec; --panel-bg:#ffffff; --input-bg:#ffffff; --placeholder:#7a818c;
+  --btn-bg:#ffffff; --btn-hover:#f1f3f6;
+  --seg-bg:#eceef2; --seg-on-bg:#ffffff; --seg-on-shadow:0 1px 2px rgba(16,24,40,.14),inset 0 0 0 1px #d6dbe2;
+  --grey-card:#f0f1f3; --warn-bg:#fff4e2; --toast-bg:#ffffff;
+  --lock-overlay:rgba(246,247,249,.97); --backdrop:rgba(18,22,30,.40);
+  --stripe-a:#eef0f3; --stripe-b:#e6e9ed;
+  --shadow-sm:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.05);
+  --shadow-md:0 8px 28px rgba(16,24,40,.10),0 2px 6px rgba(16,24,40,.06);
+  /* synthetic scene — a lit classroom seen by the webcam */
+  --sc-wall:#e7eaee; --sc-wall-2:#dbe0e6; --sc-desk:#cbd2da; --sc-body:#97a2af; --sc-head:#b1bbc6; --sc-face:#c8d0d9;
+  --sc-hand:#a7b1bc; --sc-phone:#1d2127; --sc-phone-edge:#1d2127; --sc-phone-screen:#3b4c72; --sc-other:#bcc4ce; --sc-muted:#6f7884;
+  --sc-hud:rgba(255,255,255,.80); --sc-faceline:#6f7884;
+  --r-sm:8px; --r:12px; --r-lg:18px;
+  --ease:cubic-bezier(.22,.7,.2,1);
+  --t1:200ms; --t2:320ms; --t3:450ms;
+  --font:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,"Roboto","Noto Sans","Helvetica Neue",Arial,sans-serif;
+  --font-display:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,"Roboto","Noto Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code",Consolas,"SFMono-Regular","Roboto Mono","DejaVu Sans Mono",monospace;
+  --bar-h:56px;
+  --notes-w:0px;
+}
+/* dark (optional, «Тёмная тема» / T) — screen only, print always uses light */
+@media screen{
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#131518; --bg-raise:#181b1f; --surface:#1c2025; --surface-2:#23282f; --surface-3:#2b3139;
+  --line:#2c323a; --line-strong:#3a414b;
+  --text:#f2f4f7; --text-2:#c5cad2; --muted:#979eaa;
+  --accent:#3461f0; --accent-hover:#4570ff; --accent-text:#8eaaff; --accent-line:#5d84ff; --accent-soft:rgba(93,132,255,.15);
+  --green:#3dbb7e; --green-text:#6fd8a3; --green-soft:rgba(61,187,126,.14);
+  --orange:#f2a33a; --orange-text:#ffbe6b; --orange-soft:rgba(242,163,58,.15);
+  --red:#ef5a4e; --red-text:#ff8a80; --red-soft:rgba(239,90,78,.15);
+  --grey:#8a919c; --grey-text:#b6bcc5; --grey-soft:rgba(138,145,156,.16);
+  --focus:#a9bfff;
+  --bar-bg:#111316; --progress-done:#3a4e8c; --panel-bg:#181b1f; --input-bg:#181b1f; --placeholder:#7e8590;
+  --btn-bg:#23282f; --btn-hover:#2b3139;
+  --seg-bg:#1c2025; --seg-on-bg:#2b3139; --seg-on-shadow:inset 0 0 0 1px #3a414b;
+  --grey-card:#1a1c1f; --warn-bg:#2a2419; --toast-bg:#2b3139;
+  --lock-overlay:rgba(14,16,19,.96); --backdrop:rgba(6,7,9,.66);
+  --stripe-a:#1b1e22; --stripe-b:#1e2125;
+  --shadow-sm:none; --shadow-md:none;
+  --sc-wall:#1a1e23; --sc-wall-2:#20252b; --sc-desk:#262c33; --sc-body:#38404a; --sc-head:#46505c; --sc-face:#56616e;
+  --sc-hand:#525d6a; --sc-phone:#0d0f12; --sc-phone-edge:#76808d; --sc-phone-screen:#1f2a44; --sc-other:#323943; --sc-muted:#5b6470;
+  --sc-hud:rgba(10,12,14,.55); --sc-faceline:#1a1e23;
+}
+}
+
+/* =========================================================
+   Base
+   ========================================================= */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:transparent}
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:8px}
+.sr-only{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--font)}
+[hidden]{display:none!important}
+
+/* =========================================================
+   Stage & viewport
+   ========================================================= */
+.viewport{position:fixed;left:0;top:0;right:var(--notes-w);bottom:var(--bar-h);overflow:hidden;transition:right var(--t2) var(--ease)}
+.stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:50% 50%}
+.slide{position:absolute;inset:0;padding:64px 96px 44px;opacity:0;visibility:hidden;transform:translateY(14px);
+  transition:opacity var(--t2) var(--ease),transform var(--t2) var(--ease),visibility 0s linear var(--t2)}
+.slide.is-active{opacity:1;visibility:visible;transform:none;transition:opacity var(--t2) var(--ease),transform var(--t2) var(--ease),visibility 0s}
+.slide:focus{outline:none}
+/* pause everything that is not on screen */
+.slide:not(.is-active) *,.stage.is-overview .slide *{animation-play-state:paused!important}
+
+/* =========================================================
+   Typography
+   ========================================================= */
+.kicker{display:flex;gap:14px;align-items:baseline;margin:0 0 18px;font-size:17px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.kicker .num{font-family:var(--mono);letter-spacing:0;color:var(--accent-text)}
+.thesis{font-family:var(--font-display);font-size:66px;line-height:1.03;letter-spacing:-.022em;font-weight:650;margin:0;text-wrap:balance}
+.thesis.compact{font-size:52px}
+.lead{font-size:26px;line-height:1.42;color:var(--text-2);margin:24px 0 0;max-width:30ch;text-wrap:pretty}
+.lead.small{font-size:22px;max-width:40ch;margin:0}
+.caption{font-size:16px;line-height:1.45;color:var(--muted);margin:0}
+.demo-tag{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:.04em;color:var(--text-2);border:1px solid var(--line-strong);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.demo-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent-line)}
+.proto-tag{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:.04em;color:var(--accent-text);background:var(--accent-soft);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.tag-row{display:flex;flex-wrap:wrap;gap:8px}
+h3{font-size:22px;margin:0;font-weight:650;letter-spacing:-.005em}
+h4{font-size:14px;margin:0;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* =========================================================
+   Controls
+   ========================================================= */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 20px;border-radius:var(--r);border:1px solid var(--line-strong);background:var(--btn-bg);color:var(--text);font-size:18px;font-weight:600;line-height:1.15;cursor:pointer;text-align:center;
+  transition:background-color var(--t1) var(--ease),border-color var(--t1) var(--ease),color var(--t1) var(--ease),transform var(--t1) var(--ease)}
+.btn:hover{background:var(--btn-hover)}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.42;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-ghost{background:transparent}
+.btn-lg{min-height:62px;padding:0 30px;font-size:22px;border-radius:14px}
+.btn-sm{min-height:40px;padding:0 14px;font-size:16px;border-radius:10px}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.is-on{border-color:var(--accent-line);background:var(--accent-soft);color:var(--text)}
+.segmented{display:inline-flex;padding:4px;gap:4px;background:var(--seg-bg);border:1px solid var(--line);border-radius:14px}
+.segmented button{min-height:42px;padding:0 18px;border:0;border-radius:10px;background:transparent;color:var(--text-2);font-size:18px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background-color var(--t1),color var(--t1)}
+.segmented button:hover{color:var(--text);background:var(--surface-2)}
+.segmented button[aria-pressed="true"]{background:var(--seg-on-bg);color:var(--text);box-shadow:var(--seg-on-shadow)}
+.segmented .count{font-family:var(--mono);font-size:15px;color:var(--muted);margin-left:6px}
+.segmented button[aria-pressed="true"] .count{color:var(--text-2)}
+.field{display:grid;gap:8px}
+.field label,.field .label{font-size:15px;font-weight:600;color:var(--text-2)}
+.input{width:100%;min-height:48px;padding:0 14px;border-radius:var(--r);border:1px solid var(--line-strong);background:var(--input-bg);color:var(--text);font-size:18px}
+.input:focus-visible{outline:3px solid var(--focus);outline-offset:1px}
+.input::placeholder{color:var(--placeholder)}
+.control-label{display:block;font-size:15px;font-weight:600;color:var(--muted);margin:0 0 10px;letter-spacing:.02em}
+
+/* priority chips — text always accompanies colour */
+.prio{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:650;padding:4px 11px 4px 10px;border-radius:999px;white-space:nowrap;line-height:1.3}
+.prio::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.prio-red{color:var(--red-text);background:var(--red-soft)}
+.prio-yellow{color:var(--orange-text);background:var(--orange-soft)}
+.prio-green{color:var(--green-text);background:var(--green-soft)}
+.prio-grey{color:var(--grey-text);background:var(--grey-soft)}
+.prio-blue{color:var(--accent-text);background:var(--accent-soft)}
+
+/* =========================================================
+   Bottom bar
+   ========================================================= */
+.bar{position:fixed;left:0;right:0;bottom:0;height:var(--bar-h);z-index:40;display:flex;align-items:center;gap:18px;padding:0 12px 0 18px;background:var(--bar-bg);border-top:1px solid var(--line);font-size:14px}
+.bar-info{display:flex;align-items:baseline;gap:12px;min-width:0;flex:0 1 330px}
+.bar-brand{font-weight:800;letter-spacing:.14em;font-size:14px}
+.bar-count{font-family:var(--mono);color:var(--text-2);font-size:13px;white-space:nowrap}
+.bar-title{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.progress{flex:1 1 auto;display:flex;gap:4px;align-items:center;min-width:120px}
+.progress button{flex:1;height:28px;background:none;border:0;padding:0;cursor:pointer;position:relative}
+.progress button::after{content:"";position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:var(--surface-3);transition:background-color var(--t2),height var(--t2),margin var(--t2)}
+.progress button.is-done::after{background:var(--progress-done)}
+.progress button[aria-current="step"]::after{background:var(--accent-line);height:6px;margin-top:-3px}
+.progress button:hover::after{background:var(--text-2)}
+.bar-actions{display:flex;gap:2px;align-items:center}
+.bar-sep{width:1px;height:24px;background:var(--line);margin:0 6px}
+.icon-btn{height:40px;min-width:40px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--text-2);cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap}
+.icon-btn:hover{background:var(--surface-2);color:var(--text)}
+.icon-btn[aria-pressed="true"]{background:var(--surface-2);border-color:var(--line-strong);color:var(--text)}
+.icon-btn[disabled]{opacity:.35;cursor:default;background:transparent}
+.icon-btn svg{width:18px;height:18px;flex:none}
+.auto-status{font-family:var(--mono);font-size:12px;color:var(--accent-text);white-space:nowrap}
+@media (max-width:1240px){.icon-btn .lbl{display:none}.bar-info{flex-basis:230px}}
+
+/* =========================================================
+   Notes, overview, dialog
+   ========================================================= */
+.notes{position:fixed;top:0;right:0;bottom:var(--bar-h);width:420px;z-index:35;background:var(--panel-bg);border-left:1px solid var(--line);padding:26px 26px 32px;overflow:auto;transform:translateX(100%);visibility:hidden;
+  transition:transform var(--t2) var(--ease),visibility 0s linear var(--t2)}
+.notes.is-open{transform:none;visibility:visible;transition:transform var(--t2) var(--ease),visibility 0s}
+.notes-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.notes-head p{margin:4px 0 0;color:var(--muted);font-size:13px;font-family:var(--mono)}
+.notes h2{font-size:22px;margin:0;line-height:1.25}
+.notes h4{margin:22px 0 10px}
+.notes ul{margin:0;padding-left:20px;display:grid;gap:8px;font-size:16px;line-height:1.5;color:var(--text-2)}
+.notes .press li::marker{color:var(--accent-text)}
+.notes .total{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.5}
+.ov-layer{position:absolute;inset:0;z-index:5}
+.ov-head{position:absolute;left:96px;top:70px;right:96px;display:flex;justify-content:space-between;align-items:baseline}
+.ov-head h2{font-size:40px;margin:0;font-family:var(--font-display);letter-spacing:-.01em}
+.ov-head p{margin:0;color:var(--muted);font-size:18px}
+.ov-tile{position:absolute;width:256px;height:192px;padding:0;border:0;background:transparent;color:var(--text);cursor:pointer;text-align:left;border-radius:10px}
+.ov-tile::before{content:"";position:absolute;left:-6px;top:-6px;width:268px;height:156px;border-radius:12px;border:2px solid transparent;transition:border-color var(--t1)}
+.ov-tile:hover::before,.ov-tile[aria-current="true"]::before{border-color:var(--accent-line)}
+.ov-tile:focus-visible{outline:none}
+.ov-tile:focus-visible::before{border-color:var(--focus);border-width:3px}
+.ov-tile .ov-label{position:absolute;left:0;right:0;top:154px;display:flex;gap:10px;font-size:16px;line-height:1.3;color:var(--text-2)}
+.ov-tile .ov-label b{font-family:var(--mono);color:var(--accent-text);font-weight:600}
+.stage.is-overview .slide{visibility:visible;opacity:1;transform:translate(var(--ox),var(--oy)) scale(.16);transform-origin:0 0;box-shadow:0 0 0 7px var(--line-strong),0 40px 90px rgba(16,24,40,.10);border-radius:40px;background:var(--bg);overflow:hidden;
+  transition:transform var(--t3) var(--ease),opacity var(--t2),box-shadow var(--t2)}
+.stage.is-overview .slide.is-active{box-shadow:0 0 0 12px var(--accent-line)}
+
+dialog{border:1px solid var(--line-strong);border-radius:var(--r-lg);background:var(--panel-bg);box-shadow:var(--shadow-md);color:var(--text);padding:0;max-width:min(680px,calc(100vw - 32px));width:100%;max-height:calc(100vh - 48px)}
+dialog::backdrop{background:var(--backdrop)}
+.dlg-inner{padding:26px 28px 24px;overflow:auto;max-height:calc(100vh - 50px)}
+.dlg-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.dlg-head h2{font-size:22px;margin:4px 0 0;line-height:1.3}
+.dlg-body{font-size:16px;line-height:1.55;color:var(--text-2)}
+.dlg-body dl{display:grid;grid-template-columns:150px 1fr;gap:10px 16px;margin:16px 0 0}
+.dlg-body dt{color:var(--muted);font-size:14px;font-weight:600;padding-top:2px}
+.dlg-body dd{margin:0;overflow-wrap:anywhere}
+.dlg-body code{font-family:var(--mono);font-size:13.5px;color:var(--text);background:var(--surface-2);padding:2px 6px;border-radius:6px}
+.dlg-body ul{margin:0;padding-left:18px;display:grid;gap:6px}
+
+/* =========================================================
+   Shared layout helpers
+   ========================================================= */
+.split{display:grid;height:100%;gap:72px;align-items:center}
+.copy .actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:36px}
+.slide-head{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;margin-bottom:26px}
+.slide-head .kicker{margin-bottom:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-sm)}
+.stack{display:grid;gap:14px}
+
+/* =========================================================
+   01 Title
+   ========================================================= */
+.s-title{display:grid;grid-template-columns:790px 1fr;gap:24px;align-items:center;padding-top:40px}
+.eyebrow{display:flex;align-items:center;gap:14px;font-size:20px;color:var(--text-2);margin:0 0 30px}
+.eyebrow::before{content:"";width:30px;height:2px;background:var(--accent-line)}
+.wordmark{font-family:var(--font-display);font-weight:800;font-size:236px;line-height:.84;letter-spacing:-.045em;margin:0 0 0 -12px;display:flex;align-items:flex-end}
+.wordmark-dot{width:34px;height:34px;border-radius:5px;background:var(--accent-line);margin:0 0 20px 16px;flex:none}
+.tagline{font-size:44px;line-height:1.16;font-weight:500;letter-spacing:-.012em;margin:46px 0 50px}
+.tagline span{color:var(--text-2)}
+.fineprint{margin:30px 0 0;font-size:16px;color:var(--muted)}
+.room{width:100%;height:auto;display:block}
+.rm-desk{fill:var(--surface);stroke:var(--line-strong);stroke-width:1.2}
+.rm-desk-t{fill:var(--surface-2)}
+.rm-screen{fill:var(--surface-3)}
+.rm-dot{fill:var(--green);opacity:.7}
+.rm-label{fill:var(--muted);font-size:15px;font-weight:600;letter-spacing:.04em}
+.rm-hot .rm-desk{stroke:var(--orange)}
+.rm-hot .rm-dot{fill:var(--orange);opacity:1}
+.rm-ring{fill:none;stroke:var(--orange);stroke-width:2;opacity:0}
+.rm-path{fill:none;stroke:var(--accent-line);stroke-width:2;stroke-dasharray:6 6;opacity:.9}
+.rm-callout{fill:var(--orange-text);font-size:15px;font-weight:650}
+.rm-callout-bg{fill:var(--bg);stroke:var(--line-strong)}
+.s-title.is-active .rm-seat{animation:rmIn 420ms var(--ease) both;animation-delay:calc(var(--i) * 34ms + 120ms)}
+.s-title.is-active .rm-hot .rm-desk{animation:rmHotStroke 450ms var(--ease) 1.25s both}
+.s-title.is-active .rm-hot .rm-dot{animation:rmHotDot 450ms var(--ease) 1.25s both}
+.s-title.is-active .rm-ring{animation:rmRing 1.2s var(--ease) 1.4s 2 both}
+.s-title.is-active .rm-path{animation:rmPath 600ms var(--ease) 1.6s both}
+.s-title.is-active .rm-callout-g{animation:rmFade 400ms var(--ease) 2s both}
+@keyframes rmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes rmHotStroke{from{stroke:var(--line-strong)}to{stroke:var(--orange)}}
+@keyframes rmHotDot{from{fill:var(--green);opacity:.7}to{fill:var(--orange);opacity:1}}
+@keyframes rmRing{0%{opacity:.9;transform:scale(.4)}100%{opacity:0;transform:scale(2.4)}}
+@keyframes rmPath{from{opacity:0;stroke-dashoffset:60}to{opacity:.9;stroke-dashoffset:0}}
+@keyframes rmFade{from{opacity:0}to{opacity:1}}
+.rm-ring{transform-box:fill-box;transform-origin:center}
+
+/* =========================================================
+   02 Class
+   ========================================================= */
+.s-class .split{grid-template-columns:560px 1fr}
+.s-class .controls{display:grid;gap:26px;margin-top:40px}
+.seat-area{display:grid;grid-template-rows:auto 1fr auto;gap:18px;height:690px}
+.seat-meta{display:flex;justify-content:space-between;align-items:center;font-size:18px;color:var(--text-2)}
+.seat-meta b{font-weight:650;color:var(--text)}
+.seats{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:var(--gap,12px);align-content:center}
+.seats[data-n="3"]{--gap:22px;padding:0 10px}
+.seats[data-n="30"]{--gap:12px}
+.seats[data-n="100"]{--gap:7px}
+.seat{position:relative;aspect-ratio:4/3;border-radius:10px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);display:flex;align-items:flex-end;justify-content:space-between;padding:10px 12px;
+  transition:border-color var(--t2) var(--ease),background-color var(--t2) var(--ease),transform var(--t2) var(--ease)}
+.seats[data-n="100"] .seat{border-radius:6px;padding:5px;aspect-ratio:16/10}
+.seat::before{content:"";position:absolute;left:18%;right:18%;top:16%;height:34%;border-radius:4px;background:var(--surface-2)}
+.seats[data-n="3"] .seat::before{top:14%;height:46%}
+.seat-dot{width:9px;height:9px;border-radius:50%;background:var(--green);opacity:.65;flex:none;transition:background-color var(--t2),opacity var(--t2)}
+.seats[data-n="100"] .seat-dot{width:6px;height:6px}
+.seat-pc{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.seats[data-n="3"] .seat-pc{font-size:18px}
+.seat.is-hot{border-color:var(--orange);background:var(--warn-bg);transform:scale(1.04);z-index:1}
+.seat.is-hot .seat-dot{background:var(--orange);opacity:1}
+.seat.is-hot .seat-pc{color:var(--orange-text)}
+.seat.is-hot::after{content:"";position:absolute;inset:-6px;border-radius:14px;border:2px solid var(--orange);opacity:0;animation:seatRing 1.1s var(--ease) 2}
+@keyframes seatRing{0%{opacity:.85;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
+.seats.is-fresh .seat{animation:rmIn 380ms var(--ease) both;animation-delay:calc(min(var(--i),40) * 8ms)}
+.seat-callout{min-height:32px;font-size:18px;color:var(--text-2)}
+.seat-callout .prio{margin-right:10px}
+
+/* =========================================================
+   03 Panel
+   ========================================================= */
+.s-panel{display:flex;flex-direction:column}
+.app-frame{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg-raise);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.app-bar{display:flex;align-items:center;gap:20px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface)}
+.app-title{display:flex;align-items:baseline;gap:12px;font-size:17px;color:var(--text-2);white-space:nowrap}
+.app-title b{font-size:16px;letter-spacing:.14em;color:var(--text)}
+.app-bar .spacer{flex:1}
+.app-bar .segmented button{min-height:38px;font-size:16px;padding:0 14px}
+.app-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr;position:relative}
+.app-body.has-drawer{grid-template-columns:1fr 470px}
+.cards{list-style:none;margin:0;padding:18px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-content:start;overflow-x:hidden;overflow-y:auto}
+.app-body.has-drawer .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cards li{min-width:0}
+.card{width:100%;display:grid;gap:12px;text-align:left;padding:14px 16px 14px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);color:var(--text);cursor:pointer;position:relative;overflow:hidden;
+  transition:border-color var(--t1),background-color var(--t1)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--lvl,var(--grey))}
+.card:hover{background:var(--surface-2)}
+.card[aria-pressed="true"]{border-color:var(--accent-line);background:var(--surface-2)}
+.card.lvl-red{--lvl:var(--red)} .card.lvl-yellow{--lvl:var(--orange)} .card.lvl-green{--lvl:var(--green)} .card.lvl-grey{--lvl:var(--grey)}
+.card.lvl-grey{background:var(--grey-card)}
+.card.lvl-grey .card-name{color:var(--text-2)}
+.card-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card-name{font-size:20px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-pc{font-family:var(--mono);font-size:15px;color:var(--muted)}
+.card-sig{display:flex;gap:14px;font-size:14px;color:var(--muted)}
+.sig{display:inline-flex;align-items:center;gap:6px}
+.sig i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
+.sig.weak i{background:var(--orange)} .sig.off i{background:var(--grey);box-shadow:inset 0 0 0 1.5px var(--grey);background:transparent}
+.card-bot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card-ev{font-size:14px;color:var(--text-2);white-space:nowrap}
+.drawer{border-left:1px solid var(--line);background:var(--surface);overflow:auto;padding:20px 22px 24px;display:flex;flex-direction:column;gap:16px;animation:drawerIn var(--t2) var(--ease)}
+@keyframes drawerIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.drawer-head h3{font-size:26px}
+.drawer-pc{font-family:var(--mono);font-size:14px;color:var(--muted);margin:0 0 4px}
+.drawer-why{margin:0;font-size:17px;line-height:1.45;color:var(--text-2)}
+.drawer-preview{margin:0;border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative;background:var(--sc-wall)}
+.drawer-preview svg{display:block;width:100%;height:auto}
+.drawer-preview figcaption{position:absolute;right:8px;bottom:8px;font-size:12px;font-weight:600;letter-spacing:.05em;color:var(--text-2);background:var(--sc-hud);padding:3px 8px;border-radius:6px}
+.no-frame{aspect-ratio:16/9;display:grid;place-items:center;text-align:center;color:var(--grey-text);font-size:16px;padding:20px;background:repeating-linear-gradient(135deg,var(--stripe-a) 0 12px,var(--stripe-b) 12px 24px)}
+.ev-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ev-list li{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:16px;padding:10px 12px;border-radius:10px;background:var(--bg-raise);border:1px solid var(--line)}
+.ev-list .ev-time{font-family:var(--mono);color:var(--muted);font-size:14px;padding-top:2px}
+.ev-list .ev-dec{grid-column:2;font-size:14px;color:var(--muted)}
+.drawer-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:4px}
+.empty{color:var(--muted);font-size:16px;margin:0}
+
+/* =========================================================
+   04 Episode
+   ========================================================= */
+.s-episode{display:flex;flex-direction:column}
+.stepper{list-style:none;margin:0;padding:0;display:flex;gap:6px;align-items:center;counter-reset:st}
+.stepper li[data-step]{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600;color:var(--muted);padding:8px 14px 8px 10px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;transition:color var(--t2),border-color var(--t2),background-color var(--t2)}
+.stepper li[data-step]::before{counter-increment:st;content:counter(st);display:grid;place-items:center;width:26px;height:26px;border-radius:50%;font-size:14px;font-family:var(--mono);background:var(--surface-2);color:var(--text-2)}
+.stepper li.is-done{color:var(--text-2)}
+.stepper li[data-step].is-done::before{content:"✓";background:var(--accent-soft);color:var(--accent-text);font-family:var(--font)}
+.stepper li.is-current{color:var(--text);border-color:var(--accent-line);background:var(--accent-soft)}
+.stepper li[data-step].is-current::before{background:var(--accent);color:var(--on-accent)}
+.stepper .arrow{flex:none;width:22px;height:2px;background:var(--line-strong);border:0;padding:0;border-radius:2px}
+.episode-grid{flex:1;min-height:0;display:grid;grid-template-columns:290px minmax(0,1fr) 360px;gap:22px}
+.queue{display:flex;flex-direction:column;gap:12px;min-height:0}
+.queue ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.q-item{width:100%;text-align:left;display:grid;gap:6px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);color:var(--text);cursor:pointer;transition:border-color var(--t1),background-color var(--t1)}
+.q-item:hover{background:var(--surface-2)}
+.q-item[aria-current="true"]{border-color:var(--accent-line);background:var(--surface-2)}
+.q-item .prio{justify-self:start;font-size:14px}
+.q-who{font-size:16px;color:var(--text)}
+.q-meta{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted)}
+.q-dec.is-made{color:var(--accent-text)}
+.counters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+.counter{padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.counter b{display:block;font-size:28px;font-weight:650;font-family:var(--font-display);line-height:1.1}
+.counter span{font-size:13px;color:var(--muted)}
+.player{display:flex;flex-direction:column;gap:12px;min-width:0}
+.scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--sc-wall)}
+.scene-wrap svg{display:block;width:100%;height:auto}
+.scene-obs{position:absolute;left:14px;bottom:14px;display:flex;gap:8px;align-items:center}
+.timeline{display:grid;gap:10px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.tl-row{display:flex;align-items:center;gap:10px}
+.tl-row .tl-time{margin-left:auto;font-family:var(--mono);font-size:16px;color:var(--text-2);white-space:nowrap}
+.tl-track{position:relative;height:34px}
+.tl-window{position:absolute;top:9px;height:16px;border-radius:4px;background:var(--accent-soft);border:1px dashed var(--accent-line);pointer-events:none}
+.tl-marker{position:absolute;top:0;bottom:0;width:2px;background:var(--accent-line);pointer-events:none}
+.tl-marker::after{content:"событие";position:absolute;top:-2px;left:6px;font-size:12px;font-weight:650;color:var(--accent-text);letter-spacing:.03em}
+.range{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;position:relative;margin:0;cursor:pointer}
+.range::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--surface-3)}
+.range::-moz-range-track{height:6px;border-radius:3px;background:var(--surface-3)}
+.range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--text);border:3px solid var(--bg);margin-top:-8px;box-shadow:0 0 0 1px var(--line-strong)}
+.range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--text);border:3px solid var(--bg)}
+.range:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.tl-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.decision{display:flex;flex-direction:column;gap:16px;padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);min-height:0}
+.decision .ep-meta{font-size:16px;color:var(--muted);margin:6px 0 0}
+.decision .ep-what{margin:0;font-size:18px;line-height:1.45;color:var(--text-2)}
+.decision .ep-note{margin:0;font-size:15px;line-height:1.45;color:var(--muted);padding-left:12px;border-left:2px solid var(--line-strong)}
+.dec-buttons{display:grid;gap:8px}
+.dec-buttons .btn{justify-content:flex-start}
+.dec-buttons .btn[aria-pressed="true"]{border-color:var(--accent-line);background:var(--accent-soft)}
+.dec-status{min-height:48px;margin:0;font-size:16px;line-height:1.45;color:var(--text)}
+.dec-status b{color:var(--accent-text)}
+.decision .reset-row{margin-top:auto}
+
+/* scene */
+.sc-wall{fill:var(--sc-wall)} .sc-wall2{fill:var(--sc-wall-2)} .sc-desk{fill:var(--sc-desk)} .sc-body{fill:var(--sc-body)}
+.sc-head{fill:var(--sc-head)} .sc-face{fill:var(--sc-face)} .sc-hand{fill:var(--sc-hand)} .sc-other{fill:var(--sc-other)}
+.sc-phone{fill:var(--sc-phone);stroke:var(--sc-phone-edge);stroke-width:2}
+.sc-phone-screen{fill:var(--sc-phone-screen)}
+.sc-faceline{stroke:var(--sc-faceline);stroke-width:3;stroke-linecap:round;fill:none;opacity:.55}
+.sc-box{fill:none;stroke:var(--accent-line);stroke-width:2.5}
+.sc-box-soft{fill:none;stroke:var(--sc-muted);stroke-width:1.5;stroke-dasharray:5 5}
+.sc-tagbg{fill:var(--accent)}
+.sc-tagtx{fill:var(--on-accent);font-size:13px;font-weight:650}
+.sc-softtx{fill:var(--sc-muted);font-size:12px;font-weight:600}
+.sc-clock{fill:var(--text-2);font-size:14px;font-family:var(--mono)}
+.sc-synth{fill:var(--muted);font-size:11px;font-weight:700;letter-spacing:.14em}
+.sc-hud{fill:var(--sc-hud)}
+
+/* =========================================================
+   05 CV
+   ========================================================= */
+.s-cv .split{grid-template-columns:560px 1fr;gap:64px}
+.pipeline{list-style:none;margin:30px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center}
+.pipeline li{font-size:16px;font-weight:600;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--text-2)}
+.pipeline li.is-obs{border-color:var(--accent-line);color:var(--text);background:var(--accent-soft)}
+.pipeline li.is-human{border-color:var(--line-strong);color:var(--text);background:var(--surface-3)}
+.pipeline .sep{padding:0;border:0;background:none;color:var(--muted)}
+.cv-explain{margin:26px 0 0;font-size:20px;line-height:1.45;color:var(--text-2);min-height:88px;max-width:32ch}
+.cv-visual{display:grid;gap:16px;align-content:center}
+.cv-stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--sc-wall);aspect-ratio:16/9}
+.cv-stage > svg{display:block;width:100%;height:100%}
+.cv-controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.obs-line{display:flex;align-items:center;gap:12px;font-size:18px;color:var(--text-2);min-height:36px}
+.head-wrap{position:relative;display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:stretch}
+.head-view{position:relative;border-radius:18px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm);touch-action:none;cursor:grab;aspect-ratio:1/1;max-height:470px}
+.head-view:active{cursor:grabbing}
+.head-view svg{display:block;width:100%;height:100%}
+.head-view .hint{position:absolute;left:14px;top:12px;font-size:13px;color:var(--muted)}
+.hd-back{fill:none;stroke:var(--muted);stroke-width:1.1;opacity:.28}
+.hd-front{fill:none;stroke:var(--text-2);stroke-width:1.4;opacity:.9}
+.hd-nose{fill:none;stroke:var(--text);stroke-width:2.4;stroke-linejoin:round}
+.hd-ax{stroke-width:2.5;stroke-linecap:round}
+.hd-ax-x,.hd-ax-y{stroke:var(--text-2)} .hd-ax-y{stroke-dasharray:6 5}
+.hd-ax-z{stroke:var(--accent-line)}
+.hd-axl{font-size:16px;font-weight:700;fill:var(--text-2)}
+.hd-axl-z{fill:var(--accent-text)}
+.hd-cam{fill:var(--surface-3)} .hd-camtx{fill:var(--muted);font-size:12px;font-weight:600;letter-spacing:.08em}
+.pose-panel{display:grid;gap:14px;align-content:start;padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.pose-row{display:grid;gap:6px}
+.pose-row label{display:flex;justify-content:space-between;font-size:15px;color:var(--text-2);font-weight:600}
+.pose-row output{font-family:var(--mono);color:var(--text)}
+.range.small{height:28px}
+.pose-note{font-size:14px;line-height:1.45;color:var(--muted);margin:0}
+
+/* =========================================================
+   06 Rules
+   ========================================================= */
+.s-rules .split{grid-template-columns:500px 1fr;gap:60px}
+.rules-form{display:grid;gap:20px;padding:24px;margin-top:34px}
+.rules-form .hint{font-size:15px;color:var(--muted);margin:0;line-height:1.45}
+.rule-state{font-size:16px;line-height:1.45;color:var(--text-2);margin:0;padding:12px 14px;border-radius:12px;background:var(--bg-raise);border:1px solid var(--line)}
+.browser{border-radius:18px;overflow:hidden;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;height:560px}
+.browser-bar{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.browser-dots{display:flex;gap:6px}
+.browser-dots i{width:11px;height:11px;border-radius:50%;background:var(--surface-3);display:block}
+.browser-bar form{flex:1;display:flex;gap:8px}
+.browser-bar .input{min-height:42px;font-family:var(--mono);font-size:16px}
+.quick{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:center}
+.quick .caption{margin-right:4px}
+.chip-btn{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line-strong);background:transparent;color:var(--text-2);font-family:var(--mono);font-size:14px;cursor:pointer}
+.chip-btn:hover{color:var(--text);background:var(--surface-2)}
+.page{flex:1;min-height:0;padding:26px 36px;overflow:auto}
+.page h3{font-size:28px;margin-bottom:10px}
+.page p{font-size:18px;line-height:1.5;color:var(--text-2);margin:0 0 14px;max-width:46ch}
+.page-blocked{display:grid;align-content:center;justify-items:start;gap:14px;height:100%}
+.page-blocked .big{font-size:30px;font-weight:650;letter-spacing:-.01em}
+.page-idle{display:grid;place-items:center;height:100%;color:var(--muted);font-size:18px;text-align:center}
+.quiz{display:grid;gap:8px;margin-top:14px;max-width:520px}
+.quiz label{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:18px;cursor:pointer}
+.quiz input{accent-color:var(--accent);width:18px;height:18px}
+.desktop{position:relative;flex:1;min-height:0;padding:28px;display:grid;grid-template-rows:1fr auto;gap:18px;background:var(--bg-raise)}
+.desk-window{border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);padding:24px 26px;align-self:start;max-width:620px}
+.desk-window h3{margin-bottom:8px}
+.desk-window p{margin:0;font-size:17px;line-height:1.5;color:var(--text-2)}
+.taskbar{display:flex;gap:10px;flex-wrap:wrap;padding:10px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.app-tile{display:grid;gap:6px;justify-items:center;min-width:120px;padding:10px 12px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--text-2);cursor:pointer;font-size:14px;font-weight:600}
+.app-tile:hover{background:var(--surface-3);color:var(--text)}
+.app-tile i{width:34px;height:34px;border-radius:9px;background:var(--surface-3);display:block;box-shadow:inset 0 0 0 1px var(--line-strong)}
+.app-tile.is-allowed i{background:var(--accent);box-shadow:none}
+
+/* =========================================================
+   07 Teacher ↔ student
+   ========================================================= */
+.s-control{display:flex;flex-direction:column}
+.control-grid{flex:1;min-height:0;display:grid;grid-template-columns:600px 1fr;gap:26px}
+.s-control .slide-head .tag-row{flex-wrap:nowrap;flex:none}
+.side-label{font-size:14px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
+.teacher{display:flex;flex-direction:column;gap:12px;padding:20px 22px;min-height:0;overflow:auto}
+.reasons .opts{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-bottom:6px}
+.who{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.who .side-label{margin:0}
+.who b{font-size:22px}
+.who #s7-pc{font-family:var(--mono);color:var(--muted);font-size:16px}
+.ctl-block{display:grid;gap:10px}
+.ctl-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.live-ind{display:inline-flex;align-items:center;gap:10px;font-size:15px;color:var(--text-2);min-height:28px}
+.bars{display:inline-flex;gap:3px;align-items:flex-end;height:20px}
+.bars i{width:4px;border-radius:2px;background:var(--accent-line);height:6px}
+.bars.is-on i{animation:bar 900ms ease-in-out infinite}
+.bars.is-on i:nth-child(2){animation-delay:-200ms}.bars.is-on i:nth-child(3){animation-delay:-450ms}.bars.is-on i:nth-child(4){animation-delay:-650ms}.bars.is-on i:nth-child(5){animation-delay:-100ms}
+@keyframes bar{0%,100%{height:5px}50%{height:19px}}
+.reasons{display:grid;gap:6px;border:0;padding:0;margin:0}
+.reasons legend{font-size:15px;font-weight:600;color:var(--text-2);margin-bottom:8px;padding:0}
+.reasons label{display:flex;gap:10px;align-items:center;font-size:16px;padding:5px 10px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.reasons label:hover{background:var(--surface-2)}
+.reasons input[type=radio]{accent-color:var(--accent);width:17px;height:17px;flex:none}
+.reasons .input{min-height:42px;font-size:16px}
+.student{position:relative;border-radius:18px;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column}
+.st-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:14px;color:var(--text-2)}
+.st-bar b{letter-spacing:.14em;color:var(--text)}
+.st-body{flex:1;padding:30px 34px;position:relative}
+.st-body h3{font-size:26px;margin-bottom:12px}
+.st-body p{font-size:18px;line-height:1.5;color:var(--text-2);margin:0 0 18px;max-width:44ch}
+.mic-banner{display:flex;gap:12px;align-items:center;padding:14px 18px;background:var(--warn-bg);border-bottom:1px solid var(--orange);color:var(--text);font-size:17px;animation:slideDown var(--t2) var(--ease)}
+.mic-banner .mic-dot{width:12px;height:12px;border-radius:50%;background:var(--orange);flex:none;box-shadow:0 0 0 4px var(--orange-soft)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.st-toast{position:absolute;right:20px;bottom:20px;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--toast-bg);box-shadow:var(--shadow-md);border:1px solid var(--line-strong);font-size:16px;line-height:1.45;animation:slideDown var(--t2) var(--ease)}
+.st-toast b{display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.lock{position:absolute;inset:0;background:var(--lock-overlay);display:grid;place-items:center;text-align:center;padding:30px;animation:fadeIn var(--t2) var(--ease)}
+.lock-card{max-width:440px;display:grid;gap:14px;justify-items:center}
+.lock-card .lock-ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--surface-3)}
+.lock-card h3{font-size:26px;line-height:1.25}
+.lock-card p{margin:0;font-size:18px;line-height:1.5;color:var(--text-2)}
+.lock-card .reason{padding:12px 16px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line-strong);color:var(--text);font-size:18px;overflow-wrap:anywhere}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* =========================================================
+   08 Network
+   ========================================================= */
+.s-net .split{grid-template-columns:470px 1fr;gap:48px}
+.net-controls{display:grid;gap:22px;margin-top:34px}
+.legend{display:grid;gap:10px;margin:0;padding:0;list-style:none;font-size:16px;color:var(--text-2);line-height:1.4}
+.legend li{display:flex;gap:12px;align-items:flex-start}
+.legend i{flex:none;margin-top:5px}
+.lg-small{width:10px;height:10px;border-radius:50%;background:var(--accent-line)}
+.lg-big{width:22px;height:10px;border-radius:5px;background:var(--text)}
+.lg-req{width:10px;height:10px;border-radius:50%;border:2px solid var(--text-2)}
+.net-visual{display:grid;gap:14px}
+.net-svg{width:100%;height:auto;display:block;border-radius:18px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm)}
+.nd-box{fill:var(--surface);stroke:var(--line-strong);stroke-width:1.5}
+.nd-box-t{fill:var(--surface-2)}
+.nd-chip{fill:var(--accent-soft);stroke:var(--accent-line);stroke-width:1}
+.nd-chiptx{fill:var(--accent-text);font-size:13px;font-weight:650}
+.nd-title{fill:var(--text);font-size:17px;font-weight:650}
+.nd-sub{fill:var(--muted);font-size:13px}
+.nd-link{fill:none;stroke:var(--line-strong);stroke-width:3;transition:stroke var(--t2),opacity var(--t2)}
+.is-wifi .nd-link-s{stroke-dasharray:3 7;stroke-linecap:round}
+.nd-link.is-down{stroke:var(--grey);opacity:.45;stroke-dasharray:4 8}
+.nd-break{stroke:var(--grey-text);stroke-width:3;stroke-linecap:round}
+.nd-wave{fill:none;stroke:var(--accent-line);stroke-width:2.2;stroke-linecap:round;opacity:0;transition:opacity var(--t2)}
+.is-wifi .nd-wave{opacity:.9}
+.nd-port{fill:var(--line-strong);transition:opacity var(--t2)}
+.is-wifi .nd-port{opacity:0}
+.nd-pc .nd-box{transition:fill var(--t2),stroke var(--t2)}
+.nd-pc.is-down .nd-box{fill:var(--grey-card);stroke:var(--grey)}
+.nd-pc.is-down .nd-title{fill:var(--grey-text)}
+.nd-dot{transition:fill var(--t2)}
+.pk{fill:var(--accent-line)}
+.pk-big{fill:var(--text)}
+.pk-req{fill:none;stroke:var(--text-2);stroke-width:2}
+.mini-cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.mini{padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);display:grid;gap:6px;min-width:0;position:relative;overflow:hidden}
+.mini::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--lvl,var(--green))}
+.mini.lvl-grey{--lvl:var(--grey);background:var(--grey-card)}
+.mini.lvl-blue{--lvl:var(--accent-line)}
+.mini b{font-family:var(--mono);font-size:15px}
+.mini span{font-size:13px;color:var(--muted);line-height:1.35}
+.mini.lvl-grey span{color:var(--grey-text)}
+
+/* =========================================================
+   09 Evidence
+   ========================================================= */
+.s-evidence{display:flex;flex-direction:column}
+.snap{font-size:15px;color:var(--muted);text-align:right;line-height:1.5;margin:0}
+.s9-right{display:flex;align-items:center;gap:22px}
+.plaque{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:14px;border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--text);cursor:pointer;text-align:left}
+.plaque b{font-family:var(--font-display);font-size:34px;line-height:1;color:var(--accent-text)}
+.plaque span{font-size:15px;font-weight:600;line-height:1.25}
+.plaque small{font-size:12px;font-weight:650;color:var(--accent-text)}
+@media (max-width:820px){.s9-right{flex-direction:column;align-items:flex-start}}
+.snap code{font-family:var(--mono);color:var(--text-2)}
+.matrix{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.02fr) minmax(0,1.25fr) minmax(0,.95fr);gap:14px}
+.mx-col{display:flex;flex-direction:column;gap:10px;min-height:0;padding:16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.mx-col h3{font-size:18px;display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.mx-col h3 i{width:10px;height:10px;border-radius:3px;flex:none}
+.mx-col[data-col="build"] h3 i{background:var(--text)}
+.mx-col[data-col="test"] h3 i{background:var(--accent-line)}
+.mx-col[data-col="int"] h3 i{background:transparent;box-shadow:inset 0 0 0 2px var(--accent-line)}
+.mx-col[data-col="pilot"] h3 i{background:transparent;box-shadow:inset 0 0 0 2px var(--muted)}
+.mx-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;overflow:auto;align-content:start}
+.mx-item{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:12px;background:var(--bg-raise);border:1px solid var(--line);cursor:pointer;color:var(--text);transition:border-color var(--t1),background-color var(--t1)}
+.mx-item:hover{border-color:var(--accent-line);background:var(--surface-2)}
+.mx-item b{display:block;font-size:16px;font-weight:650;line-height:1.3;margin-bottom:4px}
+.mx-cond{display:block;font-size:13.5px;line-height:1.4;color:var(--muted)}
+.mx-link{float:right;margin:0 0 4px 10px;font-size:12.5px;font-weight:650;color:var(--accent-text);padding:2px 9px;border:1px solid var(--line-strong);border-radius:999px;line-height:1.4}
+.mx-foot{margin-top:14px;font-size:15px;color:var(--muted)}
+
+/* =========================================================
+   10 Finale
+   ========================================================= */
+.s-final{display:grid;grid-template-rows:1fr auto;align-items:center}
+.final-main{display:grid;grid-template-columns:1fr 520px;gap:80px;align-items:center}
+.s-final .wordmark{font-size:200px}
+.s-final .tagline{margin:36px 0 0;font-size:46px}
+.pillars{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.pillars li{display:grid;grid-template-columns:52px 1fr;gap:18px;align-items:center;padding:20px 22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.pillars svg{width:52px;height:52px}
+.pillars b{display:block;font-size:24px;font-weight:650;margin-bottom:4px}
+.pillars span{font-size:17px;color:var(--text-2);line-height:1.4}
+.pl-stroke{fill:none;stroke:var(--accent-line);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.pl-soft{fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.final-actions{display:flex;gap:14px;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--line)}
+.final-actions .caption{max-width:62ch}
+.s-final.is-active .final-main > *{animation:rmIn 450ms var(--ease) both}
+.s-final.is-active .pillars li:nth-child(1){animation:rmIn 420ms var(--ease) 150ms both}
+.s-final.is-active .pillars li:nth-child(2){animation:rmIn 420ms var(--ease) 250ms both}
+.s-final.is-active .pillars li:nth-child(3){animation:rmIn 420ms var(--ease) 350ms both}
+
+/* print-only notes */
+.print-notes{display:none}
+
+/* =========================================================
+   Reduced motion
+   ========================================================= */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-delay:0ms!important;animation-iteration-count:1!important;transition-duration:1ms!important;transition-delay:0ms!important}
+  .bars.is-on i{height:12px}
+}
+
+/* =========================================================
+   Mobile (single column, natural scroll)
+   ========================================================= */
+@media (max-width:820px){
+  body{overflow:auto}
+  :root{--bar-h:60px}
+  .viewport{position:static;overflow:visible;padding-bottom:calc(var(--bar-h) + 12px);right:auto}
+  .stage{position:static;width:auto;height:auto;transform:none}
+  .slide{position:relative;inset:auto;display:none;padding:28px 16px 32px;transform:none;opacity:1;visibility:visible;transition:none}
+  .slide.is-active{display:block}
+  .slide:not(.is-active),.stage.is-overview .slide{display:none!important}
+  .thesis{font-size:36px}.thesis.compact{font-size:32px}
+  .lead{font-size:18px;margin-top:16px}.lead.small{font-size:17px}
+  .kicker{font-size:13px;margin-bottom:12px}
+  .split{display:flex;flex-direction:column;align-items:stretch;gap:28px;height:auto}
+  .slide-head{flex-direction:column;align-items:flex-start;gap:14px;margin-bottom:18px}
+  .btn{font-size:16px;min-height:46px}
+  .btn-lg{font-size:18px;min-height:54px}
+  .segmented{max-width:100%;overflow-x:auto}
+  .segmented button{font-size:15px;padding:0 12px;min-height:40px}
+  /* bar */
+  .bar{gap:8px;padding:0 6px 0 10px}
+  .bar-info{flex:0 0 auto}
+  .bar-title,.bar-brand{display:none}
+  .progress{display:none}
+  .bar-actions{margin-left:auto;gap:0}
+  .bar-sep{display:none}
+  .icon-btn{min-width:38px;padding:0 8px}
+  .icon-btn.hide-m{display:none}
+  .notes{width:100%}
+  /* 01 */
+  .s-title{display:flex;flex-direction:column;padding-top:20px;gap:20px}
+  .wordmark{font-size:104px;margin-left:-4px}
+  .wordmark-dot{width:16px;height:16px;margin:0 0 10px 8px}
+  .tagline{font-size:26px;margin:24px 0 28px}
+  .eyebrow{font-size:15px;margin-bottom:18px}
+  /* 02 */
+  .seat-area{height:auto}
+  .seats[data-n="100"]{--gap:4px}
+  .seats[data-n="100"] .seat{padding:2px;border-radius:4px}
+  .seats[data-n="100"] .seat::before{display:none}
+  .seats[data-n="30"] .seat-pc{font-size:10px}
+  .seats[data-n="30"]{--gap:6px}
+  .seats[data-n="30"] .seat{padding:4px 5px}
+  /* 03 */
+  .app-bar{flex-wrap:wrap;gap:10px}
+  .app-title{white-space:normal}
+  .app-body,.app-body.has-drawer{display:flex;flex-direction:column}
+  .cards,.app-body.has-drawer .cards{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px;gap:8px;overflow:visible}
+  .card{padding:10px 10px 10px 14px;gap:8px}
+  .card-name{font-size:16px}
+  .card-sig{flex-wrap:wrap;gap:6px 10px;font-size:12px}
+  .card-bot{flex-wrap:wrap}
+  .card-top{flex-wrap:wrap;gap:2px 8px}
+  .card .prio{font-size:12px;padding:3px 8px}
+  .card-ev{white-space:normal;font-size:12px}
+  .drawer{border-left:0;border-top:1px solid var(--line);order:-1}
+  /* 04 */
+  .stepper{flex-wrap:wrap}.stepper li{font-size:15px}.stepper .arrow{display:none}
+  .episode-grid{display:flex;flex-direction:column}
+  .episode-grid .player{order:1}.episode-grid .decision{order:2}.episode-grid .queue{order:3}
+  .app-bar .segmented button{padding:0 9px;font-size:14px}
+  .s-control .slide-head .tag-row{flex-wrap:wrap}
+  .counters{grid-template-columns:repeat(4,1fr)}
+  .counter b{font-size:20px}.counter span{font-size:11px}
+  /* 05 */
+  .cv-explain{font-size:17px;min-height:0}
+  .head-wrap{grid-template-columns:1fr}
+  .pipeline li{font-size:14px}
+  /* 06 */
+  .rules-form{margin-top:20px;padding:18px}
+  .browser{height:auto;min-height:420px}
+  .browser-bar form{flex-wrap:wrap}
+  .page{padding:20px}
+  .page h3{font-size:22px}.page p{font-size:16px}
+  .page-blocked .big{font-size:22px}
+  .desktop{padding:14px}
+  .app-tile{min-width:0;flex:1 1 40%}
+  /* 07 */
+  .control-grid{display:flex;flex-direction:column}
+  .st-body{padding:20px;min-height:340px}
+  .lock-card h3{font-size:21px}
+  /* 08 */
+  .mini-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* 09 */
+  .matrix{display:flex;flex-direction:column}
+  .snap{text-align:left}
+  /* 10 */
+  .final-main{grid-template-columns:1fr;gap:28px}
+  .s-final .wordmark{font-size:96px}
+  .s-final .tagline{font-size:26px}
+  .pillars b{font-size:19px}.pillars span{font-size:15px}
+  .final-actions{flex-direction:column;align-items:stretch}
+  .ov-layer{position:fixed;inset:0 0 var(--bar-h) 0;background:var(--bg);overflow:auto;padding:20px 16px;display:grid;gap:8px;align-content:start;z-index:30}
+  .ov-head{position:static;flex-direction:column;gap:6px;margin-bottom:8px}
+  .ov-head h2{font-size:28px}
+  .ov-tile{position:static;width:auto;height:auto;padding:14px;border:1px solid var(--line);background:var(--surface);transform:none!important}
+  .ov-tile::before{display:none}
+  .ov-tile .ov-label{position:static}
+  .ov-tile[aria-current="true"]{border-color:var(--accent-line)}
+}
+
+/* =========================================================
+   Print — every screen on its own landscape page, light ink
+   ========================================================= */
+@media print{
+  @page{size:A4 landscape;margin:7mm}
+  :root{--bg:#ffffff;--shadow-sm:none;--shadow-md:none}
+  html,body{height:auto;overflow:visible;background:#fff}
+  .bar,.notes,.ov-layer,dialog,.no-print{display:none!important}
+  .viewport{position:static;overflow:visible}
+  .stage{position:static;transform:none;width:1600px;height:auto;zoom:.6}
+  .slide{position:relative;inset:auto;opacity:1!important;visibility:visible!important;transform:none!important;height:900px;margin-bottom:250px;break-after:page;page-break-after:always;border:1px solid var(--line);border-radius:0}
+  #slide-10{break-after:auto;page-break-after:auto}
+  .slide *{animation:none!important;transition:none!important}
+  .print-notes{display:block;position:absolute;left:0;right:0;top:calc(100% + 18px);font-size:22px;line-height:1.45;color:#2e333b;padding:0 96px}
+  .print-notes b{font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:#545b66;display:block;margin-bottom:6px}
+}
+</style>
+</head>
+<body>
+<a class="sr-only" href="#slide-1" id="skip">К первому экрану</a>
+<div class="viewport" id="viewport">
+<main class="stage" id="stage" aria-label="Презентация Adal">
+
+<!-- ============ 01 ADAL ============ -->
+<section class="slide s-title" id="slide-1" data-title="ADAL" tabindex="-1" aria-labelledby="t1">
+  <div class="title-copy">
+    <p class="eyebrow">Наблюдение за экзаменом в компьютерном классе</p>
+    <h1 class="wordmark" id="t1">ADAL<span class="wordmark-dot" aria-hidden="true"></span></h1>
+    <p class="tagline">Экзамен виден.<br><span>Решение за преподавателем.</span></p>
+    <button class="btn btn-primary btn-lg" type="button" data-action="next">Увидеть экзамен
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <p class="fineprint">Интерактивная демонстрация · все данные синтетические</p>
+  </div>
+  <svg class="room" id="room" viewBox="0 0 720 600" role="img" aria-label="Схема аудитории: двадцать рабочих мест, одно место отмечено как требующее проверки"></svg>
+</section>
+
+<!-- ============ 02 CLASS ============ -->
+<section class="slide s-class" id="slide-2" data-title="Один преподаватель. Целый класс." tabindex="-1" aria-labelledby="t2">
+  <div class="split">
+    <div class="copy">
+      <p class="kicker"><span class="num">02</span>Задача внимания</p>
+      <h2 class="thesis" id="t2">Один преподаватель.<br>Целый класс.</h2>
+      <p class="lead">Невозможно одновременно смотреть на каждое место. Adal выделяет то, что стоит проверить,&nbsp;— остальные остаются спокойными.</p>
+      <div class="controls">
+        <div>
+          <span class="control-label" id="s2-size-l">Рабочих мест в модели</span>
+          <div class="segmented" role="group" aria-labelledby="s2-size-l">
+            <button type="button" data-action="s2-size" data-arg="3">3</button>
+            <button type="button" data-action="s2-size" data-arg="30">30</button>
+            <button type="button" data-action="s2-size" data-arg="100">100</button>
+          </div>
+        </div>
+        <div><button class="btn btn-primary" type="button" data-action="s2-event" id="s2-event">Появилось событие</button></div>
+        <p class="caption">Модель аудитории, не результат нагрузочного теста.</p>
+      </div>
+    </div>
+    <div class="seat-area">
+      <div class="seat-meta"><span id="s2-meta"></span><span class="demo-tag">Интерактивная демонстрация</span></div>
+      <div class="seats" id="s2-seats" aria-hidden="true"></div>
+      <p class="seat-callout" id="s2-callout" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 PANEL ============ -->
+<section class="slide s-panel" id="slide-3" data-title="Что видит преподаватель" tabindex="-1" aria-labelledby="t3">
+  <header class="slide-head">
+    <div>
+      <p class="kicker"><span class="num">03</span>Панель преподавателя</p>
+      <h2 class="thesis compact" id="t3">Что видит преподаватель</h2>
+    </div>
+    <p class="lead small">Сначала — места, которые стоит проверить. Подробности и действия — в контексте выбранного студента.</p>
+  </header>
+  <div class="app-frame">
+    <div class="app-bar">
+      <div class="app-title"><b>ADAL</b><span>Аудитория 204 · идёт экзамен</span></div>
+      <div class="segmented" role="group" aria-label="Фильтр карточек">
+        <button type="button" data-action="s3-filter" data-arg="all">Все<span class="count" id="s3-c-all"></span></button>
+        <button type="button" data-action="s3-filter" data-arg="check">Проверить<span class="count" id="s3-c-check"></span></button>
+        <button type="button" data-action="s3-filter" data-arg="offline">Нет связи<span class="count" id="s3-c-offline"></span></button>
+      </div>
+      <div class="segmented" role="group" aria-label="Порядок карточек">
+        <button type="button" data-action="s3-sort" data-arg="priority">По приоритету</button>
+        <button type="button" data-action="s3-sort" data-arg="pc">По номеру ПК</button>
+      </div>
+      <span class="spacer"></span>
+      <span class="demo-tag">Интерактивная демонстрация</span>
+    </div>
+    <div class="app-body" id="s3-body">
+      <ul class="cards" id="s3-cards" aria-label="Рабочие места"></ul>
+      <aside class="drawer" id="s3-drawer" aria-label="Выбранный студент" hidden></aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 EPISODE ============ -->
+<section class="slide s-episode" id="slide-4" data-title="От сигнала к решению" tabindex="-1" aria-labelledby="t4">
+  <header class="slide-head">
+    <div>
+      <p class="kicker"><span class="num">04</span>Эпизод</p>
+      <h2 class="thesis compact" id="t4">От сигнала к решению</h2>
+    </div>
+    <ol class="stepper" id="s4-steps" aria-label="Этапы работы с эпизодом">
+      <li data-step="event">Событие</li><li class="arrow" aria-hidden="true"></li>
+      <li data-step="context">Контекст</li><li class="arrow" aria-hidden="true"></li>
+      <li data-step="decision">Решение преподавателя</li>
+    </ol>
+  </header>
+  <div class="episode-grid">
+    <div class="queue">
+      <h4>Очередь эпизодов</h4>
+      <ul id="s4-queue"></ul>
+      <div class="counters" id="s4-counters" aria-live="polite"></div>
+    </div>
+    <div class="player">
+      <div class="scene-wrap">
+        <svg id="s4-scene" viewBox="0 0 640 360" role="img" aria-label="Синтетическая сцена эпизода"></svg>
+        <div class="scene-obs" id="s4-obs"></div>
+      </div>
+      <div class="timeline">
+        <div class="tl-row">
+          <button class="btn btn-sm" type="button" data-action="s4-play" id="s4-play" aria-label="Воспроизвести">
+            <svg viewBox="0 0 20 20" aria-hidden="true" id="s4-play-ico"><path d="M6 4.5v11l9-5.5z" fill="currentColor"/></svg><span id="s4-play-l">Смотреть</span></button>
+          <button class="btn btn-sm btn-ghost" type="button" data-action="s4-step" data-arg="-1" aria-label="Назад на одну секунду">−1 с</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-action="s4-step" data-arg="1" aria-label="Вперёд на одну секунду">+1 с</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-action="s4-jump">К событию</button>
+          <span class="tl-time" id="s4-time" aria-live="off"></span>
+        </div>
+        <div class="tl-track">
+          <span class="tl-window" id="s4-window"></span>
+          <span class="tl-marker" id="s4-marker"></span>
+          <input class="range" id="s4-range" type="range" min="0" max="12" step="0.1" value="3" aria-label="Позиция на временной шкале, секунды">
+        </div>
+        <div class="tl-scale" aria-hidden="true"><span>−6 с</span><span>−3 с</span><span>событие</span><span>+3 с</span><span>+6 с</span></div>
+      </div>
+    </div>
+    <div class="decision">
+      <div>
+        <span class="prio" id="s4-prio"></span>
+        <h3 id="s4-title" style="margin-top:12px"></h3>
+        <p class="ep-meta" id="s4-meta"></p>
+      </div>
+      <p class="ep-what" id="s4-what"></p>
+      <p class="ep-note">Событие — повод проверить, а не доказательство.</p>
+      <div class="dec-buttons" role="group" aria-label="Решение преподавателя">
+        <button class="btn" type="button" data-action="s4-decide" data-arg="confirmed">Подтвердить</button>
+        <button class="btn" type="button" data-action="s4-decide" data-arg="dismissed">Отклонить</button>
+        <button class="btn" type="button" data-action="s4-decide" data-arg="later">Проверить позже</button>
+      </div>
+      <p class="dec-status" id="s4-status" aria-live="polite"></p>
+      <div class="reset-row"><button class="btn btn-sm btn-ghost" type="button" data-action="s4-reset">Сбросить сценарий эпизодов</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 CV ============ -->
+<section class="slide s-cv" id="slide-5" data-title="Компьютерное зрение — понятно" tabindex="-1" aria-labelledby="t5">
+  <div class="split">
+    <div class="copy">
+      <p class="kicker"><span class="num">05</span>Компьютерное зрение</p>
+      <h2 class="thesis" id="t5">Наблюдение,<br>а не приговор</h2>
+      <p class="lead">Модель на компьютере студента отмечает, что видно в кадре. Что это значит — решает преподаватель.</p>
+      <div style="margin-top:34px">
+        <div class="segmented" role="group" aria-label="Пример наблюдения">
+          <button type="button" data-action="s5-tab" data-arg="phone">Телефон</button>
+          <button type="button" data-action="s5-tab" data-arg="presence">Присутствие</button>
+          <button type="button" data-action="s5-tab" data-arg="head">Поворот головы</button>
+        </div>
+      </div>
+      <p class="cv-explain" id="s5-explain"></p>
+      <ol class="pipeline" aria-label="Путь наблюдения">
+        <li>Кадр</li><li class="sep" aria-hidden="true">→</li>
+        <li>Модель</li><li class="sep" aria-hidden="true">→</li>
+        <li class="is-obs">Наблюдение</li><li class="sep" aria-hidden="true">→</li>
+        <li>Эпизод</li><li class="sep" aria-hidden="true">→</li>
+        <li class="is-human">Решение преподавателя</li>
+      </ol>
+    </div>
+    <div class="cv-visual">
+      <div id="s5-pane-scene">
+        <div class="cv-stage"><svg id="s5-scene" viewBox="0 0 640 360" role="img" aria-label="Синтетическая сцена для примера"></svg></div>
+      </div>
+      <div id="s5-pane-head" class="head-wrap" hidden>
+        <div class="head-view" id="s5-headview">
+          <svg id="s5-head" viewBox="-260 -260 520 520" role="img" aria-label="Схема головы с осями X, Y, Z"></svg>
+          <span class="hint">Перетащите схему или используйте ползунки</span>
+        </div>
+        <div class="pose-panel">
+          <div class="pose-row"><label for="s5-yaw">Yaw · поворот <output id="s5-yaw-o"></output></label>
+            <input class="range small" id="s5-yaw" type="range" min="-70" max="70" step="1" data-input="s5-pose" data-arg="yaw"></div>
+          <div class="pose-row"><label for="s5-pitch">Pitch · наклон <output id="s5-pitch-o"></output></label>
+            <input class="range small" id="s5-pitch" type="range" min="-45" max="45" step="1" data-input="s5-pose" data-arg="pitch"></div>
+          <div class="pose-row"><label for="s5-roll">Roll · крен <output id="s5-roll-o"></output></label>
+            <input class="range small" id="s5-roll" type="range" min="-40" max="40" step="1" data-input="s5-pose" data-arg="roll"></div>
+          <button class="btn btn-sm" type="button" data-action="s5-pose-reset">Голова прямо</button>
+          <p class="pose-note">Поворот головы — не направление взгляда и не доказательство нарушения. Порог в демонстрации условный.</p>
+        </div>
+      </div>
+      <div class="cv-controls">
+        <div id="s5-ctl-phone" class="segmented" role="group" aria-label="Телефон в сцене">
+          <button type="button" data-action="s5-phone" data-arg="on">Телефон в руке</button>
+          <button type="button" data-action="s5-phone" data-arg="off">Без телефона</button>
+        </div>
+        <div id="s5-ctl-presence" class="segmented" role="group" aria-label="Лица в кадре" hidden>
+          <button type="button" data-action="s5-faces" data-arg="1">Одно лицо</button>
+          <button type="button" data-action="s5-faces" data-arg="0">Нет лица</button>
+          <button type="button" data-action="s5-faces" data-arg="2">Два лица</button>
+        </div>
+        <span class="caption" id="s5-caption">Синтетическая сцена, не запись</span>
+      </div>
+      <p class="obs-line" id="s5-obs" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 06 RULES ============ -->
+<section class="slide s-rules" id="slide-6" data-title="Правила экзамена" tabindex="-1" aria-labelledby="t6">
+  <div class="split">
+    <div class="copy">
+      <p class="kicker"><span class="num">06</span>Правила экзамена</p>
+      <h2 class="thesis compact" id="t6">Экзамен — там, где решил преподаватель</h2>
+      <form class="rules-form panel" id="s6-form" autocomplete="off" novalidate>
+        <div class="tag-row"><span class="proto-tag">Прототип управления доступом</span></div>
+        <div>
+          <span class="control-label" id="s6-mode-l">Где проходит экзамен</span>
+          <div class="segmented" role="group" aria-labelledby="s6-mode-l">
+            <button type="button" data-action="s6-mode" data-arg="site">Сайт</button>
+            <button type="button" data-action="s6-mode" data-arg="program">Программа</button>
+          </div>
+        </div>
+        <div class="field" id="s6-site-field">
+          <label for="s6-allowed">Разрешённый адрес</label>
+          <input class="input mono" id="s6-allowed" type="text" inputmode="url" spellcheck="false" data-input="s6-allowed" placeholder="exam.college.example">
+          <p class="hint">Разрешены этот адрес и его поддомены.</p>
+        </div>
+        <div class="field" id="s6-program-field" hidden>
+          <label for="s6-program">Разрешённая программа</label>
+          <select class="input" id="s6-program" data-input="s6-program">
+            <option value="exam">Экзаменационная программа</option>
+            <option value="ide">Среда разработки</option>
+            <option value="sheet">Табличный редактор</option>
+          </select>
+          <p class="hint">Для программы в целевом сценарии нужна настройка Windows на ПК студента.</p>
+        </div>
+        <p class="rule-state" id="s6-state" aria-live="polite"></p>
+      </form>
+    </div>
+    <div>
+      <div class="browser" id="s6-browser">
+        <div class="browser-bar">
+          <span class="browser-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <form id="s6-go-form" autocomplete="off" novalidate>
+            <label class="sr-only" for="s6-address">Адрес в браузере студента</label>
+            <input class="input" id="s6-address" type="text" inputmode="url" spellcheck="false" data-input="s6-address" placeholder="Введите адрес">
+            <button class="btn btn-sm btn-primary" type="submit">Перейти</button>
+          </form>
+        </div>
+        <div class="quick" id="s6-quick">
+          <span class="caption">Быстрый переход:</span>
+        </div>
+        <div class="page" id="s6-page" aria-live="polite"></div>
+      </div>
+      <div class="browser" id="s6-desktop" hidden>
+        <div class="browser-bar"><span class="browser-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="caption">Рабочий стол студента · макет</span></div>
+        <div class="desktop">
+          <div id="s6-window" aria-live="polite"></div>
+          <div class="taskbar" id="s6-taskbar" role="group" aria-label="Программы на рабочем столе"></div>
+        </div>
+      </div>
+      <p class="caption" style="margin-top:12px"><b style="color:var(--text)">Свой низкоуровневый хук Windows</b> проверен отдельно и подключается через -Enforce во время экзамена. Разрешённые адреса применяются внутри окна Adal; системного списка разрешённых программ нет. Общий LIVE-прогон ещё требуется. Эта HTML-демонстрация не управляет Windows.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 TEACHER ↔ STUDENT ============ -->
+<section class="slide s-control" id="slide-7" data-title="Преподаватель и студент" tabindex="-1" aria-labelledby="t7">
+  <header class="slide-head">
+    <div>
+      <p class="kicker"><span class="num">07</span>Управление</p>
+      <h2 class="thesis compact" id="t7">Каждое действие видно студенту</h2>
+    </div>
+    <div class="tag-row" style="align-items:center"><span class="proto-tag">Симуляция целевого взаимодействия</span><span class="demo-tag">Без микрофона</span><button class="btn btn-sm btn-ghost" type="button" data-action="s7-tone" title="Короткий тон только по нажатию">Демо-тон</button></div>
+  </header>
+  <div class="control-grid">
+    <div class="teacher panel">
+      <div class="who"><span class="side-label">Преподаватель</span><span><b id="s7-name"></b> · <span id="s7-pc"></span></span></div>
+      <div class="ctl-block">
+        <h4>Микрофон студента</h4>
+        <div class="ctl-row">
+          <button class="btn" type="button" data-action="s7-listen" id="s7-listen">Прослушать</button>
+          <button class="btn btn-ghost" type="button" data-action="s7-stop" id="s7-stop">Остановить прослушивание</button>
+        </div>
+        <div class="live-ind" id="s7-live"><span class="bars" id="s7-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span id="s7-live-t"></span></div>
+      </div>
+      <div class="ctl-block">
+        <h4>Обращение</h4>
+        <div class="ctl-row">
+          <button class="btn btn-sm" type="button" data-action="s7-say" data-arg="camera">«Посмотрите в камеру»</button>
+          <button class="btn btn-sm" type="button" data-action="s7-say" data-arg="come">«Подойду к вашему месту»</button>
+        </div>
+      </div>
+      <div class="ctl-block">
+        <fieldset class="reasons" id="s7-reasons">
+          <legend>Причина приостановки</legend>
+          <div class="opts"><label><input type="radio" name="s7-reason" value="object" data-input="s7-reason"> Посторонний предмет в кадре</label>
+          <label><input type="radio" name="s7-reason" value="talk" data-input="s7-reason"> Разговор во время экзамена</label>
+          <label><input type="radio" name="s7-reason" value="check" data-input="s7-reason"> Нужна проверка преподавателем</label>
+          <label><input type="radio" name="s7-reason" value="custom" data-input="s7-reason"> Свой текст</label></div>
+          <label class="sr-only" for="s7-custom">Своя причина</label>
+          <input class="input" id="s7-custom" type="text" maxlength="200" placeholder="Своя причина, до 200 символов" data-input="s7-custom">
+        </fieldset>
+        <div class="ctl-row">
+          <button class="btn" type="button" data-action="s7-lock" id="s7-lock">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Заблокировать</button>
+          <button class="btn btn-ghost" type="button" data-action="s7-unlock" id="s7-unlock">Разблокировать</button>
+        </div>
+      </div>
+    </div>
+    <div class="student" id="s7-student" aria-live="polite">
+      <div class="st-bar"><span><b>ADAL</b> · экран студента</span><span id="s7-st-pc"></span></div>
+      <div id="s7-mic"></div>
+      <div class="st-body">
+        <h3>Вопрос 7 из 30</h3>
+        <p>Экзамен открыт во внешней системе. Adal работает рядом и показывает студенту, что происходит.</p>
+        <div class="quiz" aria-hidden="true">
+          <label><input type="radio" name="s7-q" tabindex="-1"> Вариант A</label>
+          <label><input type="radio" name="s7-q" tabindex="-1"> Вариант B</label>
+          <label><input type="radio" name="s7-q" tabindex="-1"> Вариант C</label>
+        </div>
+        <div id="s7-toast"></div>
+      </div>
+      <div id="s7-lockwrap"></div>
+    </div>
+  </div>
+  <p class="caption" style="margin-top:12px">Блокировка — экран внутри Adal, не всей Windows. Аудиосвязь и причины блокировки интегрированы в продукт; проверка с реальным микрофоном ещё предстоит. Здесь — синтетическая симуляция без микрофона. Звук выключен по умолчанию.</p>
+</section>
+
+<!-- ============ 08 NETWORK ============ -->
+<section class="slide s-net" id="slide-8" data-title="Внутри аудитории" tabindex="-1" aria-labelledby="t8">
+  <div class="split">
+    <div class="copy">
+      <p class="kicker"><span class="num">08</span>Внутри аудитории</p>
+      <h2 class="thesis" id="t8">Локальная сеть класса</h2>
+      <p class="lead">Кадр анализируется на ПК студента. Преподавателю идут состояние, события и маленькое превью.</p>
+      <div class="net-controls">
+        <div>
+          <span class="control-label" id="s8-link-l">Подключение</span>
+          <div class="segmented" role="group" aria-labelledby="s8-link-l">
+            <button type="button" data-action="s8-link" data-arg="ethernet">Ethernet</button>
+            <button type="button" data-action="s8-link" data-arg="wifi">Wi-Fi</button>
+          </div>
+        </div>
+        <div class="ctl-row">
+          <button class="btn" type="button" data-action="s8-toggle03" id="s8-toggle03">Отключить сеть у ПК-03</button>
+          <button class="btn btn-ghost" type="button" data-action="s8-clip" id="s8-clip">Запросить клип ПК-05</button>
+        </div>
+        <ul class="legend">
+          <li><i class="lg-small"></i><span>Каждые 2 с: состояние, события, превью 320×240</span></li>
+          <li><i class="lg-req"></i><i class="lg-big" style="margin-left:-4px"></i><span>По запросу: клип эпизода и аудиосвязь. Аудиомодуль подключён; реальный микрофон ещё требует проверки.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="net-visual">
+      <svg class="net-svg" id="s8-svg" viewBox="0 0 960 520" role="img" aria-label="Схема сети: компьютер преподавателя, коммутатор или точка доступа, шесть компьютеров студентов"></svg>
+      <div class="mini-cards" id="s8-cards" aria-live="polite"></div>
+      <p class="caption" id="s8-note"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 09 EVIDENCE ============ -->
+<section class="slide s-evidence" id="slide-9" data-title="Что уже проверено" tabindex="-1" aria-labelledby="t9">
+  <header class="slide-head">
+    <div>
+      <p class="kicker"><span class="num">09</span>Честный статус</p>
+      <h2 class="thesis compact" id="t9">Что уже проверено</h2>
+    </div>
+    <div class="s9-right"><button class="plaque" type="button" data-action="s9-open" data-arg="q1"><b>380</b><span>QA PASS · 22/22 цепочка<br><small>Основание и границы</small></span></button>
+    <p class="snap">Снимок: <code>main</code>, коммит <code>bb8bcfd</code>, 08.10.2026<br>Ревизии прогонов указаны в источниках; синтетика не подтверждает LIVE.</p></div>
+  </header>
+  <div class="matrix" id="s9-matrix"></div>
+  <p class="mx-foot">Физический класс из трёх и более ПК, работа по Wi-Fi и 100 веб-камер ещё не проверялись. Точность моделей на экзаменах не измерялась.</p>
+</section>
+
+<!-- ============ 10 FINAL ============ -->
+<section class="slide s-final" id="slide-10" data-title="Финал" tabindex="-1" aria-labelledby="t10">
+  <div class="final-main">
+    <div>
+      <h2 class="wordmark" id="t10">ADAL<span class="wordmark-dot" aria-hidden="true"></span></h2>
+      <p class="tagline">Помочь преподавателю<br><span>увидеть важное.</span></p>
+    </div>
+    <ul class="pillars">
+      <li><svg viewBox="0 0 52 52" aria-hidden="true"><rect class="pl-soft" x="5" y="8" width="42" height="26" rx="4"/><path class="pl-soft" d="M5 43h42"/><path class="pl-stroke" d="M18 43h16M26 38v10"/></svg>
+        <div><b>Доказательства, а не вероятность</b><span>Хронология и кадры до и после — вместо «вероятности списывания».</span></div></li>
+      <li><svg viewBox="0 0 52 52" aria-hidden="true"><rect class="pl-soft" x="3" y="14" width="18" height="24" rx="3"/><rect class="pl-soft" x="31" y="14" width="18" height="24" rx="3"/><path class="pl-stroke" d="M22 26h8m-3-3 3 3-3 3"/></svg>
+        <div><b>Понятное управление</b><span>Студент видит, когда преподаватель действует, и знает причину.</span></div></li>
+      <li><svg viewBox="0 0 52 52" aria-hidden="true"><circle class="pl-soft" cx="26" cy="17" r="8"/><path class="pl-soft" d="M11 44c2-9 8-13 15-13s13 4 15 13"/><path class="pl-stroke" d="M30 40l4 4 8-9"/></svg>
+        <div><b>Решение человека</b><span>Система наблюдает. Выводы делает преподаватель.</span></div></li>
+    </ul>
+  </div>
+  <div class="final-actions">
+    <p class="caption">Adal — интегрированный прототип команды хакатона. Следующий шаг — совместный LIVE-прогон и пилот в классе; статус функций — на экране 09.</p>
+    <div class="ctl-row">
+      <button class="btn btn-lg" type="button" data-action="restart">Повторить демонстрацию</button>
+      <button class="btn btn-lg btn-primary" type="button" data-action="goto" data-arg="3">Открыть панель</button>
+    </div>
+  </div>
+</section>
+
+<div class="ov-layer" id="ov-layer" hidden>
+  <div class="ov-head"><h2>Все экраны</h2><p>Выберите экран · Esc — вернуться</p></div>
+</div>
+</main>
+</div>
+
+<!-- ============ Chrome ============ -->
+<nav class="bar" aria-label="Управление презентацией">
+  <div class="bar-info"><span class="bar-brand">ADAL</span><span class="bar-count" id="bar-count">01 / 10</span><span class="bar-title" id="bar-title"></span></div>
+  <div class="progress" id="progress" role="group" aria-label="Экраны"></div>
+  <div class="bar-actions">
+    <button class="icon-btn" type="button" data-action="prev" id="btn-prev" aria-label="Предыдущий экран" title="Назад (←)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" type="button" data-action="next" id="btn-next" aria-label="Следующий экран" title="Вперёд (→, пробел)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <span class="bar-sep" aria-hidden="true"></span>
+    <button class="icon-btn" type="button" data-action="overview" id="btn-overview" aria-pressed="false" title="Обзор (O)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h6v6H3zM11 3h6v6h-6zM3 11h6v6H3zM11 11h6v6h-6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span class="lbl">Обзор</span></button>
+    <button class="icon-btn" type="button" data-action="notes" id="btn-notes" aria-pressed="false" aria-controls="notes" title="Заметки (N)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3h10v14H5zM8 7h4M8 10h4M8 13h2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl">Заметки</span></button>
+    <button class="icon-btn" type="button" data-action="auto" id="btn-auto" aria-pressed="false" title="Автодемонстрация"><svg viewBox="0 0 20 20" aria-hidden="true" id="auto-ico"><path d="M6 4.5v11l9-5.5z" fill="currentColor"/></svg><span class="lbl" id="auto-lbl">Автодемо</span></button>
+    <span class="auto-status" id="auto-status" aria-live="polite"></span>
+    <button class="icon-btn" type="button" data-action="theme" id="btn-theme" aria-pressed="false" title="Тёмная тема (T)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 12.2A6.3 6.3 0 0 1 7.8 4.5a6.3 6.3 0 1 0 7.7 7.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span class="lbl">Тёмная тема</span></button>
+    <button class="icon-btn" type="button" data-action="reset" title="Сбросить все взаимодействия"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 9.5a5.5 5.5 0 1 1 1.6 3.9M4.5 9.5V5m0 4.5H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl">Сброс</span></button>
+    <button class="icon-btn hide-m" type="button" data-action="fullscreen" id="btn-fs" aria-pressed="false" title="Полный экран (F)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl" id="fs-lbl">Полный экран</span></button>
+  </div>
+</nav>
+
+<aside class="notes" id="notes" aria-label="Заметки докладчика" aria-hidden="true">
+  <div class="notes-head">
+    <div><h2 id="notes-title"></h2><p id="notes-time"></p></div>
+    <button class="icon-btn" type="button" data-action="notes" aria-label="Закрыть заметки"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  </div>
+  <h4>Сказать</h4><ul id="notes-say"></ul>
+  <h4>Нажать</h4><ul class="press" id="notes-press"></ul>
+  <p class="total">Весь сценарий — около 3 мин 40 с. Клавиши: ← → пробел, PageUp/PageDown, Home/End, O — обзор, N — заметки, F — полный экран, T — тёмная тема, Esc — вернуть управление.</p>
+</aside>
+
+<dialog id="evidence-dlg" aria-labelledby="dlg-title">
+  <div class="dlg-inner">
+    <div class="dlg-head"><div><span class="demo-tag" id="dlg-col"></span><h2 id="dlg-title"></h2></div>
+      <button class="icon-btn" type="button" data-action="dlg-close" aria-label="Закрыть"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div class="dlg-body" id="dlg-body"></div>
+  </div>
+</dialog>
+
+<div class="sr-only" aria-live="polite" id="sr-live"></div>
+<script>
+(function () {
+'use strict';
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const pad2 = n => String(n).padStart(2, '0');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const mqMobile = matchMedia('(max-width: 820px)');
+const mqReduce = matchMedia('(prefers-reduced-motion: reduce)');
+const isMobile = () => mqMobile.matches;
+const reduced = () => mqReduce.matches;
+const SVGNS = 'http://www.w3.org/2000/svg';
+const DEG = Math.PI / 180;
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x);
+const ss = (a, b, t) => ease((t - a) / (b - a));
+const pcLabel = n => 'ПК-' + pad2(n);
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+  return many;
+}
+function addSeconds(hms, delta) {
+  const [h, m, s] = hms.split(':').map(Number);
+  let t = h * 3600 + m * 60 + s + Math.floor(delta);
+  t = (t + 86400) % 86400;
+  return pad2(Math.floor(t / 3600)) + ':' + pad2(Math.floor(t % 3600 / 60)) + ':' + pad2(t % 60);
+}
+function svg(tag, attrs, parent) {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(el);
+  return el;
+}
+const ICON_X = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+/* timers that belong to the demo (cleared by «Сброс») */
+const timers = new Set();
+function later(fn, ms) {
+  const id = setTimeout(() => { timers.delete(id); fn(); }, ms);
+  timers.add(id);
+  return id;
+}
+function clearTimers() { timers.forEach(clearTimeout); timers.clear(); }
+
+/* =========================================================
+   Data — stable ids, all synthetic
+   ========================================================= */
+const LEVEL = {
+  red:    { chip: 'Проверить',     full: 'Проверить в первую очередь', rank: 0 },
+  yellow: { chip: 'Внимание',      full: 'Требует внимания',           rank: 1 },
+  grey:   { chip: 'Нет данных',    full: 'Недостаточно данных',        rank: 2 },
+  green:  { chip: 'Без замечаний', full: 'Без замечаний',              rank: 3 }
+};
+const STUDENTS = [
+  { id: 's01', name: 'Айгерим С.', pc: 'ПК-01', link: 'ok' },
+  { id: 's02', name: 'Данияр К.',  pc: 'ПК-02', link: 'ok' },
+  { id: 's03', name: 'Алия М.',    pc: 'ПК-03', link: 'ok' },
+  { id: 's04', name: 'Ерлан А.',   pc: 'ПК-04', link: 'ok' },
+  { id: 's05', name: 'Мадина Ж.',  pc: 'ПК-05', link: 'ok' },
+  { id: 's06', name: 'Арман Н.',   pc: 'ПК-06', link: 'ok' },
+  { id: 's07', name: 'Тимур Б.',   pc: 'ПК-07', link: 'ok' },
+  { id: 's08', name: 'Сауле Т.',   pc: 'ПК-08', link: 'ok' },
+  { id: 's09', name: 'Жанна О.',   pc: 'ПК-09', link: 'ok' },
+  { id: 's10', name: 'Нурлан Е.',  pc: 'ПК-10', link: 'ok' },
+  { id: 's11', name: 'Камила Р.',  pc: 'ПК-11', link: 'ok' },
+  { id: 's12', name: 'Ильяс Д.',   pc: 'ПК-12', link: 'weak' }
+];
+const byId = id => STUDENTS.find(s => s.id === id);
+const OFFLINE_INFO = {
+  s10: { since: '10:41:58', reason: 'Нет статуса 40 с' },
+  s03: { since: '10:42:31', reason: 'Нет связи со студентом' }
+};
+const EVENT_T = 6;            /* event moment inside the 12-second synthetic clip */
+const WIN = [5.5, 9.2];       /* event window shown on the timeline */
+const CLIP = 12;
+const EPISODES = [
+  { id: 'ep07', student: 's07', kind: 'phone',  title: 'Телефон в кадре',         time: '10:42:18', level: 'red',
+    what: 'Модель отметила в руке предмет, похожий на телефон. Он виден около трёх секунд.' },
+  { id: 'ep05', student: 's05', kind: 'second', title: 'Второе лицо в кадре',     time: '10:40:05', level: 'red',
+    what: 'За спиной студента появилось ещё одно лицо.' },
+  { id: 'ep11', student: 's11', kind: 'absent', title: 'Лицо не видно',           time: '10:41:30', level: 'yellow',
+    what: 'Несколько секунд лица не было в кадре.' },
+  { id: 'ep02', student: 's02', kind: 'head',   title: 'Долгий взгляд в сторону', time: '10:37:44', level: 'yellow',
+    what: 'Голова долго повёрнута в сторону. Оценка приблизительная: поза головы — не точный взгляд.' }
+];
+const DECISION = {
+  confirmed: { short: 'подтверждено', text: '<b>Подтверждено.</b> Решение принято преподавателем, приоритет карточки пересчитан.' },
+  dismissed: { short: 'отклонено', text: '<b>Отклонено.</b> Наблюдение не подтвердилось — эпизод закрыт без последствий для студента.' },
+  later:     { short: 'проверить позже', text: '<b>Проверить позже.</b> Эпизод остаётся в очереди, карточка сохраняет приоритет.' }
+};
+const LOCK_REASONS = { object: 'Посторонний предмет в кадре', talk: 'Разговор во время экзамена', check: 'Нужна проверка преподавателем' };
+const SAYINGS = { camera: 'Пожалуйста, посмотрите в камеру.', come: 'Я подойду к вашему месту.', resumed: 'Экзамен продолжен. Можно работать дальше.' };
+const PROGRAMS = { exam: 'Экзаменационная программа', ide: 'Среда разработки', sheet: 'Табличный редактор', browser: 'Браузер', chat: 'Мессенджер' };
+
+const EVIDENCE = [
+  /* Работает в сборке */
+  { id: 'b1', col: 'build', title: 'Телефон в кадре — на записи',
+    cond: 'Windows, реальные модели, постановочный клип: красная зона, как ожидалось.',
+    facts: ['Режим REPLAY: записанный клип проходит через локальный конвейер на ПК в реальном времени.',
+            'Наблюдение «телефон» и красная зона совпали с ожиданием.',
+            'Клипы записаны с согласия участников и хранятся вне Git.',
+            'Известное ограничение: в реальном времени теряется 44–54 кадра на клип.'],
+    src: ['proctoring/handoffs/A08/checks/replay-zones-results.json'], when: '08.10.2026, 09:46 UTC', type: 'Артефакт прогона (JSON)' },
+  { id: 'b2', col: 'build', title: 'Лица нет / второе лицо — на записи',
+    cond: 'Тот же прогон: face_missing и multiple_faces найдены, как ожидалось.',
+    facts: ['3 клипа с ожидаемыми зонами — 3 совпадения.', 'Без калибровки почти профильный поворот головы может читаться как «лица нет».'],
+    src: ['proctoring/handoffs/A08/checks/replay-zones-results.json'], when: '08.10.2026, 09:46 UTC', type: 'Артефакт прогона (JSON)' },
+  { id: 'b3', col: 'build', title: 'Зоны приоритета и отчёт эпизодов',
+    cond: 'JUnit на Windows: 55–60 тестов в каждом прогоне, 0 ошибок.',
+    facts: ['Правило zone-rule-1: красная — ≥1 сигнал высокого уровня или ≥3 среднего; оранжевая — ≥1 среднего или ≥3 низкого; серая — кадров меньше 80% времени.',
+            'Зоны считаются на ПК студента, панель показывает их цветом и текстом.'],
+    src: ['proctoring/handoffs/A08/checks/windows-final.xml', 'proctoring/handoffs/A08/checks/zones-integration.xml'], when: '08.10.2026, 13:57–14:51 (UTC+5)', type: 'Артефакт (JUnit XML)' },
+  /* Проверено на тестовых данных */
+  { id: 't1', col: 'test', title: 'Сервер класса и 2 процесса студентов',
+    cond: '15/15 на одном ПК с Windows, синтетические кадры, loopback.',
+    facts: ['Отдельные события и превью от каждого студента, непрерывный поток в панель.',
+            'Аварийное завершение сервера и восстановление примерно за 1,1 с; события не теряются.',
+            'Предыдущий прогон 14/15 (неверная метка источника) сохранён как честная история.',
+            'Не входило в проверку: Electron, веб-камера, микрофон, реальная сеть.'],
+    src: ['proctoring/acceptance/classroom/chain/windows-integration-result.json', 'proctoring/acceptance/classroom/chain/windows-result.json'],
+    when: '08.10.2026, 11:35 UTC', commit: '67ac557', type: 'Артефакт прогона (JSON)' },
+  { id: 't2', col: 'test', title: 'Панель: 2 / 30 / 100 карточек',
+    cond: '61/61 проверок в Chrome на Windows, демонстрационные данные.',
+    facts: ['Фильтры, фокус, переподключение, серые состояния.',
+            'Отрисовка 100 карточек: p95 около 2,8 мс — по отчёту агента; файла с результатами в репозитории нет.',
+            'Это тест интерфейса, а не 100 настоящих камер.'],
+    src: ['proctoring/class-panel/tests/e2e/panel.e2e.mjs', 'proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md'], when: '08.10.2026', type: 'Отчёт агента + тест в репозитории' },
+  { id: 't3', col: 'test', title: 'Создание класса через сервер',
+    cond: '39/39 в Chrome с настоящим сервером, loopback, ширина 390 и 1366 px.',
+    facts: ['Вход по PIN, код класса, замена класса только с подтверждением.', 'Скриншоты проверялись отдельно и в Git не лежат.'],
+    src: ['proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md'], when: '08.10.2026', type: 'Отчёт агента' },
+  { id: 't4', col: 'test', title: 'Сигналы → эпизоды',
+    cond: '121 тест модуля объединения на Windows, синтетические сценарии.',
+    facts: ['Эталонные сценарии синтетические.', 'Приоритеты эпизодов обновлены вместе с правилом зон.'],
+    src: ['proctoring/handoffs/A05/STATUS.md'], when: '08.10.2026', type: 'Отчёт агента' },
+  /* Интегрируется */
+  { id: 'i1', col: 'int', title: 'Экран блокировки с причиной',
+    cond: '22/22: настоящий C1 → backend → Electron → панель; синтетические сессии.',
+    facts: ['Это экран внутри приложения Adal, а не блокировка Windows.',
+            'Подтверждение требует отрисованного экрана; проверены причина, изоляция, переподключение и восстановление.',
+            'Причина — свободный текст до 200 символов.'],
+    src: ['proctoring/handoffs/CLASSROOM-ACCEPTANCE/INTEGRATED_CONTROL_CHAIN.json', 'proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md'], when: '08.10.2026', type: 'Артефакт прогона + журнал интеграции' },
+  { id: 'i2', col: 'int', title: 'Прослушивание и голос',
+    cond: 'Аудиосвязь интегрирована в C1, Electron и панель; реальный микрофон ещё не проверен совместно.',
+    facts: ['Подключены сигнализация, разрешения и видимая индикация аудиосвязи студенту.',
+            'Журнал интеграции: 19 проверок аудиомодуля и 7 проверок сохранения/отключения прошли.',
+            'Программные проверки не подтверждают совместную работу реального микрофона, камеры и Enforce.'],
+    src: ['proctoring/handoffs/ADAL-AUDIO-BRIDGE/STATUS.md', 'proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md'], when: '08.10.2026', type: 'Исходный код + отчёт агента' },
+  { id: 'i3', col: 'int', title: 'Правила экзамена на ПК студента',
+    cond: 'Адреса ограничиваются внутри Adal. Enforce подключает native helper; системного списка программ нет.',
+    facts: ['Разрешённый сайт и стартовый адрес применяются в окне экзамена. Ctrl+C/V и вкладки ограничиваются внутри окна.',
+            'Чужие окна и системные клавиши требуют проверки на целевом Windows-ПК; HTML показывает синтетическую модель.',
+            'Отдельный живой тест на ноутбуке с Windows 11: Win, Alt+Tab, PrtScn подавлены; аварийный выход сработал; журналы сохранены, нажатия выполнял человек.',
+            'Enforce включается явно через -Enforce во время RUNNING. Ctrl+Alt+Del и UAC не блокируются; общий LIVE-прогон ещё требуется.'],
+    src: ['proctoring/README.md', 'proctoring/handoffs/A06/checks/live-2026-10-08/RESULTS.md', 'proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md'],
+    when: 'Тест клавиш: 08.10.2026, 10:37–10:40 UTC', commit: '29778e9', type: 'Журналы + подтверждение человека; исходный код' },
+  { id: 'i4', col: 'int', title: 'Клип эпизода по запросу',
+    cond: 'История, загрузка клипа и Chrome-воспроизведение проверены с настоящим C1.',
+    facts: ['Проверены запрос из панели, авторизованная загрузка, HTTP Range и перемотка видео.',
+            'Сохранение решений и восстановление после перезапуска проверены; набор review — 78 PASS.',
+            'Клипы проверок явно синтетические; физическую запись камеры этот прогон не подтверждает.'],
+    src: ['proctoring/handoffs/ADAL-REVIEW-ADAPTER/STATUS.md', 'proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md'], when: '08.10.2026', type: 'Исходный код + отчёт агента' },
+  { id: 'i6', col: 'int', title: 'Взгляд и сверка лица',
+    cond: 'Модули включены в исходники; точность взгляда и сверки лица на экзаменах ещё не измерена.',
+    facts: ['После калибровки отдельно оцениваются приблизительный взгляд вниз/в стороны, поза головы и присутствие лиц.',
+            'Сверка лица с началом экзамена зависит от отдельной модели и готовности локального окружения.',
+            'Наличие кода и отдельные прогоны не подтверждают качество общей LIVE-связки.'],
+    src: ['proctoring/backend/proctor/attention/analyzer.py', 'proctoring/backend/proctor/identity/analyzer.py', 'proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md'],
+    when: '08.10.2026', type: 'Артефакт в ветке + отчёты агентов' },
+  { id: 'q1', col: 'test', extra: true, title: '380 PASS QA + 22/22 цепочка управления',
+    cond: 'Два прогона: QA 380 PASS, 1 SKIP, 4 XFAIL; цепочка управления 22/22 PASS.',
+    facts: ['QA после A11: источник 0f7405ff3dff, 380 PASS, 1 SKIP, 4 известных XFAIL. Это не измерение точности CV.',
+            '22/22: настоящий C1, два backend/C2, production Electron и Chrome; сессии SYNTHETIC/CREATED, без камеры, микрофона и guard.',
+            'Точные ревизии и границы — в журнале интеграции. Числа не складываются в один тест релиза.'],
+    src: ['proctoring/handoffs/CLASSROOM-ACCEPTANCE/STATUS.md', 'proctoring/handoffs/CLASSROOM-ACCEPTANCE/INTEGRATED_CONTROL_CHAIN.json'], when: '08.10.2026', type: 'Записанные результаты прогонов' },
+  /* Предстоит пилот */
+  { id: 'p1', col: 'pilot', title: 'Класс из 3+ физических ПК',
+    cond: 'Запуск по сети подготовлен; прогона на реальных ПК нет.',
+    facts: ['Start-Teacher.ps1 -Lan, порт 8765, вход в панель только с ПК преподавателя.', 'Все записанные прогоны — на одном компьютере.'],
+    src: ['proctoring/acceptance/classroom/README.md', 'proctoring/handoffs/ASTRA-LAUNCH/STATUS.md'], when: '—', type: 'Не проверялось' },
+  { id: 'p2', col: 'pilot', title: 'Wi-Fi в настоящей аудитории',
+    cond: 'Не проверялось. Нужна одна подсеть без изоляции клиентов.',
+    facts: ['Изоляция клиентов в гостевых и школьных сетях ломает подключение.', 'Сейчас соединение ws://, без шифрования.'],
+    src: ['proctoring/class-audio/LAN.md', 'proctoring/contracts/class/PROTOCOL_v1.md'], when: '—', type: 'Не проверялось' },
+  { id: 'p3', col: 'pilot', title: '100 мест с веб-камерами',
+    cond: 'Проверены только карточки интерфейса. Нагрузка превью не измерялась.',
+    facts: ['100 студентов — около 50 превью JPEG в секунду на сервер. Не измерено.', 'Экран 02 — модель аудитории, не нагрузочный тест.'],
+    src: ['proctoring/contracts/class/PROTOCOL_v1.md'], when: '—', type: 'Не проверялось' },
+  { id: 'p4', col: 'pilot', title: 'Точность на экзамене',
+    cond: 'Не измерялась. Цифры на фото COCO — не точность экзамена.',
+    facts: ['Детекция наушников не реализована.', 'Поза головы ≠ взгляд. Без калибровки взгляд вниз на 25–30° может читаться как «прямо».', 'Совместный локальный LIVE-прогон камеры, микрофона и Enforce ещё требуется; физический offline-пилот не подтверждён.'],
+    src: ['proctoring/handoffs/A03/STATUS.md', 'proctoring/handoffs/A04/STATUS.md'], when: '—', type: 'Не проверялось' }
+];
+const COLS = [
+  { id: 'build', title: 'Работает в сборке' },
+  { id: 'test',  title: 'Проверено на тестовых данных' },
+  { id: 'int',   title: 'Интегрировано' },
+  { id: 'pilot', title: 'Предстоит пилот' }
+];
+
+const NOTES = [
+  { time: '0:00–0:15', say: ['Adal помогает преподавателю наблюдать за экзаменом в компьютерном классе.', 'Экзамен идёт на разрешённом сайте внутри Adal; список разрешённых программ Windows — будущий сценарий.', 'Главная мысль: система показывает, решает человек.'], press: ['«Увидеть экзамен» или →'] },
+  { time: '0:15–0:35', say: ['Один преподаватель не может смотреть на 30 экранов сразу.', 'Adal поднимает одно место, которое стоит проверить, — без паники и сотни красных лампочек.', 'Это модель аудитории, а не нагрузочный тест.'], press: ['3 → 30 → 100', '«Появилось событие»'] },
+  { time: '0:35–1:05', say: ['Панель: имя, номер ПК, связь, камера, события.', 'Порядок: красный, оранжевый, серый, зелёный.', 'Серый — нет актуальных данных, это не «всё хорошо».'], press: ['Фильтр «Проверить»', 'Карточка «Тимур Б., ПК-07»', '«Открыть эпизод»'] },
+  { time: '1:05–1:40', say: ['Событие — повод проверить, не доказательство.', 'Смотрим несколько секунд до и после: контекст важнее одного кадра.', 'Решение принимает преподаватель — меняются счётчики и карточка.'], press: ['«Смотреть» или ползунок шкалы', '«Подтвердить», «Отклонить» или «Проверить позже»'] },
+  { time: '1:40–2:05', say: ['Модель работает на ПК студента и формирует наблюдение.', 'Есть эвристики подъёма телефона и возможной съёмки; момент снимка они не доказывают.', 'После калибровки оцениваем примерный взгляд вниз и в стороны, отсутствие и второе лицо; точность ещё предстоит измерить.'], press: ['Телефон / Присутствие / Поворот головы', 'Потянуть схему головы'] },
+  { time: '2:05–2:20', say: ['Преподаватель задаёт разрешённый сайт; внутри Adal ограничиваются адреса, Ctrl+C/V и вкладки.', 'Свой низкоуровневый хук Windows уже подавлял системные клавиши в живом тесте.', 'Alt+Tab, Win, PrtScn и чужие окна проверяем отдельно на Windows; системного списка программ пока нет.'], press: ['Переход на разрешённый адрес, затем на другой'] },
+  { time: '2:20–2:45', say: ['Любое действие преподавателя студент видит.', 'Сначала уведомление студенту — потом прослушивание.', 'Блокировка — с понятной причиной; это экран приложения, не всей Windows.'], press: ['«Прослушать» → «Остановить»', 'Причина → «Заблокировать» → «Разблокировать»'] },
+  { time: '2:45–3:05', say: ['Связь рассчитана на локальную сеть Ethernet или Wi-Fi; физический пилот класса ещё предстоит.', 'Кадр анализируется на месте; преподавателю идут события и превью.', 'Пропала связь — карточка серая, с причиной.'], press: ['Ethernet / Wi-Fi', '«Отключить сеть у ПК-03», затем вернуть'] },
+  { time: '3:05–3:25', say: ['Локальная интеграция выполнена; общий LIVE-прогон камеры, микрофона и Enforce на целевом ПК ещё нужен.', 'Подтверждены 380 PASS в QA и 22 из 22 проверок управления на синтетических источниках; это не точность CV.', 'У каждого пункта — основание из репозитория.'], press: ['Любая карточка → «Основание»'] },
+  { time: '3:25–3:40', say: ['Adal не выдаёт «вероятность списывания»: только хронология и кадры, решение — за преподавателем.', 'Adal помогает увидеть важное: доказательства, понятное управление, решение человека.', 'Спасибо. Готовы показать панель и ответить на вопросы.'], press: ['«Открыть панель» — к экрану 03'] }
+];
+
+/* =========================================================
+   State
+   ========================================================= */
+function initialState() {
+  return {
+    s2: { size: 30, event: false },
+    s3: { filter: 'all', sort: 'priority', selected: null },
+    s4: { current: 'ep07', t: 3, playing: false, seen: {} },
+    decisions: {},
+    s5: { tab: 'phone', phone: true, faces: 1, yaw: -34, pitch: 8, roll: 0 },
+    s6: { mode: 'site', allowed: 'exam.college.example', address: '', page: { kind: 'idle' }, program: 'exam', opened: null },
+    s7: { student: 's07', listen: 'off', locked: false, reason: 'check', custom: '', lockReason: '', toast: null },
+    net: { link: 'ethernet', clip: 'idle' },
+    offline: ['s10'],
+    recovering: []
+  };
+}
+let demoState = initialState();
+
+function studentView(st) {
+  const s = demoState;
+  const offline = s.offline.includes(st.id);
+  const eps = EPISODES.filter(e => e.student === st.id);
+  const open = eps.filter(e => s.decisions[e.id] !== 'confirmed' && s.decisions[e.id] !== 'dismissed');
+  let level = 'green';
+  if (open.some(e => e.level === 'red')) level = 'red';
+  else if (open.length) level = 'yellow';
+  if (offline) level = 'grey';
+  return Object.assign({}, st, { offline, eps, open, level, recovering: s.recovering.includes(st.id) });
+}
+
+/* =========================================================
+   Stage, navigation, chrome
+   ========================================================= */
+const stage = $('#stage');
+const viewport = $('#viewport');
+const slides = $$('.slide', stage);
+const N = slides.length;
+let current = -1;
+let overviewOpen = false;
+let notesOpen = false;
+let scale = 1;
+
+function fit() {
+  if (isMobile()) { stage.style.removeProperty('--scale'); scale = 1; return; }
+  const r = viewport.getBoundingClientRect();
+  scale = Math.max(0.2, Math.min(r.width / 1600, r.height / 900));
+  stage.style.setProperty('--scale', String(scale));
+}
+const getScale = () => (isMobile() ? 1 : scale);
+
+function announce(text) {
+  const el = $('#sr-live');
+  el.textContent = '';
+  setTimeout(() => { el.textContent = text; }, 30);
+}
+
+function go(i, opts = {}) {
+  i = clamp(i | 0, 0, N - 1);
+  if (i === current && !opts.force) return;
+  const prev = current;
+  current = i;
+  slides.forEach((el, k) => {
+    el.classList.toggle('is-active', k === i);
+    el.inert = overviewOpen ? true : k !== i;
+  });
+  if (prev >= 0 && prev !== i) onLeave(prev);
+  onEnter(i);
+  renderChrome();
+  try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) { /* file:// in some browsers */ }
+  if (!opts.silent) announce('Экран ' + (i + 1) + ' из ' + N + ': ' + slides[i].dataset.title);
+  const a = document.activeElement;
+  if (a && a !== document.body && a.closest && a.closest('.slide') && !slides[i].contains(a)) slides[i].focus({ preventScroll: true });
+  if (isMobile() && prev !== i) window.scrollTo(0, 0);
+  if (opts.user && auto.running) pauseAuto();
+}
+const next = () => go(current + 1, { user: true });
+const prev = () => go(current - 1, { user: true });
+
+function onEnter(i) {
+  if (i === 1) renderS2();
+  if (i === 2) renderS3();
+  if (i === 3) { renderS4(); syncPlayLoop(); }
+  if (i === 4) renderS5();
+  if (i === 7) { renderS8(); syncNetLoop(); }
+}
+function onLeave(i) {
+  if (i === 3 && demoState.s4.playing) { demoState.s4.playing = false; syncPlayLoop(); renderPlayer(); }
+  if (i === 7) syncNetLoop();
+}
+
+function buildProgress() {
+  const p = $('#progress');
+  slides.forEach((sl, k) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.action = 'goto';
+    b.dataset.arg = String(k + 1);
+    b.setAttribute('aria-label', 'Экран ' + (k + 1) + ': ' + sl.dataset.title);
+    b.title = pad2(k + 1) + ' · ' + sl.dataset.title;
+    p.appendChild(b);
+  });
+}
+function renderChrome() {
+  $('#bar-count').textContent = pad2(current + 1) + ' / ' + pad2(N);
+  $('#bar-title').textContent = slides[current].dataset.title;
+  $$('#progress button').forEach((b, k) => {
+    b.classList.toggle('is-done', k < current);
+    if (k === current) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  $('#btn-prev').disabled = current === 0;
+  $('#btn-next').disabled = current === N - 1;
+  renderNotes();
+  if (overviewOpen) $$('.ov-tile').forEach(t => t.setAttribute('aria-current', String(+t.dataset.arg === current + 1)));
+}
+
+/* ---------- notes ---------- */
+function renderNotes() {
+  const n = NOTES[current];
+  $('#notes-title').textContent = pad2(current + 1) + ' · ' + slides[current].dataset.title;
+  $('#notes-time').textContent = '≈ ' + n.time;
+  $('#notes-say').innerHTML = n.say.map(x => '<li>' + esc(x) + '</li>').join('');
+  $('#notes-press').innerHTML = n.press.map(x => '<li>' + esc(x) + '</li>').join('');
+}
+function setNotes(on) {
+  notesOpen = on;
+  const el = $('#notes');
+  el.classList.toggle('is-open', on);
+  el.setAttribute('aria-hidden', String(!on));
+  el.inert = !on;
+  document.documentElement.style.setProperty('--notes-w', on && !isMobile() ? '420px' : '0px');
+  $('#btn-notes').setAttribute('aria-pressed', String(on));
+  fit();
+}
+
+/* ---------- overview ---------- */
+function buildOverview() {
+  const layer = $('#ov-layer');
+  slides.forEach((sl, k) => {
+    const col = k % 5, row = Math.floor(k / 5);
+    const x = 96 + col * 288, y = 210 + row * 250;
+    sl.style.setProperty('--ox', x + 'px');
+    sl.style.setProperty('--oy', y + 'px');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ov-tile';
+    b.dataset.action = 'goto-ov';
+    b.dataset.arg = String(k + 1);
+    b.style.left = x + 'px';
+    b.style.top = y + 'px';
+    b.innerHTML = '<span class="ov-label"><b>' + pad2(k + 1) + '</b><span>' + esc(sl.dataset.title) + '</span></span>';
+    b.setAttribute('aria-label', 'Экран ' + (k + 1) + ': ' + sl.dataset.title);
+    layer.appendChild(b);
+  });
+}
+function setOverview(on) {
+  if (on === overviewOpen) return;
+  overviewOpen = on;
+  stage.classList.toggle('is-overview', on);
+  $('#ov-layer').hidden = !on;
+  slides.forEach((el, k) => { el.inert = on ? true : k !== current; });
+  $('#btn-overview').setAttribute('aria-pressed', String(on));
+  if (on) {
+    if (auto.running) pauseAuto();
+    if (demoState.s4.playing) { demoState.s4.playing = false; renderPlayer(); }
+    syncPlayLoop(); syncNetLoop();
+    renderChrome();
+    const t = $('.ov-tile[data-arg="' + (current + 1) + '"]');
+    if (t) t.focus({ preventScroll: true });
+  } else {
+    onEnter(current);
+  }
+}
+
+/* ---------- theme ---------- */
+function setTheme(dark, persist) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  $('#btn-theme').setAttribute('aria-pressed', String(dark));
+  if (persist) { try { localStorage.setItem('adal-theme', dark ? 'dark' : 'light'); } catch (e) { /* storage unavailable */ } }
+  if (persist) announce(dark ? 'Тёмная тема' : 'Светлая тема');
+}
+
+/* ---------- fullscreen ---------- */
+function toggleFullscreen() {
+  const d = document;
+  if (!d.fullscreenElement) {
+    const req = d.documentElement.requestFullscreen;
+    if (req) d.documentElement.requestFullscreen().catch(() => {});
+  } else if (d.exitFullscreen) d.exitFullscreen();
+}
+document.addEventListener('fullscreenchange', () => {
+  const on = !!document.fullscreenElement;
+  $('#btn-fs').setAttribute('aria-pressed', String(on));
+  $('#fs-lbl').textContent = on ? 'Выйти из полного экрана' : 'Полный экран';
+});
+
+/* =========================================================
+   01 — classroom plan
+   ========================================================= */
+function buildRoom() {
+  const s = $('#room');
+  const cols = 5, rows = 4, w = 100, h = 60, gx = 24, gy = 36, x0 = 62, y0 = 178;
+  let out = '<g><rect class="rm-desk rm-desk-t" x="250" y="40" width="220" height="64" rx="10"/>' +
+            '<text class="rm-label" x="360" y="78" text-anchor="middle">Преподаватель</text></g>';
+  let n = 0, hot = null;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      n++;
+      const x = x0 + c * (w + gx), y = y0 + r * (h + gy);
+      const isHot = n === 14;
+      if (isHot) hot = { x, y };
+      out += '<g class="rm-seat' + (isHot ? ' rm-hot' : '') + '" style="--i:' + n + '">' +
+             '<rect class="rm-desk" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10"/>' +
+             '<rect class="rm-screen" x="' + (x + 18) + '" y="' + (y + 12) + '" width="64" height="24" rx="4"/>' +
+             '<circle class="rm-dot" cx="' + (x + w - 14) + '" cy="' + (y + h - 12) + '" r="5"/></g>';
+    }
+  }
+  const cx = hot.x + 50, cy = hot.y;
+  out += '<path class="rm-path" d="M' + cx + ' ' + (cy - 4) + ' C ' + cx + ' 150, 420 150, 420 108"/>';
+  out += '<circle class="rm-ring" cx="' + (hot.x + 86) + '" cy="' + (hot.y + 48) + '" r="10"/>';
+  out += '<g class="rm-callout-g"><rect class="rm-callout-bg" x="' + (hot.x - 40) + '" y="' + (hot.y + h + 8) + '" width="200" height="30" rx="8"/>' +
+         '<text class="rm-callout" x="' + (hot.x + 60) + '" y="' + (hot.y + h + 28) + '" text-anchor="middle">ПК-14 · требует проверки</text></g>';
+  s.innerHTML = out;
+}
+
+/* =========================================================
+   02 — attention model
+   ========================================================= */
+const S2_HOT = { 3: 1, 30: 16, 100: 63 };
+function renderS2() {
+  const { size, event } = demoState.s2;
+  const grid = $('#s2-seats');
+  if (grid.dataset.n !== String(size)) {
+    const cols = size === 3 ? 3 : size === 30 ? 6 : 10;
+    grid.style.setProperty('--cols', String(cols));
+    grid.dataset.n = String(size);
+    let h = '';
+    for (let i = 0; i < size; i++) {
+      h += '<div class="seat" style="--i:' + i + '"><span class="seat-dot"></span>' + (size <= 30 ? '<span class="seat-pc">' + pcLabel(i + 1) + '</span>' : '') + '</div>';
+    }
+    grid.innerHTML = h;
+    grid.classList.remove('is-fresh');
+    if (current === 1 && !reduced()) { void grid.offsetWidth; grid.classList.add('is-fresh'); }
+  }
+  const hot = S2_HOT[size];
+  $$('.seat', grid).forEach((el, i) => el.classList.toggle('is-hot', event && i === hot));
+  $$('[data-action="s2-size"]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.arg === size)));
+  const btn = $('#s2-event');
+  btn.textContent = event ? 'Вернуть спокойное состояние' : 'Появилось событие';
+  btn.classList.toggle('btn-primary', !event);
+  btn.setAttribute('aria-pressed', String(event));
+  $('#s2-meta').innerHTML = '<b>' + size + '</b> ' + plural(size, 'рабочее место', 'рабочих места', 'рабочих мест') +
+    ' · <b>' + (event ? 1 : 0) + '</b> требует проверки';
+  $('#s2-callout').innerHTML = event
+    ? '<span class="prio prio-yellow">Требует внимания</span>' + pcLabel(hot + 1) + ' · остальные ' + (size - 1) + ' без изменений'
+    : 'Все места спокойны. Преподаватель смотрит на класс, а не на сигналы.';
+}
+
+/* =========================================================
+   Synthetic scene (used by 03, 04, 05)
+   ========================================================= */
+function createScene(root) {
+  root.innerHTML =
+    '<rect class="sc-wall" width="640" height="360"/>' +
+    '<rect class="sc-wall2" x="40" y="54" width="150" height="160" rx="6"/>' +
+    '<rect class="sc-wall2" x="470" y="48" width="130" height="86" rx="6"/>' +
+    '<g data-k="other" opacity="0"><path class="sc-other" d="M452 330 C458 246 480 214 506 214 C532 214 554 246 560 330 Z"/>' +
+      '<ellipse class="sc-other" cx="506" cy="168" rx="31" ry="38"/></g>' +
+    '<g data-k="person">' +
+      '<path class="sc-body" d="M190 360 C198 286 248 250 320 250 C392 250 442 286 450 360 Z"/>' +
+      '<rect class="sc-body" x="302" y="206" width="36" height="54" rx="12"/>' +
+      '<g data-k="head"><ellipse class="sc-head" cx="320" cy="160" rx="54" ry="66"/>' +
+        '<ellipse class="sc-face" data-k="face" cx="320" cy="168" rx="36" ry="46"/>' +
+        '<path class="sc-faceline" data-k="nose" d="M320 152 L320 184"/></g>' +
+    '</g>' +
+    '<rect class="sc-desk" x="0" y="318" width="640" height="42"/>' +
+    '<g data-k="phone" opacity="0"><rect class="sc-phone" x="0" y="0" width="34" height="60" rx="6"/><rect class="sc-phone-screen" x="5" y="7" width="24" height="44" rx="3"/></g>' +
+    '<ellipse class="sc-hand" data-k="hand" cx="252" cy="330" rx="21" ry="14"/>' +
+    '<ellipse class="sc-hand" cx="392" cy="330" rx="21" ry="14"/>' +
+    '<g data-k="fbox"><rect class="sc-box-soft" x="258" y="86" width="124" height="150" rx="6"/><text class="sc-softtx" x="262" y="80">лицо</text></g>' +
+    '<g data-k="obox" opacity="0"><rect class="sc-box" data-k="obox-r" x="0" y="0" width="10" height="10" rx="6"/>' +
+      '<rect class="sc-tagbg" data-k="obox-bg" x="0" y="0" width="10" height="22" rx="5"/><text class="sc-tagtx" data-k="obox-t" x="0" y="0"></text></g>' +
+    '<rect class="sc-hud" width="640" height="34"/>' +
+    '<text class="sc-clock" data-k="clock" x="16" y="23"></text>' +
+    '<text class="sc-synth" x="624" y="22" text-anchor="end">СИНТЕТИЧЕСКАЯ СЦЕНА</text>';
+  const k = name => root.querySelector('[data-k="' + name + '"]');
+  const el = {
+    other: k('other'), person: k('person'), head: k('head'), face: k('face'), nose: k('nose'),
+    phone: k('phone'), hand: k('hand'), fbox: k('fbox'), obox: k('obox'), oboxR: k('obox-r'), oboxBg: k('obox-bg'), oboxT: k('obox-t'), clock: k('clock')
+  };
+  function tag(x, y, w, h, label) {
+    el.obox.setAttribute('opacity', '1');
+    el.oboxR.setAttribute('x', x); el.oboxR.setAttribute('y', y);
+    el.oboxR.setAttribute('width', w); el.oboxR.setAttribute('height', h);
+    const tw = Math.round(label.length * 7.6 + 18);
+    el.oboxBg.setAttribute('x', x); el.oboxBg.setAttribute('y', y - 26); el.oboxBg.setAttribute('width', tw);
+    el.oboxT.setAttribute('x', x + 9); el.oboxT.setAttribute('y', y - 10);
+    el.oboxT.textContent = label;
+  }
+  /* kind: phone | second | absent | head | none ; t: seconds 0..12 */
+  function update(kind, t, opts) {
+    opts = opts || {};
+    let obs = null;
+    let dx = 0, yaw = 0, phoneUp = 0, other = 0;
+    if (kind === 'phone') phoneUp = ss(5.0, 5.8, t) * (1 - ss(8.6, 9.4, t));
+    if (kind === 'second') other = ss(5.0, 5.8, t) * (1 - ss(9.0, 9.6, t));
+    if (kind === 'absent') dx = -360 * ss(5.0, 5.9, t) * (1 - ss(9.4, 10.4, t));
+    if (kind === 'head') yaw = -38 * ss(5.0, 5.8, t) * (1 - ss(8.8, 9.6, t));
+    el.person.setAttribute('transform', 'translate(' + dx.toFixed(1) + ' 0)');
+    el.other.setAttribute('opacity', other.toFixed(2));
+    const shift = Math.sin(yaw * DEG) * 30;
+    el.face.setAttribute('cx', (320 + shift).toFixed(1));
+    el.face.setAttribute('rx', (36 * (1 - Math.abs(Math.sin(yaw * DEG)) * 0.35)).toFixed(1));
+    el.nose.setAttribute('d', 'M' + (320 + shift * 1.25).toFixed(1) + ' 152 L' + (320 + shift * 1.35).toFixed(1) + ' 184');
+    const py = 372 - phoneUp * 116;
+    el.phone.setAttribute('opacity', phoneUp > 0.02 ? '1' : '0');
+    el.phone.setAttribute('transform', 'translate(236 ' + py.toFixed(1) + ')');
+    el.hand.setAttribute('cy', (330 - phoneUp * 86).toFixed(1));
+    el.hand.setAttribute('cx', (252 + phoneUp * 2).toFixed(1));
+    const facePresent = Math.abs(dx) < 60;
+    el.fbox.setAttribute('opacity', facePresent ? '1' : '0');
+    el.fbox.setAttribute('transform', 'translate(' + dx.toFixed(1) + ' 0)');
+    el.obox.setAttribute('opacity', '0');
+    if (kind === 'phone' && phoneUp > 0.95 && t >= EVENT_T && t < 8.8) { tag(226, py - 10, 54, 80, 'телефон'); obs = 'Телефон в кадре'; }
+    if (kind === 'second' && other > 0.95 && t >= EVENT_T && t < 9.0) { tag(468, 124, 76, 92, 'второе лицо'); obs = 'Второе лицо в кадре'; }
+    if (kind === 'absent' && Math.abs(dx) > 320 && t >= EVENT_T) { tag(250, 96, 140, 150, 'лицо не видно'); obs = 'Лицо не видно'; }
+    if (kind === 'head' && Math.abs(yaw) > 34 && t >= EVENT_T) { tag(252, 86, 136, 150, 'голова повёрнута'); obs = 'Голова повёрнута в сторону'; }
+    el.clock.textContent = opts.clock || '';
+    return obs;
+  }
+  return { update };
+}
+
+/* =========================================================
+   03 — teacher panel
+   ========================================================= */
+function flipFirst(container) {
+  const m = new Map();
+  $$('[data-key]', container).forEach(el => m.set(el.dataset.key, el.getBoundingClientRect()));
+  return m;
+}
+function flipPlay(container, first) {
+  if (reduced() || !first.size || !container.closest('.slide').classList.contains('is-active') || overviewOpen) return;
+  const sc = getScale();
+  $$('[data-key]', container).forEach(el => {
+    const a = first.get(el.dataset.key);
+    if (!a) { el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' }); return; }
+    const b = el.getBoundingClientRect();
+    const dx = (a.left - b.left) / sc, dy = (a.top - b.top) / sc;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    el.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 400, easing: 'cubic-bezier(.22,.7,.2,1)' });
+  });
+}
+function decShort(id) {
+  const d = demoState.decisions[id];
+  return d ? 'Решение: ' + DECISION[d].short : 'Ждёт решения преподавателя';
+}
+function cardHTML(v) {
+  const L = LEVEL[v.level];
+  const ev = v.eps.length ? v.eps.length + ' ' + plural(v.eps.length, 'событие', 'события', 'событий') : 'Событий нет';
+  const link = v.offline ? '<span class="sig off"><i></i>Нет связи</span>'
+    : v.recovering ? '<span class="sig"><i></i>Связь восстановлена</span>'
+    : v.link === 'weak' ? '<span class="sig weak"><i></i>Связь слабая</span>' : '<span class="sig"><i></i>Связь</span>';
+  const cam = v.offline ? '<span class="sig off"><i></i>Нет кадров</span>' : '<span class="sig"><i></i>Камера</span>';
+  const sel = demoState.s3.selected === v.id;
+  return '<li data-key="' + v.id + '"><button type="button" class="card lvl-' + v.level + '" data-action="s3-select" data-arg="' + v.id + '" aria-pressed="' + sel + '"' +
+    ' aria-label="' + esc(v.name + ', ' + v.pc + ', ' + L.full + ', ' + ev) + '">' +
+    '<span class="card-top"><span class="card-name">' + esc(v.name) + '</span><span class="card-pc">' + v.pc + '</span></span>' +
+    '<span class="card-sig">' + link + cam + '</span>' +
+    '<span class="card-bot"><span class="prio prio-' + v.level + '">' + L.chip + '</span><span class="card-ev">' + ev + '</span></span></button></li>';
+}
+function renderS3(opts = {}) {
+  const st = demoState.s3;
+  const views = STUDENTS.map(studentView);
+  const isCheck = v => v.level === 'red' || v.level === 'yellow';
+  $('#s3-c-all').textContent = views.length;
+  $('#s3-c-check').textContent = views.filter(isCheck).length;
+  $('#s3-c-offline').textContent = views.filter(v => v.level === 'grey').length;
+  $$('[data-action="s3-filter"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.arg === st.filter)));
+  $$('[data-action="s3-sort"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.arg === st.sort)));
+  const list = views.filter(v => st.filter === 'all' || (st.filter === 'check' ? isCheck(v) : v.level === 'grey'));
+  list.sort(st.sort === 'priority'
+    ? (a, b) => LEVEL[a.level].rank - LEVEL[b.level].rank || a.pc.localeCompare(b.pc)
+    : (a, b) => a.pc.localeCompare(b.pc));
+  const ul = $('#s3-cards');
+  const first = flipFirst(ul);
+  const fc = document.activeElement && document.activeElement.closest && document.activeElement.closest('#s3-cards .card');
+  const focusedId = fc ? fc.dataset.arg : null;
+  ul.innerHTML = list.length ? list.map(cardHTML).join('') : '<li class="empty">В этом фильтре карточек нет.</li>';
+  renderDrawer(views, opts);
+  flipPlay(ul, first);
+  if (focusedId) { const f = $('#s3-cards .card[data-arg="' + focusedId + '"]'); if (f) f.focus({ preventScroll: true }); }
+}
+function renderDrawer(views, opts) {
+  const id = demoState.s3.selected;
+  const body = $('#s3-body');
+  const dr = $('#s3-drawer');
+  const v = id && views.find(x => x.id === id);
+  if (!v) { dr.hidden = true; dr.innerHTML = ''; body.classList.remove('has-drawer'); return; }
+  const wasOpen = !dr.hidden;
+  body.classList.add('has-drawer');
+  dr.hidden = false;
+  const L = LEVEL[v.level];
+  const info = OFFLINE_INFO[v.id] || { since: '—', reason: 'Нет связи со студентом' };
+  let why;
+  if (v.level === 'grey') why = info.reason + ' · последний статус ' + info.since + '. Серый означает «не видно», а не «всё в порядке».';
+  else if (v.open.length) { const e = v.open[0]; why = e.title + ', ' + e.time + '. ' + (demoState.decisions[e.id] === 'later' ? 'Отложено преподавателем.' : 'Ждёт решения преподавателя.'); }
+  else if (v.eps.length) why = 'Эпизоды рассмотрены преподавателем.';
+  else why = 'Событий нет. Карточка остаётся спокойной.';
+  const main = v.eps[0];
+  const evs = v.eps.length
+    ? '<ol class="ev-list">' + v.eps.map(e => '<li><span class="ev-time">' + e.time + '</span><span>' + e.title + '</span><span class="ev-dec">' + decShort(e.id) + '</span></li>').join('') + '</ol>'
+    : '<p class="empty">За экзамен событий нет.</p>';
+  const preview = v.offline
+    ? '<div class="no-frame">Нет актуального кадра<br>с ' + info.since + '</div>'
+    : '<svg viewBox="0 0 640 360" data-preview role="img" aria-label="Превью, синтетическая сцена"></svg>';
+  dr.innerHTML =
+    '<div class="drawer-head"><div><p class="drawer-pc">' + v.pc + '</p><h3>' + esc(v.name) + '</h3></div>' +
+    '<button class="icon-btn" type="button" data-action="s3-close" aria-label="Закрыть карточку студента">' + ICON_X + '</button></div>' +
+    '<div><span class="prio prio-' + v.level + '">' + L.full + '</span></div>' +
+    '<p class="drawer-why">' + why + '</p>' +
+    '<figure class="drawer-preview">' + preview + '</figure>' +
+    '<h4>События</h4>' + evs +
+    '<div class="drawer-actions">' +
+      (main ? '<button class="btn btn-primary" type="button" data-action="open-episode" data-arg="' + main.id + '">Открыть эпизод</button>' : '') +
+      '<button class="btn" type="button" data-action="open-control" data-arg="' + v.id + '">Управление</button></div>';
+  if (wasOpen) dr.style.animation = 'none';
+  else dr.style.removeProperty('animation');
+  const svgEl = $('[data-preview]', dr);
+  if (svgEl) createScene(svgEl).update(main ? main.kind : 'none', main ? EVENT_T + 0.8 : 0, { clock: main ? main.time : '10:42:31' });
+  if (opts.focusDrawer) { const c = $('[data-action="s3-close"]', dr); if (c) c.focus({ preventScroll: true }); }
+}
+
+/* =========================================================
+   04 — episode
+   ========================================================= */
+let scene4 = null;
+function currentEpisode() { return EPISODES.find(e => e.id === demoState.s4.current); }
+function seenOf(id) { return demoState.s4.seen[id] || (demoState.s4.seen[id] = { event: false, context: false }); }
+function markSeen() {
+  const s = demoState.s4, sn = seenOf(s.current);
+  if (s.t >= EVENT_T) sn.event = true;
+  if (sn.event && s.t >= WIN[1]) sn.context = true;
+}
+function renderS4() {
+  const s = demoState.s4;
+  const ep = currentEpisode();
+  const stu = byId(ep.student);
+  $('#s4-queue').innerHTML = EPISODES.map(e => {
+    const st = byId(e.student), d = demoState.decisions[e.id];
+    return '<li><button type="button" class="q-item" data-action="s4-pick" data-arg="' + e.id + '" aria-current="' + (e.id === s.current) + '">' +
+      '<span class="prio prio-' + e.level + '">' + e.title + '</span>' +
+      '<span class="q-who">' + esc(st.name) + ' · ' + st.pc + '</span>' +
+      '<span class="q-meta"><span class="mono">' + e.time + '</span><span class="q-dec' + (d ? ' is-made' : '') + '">' + (d ? DECISION[d].short : 'ждёт решения') + '</span></span></button></li>';
+  }).join('');
+  const c = { pending: 0, confirmed: 0, dismissed: 0, later: 0 };
+  EPISODES.forEach(e => { c[demoState.decisions[e.id] || 'pending']++; });
+  $('#s4-counters').innerHTML = [['pending', 'Ждут решения'], ['confirmed', 'Подтверждено'], ['dismissed', 'Отклонено'], ['later', 'Проверить позже']]
+    .map(([k, l]) => '<div class="counter"><b>' + c[k] + '</b><span>' + l + '</span></div>').join('');
+  const pr = $('#s4-prio');
+  pr.className = 'prio prio-' + ep.level;
+  pr.textContent = LEVEL[ep.level].full;
+  $('#s4-title').textContent = ep.title;
+  $('#s4-meta').textContent = stu.name + ' · ' + stu.pc + ' · ' + ep.time;
+  $('#s4-what').textContent = ep.what;
+  const d = demoState.decisions[ep.id];
+  $$('[data-action="s4-decide"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.arg === d)));
+  $('#s4-status').innerHTML = d ? DECISION[d].text : 'Решение ещё не принято. Посмотрите несколько секунд до и после события.';
+  const pct = x => 'calc(11px + (100% - 22px) * ' + (x / CLIP).toFixed(4) + ')';
+  const w = $('#s4-window');
+  w.style.left = pct(WIN[0]);
+  w.style.width = 'calc((100% - 22px) * ' + ((WIN[1] - WIN[0]) / CLIP).toFixed(4) + ')';
+  $('#s4-marker').style.left = pct(EVENT_T);
+  renderPlayer();
+}
+function renderSteps() {
+  const ep = currentEpisode(), sn = seenOf(ep.id), dec = !!demoState.decisions[ep.id];
+  const done = { event: sn.event, context: sn.context, decision: dec };
+  const order = ['event', 'context', 'decision'];
+  const cur = order.find(k => !done[k]);
+  $$('#s4-steps li[data-step]').forEach(li => {
+    const k = li.dataset.step;
+    li.classList.toggle('is-done', done[k]);
+    li.classList.toggle('is-current', k === cur);
+    if (k === cur) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+  });
+}
+function renderPlayer() {
+  const s = demoState.s4, ep = currentEpisode();
+  if (!scene4) scene4 = createScene($('#s4-scene'));
+  const obs = scene4.update(ep.kind, s.t, { clock: addSeconds(ep.time, s.t - EVENT_T) });
+  $('#s4-range').value = String(s.t);
+  const rel = s.t - EVENT_T;
+  const relTxt = Math.abs(rel) < 0.05 ? 'момент события' : (rel < 0 ? '−' : '+') + Math.abs(rel).toFixed(1).replace('.', ',') + ' с';
+  $('#s4-time').textContent = addSeconds(ep.time, rel) + ' · ' + relTxt;
+  $('#s4-range').setAttribute('aria-valuetext', relTxt);
+  $('#s4-obs').innerHTML = obs ? '<span class="prio prio-blue">Наблюдение: ' + obs.toLowerCase() + '</span>' : '';
+  $('#s4-play-l').textContent = s.playing ? 'Пауза' : (s.t >= CLIP - 0.05 ? 'Сначала' : 'Смотреть');
+  $('#s4-play').setAttribute('aria-label', s.playing ? 'Пауза' : 'Воспроизвести');
+  $('#s4-play-ico').innerHTML = s.playing ? '<path d="M6 4.5h3v11H6zM11 4.5h3v11h-3z" fill="currentColor"/>' : '<path d="M6 4.5v11l9-5.5z" fill="currentColor"/>';
+  renderSteps();
+}
+let raf4 = 0, last4 = 0;
+function syncPlayLoop() {
+  const want = demoState.s4.playing && current === 3 && !overviewOpen;
+  if (want && !raf4) { last4 = performance.now(); raf4 = requestAnimationFrame(tick4); }
+  else if (!want && raf4) { cancelAnimationFrame(raf4); raf4 = 0; }
+}
+function tick4(now) {
+  const s = demoState.s4;
+  const dt = Math.min(0.1, (now - last4) / 1000);
+  last4 = now;
+  s.t = Math.min(CLIP, s.t + dt);
+  markSeen();
+  if (s.t >= CLIP) s.playing = false;
+  renderPlayer();
+  raf4 = 0;
+  syncPlayLoop();
+}
+function togglePlay() {
+  const s = demoState.s4;
+  if (s.playing) s.playing = false;
+  else { if (s.t >= CLIP - 0.05) s.t = 0; s.playing = true; }
+  syncPlayLoop();
+  renderPlayer();
+}
+function seek(t) {
+  const s = demoState.s4;
+  s.t = clamp(Math.round(t * 10) / 10, 0, CLIP);
+  markSeen();
+  renderPlayer();
+}
+function selectEpisode(id) {
+  const s = demoState.s4;
+  if (s.current !== id) { s.current = id; s.t = 3; s.playing = false; syncPlayLoop(); }
+  renderS4();
+}
+function decide(kind) {
+  const ep = currentEpisode();
+  demoState.decisions[ep.id] = kind;
+  renderS4();
+  renderS3();
+  announce('Решение по эпизоду «' + ep.title + '»: ' + DECISION[kind].short);
+}
+
+/* =========================================================
+   05 — computer vision
+   ========================================================= */
+let scene5 = null;
+const S5_TEXT = {
+  phone: 'Детектор ищет телефон; эвристики отмечают подъём и возможную съёмку экрана. Это признаки для проверки, а не доказательство снимка или намерения.',
+  presence: 'Детектор лиц считает лица в кадре. Нет лица или второе лицо — повод посмотреть контекст.',
+  head: 'Здесь — схема позы головы. В продукте после калибровки отдельно оценивается примерный взгляд вниз и в стороны; точность на экзаменах ещё не измерена.'
+};
+function buildHeadGeometry() {
+  const rx = 0.8, ry = 1.0, rz = 0.88;
+  const surf = (x, y) => rz * Math.sqrt(Math.max(0, 1 - (x / rx) ** 2 - (y / ry) ** 2));
+  const lines = [];
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const pts = [];
+    for (let lon = 0; lon <= 360; lon += 10) {
+      const a = lat * DEG, b = lon * DEG;
+      pts.push([Math.cos(a) * Math.sin(b) * rx, Math.sin(a) * ry, Math.cos(a) * Math.cos(b) * rz]);
+    }
+    lines.push(pts);
+  }
+  for (let lon = 0; lon < 360; lon += 30) {
+    const pts = [];
+    for (let lat = -90; lat <= 90; lat += 10) {
+      const a = lat * DEG, b = lon * DEG;
+      pts.push([Math.cos(a) * Math.sin(b) * rx, Math.sin(a) * ry, Math.cos(a) * Math.cos(b) * rz]);
+    }
+    lines.push(pts);
+  }
+  const feat = [];
+  const curve = (x0, x1, y0, bend) => {
+    const pts = [];
+    for (let i = 0; i <= 8; i++) {
+      const x = x0 + (x1 - x0) * i / 8, y = y0 + bend * Math.sin(Math.PI * i / 8);
+      pts.push([x, y, surf(x, y) + 0.015]);
+    }
+    return pts;
+  };
+  feat.push(curve(-0.46, -0.16, 0.2, 0.05), curve(0.16, 0.46, 0.2, 0.05), curve(-0.22, 0.22, -0.5, -0.06));
+  const nose = [[0, 0.12, surf(0, 0.12)], [0, -0.2, rz * 1.2], [0, -0.3, surf(0, -0.3)]];
+  const ears = [-1, 1].map(sg => {
+    const pts = [];
+    for (let i = 0; i <= 16; i++) { const a = i / 16 * Math.PI * 2; pts.push([sg * rx * 1.02, 0.05 + Math.sin(a) * 0.2, Math.cos(a) * 0.12]); }
+    return pts;
+  });
+  return { lines, feat, nose, ears };
+}
+const HEAD = buildHeadGeometry();
+function rot(p, yaw, pitch, roll) {
+  let [x, y, z] = p, c = Math.cos(yaw), s = Math.sin(yaw);
+  const x1 = c * x + s * z, z1 = -s * x + c * z, y1 = y;
+  c = Math.cos(pitch); s = Math.sin(pitch);
+  const y2 = c * y1 - s * z1, z2 = s * y1 + c * z1;
+  c = Math.cos(roll); s = Math.sin(roll);
+  return [c * x1 - s * y2, s * x1 + c * y2, z2];
+}
+function proj(p) { const k = 5 / (5 - p[2]); return [p[0] * k * 165, -p[1] * k * 165 - 20, p[2]]; }
+function renderHead() {
+  const s = demoState.s5;
+  const Y = s.yaw * DEG, P = s.pitch * DEG, R = s.roll * DEG;
+  let front = '', back = '';
+  const addLine = (pts, frontOnly) => {
+    const q = pts.map(p => proj(rot(p, Y, P, R)));
+    for (let i = 1; i < q.length; i++) {
+      const a = q[i - 1], b = q[i], z = (a[2] + b[2]) / 2;
+      const seg = 'M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + 'L' + b[0].toFixed(1) + ' ' + b[1].toFixed(1);
+      if (z > -0.04) front += seg; else if (!frontOnly) back += seg;
+    }
+  };
+  HEAD.lines.forEach(l => addLine(l));
+  HEAD.ears.forEach(l => addLine(l));
+  let feat = '';
+  HEAD.feat.forEach(l => {
+    const q = l.map(p => proj(rot(p, Y, P, R)));
+    if (q[4][2] > 0) feat += 'M' + q.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L');
+  });
+  const nq = HEAD.nose.map(p => proj(rot(p, Y, P, R)));
+  const nosePath = nq[1][2] > 0 ? 'M' + nq.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') : '';
+  const o = proj(rot([0, 0, 0], Y, P, R));
+  const ax = (v, cls, label, lcls) => {
+    const e = proj(rot(v, Y, P, R));
+    const lx = o[0] + (e[0] - o[0]) * 1.13, ly = o[1] + (e[1] - o[1]) * 1.13;
+    return '<line class="hd-ax ' + cls + '" x1="' + o[0].toFixed(1) + '" y1="' + o[1].toFixed(1) + '" x2="' + e[0].toFixed(1) + '" y2="' + e[1].toFixed(1) + '"/>' +
+      '<text class="hd-axl ' + (lcls || '') + '" x="' + lx.toFixed(1) + '" y="' + (ly + 5).toFixed(1) + '" text-anchor="middle">' + label + '</text>';
+  };
+  $('#s5-head').innerHTML =
+    '<path class="hd-back" d="' + back + '"/>' +
+    ax([1.3, 0, 0], 'hd-ax-x', 'X') + ax([0, 1.35, 0], 'hd-ax-y', 'Y') +
+    '<path class="hd-front" d="' + front + '"/>' +
+    '<path class="hd-front" d="' + feat + '" style="stroke-width:2.2"/>' +
+    (nosePath ? '<path class="hd-nose" d="' + nosePath + '"/>' : '') +
+    ax([0, 0, 1.6], 'hd-ax-z', 'Z', 'hd-axl-z') +
+    '<rect class="hd-cam" x="-36" y="214" width="72" height="20" rx="6"/><text class="hd-camtx" x="0" y="228" text-anchor="middle">КАМЕРА</text>';
+  const fmt = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + '°';
+  [['yaw', s.yaw], ['pitch', s.pitch], ['roll', s.roll]].forEach(([k, v]) => {
+    const inp = $('#s5-' + k);
+    if (document.activeElement !== inp) inp.value = String(v);
+    $('#s5-' + k + '-o').textContent = fmt(v);
+    inp.setAttribute('aria-valuetext', fmt(v));
+  });
+  let obs = null;
+  if (Math.abs(s.yaw) >= 30) obs = 'Голова повёрнута ' + (s.yaw < 0 ? 'влево' : 'вправо') + ' в кадре';
+  else if (s.pitch >= 22) obs = 'Голова опущена';
+  else if (s.pitch <= -22) obs = 'Голова поднята';
+  $('#s5-obs').innerHTML = obs
+    ? '<span class="prio prio-blue">Наблюдение</span>' + obs + ' · не взгляд и не вывод'
+    : '<span class="prio prio-green">Без замечаний</span>Голова примерно прямо';
+}
+function renderS5() {
+  const s = demoState.s5;
+  $$('[data-action="s5-tab"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.arg === s.tab)));
+  $$('[data-action="s5-phone"]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.arg === 'on') === s.phone)));
+  $$('[data-action="s5-faces"]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.arg === s.faces)));
+  const head = s.tab === 'head';
+  $('#s5-pane-scene').hidden = head;
+  $('#s5-pane-head').hidden = !head;
+  $('#s5-ctl-phone').hidden = s.tab !== 'phone';
+  $('#s5-ctl-presence').hidden = s.tab !== 'presence';
+  $('#s5-explain').textContent = S5_TEXT[s.tab];
+  $('#s5-caption').textContent = head ? 'Визуализация принципа, синтетическая поза' : 'Синтетическая сцена, не запись';
+  if (head) { renderHead(); return; }
+  if (!scene5) scene5 = createScene($('#s5-scene'));
+  let obs;
+  if (s.tab === 'phone') {
+    obs = scene5.update('phone', s.phone ? 7 : 2, { clock: '10:42:19' });
+    $('#s5-obs').innerHTML = obs ? '<span class="prio prio-blue">Наблюдение</span>Телефон в кадре · 10:42:19' : '<span class="prio prio-green">Без замечаний</span>Телефон не замечен';
+  } else {
+    const kind = s.faces === 0 ? 'absent' : s.faces === 2 ? 'second' : 'none';
+    obs = scene5.update(kind, 7, { clock: '10:42:19' });
+    $('#s5-obs').innerHTML = obs ? '<span class="prio prio-blue">Наблюдение</span>' + obs : '<span class="prio prio-green">Без замечаний</span>В кадре одно лицо';
+  }
+}
+
+/* =========================================================
+   06 — exam rules
+   ========================================================= */
+function normHost(v) {
+  let s = String(v || '').trim().toLowerCase();
+  s = s.replace(/^[a-z][a-z0-9+.-]*:\/\//, '');
+  s = s.split(/[\/?#\s]/)[0].replace(/:\d+$/, '').replace(/^www\./, '').replace(/\.$/, '');
+  return s;
+}
+const validHost = h => /^[a-z0-9а-яё-]+(\.[a-z0-9а-яё-]+)+$/i.test(h);
+const allowedHost = () => normHost(demoState.s6.allowed);
+const isAllowed = (h, a) => !!a && (h === a || h.endsWith('.' + a));
+function navigate6(addr) {
+  const s = demoState.s6;
+  s.address = addr;
+  const host = normHost(addr);
+  if (!host) s.page = { kind: 'idle' };
+  else if (!validHost(host)) s.page = { kind: 'invalid', host };
+  else s.page = { kind: isAllowed(host, allowedHost()) ? 'allowed' : 'blocked', host };
+  renderS6();
+}
+function renderS6() {
+  const s = demoState.s6;
+  $$('[data-action="s6-mode"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.arg === s.mode)));
+  const site = s.mode === 'site';
+  $('#s6-site-field').hidden = !site;
+  $('#s6-program-field').hidden = site;
+  $('#s6-browser').hidden = !site;
+  $('#s6-desktop').hidden = site;
+  const al = $('#s6-allowed');
+  if (document.activeElement !== al) al.value = s.allowed;
+  const pr = $('#s6-program');
+  if (document.activeElement !== pr) pr.value = s.program;
+  const a = allowedHost();
+  const state = $('#s6-state');
+  if (site) {
+    state.innerHTML = a && validHost(a)
+      ? 'Правило: разрешён <span class="mono">' + esc(a) + '</span> и его поддомены. Остальные адреса — вне правил.'
+      : 'Укажите разрешённый адрес, например <span class="mono">exam.college.example</span>.';
+  } else {
+    state.innerHTML = 'Правило: разрешена «' + PROGRAMS[s.program] + '». Другие программы — вне правил.';
+  }
+  if (site) {
+    const ad = $('#s6-address');
+    if (document.activeElement !== ad) ad.value = s.address;
+    const quick = [a && validHost(a) ? a : null, a && validHost(a) ? 'docs.' + a : null, 'search.example.com', 'chat.example.net'].filter(Boolean);
+    $('#s6-quick').innerHTML = '<span class="caption">Быстрый переход:</span>' +
+      quick.map(h => '<button type="button" class="chip-btn" data-action="s6-quick" data-arg="' + esc(h) + '">' + esc(h) + '</button>').join('');
+    const p = s.page, page = $('#s6-page');
+    if (p.kind === 'idle') page.innerHTML = '<div class="page-idle">Введите адрес или выберите быстрый переход.</div>';
+    else if (p.kind === 'invalid') page.innerHTML = '<div class="page-blocked"><span class="prio prio-grey">Адрес не распознан</span><p class="big">Проверьте адрес</p><p>Пример: <span class="mono">' + esc(a || 'exam.college.example') + '</span></p></div>';
+    else if (p.kind === 'allowed') page.innerHTML =
+      '<span class="prio prio-green">Разрешено правилами экзамена</span>' +
+      '<h3 style="margin-top:16px">Экзамен · вопрос 7 из 30</h3><p>Открыт <span class="mono">' + esc(p.host) + '</span>. Страница экзамена работает как обычно.</p>' +
+      '<div class="quiz" aria-hidden="true"><label><input type="radio" name="s6q" tabindex="-1"> Вариант A</label><label><input type="radio" name="s6q" tabindex="-1"> Вариант B</label><label><input type="radio" name="s6q" tabindex="-1"> Вариант C</label></div>';
+    else page.innerHTML =
+      '<div class="page-blocked"><span class="prio prio-yellow">Вне правил экзамена</span>' +
+      '<p class="big">Переход на <span class="mono">' + esc(p.host) + '</span> не выполнен</p>' +
+      '<p>Адрес не входит в правила экзамена. В целевом сценарии студент видит это сообщение, а преподаватель получает событие.</p></div>';
+  } else {
+    $('#s6-taskbar').innerHTML = Object.keys(PROGRAMS).map(k =>
+      '<button type="button" class="app-tile' + (k === s.program ? ' is-allowed' : '') + '" data-action="s6-launch" data-arg="' + k + '"><i aria-hidden="true"></i>' + PROGRAMS[k] + '</button>').join('');
+    const w = $('#s6-window');
+    if (!s.opened) w.innerHTML = '<div class="desk-window"><p>Выберите программу на панели задач.</p></div>';
+    else if (s.opened === s.program) w.innerHTML = '<div class="desk-window"><span class="prio prio-green">Разрешено правилами экзамена</span><h3 style="margin-top:12px">' + PROGRAMS[s.opened] + '</h3><p>Программа запущена — она входит в правила экзамена.</p></div>';
+    else w.innerHTML = '<div class="desk-window"><span class="prio prio-yellow">Вне правил экзамена</span><h3 style="margin-top:12px">«' + PROGRAMS[s.opened] + '» не входит в правила</h3>' +
+      '<p>В целевом сценарии запуск ограничивает политика Windows на ПК студента — её настраивает администратор. Эта страница Windows не блокирует.</p></div>';
+  }
+}
+
+/* =========================================================
+   07 — teacher ↔ student
+   ========================================================= */
+let audioCtx = null;
+function playTone() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = audioCtx || new AC();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = 660;
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.06, audioCtx.currentTime + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.45);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.5);
+  } catch (e) { /* audio is optional */ }
+}
+function lockReasonText() {
+  const s = demoState.s7;
+  return s.reason === 'custom' ? s.custom.trim() : LOCK_REASONS[s.reason] || '';
+}
+function renderS7() {
+  const s = demoState.s7, st = byId(s.student);
+  $('#s7-name').textContent = st.name;
+  $('#s7-pc').textContent = st.pc;
+  $('#s7-st-pc').textContent = st.pc + ' · ' + st.name;
+  $('#s7-listen').disabled = s.listen !== 'off';
+  $('#s7-stop').disabled = s.listen === 'off';
+  $('#s7-bars').classList.toggle('is-on', s.listen === 'on');
+  $('#s7-bars').style.opacity = s.listen === 'on' ? '1' : '.3';
+  $('#s7-live-t').textContent = s.listen === 'off' ? 'Прослушивание выключено'
+    : s.listen === 'notify' ? 'Сначала студент получает уведомление…' : 'Идёт прослушивание · демонстрационный индикатор, без звука';
+  $('#s7-mic').innerHTML = s.listen !== 'off'
+    ? '<div class="mic-banner" role="status"><span class="mic-dot" aria-hidden="true"></span><b>Микрофон включён преподавателем для проверки</b></div>' : '';
+  $('#s7-toast').innerHTML = s.toast ? '<div class="st-toast" role="status"><b>Преподаватель</b>' + esc(SAYINGS[s.toast]) + '</div>' : '';
+  $$('input[name="s7-reason"]').forEach(r => { r.checked = r.value === s.reason; });
+  const ci = $('#s7-custom');
+  if (document.activeElement !== ci) ci.value = s.custom;
+  $('#s7-lock').disabled = s.locked || !lockReasonText();
+  $('#s7-unlock').disabled = !s.locked;
+  $('#s7-lockwrap').innerHTML = s.locked
+    ? '<div class="lock" role="alert"><div class="lock-card"><div class="lock-ico" aria-hidden="true"><svg viewBox="0 0 20 20" width="26" height="26"><rect x="4.5" y="9" width="11" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></div>' +
+      '<h3>Преподаватель приостановил ваш экзамен</h3><p class="reason">Причина: ' + esc(s.lockReason) + '</p><p>Дождитесь преподавателя.</p></div></div>' : '';
+}
+function showToast(key) {
+  const s = demoState.s7;
+  s.toast = key;
+  renderS7();
+  const stamp = key + Date.now();
+  s._toastStamp = stamp;
+  later(() => { if (demoState.s7._toastStamp === stamp) { demoState.s7.toast = null; renderS7(); } }, 4200);
+}
+
+/* =========================================================
+   08 — network
+   ========================================================= */
+const NET_PCS = ['s01', 's02', 's03', 's04', 's05', 's06'];
+const net = { paths: {}, packets: {}, built: false, req: null, big: null, clipStart: 0 };
+function buildNet() {
+  const root = $('#s8-svg');
+  root.innerHTML = '';
+  const gLinks = svg('g', {}, root);
+  /* teacher */
+  const t = svg('g', {}, root);
+  svg('rect', { class: 'nd-box nd-box-t', x: 30, y: 180, width: 240, height: 160, rx: 16 }, t);
+  svg('text', { class: 'nd-title', x: 52, y: 216 }, t).textContent = 'ПК преподавателя';
+  svg('rect', { class: 'nd-chip', x: 50, y: 232, width: 200, height: 30, rx: 8 }, t);
+  svg('text', { class: 'nd-chiptx', x: 62, y: 252 }, t).textContent = 'Сервер Adal · порт 8765';
+  svg('rect', { class: 'nd-chip', x: 50, y: 270, width: 200, height: 30, rx: 8 }, t);
+  svg('text', { class: 'nd-chiptx', x: 62, y: 290 }, t).textContent = 'Панель преподавателя';
+  svg('text', { class: 'nd-sub', x: 52, y: 324 }, t).textContent = 'Панель открыта только на этом ПК';
+  /* hub */
+  const h = svg('g', {}, root);
+  svg('rect', { class: 'nd-box', x: 386, y: 226, width: 138, height: 68, rx: 14 }, h);
+  for (let i = 0; i < 6; i++) svg('rect', { class: 'nd-port', x: 404 + i * 18, y: 270, width: 10, height: 8, rx: 2 }, h);
+  const ht = svg('text', { class: 'nd-title', x: 455, y: 256, 'text-anchor': 'middle', id: 's8-hub-t' }, h);
+  ht.textContent = 'Коммутатор';
+  ht.style.fontSize = '15px';
+  [16, 28, 40].forEach(r => svg('path', { class: 'nd-wave', d: 'M' + (455 - r) + ' ' + (220 - r * 0.15) + ' A' + r + ' ' + r + ' 0 0 1 ' + (455 + r) + ' ' + (220 - r * 0.15) }, h));
+  svg('text', { class: 'nd-sub', x: 455, y: 316, 'text-anchor': 'middle' }, h).textContent = 'одна подсеть';
+  svg('line', { class: 'nd-link', x1: 270, y1: 260, x2: 386, y2: 260 }, gLinks);
+  /* students */
+  NET_PCS.forEach((id, k) => {
+    const y = 26 + k * 80, cy = y + 31;
+    const st = byId(id);
+    const lk = svg('path', { class: 'nd-link nd-link-s', id: 'lk-' + id, d: 'M524 260 C610 260 636 ' + cy + ' 712 ' + cy }, gLinks);
+    let bx = 640, by = cy;
+    try { const L = lk.getTotalLength(); if (L > 0) { const q = lk.getPointAtLength(L * 0.62); bx = q.x; by = q.y; } } catch (err) { /* not rendered yet */ }
+    const brk = svg('g', { id: 'brk-' + id, opacity: 0 }, gLinks);
+    svg('path', { class: 'nd-break', d: 'M' + (bx - 7).toFixed(1) + ' ' + (by - 7).toFixed(1) + ' l14 14 m0 -14 l-14 14' }, brk);
+    const route = svg('path', { d: 'M712 ' + cy + ' C636 ' + cy + ' 610 260 524 260 L270 260', fill: 'none', stroke: 'none' }, root);
+    net.paths[id] = { el: route, len: 0 };
+    const g = svg('g', { class: 'nd-pc', id: 'pc-' + id }, root);
+    svg('rect', { class: 'nd-box', x: 712, y: y, width: 220, height: 62, rx: 12 }, g);
+    svg('text', { class: 'nd-title', x: 730, y: y + 27 }, g).textContent = st.pc;
+    svg('text', { class: 'nd-sub', x: 730, y: y + 47, id: 'pcs-' + id }, g).textContent = 'анализ кадра на месте';
+    svg('circle', { class: 'nd-dot', id: 'pcd-' + id, cx: 912, cy: y + 20, r: 6 }, g).style.fill = 'var(--green)';
+    net.packets[id] = svg('circle', { class: 'pk', r: 5, cx: -20, cy: -20 }, root);
+  });
+  net.req = svg('circle', { class: 'pk-req', r: 7, cx: -20, cy: -20 }, root);
+  net.big = svg('rect', { class: 'pk-big', width: 26, height: 12, rx: 6, x: -40, y: -40 }, root);
+  net.built = true;
+}
+function renderS8() {
+  if (!net.built) buildNet();
+  const s = demoState.net;
+  $$('[data-action="s8-link"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.arg === s.link)));
+  const svgRoot = $('#s8-svg');
+  svgRoot.classList.toggle('is-wifi', s.link === 'wifi');
+  $('#s8-hub-t').textContent = s.link === 'wifi' ? 'Точка доступа' : 'Коммутатор';
+  const off03 = demoState.offline.includes('s03');
+  $('#s8-toggle03').textContent = off03 ? 'Вернуть сеть ПК-03' : 'Отключить сеть у ПК-03';
+  $('#s8-toggle03').setAttribute('aria-pressed', String(off03));
+  $('#s8-clip').disabled = s.clip !== 'idle' && s.clip !== 'done' || demoState.offline.includes('s05');
+  NET_PCS.forEach(id => {
+    const down = demoState.offline.includes(id);
+    const rec = demoState.recovering.includes(id);
+    $('#lk-' + id).classList.toggle('is-down', down);
+    $('#brk-' + id).setAttribute('opacity', down ? '1' : '0');
+    $('#pc-' + id).classList.toggle('is-down', down);
+    $('#pcd-' + id).style.fill = down ? 'var(--grey)' : rec ? 'var(--accent-line)' : 'var(--green)';
+    $('#pcs-' + id).textContent = down ? 'нет связи · данные устарели' : rec ? 'связь восстановлена' : 'анализ кадра на месте';
+  });
+  $('#s8-cards').innerHTML = NET_PCS.map(id => {
+    const st = byId(id), down = demoState.offline.includes(id), rec = demoState.recovering.includes(id);
+    let lvl = 'green', txt = 'Связь · статус каждые 2 с';
+    if (down) { lvl = 'grey'; txt = 'Нет данных · связь потеряна в ' + OFFLINE_INFO[id].since; }
+    else if (rec) { lvl = 'blue'; txt = 'Связь восстановлена · отправка накопленных событий'; }
+    else if (id === 's05' && s.clip === 'request') { lvl = 'blue'; txt = 'Запрос клипа отправлен'; }
+    else if (id === 's05' && s.clip === 'upload') { lvl = 'blue'; txt = 'Клип передаётся преподавателю'; }
+    else if (id === 's05' && s.clip === 'done') { lvl = 'blue'; txt = 'Клип у преподавателя (демонстрация)'; }
+    return '<div class="mini lvl-' + lvl + '"><b>' + st.pc + '</b><span>' + txt + '</span></div>';
+  }).join('');
+  $('#s8-note').textContent = (s.link === 'wifi'
+    ? 'Wi-Fi: все ПК в одной подсети; изоляция клиентов в гостевых сетях мешает подключению.'
+    : 'Ethernet: кабель до коммутатора, сервер слушает порт 8765.') +
+    ' Adal не нужен интернет во время работы — внешнему сайту экзамена он нужен свой.';
+  if (reduced() || current !== 7) placeStaticPackets();
+}
+function pathLen(p) {
+  if (!p.len) { try { p.len = p.el.getTotalLength(); } catch (e) { p.len = 0; } }
+  return p.len;
+}
+function placeStaticPackets() {
+  NET_PCS.forEach(id => {
+    const p = net.paths[id], c = net.packets[id];
+    if (!p || demoState.offline.includes(id) || !pathLen(p)) { c.setAttribute('cx', -20); c.setAttribute('cy', -20); return; }
+    const pt = p.el.getPointAtLength(p.len * 0.3);
+    c.setAttribute('cx', pt.x); c.setAttribute('cy', pt.y);
+  });
+  net.req.setAttribute('cx', -20);
+  net.big.setAttribute('x', -40);
+}
+let raf8 = 0;
+function syncNetLoop() {
+  const want = current === 7 && !overviewOpen && !reduced();
+  if (want && !raf8) raf8 = requestAnimationFrame(tick8);
+  else if (!want && raf8) { cancelAnimationFrame(raf8); raf8 = 0; }
+}
+function tick8(now) {
+  raf8 = 0;
+  if (!net.built) buildNet();
+  NET_PCS.forEach((id, k) => {
+    const p = net.paths[id], c = net.packets[id];
+    if (demoState.offline.includes(id) || !pathLen(p)) { c.setAttribute('cx', -20); c.setAttribute('cy', -20); return; }
+    const phase = ((now / 2000) + k * 0.17) % 1;
+    if (phase > 0.72) { c.setAttribute('cx', -20); c.setAttribute('cy', -20); return; }
+    const pt = p.el.getPointAtLength(p.len * ease(phase / 0.72));
+    c.setAttribute('cx', pt.x.toFixed(1)); c.setAttribute('cy', pt.y.toFixed(1));
+  });
+  const s = demoState.net, p5 = net.paths.s05;
+  if ((s.clip === 'request' || s.clip === 'upload') && pathLen(p5)) {
+    if (!net.clipStart) net.clipStart = now;
+    const el = now - net.clipStart;
+    if (s.clip === 'request') {
+      const f = Math.min(1, el / 900);
+      const pt = p5.el.getPointAtLength(p5.len * (1 - ease(f)));
+      net.req.setAttribute('cx', pt.x.toFixed(1)); net.req.setAttribute('cy', pt.y.toFixed(1));
+    } else {
+      net.req.setAttribute('cx', -20);
+      const f = Math.min(1, el / 1500);
+      const pt = p5.el.getPointAtLength(p5.len * ease(f));
+      net.big.setAttribute('x', (pt.x - 13).toFixed(1)); net.big.setAttribute('y', (pt.y - 6).toFixed(1));
+    }
+  } else { net.req.setAttribute('cx', -20); net.big.setAttribute('x', -40); net.clipStart = 0; }
+  syncNetLoop();
+}
+function requestClip() {
+  const s = demoState.net;
+  s.clip = 'request'; net.clipStart = 0; renderS8();
+  later(() => { s.clip = 'upload'; net.clipStart = 0; renderS8(); }, reduced() ? 400 : 950);
+  later(() => { s.clip = 'done'; renderS8(); announce('Клип ПК-05 у преподавателя (демонстрация)'); }, reduced() ? 900 : 2500);
+  later(() => { if (s.clip === 'done') { s.clip = 'idle'; renderS8(); } }, 6500);
+}
+function toggle03() {
+  const off = demoState.offline.includes('s03');
+  if (off) {
+    demoState.offline = demoState.offline.filter(x => x !== 's03');
+    demoState.recovering = demoState.recovering.concat('s03');
+    later(() => { demoState.recovering = demoState.recovering.filter(x => x !== 's03'); renderS8(); renderS3(); }, 1800);
+    announce('ПК-03: связь восстановлена');
+  } else {
+    demoState.offline = demoState.offline.concat('s03');
+    demoState.recovering = demoState.recovering.filter(x => x !== 's03');
+    announce('ПК-03: нет связи, карточка серая');
+  }
+  renderS8();
+  renderS3();
+}
+
+/* =========================================================
+   09 — evidence
+   ========================================================= */
+function renderS9() {
+  $('#s9-matrix').innerHTML = COLS.map(c =>
+    '<section class="mx-col" data-col="' + c.id + '" aria-label="' + c.title + '"><h3><i aria-hidden="true"></i>' + c.title + '</h3><ul class="mx-list">' +
+    EVIDENCE.filter(e => e.col === c.id && !e.extra).map(e =>
+      '<li><button class="mx-item" type="button" data-action="s9-open" data-arg="' + e.id + '"><span class="mx-link">Основание</span>' +
+      '<b>' + esc(e.title) + '</b><span class="mx-cond">' + esc(e.cond) + '</span></button></li>').join('') +
+    '</ul></section>').join('');
+}
+function openEvidence(id) {
+  const e = EVIDENCE.find(x => x.id === id);
+  if (!e) return;
+  const col = COLS.find(c => c.id === e.col);
+  $('#dlg-col').textContent = col.title;
+  $('#dlg-title').textContent = e.title;
+  $('#dlg-body').innerHTML =
+    '<p style="margin:0">' + esc(e.cond) + '</p>' +
+    '<dl><dt>Что известно</dt><dd><ul>' + e.facts.map(f => '<li>' + esc(f) + '</li>').join('') + '</ul></dd>' +
+    '<dt>Тип основания</dt><dd>' + esc(e.type) + '</dd>' +
+    '<dt>Дата</dt><dd>' + esc(e.when) + '</dd>' +
+    (e.commit ? '<dt>Коммит прогона</dt><dd><code>' + esc(e.commit) + '</code></dd>' : '') +
+    '<dt>Файлы</dt><dd><ul>' + e.src.map(p => '<li><a style="color:inherit" href="https://github.com/diiaanns07-droid/Qostanay_hub/blob/bb8bcfd/' + encodeURI(p) + '" target="_blank" rel="noopener noreferrer"><code>' + esc(p) + '</code></a></li>').join('') + '</ul></dd>' +
+    '<dt>Снимок</dt><dd><code>main @ bb8bcfd</code></dd></dl>';
+  const d = $('#evidence-dlg');
+  if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+}
+
+/* =========================================================
+   Auto demo — explicit start, pause, reset
+   ========================================================= */
+const AUTO = [
+  { go: 0, wait: 3200 },
+  { go: 1, wait: 1500 }, { run: () => ACTIONS['s2-size']('3'), wait: 1300 }, { run: () => ACTIONS['s2-size']('100'), wait: 1500 },
+  { run: () => ACTIONS['s2-size']('30'), wait: 1200 }, { run: () => { demoState.s2.event = true; renderS2(); }, wait: 3000 },
+  { go: 2, wait: 2200 }, { run: () => ACTIONS['s3-filter']('check'), wait: 2000 }, { run: () => { demoState.s3.selected = 's07'; renderS3(); }, wait: 3200 },
+  { run: () => { selectEpisode('ep07'); go(3, { silent: false }); }, wait: 1500 }, { run: () => { if (!demoState.s4.playing) togglePlay(); }, wait: 7200 },
+  { run: () => decide('confirmed'), wait: 2600 },
+  { go: 4, wait: 2000 }, { run: () => ACTIONS['s5-phone']('off'), wait: 1300 }, { run: () => ACTIONS['s5-phone']('on'), wait: 1400 },
+  { run: () => ACTIONS['s5-tab']('presence'), wait: 900 }, { run: () => ACTIONS['s5-faces']('2'), wait: 1800 },
+  { run: () => ACTIONS['s5-tab']('head'), wait: 900 }, { run: () => setPose(0, 4, 0), wait: 900 }, { run: () => setPose(-36, 6, 0), wait: 1300 }, { run: () => setPose(30, -8, 8), wait: 1500 },
+  { go: 5, wait: 1500 }, { run: () => navigate6(allowedHost()), wait: 2200 }, { run: () => navigate6('search.example.com'), wait: 2800 },
+  { go: 6, wait: 1500 }, { run: () => ACTIONS['s7-listen'](), wait: 2600 }, { run: () => ACTIONS['s7-stop'](), wait: 1200 },
+  { run: () => { demoState.s7.reason = 'check'; ACTIONS['s7-lock'](); }, wait: 2800 }, { run: () => ACTIONS['s7-unlock'](), wait: 2000 },
+  { go: 7, wait: 1600 }, { run: () => ACTIONS['s8-link']('wifi'), wait: 1800 }, { run: () => ACTIONS['s8-link']('ethernet'), wait: 1000 },
+  { run: () => toggle03(), wait: 2600 }, { run: () => toggle03(), wait: 2400 },
+  { go: 8, wait: 5500 },
+  { go: 9, wait: 4000 }
+];
+const auto = { running: false, step: 0, timer: 0 };
+function renderAuto() {
+  $('#btn-auto').setAttribute('aria-pressed', String(auto.running));
+  $('#auto-lbl').textContent = auto.running ? 'Пауза' : (auto.step > 0 ? 'Продолжить' : 'Автодемо');
+  $('#auto-ico').innerHTML = auto.running ? '<path d="M6 4.5h3v11H6zM11 4.5h3v11h-3z" fill="currentColor"/>' : '<path d="M6 4.5v11l9-5.5z" fill="currentColor"/>';
+  $('#auto-status').textContent = auto.step > 0 && auto.step < AUTO.length ? (auto.running ? 'авто · ' : 'пауза · ') + auto.step + '/' + AUTO.length : '';
+}
+function runAutoStep() {
+  auto.timer = 0;
+  if (!auto.running) return;
+  if (auto.step >= AUTO.length) { auto.running = false; auto.step = 0; renderAuto(); announce('Автодемонстрация завершена'); return; }
+  const st = AUTO[auto.step++];
+  if (overviewOpen) setOverview(false);
+  if (typeof st.go === 'number') go(st.go);
+  if (st.run) st.run();
+  renderAuto();
+  auto.timer = setTimeout(runAutoStep, st.wait);
+}
+function startAuto() {
+  if (auto.step === 0) { resetDemo(); }
+  auto.running = true;
+  renderAuto();
+  announce('Автодемонстрация запущена. Пауза — та же кнопка или Esc.');
+  runAutoStep();
+}
+function pauseAuto() {
+  auto.running = false;
+  clearTimeout(auto.timer);
+  auto.timer = 0;
+  renderAuto();
+}
+function stopAuto() { pauseAuto(); auto.step = 0; renderAuto(); }
+
+/* =========================================================
+   Reset & render-all
+   ========================================================= */
+function resetDemo() {
+  clearTimers();
+  demoState = initialState();
+  demoState.s4.playing = false;
+  syncPlayLoop();
+  net.clipStart = 0;
+  renderAll();
+}
+function renderAll() {
+  renderS2(); renderS3(); renderS4(); renderS5(); renderS6(); renderS7(); renderS8(); renderS9();
+}
+function setPose(y, p, r) {
+  const s = demoState.s5;
+  s.yaw = y; s.pitch = p; s.roll = r;
+  renderHead();
+}
+
+/* =========================================================
+   Actions (single click delegation)
+   ========================================================= */
+const ACTIONS = {
+  next, prev,
+  goto: a => { if (overviewOpen) setOverview(false); go(+a - 1, { user: true }); },
+  'goto-ov': a => { setOverview(false); go(+a - 1, { user: true, force: true }); slides[current].focus({ preventScroll: true }); },
+  overview: () => setOverview(!overviewOpen),
+  notes: () => setNotes(!notesOpen),
+  fullscreen: toggleFullscreen,
+  theme: () => setTheme(document.documentElement.getAttribute('data-theme') !== 'dark', true),
+  auto: () => (auto.running ? pauseAuto() : startAuto()),
+  reset: () => { stopAuto(); resetDemo(); announce('Демонстрация сброшена'); },
+  restart: () => { stopAuto(); resetDemo(); go(0, { user: true }); },
+  's2-size': a => { demoState.s2.size = +a; renderS2(); },
+  's2-event': () => { demoState.s2.event = !demoState.s2.event; renderS2(); },
+  's3-filter': a => { demoState.s3.filter = a; renderS3(); },
+  's3-sort': a => { demoState.s3.sort = a; renderS3(); },
+  's3-select': (a, el, e) => {
+    demoState.s3.selected = demoState.s3.selected === a ? null : a;
+    renderS3({ focusDrawer: !!demoState.s3.selected && e && e.detail === 0 });
+  },
+  's3-close': () => {
+    const id = demoState.s3.selected;
+    demoState.s3.selected = null;
+    renderS3();
+    const c = $('#s3-cards .card[data-arg="' + id + '"]');
+    if (c) c.focus({ preventScroll: true });
+  },
+  'open-episode': a => { selectEpisode(a); go(3, { user: true }); },
+  'open-control': a => { demoState.s7.student = a; renderS7(); go(6, { user: true }); },
+  's4-pick': a => selectEpisode(a),
+  's4-play': () => togglePlay(),
+  's4-step': a => { demoState.s4.playing = false; syncPlayLoop(); seek(demoState.s4.t + (+a)); },
+  's4-jump': () => { demoState.s4.playing = false; syncPlayLoop(); seek(EVENT_T); },
+  's4-decide': a => decide(a),
+  's4-reset': () => {
+    demoState.decisions = {};
+    demoState.s4 = initialState().s4;
+    syncPlayLoop();
+    renderS4(); renderS3();
+    announce('Сценарий эпизодов сброшен');
+  },
+  's5-tab': a => { demoState.s5.tab = a; renderS5(); },
+  's5-phone': a => { demoState.s5.phone = a === 'on'; renderS5(); },
+  's5-faces': a => { demoState.s5.faces = +a; renderS5(); },
+  's5-pose-reset': () => setPose(0, 0, 0),
+  's6-mode': a => { demoState.s6.mode = a; renderS6(); },
+  's6-quick': a => navigate6(a),
+  's6-launch': a => { demoState.s6.opened = a; renderS6(); },
+  's7-listen': () => {
+    const s = demoState.s7;
+    if (s.listen !== 'off') return;
+    s.listen = 'notify'; renderS7();
+    later(() => { if (demoState.s7 === s && s.listen === 'notify') { s.listen = 'on'; renderS7(); } }, reduced() ? 300 : 900);
+  },
+  's7-stop': () => { demoState.s7.listen = 'off'; renderS7(); },
+  's7-say': a => showToast(a),
+  's7-lock': () => {
+    const s = demoState.s7, txt = lockReasonText();
+    if (!txt || s.locked) return;
+    s.locked = true; s.lockReason = txt; s.toast = null; renderS7();
+    announce('Экран студента приостановлен. Причина: ' + txt);
+  },
+  's7-unlock': () => { demoState.s7.locked = false; renderS7(); showToast('resumed'); },
+  's7-tone': () => playTone(),
+  's8-link': a => { demoState.net.link = a; renderS8(); },
+  's8-toggle03': () => toggle03(),
+  's8-clip': () => requestClip(),
+  's9-open': a => openEvidence(a),
+  'dlg-close': () => { const d = $('#evidence-dlg'); if (d.open) d.close(); }
+};
+const INPUTS = {
+  's5-pose': (v, el) => { demoState.s5[el.dataset.arg] = +v; renderHead(); },
+  's6-allowed': v => { demoState.s6.allowed = v; if (demoState.s6.page.host) navigate6(demoState.s6.address); else renderS6(); },
+  's6-address': v => { demoState.s6.address = v; },
+  's6-program': v => { demoState.s6.program = v; renderS6(); },
+  's7-reason': v => { demoState.s7.reason = v; renderS7(); if (v === 'custom') $('#s7-custom').focus(); },
+  's7-custom': v => { demoState.s7.custom = v; if (v.trim()) demoState.s7.reason = 'custom'; renderS7(); }
+};
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if (!el || el.disabled) return;
+  const fn = ACTIONS[el.dataset.action];
+  if (!fn) return;
+  fn(el.dataset.arg, el, e);
+});
+const onInput = e => {
+  const el = e.target.closest && e.target.closest('[data-input]');
+  if (!el) return;
+  const fn = INPUTS[el.dataset.input];
+  if (fn) fn(el.value, el);
+};
+document.addEventListener('input', onInput);
+document.addEventListener('change', e => { if (e.target.type === 'radio' || e.target.tagName === 'SELECT') onInput(e); });
+$('#s4-range').addEventListener('input', e => { demoState.s4.playing = false; syncPlayLoop(); seek(+e.target.value); });
+$('#s6-go-form').addEventListener('submit', e => { e.preventDefault(); navigate6($('#s6-address').value); });
+$('#s6-form').addEventListener('submit', e => e.preventDefault());
+$('#evidence-dlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+/* head drag */
+(function () {
+  const view = $('#s5-headview');
+  let drag = null;
+  view.addEventListener('pointerdown', e => {
+    drag = { x: e.clientX, y: e.clientY, yaw: demoState.s5.yaw, pitch: demoState.s5.pitch };
+    try { view.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  });
+  view.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const sc = getScale();
+    const s = demoState.s5;
+    s.yaw = clamp(Math.round(drag.yaw + (e.clientX - drag.x) / sc * 0.35), -70, 70);
+    s.pitch = clamp(Math.round(drag.pitch + (e.clientY - drag.y) / sc * 0.3), -45, 45);
+    renderHead();
+  });
+  const end = () => { drag = null; };
+  view.addEventListener('pointerup', end);
+  view.addEventListener('pointercancel', end);
+})();
+
+/* =========================================================
+   Keyboard
+   ========================================================= */
+function isTypingTarget(t) {
+  if (!t || !t.tagName) return false;
+  if (t.isContentEditable) return true;
+  const tag = t.tagName;
+  if (tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (tag === 'INPUT') return !['button', 'submit', 'reset', 'checkbox'].includes((t.type || '').toLowerCase());
+  return false;
+}
+function handleEscape() {
+  const dlg = $('#evidence-dlg');
+  if (dlg.open) { dlg.close(); return true; }
+  if (auto.running) { pauseAuto(); announce('Автодемонстрация на паузе'); return true; }
+  if (overviewOpen) { setOverview(false); slides[current].focus({ preventScroll: true }); return true; }
+  if (notesOpen) { setNotes(false); $('#btn-notes').focus(); return true; }
+  if (current === 2 && demoState.s3.selected) { ACTIONS['s3-close'](); return true; }
+  return false;
+}
+document.addEventListener('keydown', e => {
+  if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+  const t = e.target;
+  if (e.key === 'Escape') {
+    if (isTypingTarget(t)) { t.blur(); if (current >= 0) slides[current].focus({ preventScroll: true }); e.preventDefault(); return; }
+    if ($('#evidence-dlg').open) return; /* native dialog closes itself */
+    if (handleEscape()) e.preventDefault();
+    return;
+  }
+  if (isTypingTarget(t)) return;
+  if ($('#evidence-dlg').open) return;
+  const onButton = t && (t.tagName === 'BUTTON' || t.tagName === 'A' || t.getAttribute && t.getAttribute('role') === 'button');
+  let handled = true;
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown': case 'PageDown':
+      if (overviewOpen) { moveOverviewFocus(e.key === 'ArrowDown' ? 5 : 1); break; }
+      next(); break;
+    case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+      if (overviewOpen) { moveOverviewFocus(e.key === 'ArrowUp' ? -5 : -1); break; }
+      prev(); break;
+    case ' ':
+      if (onButton) { handled = false; break; }
+      if (e.shiftKey) prev(); else next();
+      break;
+    case 'Home': go(0, { user: true }); break;
+    case 'End': go(N - 1, { user: true }); break;
+    default:
+      if (e.code === 'KeyO') setOverview(!overviewOpen);
+      else if (e.code === 'KeyN') setNotes(!notesOpen);
+      else if (e.code === 'KeyF') toggleFullscreen();
+      else if (e.code === 'KeyT') ACTIONS.theme();
+      else handled = false;
+  }
+  if (handled) e.preventDefault();
+});
+function moveOverviewFocus(d) {
+  const tiles = $$('.ov-tile');
+  const i = tiles.indexOf(document.activeElement);
+  const j = clamp((i < 0 ? current : i) + d, 0, tiles.length - 1);
+  tiles[j].focus();
+}
+
+/* =========================================================
+   Print notes (every screen carries its theses on paper)
+   ========================================================= */
+function buildPrintNotes() {
+  slides.forEach((sl, k) => {
+    const n = NOTES[k];
+    const d = document.createElement('div');
+    d.className = 'print-notes';
+    d.setAttribute('aria-hidden', 'true');
+    d.innerHTML = '<b>Экран ' + pad2(k + 1) + ' · ' + esc(sl.dataset.title) + ' · ' + n.time + '</b>' + n.say.map(esc).join(' ');
+    sl.appendChild(d);
+  });
+}
+window.addEventListener('beforeprint', () => { if (overviewOpen) setOverview(false); });
+
+/* =========================================================
+   Init
+   ========================================================= */
+setTheme(document.documentElement.getAttribute('data-theme') === 'dark', false);
+buildRoom();
+buildProgress();
+buildOverview();
+buildPrintNotes();
+setNotes(false);
+renderAll();
+renderAuto();
+const fromHash = parseInt((location.hash || '').replace('#', ''), 10);
+go(Number.isFinite(fromHash) ? fromHash - 1 : 0, { silent: true, force: true });
+fit();
+if ('ResizeObserver' in window) new ResizeObserver(fit).observe(viewport);
+window.addEventListener('resize', fit);
+window.addEventListener('hashchange', () => {
+  const n = parseInt((location.hash || '').replace('#', ''), 10);
+  if (Number.isFinite(n) && n - 1 !== current) go(n - 1, { user: true });
+});
+const onMq = () => { fit(); setNotes(notesOpen); renderS8(); syncNetLoop(); };
+if (mqMobile.addEventListener) { mqMobile.addEventListener('change', onMq); mqReduce.addEventListener('change', onMq); }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (demoState.s4.playing) { demoState.s4.playing = false; renderPlayer(); } syncPlayLoop(); if (raf8) { cancelAnimationFrame(raf8); raf8 = 0; } }
+  else syncNetLoop();
+});
+})();
+</script>
+</body>
+</html>
