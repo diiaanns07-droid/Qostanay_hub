@@ -111,7 +111,7 @@ const RULES: Record<string, InAppRule | OsRule | DetectRule> = {
     kind: "in_app",
     mechanism: "electron.before_input_event",
     checks: ["key_ctrl_v", "key_shift_insert"],
-    note_ru: "Ctrl+V и Shift+Insert блокируются внутри окна; буфер обмена очищается при входе и выходе.",
+    note_ru: "Ctrl+V и Shift+Insert блокируются внутри окна; во время экзамена буфер очищается каждую секунду без чтения содержимого.",
   },
   shortcut_ctrl_x: {
     kind: "in_app",
@@ -173,7 +173,7 @@ const RULES: Record<string, InAppRule | OsRule | DetectRule> = {
   foreign_window_foreground: {
     kind: "os",
     mechanism: "native.foreground_watch",
-    note_ru: "Имя процесса (без заголовка окна) фиксируется помощником Windows; переход не предотвращается.",
+    note_ru: "Имя процесса фиксируется помощником Windows; в enforce выполняется попытка вернуть фокус через 400 мс, успех требует LIVE-проверки.",
   },
   focus_lost: {
     kind: "detect",
@@ -183,7 +183,7 @@ const RULES: Record<string, InAppRule | OsRule | DetectRule> = {
   display_changed: {
     kind: "detect",
     mechanism: "electron.screen_events",
-    note_ru: "Подключение/отключение мониторов только фиксируется.",
+    note_ru: "Второй монитор не допускается на preflight; изменение количества мониторов фиксируется во время экзамена.",
   },
 };
 

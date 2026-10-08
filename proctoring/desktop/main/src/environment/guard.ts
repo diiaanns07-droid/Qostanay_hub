@@ -2,7 +2,7 @@
 //
 // Window/app scope (all platforms): kiosk + fullscreen + always-on-top, content protection (window
 // excluded from screen capture where the OS supports it), close prevention, in-window key policy,
-// focus-loss/display-change detection, clipboard cleared on entry and exit, emergency hotkey.
+// focus-loss/display-change detection, clipboard cleared each second + entry/exit, emergency hotkey.
 // OS scope (Windows only, optional): native helper (desktop/native) started in dry-run unless the
 // operator explicitly enabled enforcement for a controlled test.
 //
@@ -89,6 +89,8 @@ export class ExamGuard implements Guard {
   private remotePending = false;
   private remoteSeen = new Set<string>();
   private remoteFailed = false;
+  private clipboardTimer: NodeJS.Timeout | null = null;
+  private clipboardFailed = false;
   /** Last engage report (for the handoff/diagnostics; no user content). */
   lastEngage: { steps: Record<string, "ok" | "failed" | "skipped">; registrations: ShortcutRegistration[] } | null = null;
 
@@ -141,6 +143,17 @@ export class ExamGuard implements Guard {
     this.activeSession = sessionId; // set first: release paths below must see an engaged guard
     try {
       step("clipboard_clear", () => this.platform.clearClipboard(), false);
+      this.clipboardTimer = setInterval(() => {
+        if (!this.active) return;
+        try {
+          this.platform.clearClipboard(); // contents are never read
+          this.clipboardFailed = false;
+        } catch {
+          if (!this.clipboardFailed) this.emit("enforcement_error", "failed", "electron.clipboard_clear", "app");
+          this.clipboardFailed = true;
+        }
+      }, 1_000);
+      this.clipboardTimer.unref();
       step("devtools_close", () => {
         if (w.webContents.isDevToolsOpened()) w.webContents.closeDevTools();
       }, true);
@@ -238,6 +251,9 @@ export class ExamGuard implements Guard {
     this.remotePending = false;
     this.remoteSeen.clear();
     this.remoteFailed = false;
+    if (this.clipboardTimer) clearInterval(this.clipboardTimer);
+    this.clipboardTimer = null;
+    this.clipboardFailed = false;
     const w = this.win();
     const attempt = (name: string, fn: () => void) => {
       try {
