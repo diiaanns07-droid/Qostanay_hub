@@ -1,0 +1,16 @@
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #f6f6f6; color: #1d2226; }
+.tp-banner { background: repeating-linear-gradient(-45deg, #7a1d14, #7a1d14 12px, #8a2419 12px, #8a2419 24px); color: #fff; font-weight: 700; text-align: center; padding: 8px; }
+.tp-main { max-width: 720px; margin: 16px auto; padding: 0 16px; }
+.tp-indicators { display: grid; gap: 8px; margin-bottom: 16px; }
+.tp-ind { padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 18px; }
+.tp-mic { background: #b42318; color: #fff; }
+.tp-teacher { background: #0f766e; color: #fff; }
+.tp-session { background: #fff; border: 2px solid #0f766e; }
+.tp-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.tp-form label { display: grid; font-size: 13px; }
+.tp-form input { font: inherit; padding: 6px 8px; }
+.tp-state { font-weight: 600; }
+.tp-small { font-size: 13px; color: #5f6a70; }
+.tp-sim { display: grid; gap: 6px; margin-top: 12px; }
+.tp-log { font: 12px/1.4 ui-monospace, monospace; max-height: 260px; overflow: auto; background: #fff; border: 1px solid #ddd; padding: 8px 8px 8px 28px; }
+[hidden] { display: none !important; }

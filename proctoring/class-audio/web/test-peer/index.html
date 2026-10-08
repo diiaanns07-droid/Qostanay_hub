@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ТЕСТОВЫЙ PEER — не приложение студента</title>
+    <link rel="stylesheet" href="/test-peer/test-peer.css" />
+    <script type="module" src="/test-peer/test-peer.js"></script>
+  </head>
+  <body>
+    <div class="tp-banner" role="note">ТЕСТОВЫЙ PEER (T05) — проверка аудиосвязи без приложения студента. Это НЕ приложение студента.</div>
+    <main class="tp-main">
+      <section class="tp-indicators" aria-live="assertive">
+        <div id="ind-mic" class="tp-ind tp-mic" hidden>● Микрофон включён преподавателем</div>
+        <div id="ind-teacher" class="tp-ind tp-teacher" hidden>🔊 Говорит преподаватель</div>
+        <div id="ind-session" class="tp-ind tp-session" hidden>Аудиосвязь с преподавателем</div>
+      </section>
+      <form id="join" class="tp-form">
+        <label>Код подключения <input id="code" inputmode="numeric" maxlength="6" autocomplete="off" required /></label>
+        <label>Метка (псевдоним) <input id="label" maxlength="32" value="test-peer" /></label>
+        <button type="submit">Подключиться к серверу</button>
+      </form>
+      <p id="state" class="tp-state" role="status">Не подключён.</p>
+      <p id="secure" class="tp-small"></p>
+      <fieldset class="tp-sim">
+        <legend>Имитация (только тестовый peer)</legend>
+        <label><input type="checkbox" id="sim-deny" /> отказ в доступе к микрофону (NotAllowedError)</label>
+        <label><input type="checkbox" id="sim-nodev" /> нет устройства (NotFoundError)</label>
+        <button type="button" id="drop">Оборвать связь (без завершения)</button>
+        <button type="button" id="reconnect">Переподключиться (resume_token)</button>
+      </fieldset>
+      <h2>Журнал</h2>
+      <ol id="log" class="tp-log"></ol>
+    </main>
+    <audio id="teacher-audio" autoplay></audio>
+  </body>
+</html>
