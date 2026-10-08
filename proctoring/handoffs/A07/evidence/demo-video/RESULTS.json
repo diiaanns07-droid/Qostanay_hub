@@ -1,0 +1,579 @@
+{
+  "recorded_at": "2026-10-08T13:09:43.506Z",
+  "platform": "win32",
+  "scope": "product renderer + real main API + real backend/CV; Chromium transport, no OS guard or native save dialog",
+  "backend_root": "proctoring (A07 checkout at backend_sha)",
+  "backend_sha": "e3ee57bb9f0dac544129f809af3911da9520ce7a",
+  "backend_dirty": "",
+  "cases": [
+    {
+      "replay_id": "zone_a_green_01",
+      "expected": "green",
+      "actual": "green",
+      "session_id": "s-20261008-180749-20453f0f",
+      "start_delay_ms": 9334,
+      "summary": {
+        "session": {
+          "session_id": "s-20261008-180749-20453f0f",
+          "state": "finished",
+          "source": {
+            "mode": "replay",
+            "camera_index": 0,
+            "replay_id": "zone_a_green_01",
+            "width": 640,
+            "height": 480,
+            "fps": 30
+          },
+          "source_mode": "replay",
+          "exam_id": "demo-exam-1",
+          "student_label": null,
+          "retain_media": false,
+          "created_at": "2026-10-08T13:07:49.334624Z",
+          "started_at": "2026-10-08T13:07:58.461404Z",
+          "finished_at": "2026-10-08T13:08:22.055526Z",
+          "exam_started_t_ms": 9125,
+          "paused_total_ms": 0,
+          "calibration": {
+            "calibration_id": null,
+            "phase": "skipped",
+            "targets": [
+              {
+                "target": "center",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "left",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "right",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "up",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "down",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              }
+            ],
+            "current_target": null,
+            "message_code": "skipped_by_operator",
+            "updated_at": "2026-10-08T13:07:58.348190Z"
+          },
+          "contract_version": "1.1.0",
+          "backend_version": "0.1.0",
+          "last_error": null
+        },
+        "observed_ms": 21359,
+        "paused_ms": 0,
+        "gaps": [
+          {
+            "t_start_ms": 30500,
+            "t_end_ms": 32720.902000000002,
+            "component": "attention",
+            "reason": "no_observations"
+          },
+          {
+            "t_start_ms": 30500,
+            "t_end_ms": 32720.902000000002,
+            "component": "phone",
+            "reason": "no_observations"
+          },
+          {
+            "t_start_ms": 30516,
+            "t_end_ms": 32720.902000000002,
+            "component": "capture",
+            "reason": "replay_ended"
+          }
+        ],
+        "incidents_total": 1,
+        "incidents_by_rule": {
+          "monitoring_degraded": 1
+        },
+        "reviews_by_decision": {
+          "pending": 1
+        },
+        "limitations_ru": [
+          "REPLAY: воспроизведение заранее записанного видео через тот же конвейер, а не живая сессия.",
+          "Эпизоды — повод для проверки преподавателем, а не доказательство нарушения; решение принимает преподаватель.",
+          "Направление взгляда — приблизительная оценка, не eye-tracking; обнаружение телефона не доказывает съёмку экрана.",
+          "Калибровка взгляда пропущена: оценки взгляда не откалиброваны под этого участника.",
+          "Интервалов без наблюдения или с неопределёнными результатами: 3. В них нарушения не определялись — это «неизвестно», а не «нарушений нет».",
+          "Снимки не сохранялись (сохранение медиа выключено): отчёт содержит только метаданные.",
+          "Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера."
+        ],
+        "review_zone": "green",
+        "review_zone_reasons_ru": [
+          "Эпизодов нет, наблюдение полное"
+        ],
+        "review_zone_rule_version": "zone-rule-1"
+      },
+      "media_sha256": "6352319b66ce6c984ded5237d2ad5143de053b98412bd924a4126d3cc3e30a93",
+      "pacing": "realtime",
+      "html_file": "zone_a_green_01.html"
+    },
+    {
+      "replay_id": "zone_b_yellow_02",
+      "expected": "yellow",
+      "actual": "yellow",
+      "session_id": "s-20261008-180823-8c2b2127",
+      "start_delay_ms": 8444,
+      "summary": {
+        "session": {
+          "session_id": "s-20261008-180823-8c2b2127",
+          "state": "finished",
+          "source": {
+            "mode": "replay",
+            "camera_index": 0,
+            "replay_id": "zone_b_yellow_02",
+            "width": 640,
+            "height": 480,
+            "fps": 30
+          },
+          "source_mode": "replay",
+          "exam_id": "demo-exam-1",
+          "student_label": null,
+          "retain_media": false,
+          "created_at": "2026-10-08T13:08:23.398665Z",
+          "started_at": "2026-10-08T13:08:31.742449Z",
+          "finished_at": "2026-10-08T13:08:59.222833Z",
+          "exam_started_t_ms": 8344,
+          "paused_total_ms": 0,
+          "calibration": {
+            "calibration_id": null,
+            "phase": "skipped",
+            "targets": [
+              {
+                "target": "center",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "left",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "right",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "up",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "down",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              }
+            ],
+            "current_target": null,
+            "message_code": "skipped_by_operator",
+            "updated_at": "2026-10-08T13:08:31.681486Z"
+          },
+          "contract_version": "1.1.0",
+          "backend_version": "0.1.0",
+          "last_error": null
+        },
+        "observed_ms": 26734,
+        "paused_ms": 0,
+        "gaps": [
+          {
+            "t_start_ms": 35141,
+            "t_end_ms": 35824.168,
+            "component": "capture",
+            "reason": "replay_ended"
+          }
+        ],
+        "incidents_total": 3,
+        "incidents_by_rule": {
+          "face_missing": 2,
+          "monitoring_degraded": 1
+        },
+        "reviews_by_decision": {
+          "pending": 3
+        },
+        "limitations_ru": [
+          "REPLAY: воспроизведение заранее записанного видео через тот же конвейер, а не живая сессия.",
+          "Эпизоды — повод для проверки преподавателем, а не доказательство нарушения; решение принимает преподаватель.",
+          "Направление взгляда — приблизительная оценка, не eye-tracking; обнаружение телефона не доказывает съёмку экрана.",
+          "Калибровка взгляда пропущена: оценки взгляда не откалиброваны под этого участника.",
+          "Интервалов без наблюдения или с неопределёнными результатами: 1. В них нарушения не определялись — это «неизвестно», а не «нарушений нет».",
+          "Снимки не сохранялись (сохранение медиа выключено): отчёт содержит только метаданные.",
+          "Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера."
+        ],
+        "review_zone": "yellow",
+        "review_zone_reasons_ru": [
+          "Лицо не видно в кадре — 00:00, 3 с",
+          "Лицо не видно в кадре — 00:06, 12 с"
+        ],
+        "review_zone_rule_version": "zone-rule-1"
+      },
+      "media_sha256": "35ce7af762900a1c1478d8f2ccace57830e08c5bd08758971ac47a8162f38ce7",
+      "pacing": "realtime",
+      "html_file": "zone_b_yellow_02.html"
+    },
+    {
+      "replay_id": "zone_c_red_01",
+      "expected": "red",
+      "actual": "red",
+      "session_id": "s-20261008-180900-1973a2f5",
+      "start_delay_ms": 8578,
+      "summary": {
+        "session": {
+          "session_id": "s-20261008-180900-1973a2f5",
+          "state": "finished",
+          "source": {
+            "mode": "replay",
+            "camera_index": 0,
+            "replay_id": "zone_c_red_01",
+            "width": 640,
+            "height": 480,
+            "fps": 30
+          },
+          "source_mode": "replay",
+          "exam_id": "demo-exam-1",
+          "student_label": null,
+          "retain_media": false,
+          "created_at": "2026-10-08T13:09:00.583740Z",
+          "started_at": "2026-10-08T13:09:08.934248Z",
+          "finished_at": "2026-10-08T13:09:41.195146Z",
+          "exam_started_t_ms": 8344,
+          "paused_total_ms": 0,
+          "calibration": {
+            "calibration_id": null,
+            "phase": "skipped",
+            "targets": [
+              {
+                "target": "center",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "left",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "right",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "up",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              },
+              {
+                "target": "down",
+                "state": "pending",
+                "samples": 0,
+                "required_samples": 20,
+                "quality": null,
+                "message_code": null
+              }
+            ],
+            "current_target": null,
+            "message_code": "skipped_by_operator",
+            "updated_at": "2026-10-08T13:09:08.869893Z"
+          },
+          "contract_version": "1.1.0",
+          "backend_version": "0.1.0",
+          "last_error": null
+        },
+        "observed_ms": 31781,
+        "paused_ms": 0,
+        "gaps": [
+          {
+            "t_start_ms": 40141,
+            "t_end_ms": 40611.406,
+            "component": "capture",
+            "reason": "replay_ended"
+          }
+        ],
+        "incidents_total": 4,
+        "incidents_by_rule": {
+          "face_missing": 1,
+          "monitoring_degraded": 1,
+          "multiple_faces": 1,
+          "phone_visible": 1
+        },
+        "reviews_by_decision": {
+          "pending": 4
+        },
+        "limitations_ru": [
+          "REPLAY: воспроизведение заранее записанного видео через тот же конвейер, а не живая сессия.",
+          "Эпизоды — повод для проверки преподавателем, а не доказательство нарушения; решение принимает преподаватель.",
+          "Направление взгляда — приблизительная оценка, не eye-tracking; обнаружение телефона не доказывает съёмку экрана.",
+          "Калибровка взгляда пропущена: оценки взгляда не откалиброваны под этого участника.",
+          "Интервалов без наблюдения или с неопределёнными результатами: 1. В них нарушения не определялись — это «неизвестно», а не «нарушений нет».",
+          "Снимки не сохранялись (сохранение медиа выключено): отчёт содержит только метаданные.",
+          "Хэши SHA-256 помогают обнаружить случайное изменение файлов, но не защищают от изменения владельцем компьютера."
+        ],
+        "review_zone": "red",
+        "review_zone_reasons_ru": [
+          "Второе лицо в кадре — 00:28, 4 с",
+          "Телефон в кадре — 00:00, 7 с",
+          "Лицо не видно в кадре — 00:06, 13 с"
+        ],
+        "review_zone_rule_version": "zone-rule-1"
+      },
+      "media_sha256": "3cf25248c9b57c310be4dbc0a4502150d59cc32896b11ca5c074cb0ff4f83787",
+      "pacing": "realtime",
+      "html_file": "zone_c_red_01.html"
+    }
+  ],
+  "checks": [
+    {
+      "name": "real backend READY through A06 BackendSupervisor",
+      "ok": true,
+      "detail": "pid 31604"
+    },
+    {
+      "name": "product renderer, no FixtureBridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 9334 ms"
+    },
+    {
+      "name": "zone_a_green_01: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: expected green",
+      "ok": true,
+      "detail": "actual green"
+    },
+    {
+      "name": "zone_a_green_01: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_a_green_01: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 8444 ms"
+    },
+    {
+      "name": "zone_b_yellow_02: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: expected yellow",
+      "ok": true,
+      "detail": "actual yellow"
+    },
+    {
+      "name": "zone_b_yellow_02: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_b_yellow_02: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: preflight marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: exam opened through UI",
+      "ok": true,
+      "detail": "preflight-to-exam 8578 ms"
+    },
+    {
+      "name": "zone_c_red_01: recording end is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: expected red",
+      "ok": true,
+      "detail": "actual red"
+    },
+    {
+      "name": "zone_c_red_01: UI zone matches backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: summary REPLAY visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: exported HTML opens with zone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zone_c_red_01: HTML is marked REPLAY",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "renderer never opens camera/microphone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no CSP violations",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "backend checkout stayed at the recorded revision",
+      "ok": true,
+      "detail": "e3ee57bb9f0dac544129f809af3911da9520ce7a"
+    }
+  ],
+  "os_release": "11",
+  "os_version": "10.0.26200",
+  "os_system": "Windows",
+  "launcher_tests": {
+    "pass": 4,
+    "mode": "Windows PowerShell + Node, stub Electron CLI; no OS hook"
+  },
+  "renderer_unit_tests": {
+    "pass": 17
+  },
+  "build": "PASS",
+  "typecheck": "PASS",
+  "artifacts": {
+    "zone_a_green_01-html.png": {
+      "sha256": "d94dc27713f18b630c66703ccec7d4d4f51f33086a6abb96c7bbc778d8e057ca",
+      "bytes": 293501
+    },
+    "zone_a_green_01-summary.png": {
+      "sha256": "03218812a6d2727c8865f09d1bd5298dfebb01845a2a59b014cf4adf4fbb503d",
+      "bytes": 154294
+    },
+    "zone_a_green_01.html": {
+      "sha256": "965a4c2c8ec60edef58ab024122f662e23f2500f3e8d8b599112bb4dbaddee04",
+      "bytes": 15643
+    },
+    "zone_b_yellow_02-html.png": {
+      "sha256": "fe419657b8fd374365e5c04e9a8ca37db89a691869f830a9f3fa08ea43e1adc1",
+      "bytes": 443171
+    },
+    "zone_b_yellow_02-summary.png": {
+      "sha256": "297902f0cc656f9eb74eb9523cde0228254d24ec6f6f31ac1bc25468ec02f31f",
+      "bytes": 152334
+    },
+    "zone_b_yellow_02.html": {
+      "sha256": "65873cf25a8a1305e71886120be1014a033e400c7bf5b2c7498b086acd2b365f",
+      "bytes": 20612
+    },
+    "zone_c_red_01-html.png": {
+      "sha256": "ccea7e4a4030eab7366a0d5af768b7152650294577a4b9d300051f77e01c1391",
+      "bytes": 535579
+    },
+    "zone_c_red_01-summary.png": {
+      "sha256": "50552a8db8835bed8c9bce8139bb0c479b90ffb5a325ea2b99aaa2237f2bba64",
+      "bytes": 156735
+    },
+    "zone_c_red_01.html": {
+      "sha256": "ba97bfc9fd5dbe1aa074e339c10d23d6bd789a27e03f3755efaef592ba52d757",
+      "bytes": 23937
+    }
+  }
+}
