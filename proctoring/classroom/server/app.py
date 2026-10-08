@@ -42,7 +42,7 @@ SECURITY_HEADERS = {
     "Referrer-Policy": "same-origin",  # no-referrer makes Chromium send "Origin: null" on form POSTs (login)
     "Content-Security-Policy": (
         "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
-        "connect-src 'self' ws: wss:; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        "media-src 'self' blob:; connect-src 'self' ws: wss:; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
     ),
 }
 
@@ -147,7 +147,9 @@ def create_app(
         st = core.students.get(student_id)
         if st is None or st.conn is None:
             return False
-        TypeAdapter(m.ServerToStudentMessage).validate_python({**envelope(), **message})  # never send off-contract
+        from .audio_feature import validate_server_audio
+        if not validate_server_audio(message):
+            TypeAdapter(m.ServerToStudentMessage).validate_python({**envelope(), **message})
         return st.conn.enqueue({**envelope(), **message})
 
     ctx = FeatureContext(
@@ -177,6 +179,7 @@ def create_app(
             yield
         finally:
             ticker.cancel()
+            await features.async_close()
             for st in list(core.students.values()):
                 if st.conn is not None:
                     st.conn.request_close(1001, "server_shutdown")
@@ -397,6 +400,10 @@ def create_app(
                 kind = data.get("type") if isinstance(data, dict) else None
             except ValueError:
                 data, kind = None, None
+            if st.conn is not conn or st.session_id != core.current_session_id:
+                return
+            if isinstance(data, dict) and await features.student_extension(st.student_id, data):
+                continue
             if kind not in ("hello", "status", "incident", "preview", "ack", "command_progress", "audio_signal", "pong"):
                 core.counters["unknown_types"] += 1
                 log.info("student %s: ignored message type %r", st.student_id, kind)
@@ -540,7 +547,9 @@ def create_app(
         @app.get("/config.json", include_in_schema=False)
         async def panel_config() -> JSONResponse:
             # T02 HANDOFF "Точка подключения к C1" §1: served by C1 with the REAL adapter (the file in the repo says demo)
-            return JSONResponse({"adapter": "real"}, headers={"Cache-Control": "no-store"})
+            owners = {f.owner for f in features.infos() if f.status == "mounted"}
+            modules = [name for owner, name in (("T03", "history"), ("T05", "audio")) if owner in owners]
+            return JSONResponse({"adapter": "real", "features": modules}, headers={"Cache-Control": "no-store"})
 
     if ui_dir is not None:
         app.mount("/", StaticFiles(directory=str(ui_dir), html=True), name="teacher-ui")

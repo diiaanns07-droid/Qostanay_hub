@@ -2,7 +2,7 @@
 //
 // Window/app scope (all platforms): kiosk + fullscreen + always-on-top, content protection (window
 // excluded from screen capture where the OS supports it), close prevention, in-window key policy,
-// focus-loss/display-change detection, clipboard cleared on entry and exit, emergency hotkey.
+// focus-loss/display-change detection, clipboard cleared each second + entry/exit, emergency hotkey.
 // OS scope (Windows only, optional): native helper (desktop/native) started in dry-run unless the
 // operator explicitly enabled enforcement for a controlled test.
 //
@@ -14,6 +14,7 @@ import { logger } from "../log";
 import type { Guard } from "../shell/state";
 import type { EventSink } from "./events";
 import { classifyExamKey, KeyEventThrottle, type KeyInput } from "./keyboard";
+import { remoteNames, type RemoteSnapshot } from "./remote";
 
 const log = logger("guard");
 
@@ -39,6 +40,7 @@ export interface GuardPlatform {
   isShortcutRegistered(accelerator: string): boolean;
   unregisterShortcut(accelerator: string): void;
   clearClipboard(): void;
+  displayCount(): number;
   /** Subscribe to display changes; returns an unsubscribe function. */
   onDisplayChange(cb: (kind: "added" | "removed" | "metrics") => void): () => void;
   platform: NodeJS.Platform;
@@ -60,6 +62,9 @@ export interface GuardOptions {
   native?: NativeHelperHandle | null;
   /** Re-focus attempts after blur (not counted as prevention). */
   refocus?: boolean;
+  /** Explicit enforce mode only; dry-run must never pull focus back. */
+  enforce?: boolean;
+  scanRemote?: () => Promise<RemoteSnapshot>;
   now?: () => number;
 }
 
@@ -76,6 +81,16 @@ export class ExamGuard implements Guard {
   private registrations: ShortcutRegistration[] = [];
   private throttle: KeyEventThrottle;
   private refocusTimer: NodeJS.Timeout | null = null;
+  private displayTimer: NodeJS.Timeout | null = null;
+  private lastDisplayCount: number | null = null;
+  private lastRefocusAt = -Infinity;
+  private remoteTimer: NodeJS.Timeout | null = null;
+  private remoteGeneration = 0;
+  private remotePending = false;
+  private remoteSeen = new Set<string>();
+  private remoteFailed = false;
+  private clipboardTimer: NodeJS.Timeout | null = null;
+  private clipboardFailed = false;
   /** Last engage report (for the handoff/diagnostics; no user content). */
   lastEngage: { steps: Record<string, "ok" | "failed" | "skipped">; registrations: ShortcutRegistration[] } | null = null;
 
@@ -128,6 +143,17 @@ export class ExamGuard implements Guard {
     this.activeSession = sessionId; // set first: release paths below must see an engaged guard
     try {
       step("clipboard_clear", () => this.platform.clearClipboard(), false);
+      this.clipboardTimer = setInterval(() => {
+        if (!this.active) return;
+        try {
+          this.platform.clearClipboard(); // contents are never read
+          this.clipboardFailed = false;
+        } catch {
+          if (!this.clipboardFailed) this.emit("enforcement_error", "failed", "electron.clipboard_clear", "app");
+          this.clipboardFailed = true;
+        }
+      }, 1_000);
+      this.clipboardTimer.unref();
       step("devtools_close", () => {
         if (w.webContents.isDevToolsOpened()) w.webContents.closeDevTools();
       }, true);
@@ -159,10 +185,17 @@ export class ExamGuard implements Guard {
         steps.print_screen_hotkey = "skipped";
       }
       step("display_watch", () => {
-        this.unsubDisplay = this.platform.onDisplayChange(() =>
-          this.emit("display_changed", "detected_only", "electron.screen_events", "os_session"),
-        );
+        this.lastDisplayCount = this.platform.displayCount();
+        this.unsubDisplay = this.platform.onDisplayChange(() => this.checkDisplays());
+        this.displayTimer = setInterval(() => this.checkDisplays(), 2_000);
+        this.displayTimer.unref();
       }, false);
+      if (this.opts.scanRemote) {
+        this.remoteGeneration++;
+        void this.checkRemote();
+        this.remoteTimer = setInterval(() => void this.checkRemote(), 5_000);
+        this.remoteTimer.unref();
+      }
     } catch (err) {
       this.releaseSync("engage_failed");
       throw err;
@@ -207,6 +240,20 @@ export class ExamGuard implements Guard {
     this.activeSession = null;
     if (this.refocusTimer) clearTimeout(this.refocusTimer);
     this.refocusTimer = null;
+    this.blurAt = null;
+    this.lastRefocusAt = -Infinity;
+    if (this.displayTimer) clearInterval(this.displayTimer);
+    this.displayTimer = null;
+    this.lastDisplayCount = null;
+    if (this.remoteTimer) clearInterval(this.remoteTimer);
+    this.remoteTimer = null;
+    this.remoteGeneration++;
+    this.remotePending = false;
+    this.remoteSeen.clear();
+    this.remoteFailed = false;
+    if (this.clipboardTimer) clearInterval(this.clipboardTimer);
+    this.clipboardTimer = null;
+    this.clipboardFailed = false;
     const w = this.win();
     const attempt = (name: string, fn: () => void) => {
       try {
@@ -253,6 +300,43 @@ export class ExamGuard implements Guard {
 
   // ------------------------------------------------------------- window hooks (wired by main)
 
+  private checkDisplays(): void {
+    if (!this.active) return;
+    try {
+      const count = this.platform.displayCount();
+      if (count !== this.lastDisplayCount) {
+        this.lastDisplayCount = count;
+        this.emit("display_changed", "detected_only", "electron.display_poll", "os_session");
+      }
+    } catch {
+      this.emit("enforcement_error", "failed", "electron.display_poll", "os_session");
+    }
+  }
+
+  private async checkRemote(): Promise<void> {
+    if (!this.active || !this.opts.scanRemote || this.remotePending) return;
+    const generation = this.remoteGeneration;
+    this.remotePending = true;
+    try {
+      const snapshot = await this.opts.scanRemote();
+      if (!this.active || generation !== this.remoteGeneration) return;
+      if (!snapshot.available) throw new Error("remote check unavailable");
+      this.remoteFailed = false;
+      const names = new Set(remoteNames(snapshot));
+      for (const name of names) if (!this.remoteSeen.has(name)) {
+        this.emit("foreign_window_foreground", "detected_only", "native.remote_access", "os_session", { process_name: name });
+      }
+      this.remoteSeen = names;
+    } catch {
+      if (this.active && generation === this.remoteGeneration && !this.remoteFailed) {
+        this.remoteFailed = true;
+        this.emit("enforcement_error", "failed", "native.remote_access", "os_session");
+      }
+    } finally {
+      if (generation === this.remoteGeneration) this.remotePending = false;
+    }
+  }
+
   /** before-input-event of the exam window. Returns true when the event must be prevented. */
   onBeforeInput(input: KeyInput): boolean {
     if (!this.active) return false;
@@ -276,26 +360,38 @@ export class ExamGuard implements Guard {
 
   onBlur(): void {
     if (!this.active) return;
-    this.blurAt = (this.opts.now ?? Date.now)();
-    this.emit("focus_lost", "detected_only", "electron.browser_window_blur", "window");
-    if (this.opts.refocus !== false) {
-      if (this.refocusTimer) clearTimeout(this.refocusTimer);
-      this.refocusTimer = setTimeout(() => {
-        this.refocusTimer = null;
-        const w = this.win();
-        if (!this.active || !w || w.isDestroyed() || w.isFocused()) return;
-        try {
-          w.show();
-          w.moveTop();
-          w.focus();
-        } catch (err) {
-          log.debug("refocus failed", err);
-        }
-      }, 100);
+    if (this.blurAt === null) {
+      this.blurAt = (this.opts.now ?? Date.now)();
+      this.emit("focus_lost", "detected_only", "electron.browser_window_blur", "window");
     }
+    this.scheduleRefocus();
+  }
+
+  private scheduleRefocus(): void {
+    if (!this.active || !this.opts.enforce || this.opts.refocus === false || this.refocusTimer) return;
+    const now = (this.opts.now ?? Date.now)();
+    const delay = Math.max(400, this.lastRefocusAt + 500 - now);
+    this.refocusTimer = setTimeout(() => {
+      this.refocusTimer = null;
+      const w = this.win();
+      if (!this.active || !w || w.isDestroyed() || w.isFocused()) return;
+      this.lastRefocusAt = (this.opts.now ?? Date.now)();
+      try {
+        w.moveTop();
+        w.focus();
+      } catch (err) {
+        log.debug("refocus failed", err);
+      }
+      // Windows may refuse focus (secure desktop/elevated foreground). Retry at <=2/s
+      // until focus returns or restrictions are released; no foreign-window manipulation.
+      if (!w.isDestroyed() && !w.isFocused()) this.scheduleRefocus();
+    }, delay);
+    this.refocusTimer.unref();
   }
 
   onFocus(): void {
+    if (this.refocusTimer) clearTimeout(this.refocusTimer);
+    this.refocusTimer = null;
     if (!this.active || this.blurAt === null) return;
     const duration = Math.max(0, (this.opts.now ?? Date.now)() - this.blurAt);
     this.blurAt = null;
@@ -323,7 +419,15 @@ export class ExamGuard implements Guard {
 
   /** Report OS-level observations from the native helper (only while engaged). */
   onNativeObservation(action: EnvironmentAction, enforcement: EnforcementResult, mechanism: string, detail: { shortcut?: string; process_name?: string }): void {
-    if (this.active) this.emit(action, enforcement, mechanism, "os_session", detail);
+    if (!this.active) return;
+    this.emit(action, enforcement, mechanism, "os_session", detail);
+    if (action === "foreign_window_foreground" && mechanism === "native.foreground_watch") {
+      if (this.blurAt === null) {
+        this.blurAt = (this.opts.now ?? Date.now)();
+        this.emit("focus_lost", "detected_only", mechanism, "window", detail);
+      }
+      this.scheduleRefocus();
+    }
   }
 
   /** Diagnostics for STATUS/QA (no user content). */

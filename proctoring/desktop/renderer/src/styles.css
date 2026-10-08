@@ -1,4 +1,8 @@
-/* Qorgau Exam — renderer styles (A07). System fonts only: no runtime downloads. */
+/* Adal — renderer styles (A07). System fonts only: no runtime downloads. */
+.exam-checks-list { list-style: none; margin: 0; padding: 0; }
+.exam-checks-list li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.exam-check-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.exam-checks-list p { margin: 4px 0 0; }
 :root {
   --bg: #f4f5f2;
   --surface: #ffffff;
@@ -701,7 +705,8 @@ code,
   background: rgba(20, 26, 30, 0.45);
   display: grid;
   place-items: center;
-  z-index: 50;
+  /* Teacher PIN must cover calibration (900), but stay below class lock (1000). */
+  z-index: 950;
   padding: 16px;
 }
 .dialog {
@@ -2000,3 +2005,7 @@ code,
 .classblock-list { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
 .classblock-list dt { color: var(--muted); }
 .classblock-list dd { margin: 0; }
+
+/* review-only objects from A03 (book / laptop / tv) */
+.ov-object { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 6 3; }
+.tag-object { background: #7c3aed; color: #fff; }

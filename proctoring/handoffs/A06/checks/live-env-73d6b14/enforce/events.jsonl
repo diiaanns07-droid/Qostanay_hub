@@ -1,0 +1,16 @@
+{"type":"preflight","t_ms":232,"wall_time":"2026-10-08T13:24:21.836Z","source_sha":"73d6b14b0de7f080931ce4c084c374ca38f5783e","platform":"win32","os_release":"10.0.26200","electron":"43.7.5","mode":"enforce","max_minutes":2,"display_count":1,"remote":{"available":true,"processes":[],"remoteSession":false},"environment_block_reason":null,"display_condition_pass":true,"scope":"component LIVE: unchanged integration ExamGuard + NativeHelper, not full backend exam","acceptance":"pending operator observations; method calls alone do not prove focus return"}
+{"type":"window_focus","t_ms":477,"wall_time":"2026-10-08T13:24:22.082Z","focused":true}
+{"type":"window_blur","t_ms":815,"wall_time":"2026-10-08T13:24:22.420Z"}
+{"type":"move_top_attempt","t_ms":1170,"wall_time":"2026-10-08T13:24:22.774Z"}
+{"type":"focus_attempt","t_ms":1171,"wall_time":"2026-10-08T13:24:22.775Z","focused_before":true}
+{"type":"window_focus","t_ms":1239,"wall_time":"2026-10-08T13:24:22.844Z","focused":true}
+{"type":"environment","t_ms":1380,"wall_time":"2026-10-08T13:24:22.985Z","action":"exam_mode_engaged","enforcement":"allowed","mechanism":"electron.kiosk","scope":"window","detail":{}}
+{"type":"engaged","t_ms":1381,"wall_time":"2026-10-08T13:24:22.986Z","max_minutes":2,"steps":{"steps":{"clipboard_clear":"ok","devtools_close":"ok","kiosk":"ok","always_on_top":"ok","content_protection":"ok","window_flags":"ok","focus":"ok","emergency_hotkey":"ok","print_screen_hotkey":"ok","display_watch":"ok","native_helper_enforce":"ok"},"registrations":[{"accelerator":"CommandOrControl+Alt+Shift+F12","purpose":"emergency_exit","registered":true},{"accelerator":"PrintScreen","purpose":"print_screen","registered":true}]}}
+{"type":"environment","t_ms":1448,"wall_time":"2026-10-08T13:24:23.052Z","action":"foreign_window_foreground","enforcement":"detected_only","mechanism":"native.foreground_watch","scope":"os_session","detail":{"process_name":"Code.exe"}}
+{"type":"environment","t_ms":1449,"wall_time":"2026-10-08T13:24:23.053Z","action":"focus_lost","enforcement":"detected_only","mechanism":"native.foreground_watch","scope":"window","detail":{"process_name":"Code.exe"}}
+{"type":"environment","t_ms":8363,"wall_time":"2026-10-08T13:24:29.968Z","action":"shortcut_win","enforcement":"blocked","mechanism":"native.ll_keyboard_hook","scope":"os_session","detail":{"shortcut":"Win"}}
+{"type":"environment","t_ms":9720,"wall_time":"2026-10-08T13:24:31.324Z","action":"devtools_blocked","enforcement":"blocked","mechanism":"electron.before_input_event","scope":"window","detail":{"shortcut":"F12"}}
+{"type":"environment","t_ms":11627,"wall_time":"2026-10-08T13:24:33.232Z","action":"shortcut_ctrl_c","enforcement":"blocked","mechanism":"electron.before_input_event","scope":"window","detail":{"shortcut":"Ctrl+C"}}
+{"type":"environment","t_ms":11628,"wall_time":"2026-10-08T13:24:33.232Z","action":"clipboard_blocked","enforcement":"blocked","mechanism":"electron.before_input_event","scope":"window","detail":{"shortcut":"Ctrl+C"}}
+{"type":"environment","t_ms":15348,"wall_time":"2026-10-08T13:24:36.952Z","action":"exam_mode_released","enforcement":"allowed","mechanism":"electron.kiosk","scope":"window","detail":{"shortcut":"emergency_hotkey"}}
+{"type":"released","t_ms":15357,"wall_time":"2026-10-08T13:24:36.961Z","reason":"emergency_hotkey","guard_active":false}

@@ -189,6 +189,11 @@ function LocalExamScreen() {
       </div>
 
       {paused && <Banner tone="warn" title={t("monitoring_paused")}>Преподаватель приостановил экзамен. Время остановлено; ответы будут отправлены после продолжения.</Banner>}
+      {session.source_mode === "replay" && live.captureHealth?.code === "replay_ended" && (
+        <Banner tone="warn" title="REPLAY — запись закончилась" actions={<Button variant="primary" disabled={backendLost} onClick={() => setDialog("finish")}>Завершить экзамен</Button>}>
+          Новые кадры больше не поступают. Завершите экзамен, чтобы открыть итог и отчёт в режиме преподавателя.
+        </Banner>
+      )}
       {timeUp && !paused && (
         <Banner tone="warn" title="Время вышло" actions={<Button variant="primary" onClick={() => setDialog("finish")}>{t("finish_exam")}</Button>}>
           Ответы больше не изменяются. Завершите экзамен.

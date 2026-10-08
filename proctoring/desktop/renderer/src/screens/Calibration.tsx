@@ -20,7 +20,7 @@ function newer(a: CalibrationState | null, b: CalibrationState | null): Calibrat
 const msg = (code: string | null) => (code ? (CAL_MESSAGE[code] ?? code) : null);
 
 export function CalibrationScreen() {
-  const { bridge, session, setSession, live, backendLost, role, requestTeacher } = useApp();
+  const { bridge, session, setSession, live, backendLost, role, requestTeacher, fixture } = useApp();
   useLive(live);
   const [polled, setPolled] = useState<CalibrationState | null>(session?.calibration ?? null);
   const [busy, setBusy] = useState<null | "target" | "finish" | "cancel" | "restart" | "skip" | "start">(null);
@@ -231,6 +231,7 @@ export function CalibrationScreen() {
 
       <div className="calfs-panel">
         <h1>Калибровка взгляда</h1>
+        {fixture && <p className="small muted">FIXTURE · имитация калибровки, без камеры</p>}
         <p className="calfs-hint">Смотрите на точку глазами, голову держите прямо.</p>
         {error && <ErrorBanner context={error.ctx} error={error.error} onDismiss={() => setError(null)} />}
         {!cal && <Spinner label="Получаем состояние калибровки…" />}

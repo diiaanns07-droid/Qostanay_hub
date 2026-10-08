@@ -1,0 +1,20 @@
+{
+  "source_sha": "73d6b14b0de7f080931ce4c084c374ca38f5783e",
+  "platform": "win32",
+  "os_release": "10.0.26200",
+  "electron": "43.7.5",
+  "mode": "preflight_only",
+  "max_minutes": 2,
+  "display_count": 1,
+  "remote": {
+    "available": true,
+    "processes": [
+      "rustdesk.exe"
+    ],
+    "remoteSession": false
+  },
+  "environment_block_reason": "Закройте rustdesk.exe, чтобы начать",
+  "display_condition_pass": true,
+  "scope": "component LIVE: unchanged integration ExamGuard + NativeHelper, not full backend exam",
+  "acceptance": "pending operator observations; method calls alone do not prove focus return"
+}

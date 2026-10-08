@@ -61,6 +61,8 @@ from .bootstrap.synthetic import ScriptedAttentionAnalyzer, ScriptedPhoneAnalyze
 from .session import Pipeline, PipelinePart, SessionManager
 from .settings import BACKEND_VERSION, PROCTORING_ROOT, Settings
 from .uplink import start_uplink  # C2: class-mode uplink (disabled unless QORGAU_CLASS_SERVER/CODE are set)
+from .uplink.lock import LockReceipt, LockUiLost
+from .uplink.audio import install_audio_routes
 
 log = logging.getLogger("proctor.app")
 
@@ -68,6 +70,7 @@ MODULES: dict[str, tuple[str, str, Component]] = {
     "capture": ("proctor.capture", "create_capture_service", Component.CAPTURE),
     "phone": ("proctor.phone", "create_phone_analyzer", Component.PHONE),
     "attention": ("proctor.attention", "create_attention_analyzer", Component.ATTENTION),
+    "identity": ("proctor.identity", "create_identity_analyzer", Component.IDENTITY),  # A13, contract 1.1
     "fusion": ("proctor.fusion", "create_incident_engine", Component.FUSION),
     "evidence": ("proctor.evidence", "create_evidence_store", Component.EVIDENCE),
 }
@@ -128,14 +131,14 @@ class ModuleRegistry:
                     self.import_health[key] = self._unavailable(component, "import_error", f"{type(exc).__name__}: {exc}")
                     continue
             self.factories[key] = factory
-        for key in ("capture", "phone", "attention", "evidence"):
+        for key in ("capture", "phone", "attention", "identity", "evidence"):
             factory = self.factories.get(key)
             if factory is None:
                 continue
             component = MODULES[key][2]
             try:
                 impl = factory(self.settings)
-                if key in ("phone", "attention"):
+                if key in ("phone", "attention", "identity"):
                     health = impl.load()
                 elif key == "evidence":
                     health = impl.open()
@@ -174,6 +177,8 @@ class ModuleRegistry:
         else:
             phone = module_or_bootstrap("phone", None)
             attention = module_or_bootstrap("attention", None)
+        # A13: real frames only (synthetic frames have no faces); absent module => no identity consumer
+        identity = None if synthetic else module_or_bootstrap("identity", None)
         store = module_or_bootstrap("evidence", self.memory_store)
 
         fusion_factory = self.factories.get("fusion")
@@ -194,7 +199,7 @@ class ModuleRegistry:
         else:
             engine_factory, engine_label = None, "missing"
             engine_health = self.import_health.get("fusion") or self._unavailable(Component.FUSION, "module_not_integrated", "")
-        return Pipeline(capture, phone, attention, store, engine_factory, engine_label, engine_health)
+        return Pipeline(capture, phone, attention, store, engine_factory, engine_label, engine_health, identity=identity)
 
     def router_store(self) -> Any:
         part = self._part("evidence")
@@ -560,6 +565,21 @@ def create_app(
         return state["manager"]
 
     api = APIRouter(prefix="/v1", dependencies=[Depends(validate_path_ids)])
+    install_audio_routes(api, lambda: state.get("uplink"))
+
+    @api.post("/class/lock/ack")
+    def confirm_class_lock(body: LockReceipt) -> dict[str, Any]:
+        uplink = state.get("uplink")
+        if uplink is None:
+            return {"accepted": False, "reason": "class_not_connected"}
+        return uplink.confirm_lock(body)
+
+    @api.post("/class/lock/lost")
+    def class_lock_renderer_lost(body: LockUiLost) -> dict[str, Any]:
+        uplink = state.get("uplink")
+        if uplink is None:
+            return {"accepted": False, "reason": "class_not_connected"}
+        return uplink.lock_control.renderer_lost(body.backend_instance_id)
 
     @api.get("/health", response_model=HealthReport)
     def health() -> HealthReport:

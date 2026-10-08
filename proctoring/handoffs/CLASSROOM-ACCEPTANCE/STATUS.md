@@ -128,3 +128,45 @@ split into ten bounded tasks, with three Astra-ultra workers at a time and root 
 
 All worker changes stay in isolated branches; root publishes the integrated checkpoint. No native
 Windows hooks or real cameras/microphones are to be activated by automated acceptance on this machine.
+
+## Shutdown checkpoint — user needs to leave with the laptop
+
+Save/stop requested at the work boundary in response to imminent laptop shutdown. This is a checkpoint,
+not a completed product. Root will push the following branches, then confirm exact remote tips.
+
+- Integrated branch codex/classroom-acceptance: latest Adal teacher UI, login, A07/contracts and exam
+  website branch (merge951cc8a). Added capability-driven fixed UI extension loader and C1 media CSP;
+  loader strict check passed, production feature combinations still need verification.
+- codex/adal-exam-web: fc01c62, completed bounded website surface. 13 actual Electron checks, 32 related
+  shell tests, build/typecheck passed. IMPORTANT UX limitation: lock/stream loss/pause destroys website
+  DOM and can lose unsent external-form values; consider retaining a detached muted view while closed
+  network gate applies, and test before claiming lossless resume. No OS-wide application allowlist.
+- codex/adal-lock-ack: 5b706be4aae96b51543f58a609876b06d7298500. 42 Python C2, 5 main, 7 renderer, 7
+  real Electron fixture checks plus build/typecheck. Needs root main.ts hooks and C1 propagation of
+  lock_state/lock_confirmed/lock_requested/lock_scope. Boolean false alone is not confirmed unlock.
+- codex/adal-audio-bridge: 55d2929d4648d90f8addfa88e2be35777a40c94a. Contains lock537ab55 and rootfc8
+  ancestry. Real C1->C2->Electron->WebRTC fake-tone check passed (bytes2778/packets34; playable Opus10922
+  bytes, student banner before capture, talk-only no capture, denial/no-device, ended tracks).
+  Latest race/playback/reconnect fixes saved but NOT rerun. Exact main.ts hooks and tests in own handoff.
+  Factory classroom.server.audio_feature:create_classroom_feature. No real microphone or camera used.
+- codex/adal-review-adapter: 61adf313b1b297c35ddc844de4d4f54966e7ad32. Adapter/store/provenance/clip
+  lifecycle/UI saved; existing69 tests passed. Production C1 integration tests and browser playback
+  NOT yet verified. Factory classreview.classroom_feature:create_classroom_feature. Event
+  history.changed sends {type:incident,student_id,incident}; real panel needs metadata refresh.
+
+Resume order:
+1. Read this checkpoint and four ADAL-* handoffs; inspect clean status and exact origin Qostanay_hub.
+2. Merge audio branch then final lock branch into root, preserving newer A07/provenance/Adal changes.
+3. Wire classLock before examSurface processing, rendererLost on crash/main-frame navigation,
+   classAudio.observe/reset/register/scoped permissions, and combine stream close handlers.
+4. Propagate lock confirmation fields through C1 contracts/core to teacher UI; do not label old ACKs
+   as current confirmed state. Complete actual teacher commands/reason presets and audio UI.
+5. Integrate review adapter, config feature defaults, assets loader, C1 history.changed refresh, and
+   run real C1->C2 clip upload/playback tests incl run-id/provenance/restarts.
+6. Full integrated startup/chain/browser tests then LAN pilot on user's three physical PCs.
+Tasks4/5/7/8/9 of the ten-task allocation have not yet started; only first four Astra workers ran.
+
+Additional baseline evidence before shutdown: full A07 fixture flow60/60 passed (no getUserMedia);
+fixture class46/46; renderer units7/7. Own Vite fixture serverPID5080 stopped. Audio/review/lock test
+processes finished. UI preview18790 may still run until shutdown; restart via class-panel/serve.mjs.
+HTML presentation prompt is already in coordination/launch-prompts/ADAL_HTML_PRESENTATION.txt.

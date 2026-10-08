@@ -1,0 +1,20 @@
+{
+  "source_sha": "73d6b14b0de7f080931ce4c084c374ca38f5783e",
+  "platform": "win32",
+  "os_release": "10.0.26200",
+  "electron": "43.7.5",
+  "mode": "enforce",
+  "max_minutes": 2,
+  "display_count": 1,
+  "remote": {
+    "available": true,
+    "processes": [],
+    "remoteSession": false
+  },
+  "environment_block_reason": null,
+  "display_condition_pass": true,
+  "scope": "component LIVE: unchanged integration ExamGuard + NativeHelper, not full backend exam",
+  "acceptance": "PASS for this laptop: captain confirmed Alt+Tab blocked, automatic focus return after Taskmgr, and normal typing/Alt+Tab after emergency exit. Taskmgr focus regained in 432 ms.",
+  "second_display_live": "NOT_TESTED: no second display available",
+  "automatic_timeout_live": "NOT_EXERCISED: both runs used emergency exit before configured 2-minute limit"
+}

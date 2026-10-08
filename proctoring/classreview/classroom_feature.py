@@ -139,3 +139,6 @@ class ClassroomReviewFeature:
 
 def create_classroom_feature(ctx: FeatureContext) -> ClassroomReviewFeature:
     return ClassroomReviewFeature(ctx)
+
+
+create = create_classroom_feature  # the spec name in classroom/coordination/INTERFACES.md §3

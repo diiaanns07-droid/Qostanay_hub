@@ -4,6 +4,7 @@ import { useApp } from "../lib/appContext";
 import { call } from "../lib/result";
 import { COMPONENT, GAP_REASON, REVIEW_STATUS, RULE, SESSION_STATE, SOURCE_MODE_RU, CAL_PHASE, human } from "../lib/labels";
 import { can } from "../lib/permissions";
+import { ReviewZone } from "../components/ReviewZone";
 import { duration, sessionT, wallDate } from "../lib/format";
 import { Badge, Banner, Button, Card, Dialog, ErrorBanner, KV, Spinner } from "../components/ui";
 import type { IncidentRule, ReviewStatus } from "@contracts/qorgau-v1.generated";
@@ -114,6 +115,8 @@ export function SummaryScreen({ onReview }: { onReview: () => void }) {
         </div>
       </div>
       {err && <ErrorBanner context="Действие" error={err} onDismiss={() => setErr(null)} />}
+      {s.source_mode === "replay" && <Banner tone="warn" title="REPLAY — воспроизведение записи">Результат анализа выбранного видео. Это не наблюдение с камеры в реальном времени.</Banner>}
+      <ReviewZone summary={summary} />
       {pending > 0 && (
         <Banner tone="warn" title={`Не проверено эпизодов: ${pending}`} actions={<Button size="sm" onClick={onReview}>Проверить</Button>}>
           Отчёт можно выгрузить и сейчас — непроверенные эпизоды будут помечены как ожидающие.

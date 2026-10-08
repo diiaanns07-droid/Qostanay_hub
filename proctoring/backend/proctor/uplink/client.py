@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import json
 import logging
 import threading
@@ -31,12 +32,15 @@ from pydantic import BaseModel, Field
 from .backend_view import Snapshot
 from .config import PROTOCOL, UplinkConfig
 from .outbox import Outbox
+from .lock import LockCoordinator, LockReceipt, PendingLock
+from .audio import AudioBridge, AUDIO_PROTOCOL
 
 log = logging.getLogger("proctor.uplink")
 
 APP_VERSION = "qorgau-exam-uplink-0.1.0"
 MAX_MESSAGE = 256 * 1024
 CLIP_WAIT_ON_REQUEST_S = 15.0
+CLASS_STATE_REPUBLISH_S = 5.0  # class_state is re-published so a renderer that subscribed late still learns it
 AUDIO_NOT_SUPPORTED_RU = "Аудиосвязь в приложении студента ещё не подключена"
 NO_CLIP_RULES = {"monitoring_degraded"}
 
@@ -47,9 +51,20 @@ class ClassStateMsg(BaseModel):
     type: Literal["class_state"] = "class_state"
     connection: Literal["connecting", "connected", "reconnecting", "rejected", "stopped"]
     server: str
+    computer_name: str | None = None
+    student_label: str | None = None
     student_id: str | None = None
     locked: bool = False
     lock_reason_ru: str | None = None
+    lock_state: str = "unconfirmed"
+    lock_confirmed: bool = False
+    lock_requested: bool = False
+    lock_requested_reason_ru: str | None = None
+    lock_error_ru: str | None = None
+    lock_request: dict[str, Any] | None = None
+    backend_instance_id: str | None = None
+    class_session_id: str | None = None
+    source_session_id: str | None = None
     mic_active: bool = False  # No live-media endpoint yet: audio_start/audio_update are refused.
     audio_direction: Literal["listen", "talk", "both"] | None = None
     exam: dict[str, Any] | None = None  # welcome.exam: exam_id, title, mode, allowed_urls, allowed_apps, instructions_ru
@@ -94,13 +109,20 @@ class Uplink:
         self._publish = publish
         self._http_post = http_post
         self.outbox = Outbox(cfg.state_dir / "outbox.sqlite", cfg.outbox_max)
-        if self.outbox.get_meta("server") != cfg.server:  # a token is only valid for its server
+        # A token is only valid for its server AND its class session: a new join code (new session) must never
+        # resume the previous one. Only a hash of the code is stored.
+        code_key = hashlib.sha256(f"{cfg.server}|{cfg.join_code}".encode()).hexdigest()[:16]
+        if self.outbox.get_meta("server") != cfg.server or self.outbox.get_meta("code_key") != code_key:
             self.outbox.set_meta("resume_token", None)
             self.outbox.set_meta("student_id", None)
             self.outbox.set_meta("server", cfg.server)
+            self.outbox.set_meta("code_key", code_key)
+            dropped = self.outbox.clear()  # messages queued for another class session must not leak into this one
+            if dropped:
+                log.info("uplink: %d queued message(s) of a previous class session dropped", dropped)
         self.connection = "connecting"
-        self.locked = False
-        self.lock_reason_ru: str | None = None
+        self.class_session_id: str | None = None
+        self._class_scope_ready = False
         self.mic_active = False
         self.audio_direction: str | None = None
         self.exam: dict[str, Any] | None = None
@@ -116,12 +138,26 @@ class Uplink:
         self._last_status: dict[str, Any] | None = None
         self._last_status_t = 0.0
         self._last_preview_t = 0.0
+        self._last_state_publish = 0.0
         self._thread: threading.Thread | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._stop: asyncio.Event | None = None
         self._stopping = threading.Event()
         self._send_lock: asyncio.Lock | None = None
         self._flush_lock: asyncio.Lock | None = None
+        self.lock_control = LockCoordinator(self.outbox, self._publish_state)
+        self.audio = AudioBridge(self)
+
+    @property
+    def locked(self) -> bool:
+        return self.lock_control.snapshot()["locked"]
+
+    @property
+    def lock_reason_ru(self) -> str | None:
+        return self.lock_control.snapshot()["lock_reason_ru"]
+
+    def confirm_lock(self, body: LockReceipt) -> dict[str, Any]:
+        return self.lock_control.confirm(body)
 
     # ================================================================== thread
     @property
@@ -134,6 +170,7 @@ class Uplink:
 
     def stop(self, timeout_s: float = 3.0) -> None:
         self._stopping.set()
+        self.lock_control.stop()
         loop, ev = self._loop, self._stop
         if loop is not None and ev is not None:
             try:
@@ -209,6 +246,7 @@ class Uplink:
         hello = envelope(
             "hello", protocol=PROTOCOL, computer_name=self.cfg.computer_name, student_label=self.cfg.student_label, app_version=APP_VERSION,
             source_mode=self._snap.source_mode, source_session_id=self._snap.session_id,
+            audio_protocol=AUDIO_PROTOCOL,
             **({"resume_token": token} if token else {"join_code": self.cfg.join_code}),
         )
         await ws.send(json.dumps(hello, ensure_ascii=False))
@@ -221,6 +259,9 @@ class Uplink:
                 self.outbox.set_meta("resume_token", str(msg["resume_token"]))
                 self.outbox.set_meta("student_id", str(msg["student_id"]))
                 self.exam = msg.get("exam")
+                self.class_session_id = msg.get("session_id")
+                self._class_scope_ready = True
+                self.lock_control.bind(self.student_id, self.class_session_id, self._snap.session_id)
                 return "ok"
             if msg.get("type") == "error":
                 code = msg.get("code")
@@ -246,6 +287,7 @@ class Uplink:
                 if not t.cancelled() and t.exception() is not None:
                     raise t.exception()  # type: ignore[misc]
         finally:
+            self.audio.disconnected()
             for t in tasks:
                 t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
@@ -282,10 +324,16 @@ class Uplink:
             try:
                 snap: Snapshot = await asyncio.to_thread(self.view.snapshot)
                 self._snap = snap
+                self.audio.observe(snap)
+                if self._class_scope_ready:
+                    self.lock_control.bind(self.student_id, self.class_session_id, snap.session_id)
+                self.lock_control.expire()
                 if self._diff_incidents(snap):
                     self._outbox_signal.set()
             except Exception:
                 log.exception("uplink: snapshot failed")
+            if time.monotonic() - self._last_state_publish >= CLASS_STATE_REPUBLISH_S:
+                self._publish_state()
             await asyncio.sleep(self.cfg.poll_interval_s)
 
     async def _ticker(self, ws: Any) -> None:
@@ -293,6 +341,9 @@ class Uplink:
             await self._flush_outbox(ws)
             snap = self._snap
             status = {**snap.status_fields(), "locked": self.locked, "mic_active": self.mic_active}
+            lock_status = self.lock_control.snapshot()
+            status.update({key: lock_status[key] for key in ("lock_state", "lock_confirmed", "lock_requested")})
+            status["lock_scope"] = "app_overlay"
             now = time.monotonic()
             if status != self._last_status or now - self._last_status_t >= self.cfg.status_interval_s:
                 await self._send(ws, envelope("status", **status))
@@ -368,6 +419,8 @@ class Uplink:
                 log.info("uplink: non-JSON message ignored")
                 continue
             kind = msg.get("type")
+            if await self.audio.receive(ws, msg):
+                continue
             if kind == "ping":
                 await self._send(ws, envelope("pong"))
             elif kind == "command":
@@ -390,28 +443,22 @@ class Uplink:
         if cid:
             self._done_commands[cid] = None
         ok, err, code = False, "Неизвестная команда", "unsupported"
-        error_code: str | None = None  # T05 audio refusal field.
+        error_code: str | None = None  # T05 audio ack field
         try:
             if kind == "start_exam":
                 ok, err = await asyncio.to_thread(self.view.start_exam)
             elif kind == "finish_exam":
                 ok, err = await asyncio.to_thread(self.view.finish_exam)
-            elif kind == "lock":
-                reason = payload.get("reason_ru")
-                if isinstance(reason, str) and 1 <= len(reason.strip()) <= 200:
-                    self.locked, self.lock_reason_ru = True, reason.strip()
-                    ok, err = True, None
-                else:
-                    err, code = "Причина блокировки должна содержать 1–200 символов", "invalid"
-            elif kind == "unlock":
-                self.locked, self.lock_reason_ru = False, None
-                ok, err = True, None
+            elif kind in ("lock", "unlock"):
+                pending = self.lock_control.begin(msg)
+                outcome = await asyncio.to_thread(self.lock_control.wait, pending) if isinstance(pending, PendingLock) else pending
+                ok, err, code = outcome["ok"], outcome.get("error_ru"), outcome.get("code", "failed")
             elif kind in ("audio_start", "audio_update"):
-                # A command alone cannot prove that media and the visible indicator exist.
+                # No WebRTC in the student app yet: never claim a live microphone (T05: ok:true = mic obtained).
                 ok, err, code = False, AUDIO_NOT_SUPPORTED_RU, "unsupported"
                 error_code = "not_supported"
             elif kind == "audio_stop":
-                self.mic_active, self.audio_direction = False, None
+                self.mic_active, self.audio_direction = False, None  # nothing is captured; stopping is always ok
                 ok, err = True, None
             elif kind == "request_clip":
                 ok, err = await self._upload_clip(str(payload.get("incident_id", "")))
@@ -428,9 +475,13 @@ class Uplink:
         if not ok:
             ack.update(error_ru=(err or "Ошибка")[:200], code=code)  # code: additive (T04 R2)
             if error_code:
-                ack["error_code"] = error_code  # additive T05 audio error, preserved on redelivery
+                ack["error_code"] = error_code  # additive (T05 PROTOCOL_AUDIO)
         if kind in ("lock", "unlock", "start_exam", "finish_exam"):
             ack["result"] = {"locked": self.locked, "exam_state": self._snap.exam_state}  # additive (T04 R2)
+            if kind in ("lock", "unlock"):
+                ack["result"].update(lock_scope="app_overlay", backend_instance_id=self.lock_control.instance_id,
+                                     class_session_id=self.class_session_id, source_session_id=self._snap.session_id,
+                                     lock_state=self.lock_control.snapshot()["lock_state"])
         if cid:
             self._done_commands[cid] = ack
             if len(self._done_commands) > 500:
@@ -446,7 +497,9 @@ class Uplink:
         if not isinstance(clip, Path) or not clip.is_file():
             return False, "Клип для этого эпизода недоступен"
         token = self.outbox.get_meta("resume_token") or ""
-        ok, detail = await asyncio.to_thread(self._http_post, self.cfg.clip_url(incident_id), clip, token, "video/x-msvideo")
+        # A02 writes MJPG .avi today; an .mp4 (H.264, codex/proctor-clips-mp4) is sent as video/mp4 and plays in T02 <video>
+        media_type = "video/mp4" if clip.suffix.lower() == ".mp4" else "video/x-msvideo"
+        ok, detail = await asyncio.to_thread(self._http_post, self.cfg.clip_url(incident_id), clip, token, media_type)
         return (True, None) if ok else (False, f"Не удалось загрузить клип ({detail})")
 
     # ================================================================== Electron state
@@ -460,9 +513,11 @@ class Uplink:
         if self._publish is None:
             return
         try:
+            self._last_state_publish = time.monotonic()
             self._publish(ClassStateMsg(
                 connection=self.connection, server=self.cfg.server, student_id=self.student_id,
-                locked=self.locked, lock_reason_ru=self.lock_reason_ru, mic_active=self.mic_active,
+                computer_name=self.cfg.computer_name, student_label=self.cfg.student_label,
+                **self.lock_control.snapshot(), mic_active=self.mic_active,
                 audio_direction=self.audio_direction, exam=self.exam, last_command=self.last_command, message_ru=message_ru,
             ))
         except Exception:

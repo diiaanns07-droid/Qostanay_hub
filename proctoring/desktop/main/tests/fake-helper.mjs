@@ -13,6 +13,11 @@ const val = (f, d) => {
 };
 const say = (obj) => process.stdout.write(JSON.stringify(obj) + "\n");
 
+if (has("--environment-check")) {
+  say({ type: "environment", processes: has("--remote-found") ? ["anydesk.exe"] : [], remote_session: has("--rdp") });
+  process.exit(0);
+}
+
 if (has("--self-check")) {
   say({ type: "selfcheck", version: "0.0.1-fake", os: "fake", elevated: false });
   process.exit(0);

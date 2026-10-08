@@ -104,6 +104,8 @@ export class FakePlatform implements GuardPlatform {
   registered = new Map<string, () => void>();
   refuse = new Set<string>();
   clipboardClears = 0;
+  displays = 1;
+  displayCount() { return this.displays; }
   displayCb: ((k: "added" | "removed" | "metrics") => void) | null = null;
   switches: string[] = [];
   constructor(public platform: NodeJS.Platform = "win32") {}

@@ -13,12 +13,13 @@ import { createGrid } from "./ui/grid.js";
 import { createHeader } from "./ui/header.js";
 import { createQueue } from "./ui/queue.js";
 import { createSessionBar } from "./ui/session.js";
+import { loadClassModules } from "./liveModules.js";
 
 export const PANEL_VERSION = "0.1.0";
 export const CONTRACT = "qorgau.class.v1";
 
 async function loadConfig() {
-  /** @type {{ adapter?: string, demo?: { students?: number, seed?: number, rate?: string } }} */
+  /** @type {{ adapter?: string, features?: string[], demo?: { students?: number, seed?: number, rate?: string } }} */
   let cfg = {};
   try {
     const r = await fetch("./config.json", { cache: "no-store" });
@@ -35,6 +36,7 @@ async function loadConfig() {
     seed: num(q.get("seed"), cfg.demo?.seed ?? 7),
     rate: /** @type {"calm"|"normal"|"busy"} */ (["calm", "normal", "busy"].includes(q.get("rate") ?? "") ? q.get("rate") : cfg.demo?.rate ?? "normal"),
     debug: q.get("debug") === "1",
+    features: Array.isArray(cfg.features) ? cfg.features : [],
   };
 }
 
@@ -141,6 +143,7 @@ async function main() {
       console.error("class-panel: module rejected", err);
     }
   }
+  if (adapter.kind === "real") void loadClassModules(cfg.features, root);
 
   adapter.start(store);
   const ticker = setInterval(() => store.tick(), 1000);

@@ -14,7 +14,7 @@ import json
 from dataclasses import asdict, dataclass, field, fields, replace
 from typing import Any
 
-RULE_VERSION = "a05-rules-1.1.0"
+RULE_VERSION = "a05-rules-1.3.0"
 CONFIG_NAME = "a05-default-1"
 
 
@@ -51,6 +51,11 @@ def _priority_base() -> dict[str, str]:
         "environment_blocked_action": "low",
         "environment_escape": "medium",
         "monitoring_degraded": "low",
+        # contracts 1.1: review-only objects from A03 detections (COCO book / laptop, tv)
+        "foreign_object_visible": "medium",
+        "second_screen_visible": "medium",
+        # contracts 1.1: A13 identity check (same_person = absent)
+        "identity_mismatch": "high",
     }
 
 
@@ -86,6 +91,27 @@ class FusionConfig:
     # face missing longer than the threshold = medium (zones spec); no escalation to high by duration
     face_missing: IntervalParams = IntervalParams(2000.0, 3, 500.0, 2000.0, None)
     multiple_faces: IntervalParams = IntervalParams(1000.0, 3, 500.0, 3000.0, None)
+    # review-only objects (A03 detections, score >= object_min_confidence): visible >= 2 s, medium, no escalation
+    foreign_object_visible: IntervalParams = IntervalParams(2000.0, 3, 700.0, 2000.0, None)
+    second_screen_visible: IntervalParams = IntervalParams(2000.0, 3, 700.0, 2000.0, None)
+    # A13 identity: face differs from the one enrolled at exam start for >= 3 s (>= 2 observations; identity runs
+    # at ~1-2 Hz, so gaps up to 2 s are tolerated) -> high, no escalation
+    identity_mismatch: IntervalParams = IntervalParams(3000.0, 2, 2000.0, 3000.0, None)
+    identity_ttl_ms: float = 5000.0  # no identity observation this long -> an open episode closes source_lost
+
+    # --- objects (A03 detections by class_name) ---
+    object_min_confidence: float = 0.5
+    foreign_object_classes: tuple[str, ...] = ("book",)
+    second_screen_classes: tuple[str, ...] = ("laptop", "tv")
+    # Scene baseline: objects already in the frame during the first object_baseline_ms of monitoring are the
+    # room (e.g. computer-lab monitors behind the student; measured on real clips: tv/laptop 0.5-0.88 all clip
+    # long) and never open an episode; a detection of the same class overlapping a baseline box (IoU >=
+    # object_baseline_iou) is ignored. Only objects that APPEAR later count.
+    object_baseline_ms: float = 10000.0
+    object_baseline_iou: float = 0.3
+    # Objects count only while the student is in the frame (a face seen within this time): when the student
+    # leaves, the room behind becomes visible (measured: lab monitors -> "second screen" while away).
+    object_face_window_ms: float = 1500.0
 
     # --- freshness / unknown ---
     source_ttl_ms: dict[str, float] = field(default_factory=_source_ttl)
