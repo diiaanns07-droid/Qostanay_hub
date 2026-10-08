@@ -29,3 +29,6 @@ data/
 .env
 .env.*
 *.log
+# replay sidecars and mis-expanded shell variables (A02 R13)
+*.ts.json
+$R/

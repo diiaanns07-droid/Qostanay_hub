@@ -213,6 +213,7 @@
       "paths": [
         "proctoring/demo/",
         "proctoring/docs/pitch/",
+        "proctoring/docs/submission/",
         "proctoring/handoffs/A10/"
       ],
       "provides": [

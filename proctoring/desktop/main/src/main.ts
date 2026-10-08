@@ -457,7 +457,11 @@ app.on("will-quit", () => {
   globalShortcut.unregisterAll();
 });
 
-app.on("window-all-closed", () => app.quit());
+app.on("window-all-closed", () => {
+  // The hidden startup self-test window closes before the exam window exists (QA-WIN-007);
+  // closing the real main window already quits via its "closed" handler.
+  if (mainWindow !== null) app.quit();
+});
 
 for (const sig of ["SIGINT", "SIGTERM"] as const) {
   process.on(sig, () => {
