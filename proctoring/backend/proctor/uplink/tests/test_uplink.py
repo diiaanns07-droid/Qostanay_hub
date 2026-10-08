@@ -311,3 +311,31 @@ def test_class_state_is_republished_while_offline(run, tmp_path, monkeypatch):
     up, _ = run(make_cfg(tmp_path, f"127.0.0.1:{free_port()}"), events=events)
     assert wait_for(lambda: len(events) >= 4, timeout=5)
     assert events[-1].connection in ("connecting", "reconnecting") and events[-1].computer_name == "pc-1"
+
+
+def test_stale_resume_token_is_dropped_and_join_code_used(server, run, tmp_path):
+    """Found on the real T01 server: a token from an older server run answered "resume_rejected"; the uplink used
+    to retry the same token forever (only "join_rejected" fell back to the code)."""
+    cfg = make_cfg(tmp_path, server.address)
+    ob = Outbox(cfg.state_dir / "outbox.sqlite")
+    import hashlib
+
+    ob.set_meta("server", cfg.server)
+    ob.set_meta("code_key", hashlib.sha256(f"{cfg.server}|{cfg.join_code}".encode()).hexdigest()[:16])
+    ob.set_meta("resume_token", "ab" * 32)  # unknown to this server
+    ob.close()
+    up, _ = run(cfg)
+    assert wait_for(lambda: up.connection == "connected", timeout=10)
+    assert "resume_token" in server.hellos[0] and server.hellos[-1].get("join_code") == "123456"
+    assert len(server.hellos) == 2  # one refused resume, one join: no waiting, no loop
+
+
+def test_new_join_code_never_resumes_the_previous_session(server, tmp_path):
+    cfg = make_cfg(tmp_path, server.address)
+    up = Uplink(cfg, FakeView(tmp_path))
+    up.start()
+    assert wait_for(lambda: up.connection == "connected")
+    up.stop()
+    up2 = Uplink(replace(cfg, join_code="654321"), FakeView(tmp_path))  # teacher started a new session
+    assert up2.outbox.get_meta("resume_token") is None
+    up2.outbox.close()
