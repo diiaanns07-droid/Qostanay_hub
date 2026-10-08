@@ -1257,6 +1257,7 @@ export class FixtureBridge implements QorgauBridge {
           "Синтетический источник кадров; точность распознавания не измерялась.",
           "Защита среды не проверялась (нет оболочки Electron).",
         ],
+        desk_scan: null,
       };
     });
   }

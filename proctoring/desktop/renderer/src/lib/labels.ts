@@ -117,6 +117,7 @@ export const CHECK: Record<PreflightCheckId, string> = {
   storage: "Локальное хранилище",
   environment_protection: "Защита среды",
   offline_assets: "Офлайн-ресурсы",
+  desk_scan: "Осмотр рабочего места",
 };
 
 export const CHECK_STATUS: Record<CheckStatus, string> = {

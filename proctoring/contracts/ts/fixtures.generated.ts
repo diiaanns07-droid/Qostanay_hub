@@ -935,6 +935,7 @@ export const fixtures = {
       "backend_version": "0.1.0",
       "last_error": null
     },
+    "desk_scan": null,
     "observed_ms": 560000.0,
     "paused_ms": 0.0,
     "gaps": [

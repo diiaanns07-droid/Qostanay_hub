@@ -29,7 +29,7 @@ from typing import Annotated, Literal, Union
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 CONTRACT_ID = "qorgau.v1"
-CONTRACT_VERSION = "1.1.0"
+CONTRACT_VERSION = "1.2.0"
 
 # ---------------------------------------------------------------------------
 # Constrained primitives
@@ -271,6 +271,7 @@ class PreflightCheckId(StrEnum):
     STORAGE = "storage"
     ENVIRONMENT_PROTECTION = "environment_protection"
     OFFLINE_ASSETS = "offline_assets"
+    DESK_SCAN = "desk_scan"  # 1.2: optional workplace check before the exam
 
 
 class CalibrationTarget(StrEnum):
@@ -792,8 +793,44 @@ class CoverageGap(Wire):
     reason: Code  # "paused", "camera_disconnected", "model_unavailable", ...
 
 
+class DeskScanState(StrEnum):
+    """1.2. Workplace (desk) check before the exam. Not evidence of cheating; a teacher reviews it."""
+
+    NOT_STARTED = "not_started"
+    RECORDING = "recording"
+    CLEAR = "clear"  # nothing of interest seen
+    OBJECTS_FOUND = "objects_found"  # e.g. phone/book/second screen seen during the scan
+    FAILED = "failed"  # camera/analyzer problem: unknown, NOT "clear"
+    SKIPPED = "skipped"  # operator skipped with a reason
+
+
+class DeskScanObject(Wire):
+    class_name: Annotated[str, Field(max_length=64)]  # model class, e.g. "cell phone", "book", "laptop", "tv"
+    label_ru: Annotated[str, Field(max_length=80)]
+    max_confidence: Unit
+    seen_ms: Annotated[float, Field(ge=0)]
+
+
+class DeskScanResult(Wire):
+    """1.2. GET/POST /v1/sessions/{session_id}/desk-scan."""
+
+    scan_id: Id | None = None
+    state: DeskScanState = DeskScanState.NOT_STARTED
+    started_t_ms: SessionMs | None = None
+    duration_ms: Annotated[float, Field(ge=0)] | None = None
+    objects: list[DeskScanObject] = Field(default_factory=list, max_length=16)
+    evidence_id: Id | None = None  # clip of the scan, only when media retention is enabled
+    message_ru: Annotated[str, Field(max_length=300)] | None = None
+    skip_reason: Annotated[str, Field(max_length=200)] | None = None
+
+
+class DeskScanRequest(Wire):
+    duration_s: Annotated[float, Field(ge=5, le=30)] = 12.0
+
+
 class SessionSummary(Wire):
     session: SessionInfo
+    desk_scan: DeskScanResult | None = None  # 1.2
     observed_ms: Annotated[float, Field(ge=0)]
     paused_ms: Annotated[float, Field(ge=0)]
     gaps: list[CoverageGap] = Field(default_factory=list)

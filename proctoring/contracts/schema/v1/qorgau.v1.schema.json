@@ -3,7 +3,7 @@
   "$id": "https://qorgau.local/contracts/qorgau.v1.schema.json",
   "title": "Qorgau Exam contracts v1",
   "x-contract-id": "qorgau.v1",
-  "x-contract-version": "1.1.0",
+  "x-contract-version": "1.2.0",
   "$defs": {
     "AbortRequest": {
       "additionalProperties": false,
@@ -934,6 +934,151 @@
       "title": "CoverageGap",
       "type": "object"
     },
+    "DeskScanObject": {
+      "additionalProperties": false,
+      "properties": {
+        "class_name": {
+          "maxLength": 64,
+          "title": "Class Name",
+          "type": "string"
+        },
+        "label_ru": {
+          "maxLength": 80,
+          "title": "Label Ru",
+          "type": "string"
+        },
+        "max_confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Max Confidence",
+          "type": "number"
+        },
+        "seen_ms": {
+          "minimum": 0,
+          "title": "Seen Ms",
+          "type": "number"
+        }
+      },
+      "required": [
+        "class_name",
+        "label_ru",
+        "max_confidence",
+        "seen_ms"
+      ],
+      "title": "DeskScanObject",
+      "type": "object"
+    },
+    "DeskScanResult": {
+      "additionalProperties": false,
+      "description": "1.2. GET/POST /v1/sessions/{session_id}/desk-scan.",
+      "properties": {
+        "scan_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scan Id"
+        },
+        "state": {
+          "$ref": "#/$defs/DeskScanState",
+          "default": "not_started"
+        },
+        "started_t_ms": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started T Ms"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration Ms"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/DeskScanObject"
+          },
+          "maxItems": 16,
+          "title": "Objects",
+          "type": "array"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "message_ru": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Ru"
+        },
+        "skip_reason": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Skip Reason"
+        }
+      },
+      "title": "DeskScanResult",
+      "type": "object"
+    },
+    "DeskScanState": {
+      "description": "1.2. Workplace (desk) check before the exam. Not evidence of cheating; a teacher reviews it.",
+      "enum": [
+        "not_started",
+        "recording",
+        "clear",
+        "objects_found",
+        "failed",
+        "skipped"
+      ],
+      "title": "DeskScanState",
+      "type": "string"
+    },
     "Direction": {
       "description": "Subject-centric direction (the student's own left/right).",
       "enum": [
@@ -1676,7 +1821,7 @@
           "type": "string"
         },
         "contract_version": {
-          "default": "1.1.0",
+          "default": "1.2.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -2142,7 +2287,7 @@
           "type": "string"
         },
         "contract_version": {
-          "default": "1.1.0",
+          "default": "1.2.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -2212,7 +2357,7 @@
           "type": "string"
         },
         "contract_version": {
-          "default": "1.1.0",
+          "default": "1.2.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -3361,7 +3506,8 @@
         "fusion",
         "storage",
         "environment_protection",
-        "offline_assets"
+        "offline_assets",
+        "desk_scan"
       ],
       "title": "PreflightCheckId",
       "type": "string"
@@ -3867,7 +4013,7 @@
           "$ref": "#/$defs/CalibrationState"
         },
         "contract_version": {
-          "default": "1.1.0",
+          "default": "1.2.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -3940,6 +4086,17 @@
       "properties": {
         "session": {
           "$ref": "#/$defs/SessionInfo"
+        },
+        "desk_scan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeskScanResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "observed_ms": {
           "minimum": 0,
