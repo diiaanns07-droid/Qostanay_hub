@@ -65,25 +65,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\proctoring\acceptance\clas
 
 ### Создать сессию и получить код класса
 
-В базовой панели T02 ещё нет создания сессии. В **другом окне PowerShell на PC1** выполните этот блок.
-Замените `$base` на адрес, напечатанный launcher. PIN вводится скрыто, cookie хранится только в памяти:
+После входа в панель укажите название класса и адрес сайта экзамена, затем нажмите **«Создать класс»**.
+Передайте ученикам показанный шестизначный код. Если класс уже открыт, для замены используйте **«Новый класс»**
+и отметьте подтверждение замены. Готовность локального экзамена, камера и калибровка у студента проверяются отдельно.
 
-```powershell
-$base = 'http://127.0.0.1:8765'
-$securePin = Read-Host 'PIN преподавателя из первого окна' -AsSecureString
-$pin = [Net.NetworkCredential]::new('', $securePin).Password
-$teacher = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-Invoke-RestMethod "$base/api/teacher/login" -Method Post -ContentType 'application/json' `
-  -Body (@{pin=$pin} | ConvertTo-Json -Compress) -WebSession $teacher | Out-Null
-Remove-Variable pin, securePin
-$body = @{title='Проверка класса'; mode='url'; allowed_urls=@('https://example.org/*')}
-$session = Invoke-RestMethod "$base/api/teacher/session" -Method Post -ContentType 'application/json; charset=utf-8' `
-  -Body ([Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Compress))) -WebSession $teacher
-$session.join_code
-```
-
-Адрес экзамена здесь — пример: замените его на адрес вашего задания. Передайте ученикам код, полученный от сервера.
-Это сессия класса для подключения; готовность локального экзамена, камера и калибровка у студента проверяются отдельно.
+Кнопка создания класса входит в объединяемую сборку координатора `codex/classroom-acceptance` начиная с `85cccd2`.
+Launcher сам не обновляет исходники. Если кнопки нет, используйте объединённую версию проекта с этим изменением;
+одной старой панели недостаточно для указанного сценария.
 
 ## PC2 и PC3 — студенты
 
@@ -135,6 +123,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\proctoring\acceptance\clas
 ```
 
 Тесты используют временные каталоги вне репозитория, фактический C1, loopback и свободные порты.
-Проверяются parse PowerShell, режим проверки, ошибки, HTTP REAL-панель, штатное EOF-завершение и уничтожение
-родительского launcher без оставшегося слушателя. PIN не сохраняется в отчёт.
+Проверяются parse PowerShell, режим проверки, ошибки, HTTP REAL-панель, штатное EOF-завершение C1 и backend,
+а также уничтожение родительского launcher без оставшегося слушателя. PIN не сохраняется в отчёт.
 Эти результаты не подтверждают работу настоящих камер, микрофона, LAN и одновременно работающих учебных ПК.

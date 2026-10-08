@@ -30,7 +30,7 @@ try {
         throw 'Укажите -Server в формате адрес:порт, например 192.168.1.10:8765 (без http://).'
     }
     if ($student.JoinCode -notmatch '^[0-9]{6}$') { throw 'Укажите -JoinCode: шесть цифр из панели преподавателя.' }
-    if (-not $student.Label -or $student.Label.Trim().Length -gt 64 -or $student.Label -match '[\x00-\x1f]') {
+    if (-not $student.Label -or $student.Label.Trim().Length -lt 1 -or $student.Label.Trim().Length -gt 64 -or $student.Label -match '[\x00-\x1f]') {
         throw 'Укажите -Label: имя ПК/студента от 1 до 64 символов.'
     }
     $root = Get-QorgauRoot

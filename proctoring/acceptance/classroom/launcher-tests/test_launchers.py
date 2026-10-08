@@ -176,6 +176,21 @@ class Launchers(unittest.TestCase):
                                  "-Label", "CHECK", "-CheckOnly", success=False)
         self.assertIn("npm ci", result.stdout)
 
+    def test_08_real_backend_ready_then_eof_without_exam_or_camera(self):
+        with tempfile.TemporaryDirectory(prefix="qorgau-launch-backend-") as directory, socket.socket() as reserved:
+            reserved.bind(("127.0.0.1", 0))
+            result = self.run_script("Start-Student.ps1", "-Server", f"127.0.0.1:{reserved.getsockname()[1]}",
+                                     "-JoinCode", "000000", "-Label", "LAUNCHER BACKEND CHECK", "-BackendOnly",
+                                     "-DataDir", directory, "-StopAfterSeconds", "1")
+            match = re.search(r"QORGAU_LAUNCH_READY backend port=(\d+)", result.stdout)
+            self.assertIsNotNone(match, sanitized(result.stdout))
+            self.assertFalse(listening(int(match[1])))
+            self.assertNotIn("000000", result.stdout + result.stderr)
+
+    def test_09_whitespace_label_is_rejected(self):
+        self.run_script("Start-Student.ps1", "-Server", "127.0.0.1:8765", "-JoinCode", "000000",
+                        "-Label", "   ", "-CheckOnly", success=False)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
