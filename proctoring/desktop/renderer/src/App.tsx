@@ -16,6 +16,7 @@ import { ExamScreen } from "./screens/Exam";
 import { OperatorScreen } from "./screens/Operator";
 import { StudentDone, SummaryScreen } from "./screens/Summary";
 import { LockScreen, MicBanner } from "./components/ClassOverlays";
+import { useClassLock } from "./lib/useClassLock";
 import { useLive as useLiveVersion } from "./lib/liveStore";
 
 const HEALTH_POLL_MS = 5000;
@@ -234,7 +235,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
   const examMode = !!shell?.exam_mode_active;
   useLiveVersion(live);
   const cls = live.classState;
-  const locked = !!cls?.locked;
+  const locked = useClassLock(cls, bridge.transport);
   const mic = !!cls?.mic_active;
   const t = (k: MsgKey) => translate(lang, k);
   const shellErr = shell?.last_error ?? null;
@@ -244,7 +245,7 @@ function Main({ bridge, fixture }: { bridge: AppApi["bridge"]; fixture: FixtureB
       <AppContext.Provider value={api}>
         {mic && cls && <MicBanner state={cls} />}
         {locked && cls && <LockScreen state={cls} />}
-        <div className={`app ${examMode ? "app-exam" : ""} ${teacher ? "app-teacher" : ""} ${mic ? "app-mic" : ""}`} inert={locked || undefined} aria-hidden={locked || undefined}>
+        <div data-adal-app className={`app ${examMode ? "app-exam" : ""} ${teacher ? "app-teacher" : ""} ${mic ? "app-mic" : ""}`} inert={locked || undefined} aria-hidden={locked || undefined}>
           {fixture && (
             <div className="fixture-strip" role="note">
               FIXTURE-режим: данные из FixtureBridge (контрактные fixtures и сценарий в памяти) — не backend, не камера, не CV.

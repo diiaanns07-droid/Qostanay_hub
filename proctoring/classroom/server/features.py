@@ -170,6 +170,19 @@ class FeatureManager:
     def student_message(self, student_id: str, message: dict[str, Any]) -> None:
         self._call("on_student_message", student_id, message)
 
+    async def student_extension(self, student_id: str, message: dict[str, Any]) -> bool:
+        for feature in self.active:
+            fn = getattr(feature, "on_student_extension", None)
+            if callable(fn) and await fn(student_id, message):
+                return True
+        return False
+
+    async def async_close(self) -> None:
+        for feature in self.active:
+            fn = getattr(feature, "async_close", None)
+            if callable(fn):
+                await fn()
+
     def student_disconnected(self, student_id: str) -> None:
         self._call("on_student_disconnected", student_id)
 

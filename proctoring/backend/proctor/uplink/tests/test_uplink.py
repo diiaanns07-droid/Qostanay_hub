@@ -14,6 +14,7 @@ from proctor.uplink.backend_view import Snapshot
 from proctor.uplink.client import ClassStateMsg, Uplink
 from proctor.uplink.config import UplinkConfig, config_from_env
 from proctor.uplink.outbox import Outbox
+from proctor.uplink.lock import LockReceipt
 from proctor.uplink.tests.fake_server import FakeClassServer, free_port
 
 
@@ -86,9 +87,15 @@ def server():
 def run(tmp_path):
     created: list[Uplink] = []
 
-    def factory(cfg: UplinkConfig, view: Any = None, events: list | None = None) -> tuple[Uplink, FakeView]:
+    def factory(cfg: UplinkConfig, view: Any = None, events: list | None = None, ui_receipts: bool = False) -> tuple[Uplink, FakeView]:
         v = view or FakeView(tmp_path)
-        up = Uplink(cfg, v, publish=(events.append if events is not None else None))
+        def publish(message):
+            if events is not None:
+                events.append(message)
+            request = getattr(message, "lock_request", None)
+            if ui_receipts and request:
+                up.confirm_lock(LockReceipt(**{k: v for k, v in request.items() if k not in ("expires_at", "recovery")}, applied=True))
+        up = Uplink(cfg, v, publish=publish)
         up.start()
         created.append(up)
         return up, v
@@ -213,7 +220,7 @@ def test_outbox_seq_survives_restart_and_is_bounded(tmp_path):
 
 def test_lock_unlock_audio_publish_class_state_and_ack(server, run, tmp_path):
     events: list[ClassStateMsg] = []
-    up, _ = run(make_cfg(tmp_path, server.address), events=events)
+    up, _ = run(make_cfg(tmp_path, server.address), events=events, ui_receipts=True)
     assert wait_for(lambda: up.connection == "connected")
     cid = server.send_command("lock", {"reason_ru": "Телефон на столе"})
     assert wait_for(lambda: cid in server.acks())
@@ -296,7 +303,7 @@ def test_start_and_finish_exam_commands_use_the_lifecycle(server, run, tmp_path)
 def test_redelivered_command_is_not_executed_twice_and_ack_has_code_and_result(server, run, tmp_path):
     """T04 re-delivers a command with the same command_id after a reconnect; the client must de-duplicate."""
     events: list[ClassStateMsg] = []
-    up, view = run(make_cfg(tmp_path, server.address), events=events)
+    up, view = run(make_cfg(tmp_path, server.address), events=events, ui_receipts=True)
     assert wait_for(lambda: up.connection == "connected")
     cid = server.send_command("lock", {"reason_ru": "Первая причина"})
     assert wait_for(lambda: cid in server.acks())
