@@ -39,6 +39,13 @@ def models() -> dict[str, Any]:
     return {m.__name__: m for m in v1.WIRE_MODELS}
 
 
+def ready_matches_contract(ready: dict[str, Any]) -> bool:
+    """Require the checked-in schema, canonical Python and running backend to agree."""
+    declared = schema()
+    return (ready.get("contract") == declared["x-contract-id"] == v1.CONTRACT_ID
+            and ready.get("contract_version") == declared["x-contract-version"] == v1.CONTRACT_VERSION)
+
+
 def validate(name: str, data: Any) -> Any:
     """Validate one payload as contract type `name` (e.g. "SessionInfo"); returns the parsed model."""
     _validator(name).validate(data)

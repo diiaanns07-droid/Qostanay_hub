@@ -5,7 +5,9 @@
 
 Registers `proctor.capture|phone|attention|fusion|evidence` in `sys.modules` BEFORE the real backend
 starts, so A01's ModuleRegistry discovers them through the agreed public factories exactly as it will
-discover A02–A08. No backend file is modified. A key absent from QA_FAKES stays "module_not_integrated".
+discover A02–A08. No backend file is modified. Unspecified factories keep normal discovery.
+Always replaces `proctor.audio.monitor.AudioMonitor` too: LIVE wire fixtures must never open
+a real microphone or load an audio model. This remains a labelled QA double, not an A14 test.
 
 Every record these doubles produce is labelled `producer.module = "qa.fake_*"` and every Health
 message starts with "QA FAULT-INJECTION DOUBLE". They exist to test the composition root's handling of
@@ -52,6 +54,7 @@ from proctor_contracts.v1 import (
     GazeEstimate,
     GazeMethod,
     Health,
+    HealthObservation,
     HealthStatus,
     AttentionObservation,
     Incident,
@@ -541,6 +544,31 @@ class FakeStore:
 # --------------------------------------------------------------------------- install
 
 
+class FakeAudioMonitor:
+    """No PCM, device API, model, network, thread or microphone lease is used."""
+
+    def __init__(self, session_id, source_mode, clock, publish):
+        self.session_id, self.mode, self.clock, self.publish = session_id, source_mode, clock, publish
+        self.active = False
+        self.starts = 0
+
+    def start(self):
+        if self.active:
+            return
+        self.active = True
+        self.starts += 1
+        t = self.clock.now_ms()
+        self.publish(HealthObservation(
+            observation_id=f"qa-audio-{self.session_id}-{self.starts}", session_id=self.session_id,
+            frame_id=None, t_session_ms=t, wall_time=self.clock.wall_at(t), source_mode=self.mode,
+            producer=Producer(module="qa.fake_audio", version=VERSION), status=ObservationStatus.DEGRADED,
+            health=_health(Component.AUDIO, HealthStatus.DEGRADED, "qa_audio_isolated", "no microphone or audio model"),
+        ))
+
+    def stop(self):
+        self.active = False
+
+
 def _raise_factory(what: str):
     def factory(*_a: Any, **_k: Any) -> Any:
         raise RuntimeError(f"{LABEL}: {what} factory failed (simulated)")
@@ -550,6 +578,12 @@ def _raise_factory(what: str):
 
 def install(spec: dict[str, str]) -> None:
     import proctor  # the real package; fakes become its submodules
+    import proctor.audio  # package __init__ only; never import the production monitor/vad
+
+    audio = types.ModuleType("proctor.audio.monitor")
+    audio.AudioMonitor = FakeAudioMonitor
+    sys.modules["proctor.audio.monitor"] = audio
+    proctor.audio.monitor = audio
 
     for key, value in spec.items():
         behaviour, arg = _split(value)
@@ -569,7 +603,7 @@ def install(spec: dict[str, str]) -> None:
             raise SystemExit(f"unknown QA_FAKES key {key!r}")
         sys.modules[f"proctor.{key}"] = mod
         setattr(proctor, key, mod)
-    print(f"{LABEL}: injected {sorted(spec)}", file=sys.stderr, flush=True)
+    print(f"{LABEL}: injected {sorted(spec)}; audio monitor isolated (no device/model)", file=sys.stderr, flush=True)
 
 
 def main(argv: list[str]) -> int:
