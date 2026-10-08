@@ -85,6 +85,8 @@ CAVEAT_UNCALIBRATED = "Калибровка взгляда не выполнен
 CAVEAT_CORRELATION = "Совпадение по времени повышает приоритет просмотра, но не доказывает использование телефона."
 CAVEAT_FACE_MISSING = "Лицо может не находиться из-за освещения, ракурса или перекрытия кадра."
 CAVEAT_MULTI = "Второе лицо может быть фото, отражением или ложным срабатыванием; личности не определяются."
+CAVEAT_OBJECT = ("Предмет распознан моделью общего назначения (COCO) и может быть ошибкой; предметы, видимые с начала "
+                 "экзамена, считаются обстановкой и не учитываются. Только для проверки преподавателем.")
 CAVEAT_ENV = "Учтено только то, что сообщила оболочка; возможности блокировки зависят от системы."
 CAVEAT_ESCAPE = "Потерю фокуса может вызвать системное окно или уведомление."
 CAVEAT_MONITORING = "Отсутствие эпизодов в этот период не означает отсутствие нарушений."
@@ -239,6 +241,12 @@ def build(
         f.add("appearances", ep.appearances, "count", "Отрезков без лица в эпизоде")
         summary.append(f"Лицо не обнаружено в кадре {f.s('face_missing_ms')} с")
         caveats.append(CAVEAT_FACE_MISSING)
+    elif rule in (R.FOREIGN_OBJECT_VISIBLE, R.SECOND_SCREEN_VISIBLE):
+        f.add("object_visible_ms", duration_ms, "ms", "Предмет в кадре")
+        f.add("appearances", ep.appearances, "count", "Появлений предмета в эпизоде")
+        what = "книга или посторонний предмет" if rule == R.FOREIGN_OBJECT_VISIBLE else "второй экран или ноутбук"
+        summary.append(f"В кадре {what} {f.s('object_visible_ms')} с")
+        caveats.append(CAVEAT_OBJECT)
     elif rule == R.MULTIPLE_FACES:
         f.add("multiple_faces_ms", duration_ms, "ms", "Несколько лиц в кадре")
         f.add("max_face_count", int(c.get("max_faces", 2)), "count", "Наибольшее число лиц")

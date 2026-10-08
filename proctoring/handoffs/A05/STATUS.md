@@ -1,5 +1,7 @@
 # A05 — STATUS (fusion: observations → explainable incidents → review zones)
 
+> **2026-10-08, ветка `codex/proctor-objects` (`a05-rules-1.2.0`):** эпизоды `foreign_object_visible` / `second_screen_visible` (medium, только для проверки), защита от фона — `OBJECTS.md`.
+
 Role: A05. Branch: `claude/zen-mayer-e0tivt`. Contract/baseline: BOOTSTRAP `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`
 (contracts `qorgau.v1` 1.0.0; contracts 1.1 with ReviewZone NOT received yet — candidate `de72905` has no ReviewZone).
 Previous A05 checkpoint: `8f763a1` (in A01 candidate `de72905`).
