@@ -53,6 +53,7 @@ export function protectContent(wc: WebContents, active: () => boolean, report: (
   wc.on("console-message", details => {
     // Chromium's CSP also blocks print in subframes without a preload. Store only the operation id.
     if (active() && /print/i.test(details.message) && /sandbox/i.test(details.message) && /allow-modals/.test(details.message)) reportOnce("print");
+    if (active() && /sandbox/i.test(details.message) && /allow-popups/.test(details.message)) reportOnce("new_window");
   });
   wc.on("zoom-changed", event => { if (active()) { event.preventDefault(); wc.setZoomFactor(1); reportOnce("zoom"); } });
   void wc.setVisualZoomLevelLimits(1, 1);

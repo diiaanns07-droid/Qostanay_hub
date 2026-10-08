@@ -36,5 +36,10 @@ contextBridge.executeInMainWorld({func: () => {
   Object.defineProperty(window, 'print', {configurable:false, writable:false, value: function () {
     if (!gate('print')) original();
   }});
+  const open = window.open.bind(window);
+  Object.defineProperty(window, 'open', {configurable:false, writable:false, value: function (...args) {
+    if (gate('new_window')) return null;
+    return open(...args);
+  }});
 }});
 `;

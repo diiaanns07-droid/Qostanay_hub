@@ -1,5 +1,8 @@
 # A06 — current environment additions
 
+Print/save/source/context/drag/zoom restrictions and self-test: branch `codex/proctor-A06-print`
+from `4bbe0b7`. See [implementation/checks](PRINT-2026-10-08.md) and [website video instructions](WEBSITE_DEMO.md).
+
 VM advisory preflight: branch `codex/proctor-A06-vm` from integration `a7cf612`.
 Read-only WMI; detected VM and unknown are nonblocking WARN; once-per-session informational event.
 Laptop LIVE: **not_detected** (ASUS TUF Gaming A15). See [VM handoff](VM-2026-10-08.md).

@@ -1,0 +1,48 @@
+{
+  "started_at": "2026-10-08T14:22:06.427Z",
+  "completed_at": "2026-10-08T14:22:15.614Z",
+  "ok": true,
+  "entry": "https://school.moodledemo.net/",
+  "allowed_urls": [
+    "https://school.moodledemo.net/",
+    "https://school.moodledemo.net/*"
+  ],
+  "mode": "production ExamSurface with injected class/shell state",
+  "enforce": false,
+  "backend": false,
+  "capture": false,
+  "checks": [
+    "verified Mount Orange title and page content (not a challenge/error page)",
+    "allowed website loaded/rendered",
+    "foreign address cancelled; URL unchanged; event emitted",
+    "new window denied; event emitted",
+    "window.print prevented and reported",
+    "no kiosk or always-on-top; no native helper instantiated"
+  ],
+  "events": [
+    {
+      "action": "navigation_blocked",
+      "enforcement": "blocked",
+      "mechanism": "electron.content.navigation",
+      "detail": {
+        "shortcut": "Адрес вне белого списка"
+      }
+    },
+    {
+      "action": "new_window_blocked",
+      "enforcement": "blocked",
+      "mechanism": "electron.content.new_window",
+      "detail": {
+        "shortcut": "Новое окно сайта"
+      }
+    },
+    {
+      "action": "clipboard_blocked",
+      "enforcement": "blocked",
+      "mechanism": "electron.content.print",
+      "detail": {
+        "shortcut": "Печать (window.print)"
+      }
+    }
+  ]
+}

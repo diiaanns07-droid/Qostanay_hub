@@ -115,6 +115,7 @@ const run = async () => {
   await wc.executeJavaScript("document.getElementById('popup').click(); window.open('/auth/login')"); await wait(100);
   assert.equal(BrowserWindow.getAllWindows().length, windowsBefore);
   record("new windows denied even for approved authentication URLs");
+  assert.ok(contentEvents.includes('new_window'), 'popup prevention is also reported when CSP cancels it first');
   for (const target of ["file:///C:/Windows/win.ini", "data:text/html,escape", "qorgau://app/", "ms-settings:"]) {
     await wc.executeJavaScript(`{const a=document.createElement('a');a.href=${JSON.stringify(target)};document.body.append(a);a.click();}`); await wait(50);
     assert.equal(wc.getURL(), `${origin}/exam/`, target);
