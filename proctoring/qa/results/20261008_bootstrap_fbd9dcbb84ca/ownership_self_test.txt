@@ -1,0 +1,2 @@
+$ /home/user/Qostanay_hub/proctoring/.venv/bin/python coordination/verify_ownership.py --self-test
+OWNERSHIP self-test: PASS (46 path prefixes, 10 agents)

@@ -1,0 +1,2 @@
+$ /home/user/Qostanay_hub/proctoring/.venv/bin/python contracts/tools/generate.py --check
+contracts qorgau.v1 1.0.0: generated files up to date

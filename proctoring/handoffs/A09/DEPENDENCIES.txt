@@ -1,0 +1,42 @@
+A09 → A01 requests (A09 never edits shared files). Product SHA referenced: 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49
+
+1. BUG FIXES (details + repro in proctoring/qa/BUGS.md; tracking tests are xfail(strict=True) in qa/tests)
+   - QA-BUG-004 (medium): in SessionRuntime._fusion_loop call engine.consume() before / independently of
+     store.record_observation(); a store exception currently drops every observation from fusion.
+   - QA-BUG-005 (medium): surface fusion/store error counters (health degraded / coverage gap / metrics) so a broken
+     pipeline is not shown as "no episodes".
+   - QA-BUG-003 (medium): map ErrorCode -> HTTP status per CONTRACTS.md §1 in the ProctorError handler
+     (INVALID_ARGUMENT 422, SESSION_MISMATCH 409, MODULE_NOT_INTEGRATED 503 currently arrive as 500).
+   - QA-BUG-002 (medium-low): validate path ids with the contract Id pattern (422) and truncate echoed ids in
+     error messages; today >~990-char ids give 500 + a reset keep-alive connection. Same rule for A08's router.
+   - QA-BUG-001 (low): strip query strings from uvicorn.error WebSocket handshake log lines (token-in-URL misuse
+     is written to stderr).
+
+2. CI / testpaths (no change needed now; decide at integration)
+   - qa/tests is intentionally NOT in pyproject testpaths (≈3 min, spawns real processes).
+     Proposal: on the integration branch run `python qa/run_qa.py --with-baseline --label candidate` as the release
+     gate, keep `python -m pytest -q` fast. No dependency change requested: the suite uses only the pinned
+     dev extras (pytest, httpx, jsonschema) + websockets from runtime.
+
+3. INTEGRATION CANDIDATE
+   - Please send the candidate SHA + list of integrated module SHAs; A09 runs qa/run_qa.py --label candidate on it
+     and the Windows protocol (qa/scenarios/WINDOWS.md) on the demo laptop.
+   - Performance targets (preview 15 FPS, latency p95 <= 500 ms, memory/cold start) are engineering goals in
+     qa/protocols/PERFORMANCE.md — please confirm or change them before measurement.
+
+4. CONTRACT CLARIFICATIONS (QA-OBS-008, no version bump needed)
+   - Document re-entry transitions the code allows: preflight->preflight, calibrating|ready->calibration/start,
+     aborted->abort idempotent; and that a rejected WebSocket is seen by clients as HTTP 403 at handshake (QA-OBS-007).
+
+5. WINDOWS CONTINUATION (codex/proctor-A09; upstream A09 f8ac906 retained)
+   - Pinned Python environment installs successfully on Windows 11 / Python 3.12.14.
+     Full combined QA: 352 PASS, 16 tracked XFAIL, 1 Linux-only SKIP, 0 FAIL.
+   - packaging/prepare-windows.ps1 and launch-windows.ps1 use existing A01 lockfiles and A06 env names.
+     No common dependency/config changes are requested. Native enforcement stays disabled in this launcher;
+     run A06's separate controlled verification before making an OS-level blocking claim.
+   - Checksum gate intentionally rejects incomplete modules/build/models on the bootstrap.
+   - A01 candidate command: python qa/run_qa.py --with-baseline --label windows_candidate --expected-sha FULL_CANDIDATE_SHA
+   - QA supports grouped A05 environment incidents; it checks all actions are observed without requiring
+     one alert per action. Model preparation CLIs are explicitly excluded from the static runtime network scan.
+   - Include A10 demo content in the same candidate. LIVE/REPLAY, full desktop/offline and measured performance
+     still need the integrated candidate, real models and the target laptop.
