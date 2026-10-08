@@ -36,7 +36,8 @@ export function createHeader(store, o) {
   const chipRow = h("div", { class: "chips", role: "group", "aria-label": "Фильтр по статусу" });
   for (const z of ZONES) {
     const n = h("span", { class: "chip-n" });
-    const btn = h("button", { type: "button", class: `chip z-${z}`, "aria-pressed": "false", "data-zone": z }, [svg(ICON[z]), h("span", {}, [ZONE_LABEL[z]]), n]);
+    const shortLabels = { red: "Проверить", yellow: "Внимание", grey: "Нет данных", green: "Без замечаний" };
+    const btn = h("button", { type: "button", class: `chip z-${z}`, "aria-pressed": "false", "data-zone": z }, [svg(ICON[z]), h("span", {}, [shortLabels[z]]), n]);
     btn.addEventListener("click", () => {
       const zones = new Set(store.filter.zones);
       if (zones.has(z)) zones.delete(z);
@@ -53,6 +54,14 @@ export function createHeader(store, o) {
     store.setFilter({ zones: new Set(), query: "", link: "all" });
   });
   chipRow.append(clearBtn);
+  const allCount = h("span", { class: "chip-n" });
+  const allBtn = h("button", { type: "button", class: "chip chip-all", "aria-pressed": "true" }, ["Все", allCount]);
+  allBtn.addEventListener("click", () => {
+    search.value = "";
+    linkSel.value = "all";
+    store.setFilter({ zones: new Set(), query: "", link: "all" });
+  });
+  chipRow.prepend(allBtn);
 
   const search = /** @type {HTMLInputElement} */ (h("input", { type: "search", id: "q", placeholder: "Имя или компьютер", autocomplete: "off", spellcheck: "false" }));
   let qTimer = 0;
@@ -97,22 +106,25 @@ export function createHeader(store, o) {
     viewOptions,
   ]);
 
+  const controls = h("section", { class: "workspace-toolbar", "aria-label": "Список студентов" }, [
+    h("div", { class: "filters" }, [chipRow, toolbar]),
+  ]);
   const root = h("header", { class: "top" }, [
     h("div", { class: "top-row" }, [
       h("div", { class: "brand" }, [
-        h("span", { class: "brand-mark", "aria-hidden": "true" }, ["Q"]),
-        h("span", { class: "brand-name" }, ["Qorgau"]),
+        h("span", { class: "brand-mark", "aria-hidden": "true" }, ["a"]),
+        h("span", { class: "brand-name" }, ["Adal"]),
         h("span", { class: `mode mode-${o.mode}`, title: o.mode === "demo" ? "Все данные на экране имитированы" : "Данные сервера класса" }, [o.modeLabel]),
       ]),
       counters,
     ]),
     banner,
-    h("div", { class: "workspace-heading" }, [h("div", {}, [h("p", { class: "eyebrow" }, ["НАБЛЮДЕНИЕ ЗА КЛАССОМ"]), h("h1", {}, ["Аудитория"])])]),
-    h("div", { class: "filters" }, [chipRow, toolbar]),
   ]);
 
   function render() {
     const c = store.counters();
+    setText(allCount, store.loaded ? String(c.total) : "—");
+    setAttr(allBtn, "aria-pressed", String(!store.filter.zones.size && !store.filter.query && store.filter.link === "all"));
     setText(cTotal, store.loaded ? String(c.total) : "—");
     setText(cOnline, store.loaded && store.feedLive ? String(c.online) : "—");
     setText(cOffline, store.loaded && store.feedLive ? String(c.offline) : "—");
@@ -151,5 +163,5 @@ export function createHeader(store, o) {
     loginLink.hidden = conn.status !== "auth";
   }
 
-  return { root, render, searchInput: search };
+  return { root, controls, render, searchInput: search };
 }

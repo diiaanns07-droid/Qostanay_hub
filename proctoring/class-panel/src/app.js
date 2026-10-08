@@ -85,7 +85,7 @@ async function main() {
   const queue = createQueue(store, { onOpen: open, announce });
   const header = createHeader(store, {
     mode: adapter.kind,
-    modeLabel: adapter.kind === "demo" ? "DEMO · тестовые данные" : "Пульт преподавателя",
+    modeLabel: "Пульт преподавателя",
     onRetry: () => adapter.retry(),
     onPreview: (on) => grid.setShowPreview(on),
   });
@@ -94,9 +94,10 @@ async function main() {
   /** @type {Array<HTMLElement|null>} */
   const nodes = [
     h("a", { class: "skip", href: "#grid-start" }, ["К карточкам студентов"]),
-    adapter.kind === "demo" ? h("div", { class: "demo-strip", role: "note" }, ["Демонстрация интерфейса · студенты, события и изображения созданы для теста"]) : null,
     header.root,
+    adapter.kind === "demo" ? h("div", { class: "demo-strip", role: "note" }, ["ДЕМО", h("span", {}, ["Тестовые студенты и события. Камеры не подключены."])]) : null,
     sessionBar.root,
+    header.controls,
     h("main", { class: "layout" }, [h("div", { class: "layout-main", id: "grid-start", tabindex: "-1" }, [grid.root]), queue.root]),
     drawer.root,
     demo ? createDemoPanel(demo, announce) : null,

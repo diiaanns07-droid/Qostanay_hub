@@ -56,15 +56,19 @@ export function createCard(id) {
   const episodes = h("span", { class: "episodes" });
   const last = h("span", { class: "last" });
   const flags = h("span", { class: "flags" });
+  media.append(h("div", { class: "media-top" }, [
+    h("div", { class: "zone" }, [zoneIcon, zoneText]),
+    computer,
+  ]));
   const hit = /** @type {HTMLButtonElement} */ (h("button", { type: "button", class: "card-hit", "data-id": id, tabindex: "-1" }));
   const body = h("div", { class: "card-body", "aria-hidden": "true" }, [
-    h("div", { class: "zone" }, [zoneIcon, zoneText]),
     media,
-    h("div", { class: "card-id" }, [name, computer]),
-    h("div", { class: "card-line" }, [link, cam, source]),
-    h("div", { class: "card-line" }, [episodes, flags]),
-    h("div", { class: "card-line" }, [exam]),
-    h("div", { class: "card-line muted" }, [last]),
+    h("div", { class: "card-info" }, [
+      h("div", { class: "card-id" }, [name, episodes]),
+      h("div", { class: "card-line card-status" }, [link, exam]),
+      h("div", { class: "card-line card-extra" }, [cam, source, flags]),
+      h("div", { class: "card-line card-reason" }, [last]),
+    ]),
   ]);
   const root = h("li", { class: "card", "data-id": id }, [body, hit]);
   return {
@@ -96,7 +100,8 @@ export function updateCard(c, x, now, o) {
     c.zone = d.zone;
   }
   setIcon(c.zoneIcon, d.zone, ICON[d.zone], c, "iconKey");
-  setText(c.zoneText, ZONE_LABEL[d.zone]);
+  setText(c.zoneText, { red: "Проверить", yellow: "Внимание", grey: "Нет данных", green: "Без замечаний" }[d.zone]);
+  setAttr(c.zoneText, "title", ZONE_LABEL[d.zone]);
 
   const linkText = d.link === "online" ? "на связи" : d.link === "offline" ? `нет связи${d.ageMs !== null ? ` ${fmtAge(d.ageMs)}` : ""}` : "нет данных";
   setIcon(c.linkIcon, d.link, ICON[d.link], c, "linkKey");
@@ -145,9 +150,10 @@ export function updateCard(c, x, now, o) {
   const unrev = v.unreviewed;
   setText(
     c.episodes,
-    total === null ? "эпизоды: нет данных" : unrev === null ? `эпизодов: ${total}` : `эпизодов: ${total} · без решения: ${unrev}`,
+    total === null ? "— эпизодов" : `${total} эпиз.${unrev !== null && unrev > 0 ? ` · ${unrev} без решения` : ""}`,
   );
   setAttr(c.episodes, "data-unreviewed", unrev !== null && unrev > 0 ? "1" : null);
+  setAttr(c.episodes, "title", total === null ? "Число эпизодов не получено" : `Эпизодов: ${total}. Без решения: ${unrev ?? "неизвестно"}`);
   const flags = [];
   if (v.locked === true) flags.push("экран заблокирован");
   if (v.micActive === true) flags.push("микрофон включён");

@@ -7,7 +7,11 @@ import { h, setText } from "./dom.js";
 export function createSessionBar(mode) {
   const root = h("section", { class: "session-bar", "aria-label": "Подключение класса" });
   if (mode === "demo") {
-    root.append(h("p", { class: "demo-session" }, ["Пробный класс", h("span", {}, ["Откройте карточку студента или выберите статус для фильтрации."])]));
+    root.append(h("div", { class: "session-summary" }, [
+      h("p", { class: "eyebrow" }, ["НАБЛЮДЕНИЕ"]),
+      h("h1", {}, ["Учебная аудитория"]),
+      h("span", { class: "session-note" }, ["Выберите студента, чтобы посмотреть события."]),
+    ]));
     return { root, destroy() {} };
   }
 
@@ -16,7 +20,7 @@ export function createSessionBar(mode) {
   let alive = true;
   let loading = false;
   let busy = false;
-  const title = h("strong", {}, ["Подключение к классу…"]);
+  const title = h("h1", {}, ["Подключение к классу…"]);
   const note = h("span", { class: "session-note" });
   const code = h("strong", { class: "join-code" });
   const copy = /** @type {HTMLButtonElement} */ (h("button", { class: "btn", type: "button" }, ["Копировать"]));
@@ -24,7 +28,7 @@ export function createSessionBar(mode) {
   const create = /** @type {HTMLButtonElement} */ (h("button", { class: "btn btn-primary", type: "button", disabled: true }, ["Создать класс"]));
   const retry = h("button", { class: "btn", type: "button", hidden: true }, ["Повторить"]);
   const feedback = h("span", { class: "session-feedback", role: "status" });
-  root.append(h("div", { class: "session-summary" }, [title, note]), codeBox, create, retry, feedback);
+  root.append(h("div", { class: "session-summary" }, [h("p", { class: "eyebrow" }, ["НАБЛЮДЕНИЕ"]), title, note]), codeBox, create, retry, feedback);
 
   const dialog = /** @type {HTMLDialogElement} */ (h("dialog", { class: "session-dialog", "aria-labelledby": "session-form-title" }));
   const form = /** @type {HTMLFormElement} */ (h("form"));

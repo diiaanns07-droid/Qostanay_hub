@@ -18,8 +18,8 @@ export function createQueue(store, o) {
   const list = h("ol", { class: "q-list" });
   const empty = h("p", { class: "q-empty" });
   const root = h("aside", { class: "queue", "aria-labelledby": "q-title" }, [
-    h("div", { class: "q-head" }, [h("h2", { id: "q-title" }, ["Требуют внимания "]), count]),
-    h("p", { class: "q-note" }, ["Откройте событие, чтобы разобраться."]),
+    h("div", { class: "q-head" }, [h("h2", { id: "q-title" }, ["Очередь проверки"]), count]),
+    h("p", { class: "q-note" }, ["Сначала — высокий приоритет"]),
     list,
     empty,
   ]);

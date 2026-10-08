@@ -86,3 +86,42 @@ The main teaching flow should then expose only capabilities those adapters actua
 Interactive teacher UI preview is running locally at `http://127.0.0.1:18790/?students=30` with the explicit
 DEMO adapter (synthetic cards). It is a visual preview, not the live class server or a camera test.
 The real startup regression ran separately against the built Electron and the actual current backend.
+
+## Adal checkpoint — 2026-10-08, second integration pass
+
+User confirmed the public name Adal. Visible student/launcher branding has been integrated from
+771ee10; internal qorgau bridge/protocol/env/data identifiers intentionally retain compatibility.
+Root merged latest A07 cb424a6 and contracts 6263aef in fc8a3a8, preserving the simplified preparation
+screen and health readiness fixes. Desktop typecheck and full build passed after both merges.
+The bounded C2 fix ad01b78 is integrated: audio_start/audio_update return not_supported until a real
+media endpoint exists. This prevents the old boolean ACK from falsely claiming microphone capture.
+Agent tested 7 regressions and 32 related uplink/server tests, all passed.
+
+Teacher panel now has a single class heading, compact priority filters with an All action, image-led
+tiles, shorter status labels, and a row-based review queue. The previous layered main-workspace CSS
+was replaced. Source labels and unknown/stale states remain explicit. Panel strict check and 25 unit
+tests passed; Chrome e2e 61/61 passed after layout changes (100 synthetic cards p95 2.8ms, not 100 cameras).
+The later dark synthetic SVG preview change is visual only; final screenshot inspection remains due.
+HTML presentation prompt: coordination/launch-prompts/ADAL_HTML_PRESENTATION.txt.
+
+Verified gaps before the next wave: C1 sends exam policy as metadata but the student does not yet
+enforce it; Electron overlay is not OS-wide PC lockdown; old C2 lock ACK preceded the visible overlay;
+T05 media signaling still needs the C1/C2/Electron bridge. LAN student connections are supported by
+Start-Teacher -Lan; teacher browser remains restricted to the server's local machine. Three physical
+PCs/Ethernet/Wi-Fi and real media have not been tested.
+
+User requested ten Astra workers; environment permits four active agents including root. Work is
+split into ten bounded tasks, with three Astra-ultra workers at a time and root integration:
+1. Exam website surface/allowlist (astra_exam_web, active, isolated Adal-exam-web).
+2. Effective lock acknowledgement (astra_lock_ack, active, isolated Adal-lock-ack).
+3. Transparent audio bridge (astra_audio_bridge, active, isolated Adal-audio-bridge).
+4. Teacher commands/policy UI (queued behind 1/2).
+5. Teacher audio UI (queued behind 3).
+6. Clip/history feature adapter (queued, independent module).
+7. LAN launch/pilot diagnostics (queued, no claimed physical pilot).
+8. UX/browser acceptance of integrated controls (queued).
+9. Cross-process negative/recovery regression (queued).
+10. Root integration, public Adal branding, visual review, and presentation prompt (in progress).
+
+All worker changes stay in isolated branches; root publishes the integrated checkpoint. No native
+Windows hooks or real cameras/microphones are to be activated by automated acceptance on this machine.

@@ -193,13 +193,12 @@ export function createDemoAdapter(opts = {}) {
       ? `<rect x="196" y="120" width="34" height="60" rx="5" fill="#334155"/><rect x="200" y="126" width="26" height="44" rx="2" fill="#94a3b8"/>`
       : "";
     const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">` +
-      `<rect width="320" height="240" fill="hsl(${s.hue} 22% 86%)"/>` +
-      `<rect y="170" width="320" height="70" fill="hsl(${s.hue} 18% 74%)"/>` +
-      `<ellipse cx="160" cy="100" rx="38" ry="46" fill="hsl(${s.hue} 12% 62%)"/>` +
-      `<path d="M92 240 C96 170 224 170 228 240 Z" fill="hsl(${s.hue} 14% 56%)"/>${phone}` +
-      `<text x="10" y="22" font-family="sans-serif" font-size="15" font-weight="700" fill="#7c2d12">DEMO</text>` +
-      `<text x="310" y="230" text-anchor="end" font-family="sans-serif" font-size="13" fill="#1f2937">${s.computer}</text></svg>`;
+      `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">` +
+      `<rect width="320" height="200" fill="#202b36"/>` +
+      `<path d="M0 144H320M80 0V200M240 0V200" stroke="#2b3846" stroke-width="1"/>` +
+      `<ellipse cx="160" cy="88" rx="34" ry="42" fill="hsl(${s.hue} 10% 34%)" stroke="#728190" stroke-width="1"/>` +
+      `<path d="M78 200 C82 126 238 126 242 200 Z" fill="hsl(${s.hue} 10% 28%)" stroke="#728190" stroke-width="1"/>${phone}` +
+      `<text x="306" y="186" text-anchor="end" font-family="sans-serif" font-size="9" fill="#aebbc9">DEMO</text></svg>`;
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   }
 
