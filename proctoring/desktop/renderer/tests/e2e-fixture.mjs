@@ -122,6 +122,16 @@ async function flow(page, tag, shot, consoleErrors) {
   check(`[${tag}] calibration hint shown`, await page.getByText("Смотрите на точку глазами, голову держите прямо.").isVisible());
   check(`[${tag}] no target requested before the student starts`, (await page.locator(".calfs-dot-active").count()) === 0);
   await shot("04a-calibration-intro");
+  await page.evaluate(() => {
+    window.__calPaint = {};
+    window.__calPaintObserver = new MutationObserver(() => {
+      const dot = document.querySelector(".calfs-dot-active");
+      if (!dot) return;
+      const entry = window.__calPaint[dot.dataset.target] ??= { painted: performance.now(), collecting: null };
+      if (dot.dataset.state === "collecting" && entry.collecting === null) entry.collecting = performance.now();
+    });
+    window.__calPaintObserver.observe(document.querySelector(".calfs"), { attributes: true, childList: true, subtree: true });
+  });
   await page.getByRole("button", { name: "Начать калибровку" }).click();
   await page.locator(".calfs-dot-active").first().waitFor({ timeout: 10000 });
   await shot("04-calibration-collecting");
@@ -129,12 +139,17 @@ async function flow(page, tag, shot, consoleErrors) {
   await retry.first().waitFor({ timeout: 20000 });
   check(`[${tag}] calibration failure surfaced`, await page.getByText("Качество кадров недостаточно").isVisible());
   check(`[${tag}] failed dot shown with text`, (await page.locator('.calfs-dot[data-state="failed"]').count()) === 1 && (await page.getByText("не собрано").count()) >= 1);
+  // A01 f46565c: "up" is optional -> the walk continues to "down" while "up" is failed
+  await page.locator('.calfs-dot[data-target="down"][data-state="collecting"]').waitFor({ timeout: 10000 }).then(() => true, () => false)
+    .then((ok) => check(`[${tag}] failed «вверх» does not stop the walk to «вниз»`, ok));
   await shot("05-calibration-failed-target");
   await retry.first().click();
   await page.waitForFunction(() => {
     const b = [...document.querySelectorAll("button")].find((x) => x.textContent?.includes("Завершить калибровку"));
     return b && !b.disabled;
   }, null, { timeout: 20000 });
+  const paint = await page.evaluate(() => { window.__calPaintObserver.disconnect(); return window.__calPaint; });
+  check(`[${tag}] all five targets are highlighted before backend collection`, Object.keys(paint).length === 5 && Object.values(paint).every((p) => p.collecting !== null && p.collecting - p.painted >= 400), JSON.stringify(paint));
   await page.getByRole("button", { name: "Завершить калибровку" }).click();
   await page.getByText("Всё готово к началу").waitFor();
   await shot("06-ready");

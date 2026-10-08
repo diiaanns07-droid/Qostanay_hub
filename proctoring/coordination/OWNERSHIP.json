@@ -279,6 +279,35 @@
         "A02 preview frames"
       ],
       "notes": "Minimal wiring in backend/proctor/app.py is granted to C2 by A01 for 8 Oct (one import + start/stop hook), documented in handoff."
+    },
+    "A13": {
+      "role": "Identity continuity (same person as at exam start), local, no biometric database",
+      "paths": [
+        "proctoring/backend/proctor/identity/",
+        "proctoring/handoffs/A13/"
+      ],
+      "provides": [
+        "proctor.identity.create_identity_analyzer(settings) -> FrameAnalyzer (name='identity')"
+      ],
+      "consumes": [
+        "FramePacket via A02 add_consumer"
+      ],
+      "notes": "OpenCV FaceDetectorYN + FaceRecognizerSF (opencv-contrib already pinned); models prepared outside runtime with manifest + sha256."
+    },
+    "A14": {
+      "role": "Audio voice-activity monitor (levels and speech probability only, no recording)",
+      "paths": [
+        "proctoring/backend/proctor/audio/",
+        "proctoring/handoffs/A14/"
+      ],
+      "provides": [
+        "proctor.audio.create_audio_monitor(settings) -> background microphone monitor emitting audio observations"
+      ],
+      "consumes": [
+        "sounddevice (already in uv.lock via mediapipe)",
+        "onnxruntime"
+      ],
+      "notes": "A05 audio_rules (background_speech) already consume string-typed audio observations."
     }
   },
   "integration_order": [
