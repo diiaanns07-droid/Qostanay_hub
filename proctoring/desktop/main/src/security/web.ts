@@ -24,6 +24,7 @@ export const CSP = [
   "form-action 'none'",
   "frame-src 'none'",
   "frame-ancestors 'none'",
+  "sandbox allow-scripts allow-same-origin allow-forms", // no allow-modals: print is forbidden even in fresh frames
 ].join("; ");
 
 export function devCsp(devOrigin: string): string {
@@ -39,6 +40,7 @@ export function devCsp(devOrigin: string): string {
     "base-uri 'none'",
     "form-action 'none'",
     "frame-src 'none'",
+    "sandbox allow-scripts allow-same-origin allow-forms",
   ].join("; ");
 }
 

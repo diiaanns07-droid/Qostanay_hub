@@ -5,6 +5,8 @@ import { BrowserWindow, type Session } from "electron";
 import { APP_ORIGIN } from "../security/web";
 import { classifyExamKey } from "./keyboard";
 import type { KeySpec, ProbeDriver } from "./probe";
+import { prepareContentSession, protectContent } from "./content";
+import type { ContentAction } from "./content-policy";
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -13,6 +15,7 @@ function pageKeyOf(input: Electron.Input): string {
 }
 
 export function createElectronProbeDriver(ses: Session, devTools: boolean): ProbeDriver {
+  prepareContentSession(ses);
   const win = new BrowserWindow({
     show: false,
     width: 480,
@@ -30,6 +33,8 @@ export function createElectronProbeDriver(ses: Session, devTools: boolean): Prob
     },
   });
   const wc = win.webContents;
+  const contentReports: ContentAction[] = [];
+  protectContent(wc, () => true, id => contentReports.push(id));
   const seen = new Map<string, number>();
   let disposing = false;
   wc.on("before-input-event", (event, input) => {
@@ -87,9 +92,29 @@ export function createElectronProbeDriver(ses: Session, devTools: boolean): Prob
       await delay(100);
       return { stillOpen: !win.isDestroyed() };
     },
+    async tryContent(id) {
+      const before = contentReports.length;
+      const prevented = await wc.executeJavaScript(contentProbeScript(id), true) as boolean;
+      return { prevented, reported: contentReports.slice(before).includes(id) };
+    },
     dispose() {
       disposing = true;
       if (!win.isDestroyed()) win.destroy();
     },
   };
+}
+
+/** Exercises the actual preload/DOM cancellation, including page-world print replacement. */
+export function contentProbeScript(id: ContentAction): string {
+  if (id === "print") return `(() => {
+    let fired = false; const listener = () => { fired = true; };
+    addEventListener('beforeprint', listener); window.print(); removeEventListener('beforeprint', listener);
+    return !fired && Object.getOwnPropertyDescriptor(window, 'print').writable === false;
+  })()`;
+  const types: Partial<Record<ContentAction, string>> = { context_menu: "contextmenu", selection: "selectstart", drag: "dragstart", zoom: "wheel" };
+  const name = types[id];
+  if (!name) throw new Error("not a DOM check");
+  return `(() => { const e = new ${id === "zoom" ? "WheelEvent" : "Event"}(${JSON.stringify(name)},
+    {bubbles:true,cancelable:true,ctrlKey:true,deltaY:100});
+    return !document.body.dispatchEvent(e) && e.defaultPrevented; })()`;
 }

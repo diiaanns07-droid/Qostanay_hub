@@ -1,0 +1,17 @@
+{
+  "started_at": "2026-10-08T14:20:14.985Z",
+  "completed_at": "2026-10-08T14:20:17.115Z",
+  "ok": false,
+  "entry": "https://moodle.org/demo/",
+  "allowed_urls": [
+    "https://moodle.org/demo/",
+    "https://moodle.org/*"
+  ],
+  "mode": "production ExamSurface with injected class/shell state",
+  "enforce": false,
+  "backend": false,
+  "capture": false,
+  "checks": [],
+  "events": [],
+  "error": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Moodle/i. Input:\n\n'Один момент…'\n"
+}

@@ -3,6 +3,8 @@ import { session, WebContentsView, type BrowserWindow, type Session, type WebCon
 import type { ShellState } from "@contracts/bridge";
 import { compileExamPolicy, examBounds, examUrlAllowed, type ExamPolicy, type ExamPolicyResult } from "../security/exam-policy";
 import type { ExamSurfaceStatus } from "./channels";
+import { prepareContentSession, protectContent } from "../environment/content";
+import type { ContentAction } from "../environment/content-policy";
 
 // Registered before constructing the view (web-contents-created fires inside the constructor).
 // The ordinary app/probe contents keep their original all-external-navigation prohibition.
@@ -29,7 +31,8 @@ export class ExamSurface {
   private currentUrl: string | null = null;
   private state: ExamSurfaceStatus = { kind: "none", phase: "idle", title: "", origin: null, message: "" };
   constructor(private readonly window: () => BrowserWindow | null, private readonly publish: (s: ExamSurfaceStatus) => void,
-    private readonly beforeInput?: (input: Electron.Input) => boolean) {}
+    private readonly beforeInput?: (input: Electron.Input) => boolean,
+    private readonly reportBlocked?: (id: ContentAction) => void) {}
 
   get status(): ExamSurfaceStatus { return { ...this.state }; }
   private emit(patch: Partial<ExamSurfaceStatus>): void {
@@ -122,12 +125,13 @@ export class ExamSurface {
     if (!this.ses) {
       this.ses = ses;
       examSessions.add(ses);
+      prepareContentSession(ses);
       ses.setPermissionRequestHandler((_wc, _permission, cb) => cb(false));
       ses.setPermissionCheckHandler(() => false);
       ses.setDevicePermissionHandler(() => false);
       ses.setDisplayMediaRequestHandler((_req, cb) => cb({}));
       ses.setSpellCheckerEnabled(false);
-      ses.on("will-download", (event) => { event.preventDefault(); this.blocked("Загрузка файлов запрещена"); });
+      ses.on("will-download", (event) => { event.preventDefault(); this.blocked("Загрузка файлов запрещена"); this.reportBlocked?.("download"); });
       // No filter: every interceptable protocol is denied unless the strict HTTP(S) policy approves it.
       ses.webRequest.onBeforeRequest((details, cb) => {
         const allowed = this.networkOpen && this.canRun() && this.ses === ses && !!this.view && !!this.policy &&
@@ -150,7 +154,7 @@ export class ExamSurface {
       session: ses, contextIsolation: true, sandbox: true, nodeIntegration: false, nodeIntegrationInWorker: false,
       nodeIntegrationInSubFrames: false, webviewTag: false, webSecurity: true, allowRunningInsecureContent: false,
       experimentalFeatures: false, navigateOnDragDrop: false, spellcheck: false, safeDialogs: true, devTools: false,
-      // Deliberately no preload. This remote content receives no qorgau/lock/audio bridge.
+      // Only the session content-policy gate; no qorgau/lock/audio/auth bridge.
     } });
     this.view = view;
     const wc = view.webContents;
@@ -159,11 +163,12 @@ export class ExamSurface {
     try { wc.debugger.attach("1.3"); } catch { this.lifecycleFailed(view); return; }
     wc.debugger.on("detach", () => { if (this.view === view) this.lifecycleFailed(view); });
     this.networkOpen = true;
+    protectContent(wc, () => this.canRun(), id => this.reportBlocked?.(id));
     wc.setWebRTCIPHandlingPolicy("disable_non_proxied_udp");
-    wc.setWindowOpenHandler(() => { this.blocked("Новое окно запрещено; откройте вход в текущем окне"); return { action: "deny" }; });
+    wc.setWindowOpenHandler(() => { this.blocked("Новое окно запрещено; откройте вход в текущем окне"); this.reportBlocked?.("new_window"); return { action: "deny" }; });
     const nav = (event: { preventDefault(): void }, url: string) => {
       if (!this.networkOpen || !this.canRun() || !this.policy || !examUrlAllowed(this.policy, url)) {
-        event.preventDefault(); this.blocked("Переход за пределы разрешённых адресов запрещён");
+        event.preventDefault(); this.blocked("Переход за пределы разрешённых адресов запрещён"); this.reportBlocked?.("navigation");
       }
     };
     wc.on("will-navigate", nav);

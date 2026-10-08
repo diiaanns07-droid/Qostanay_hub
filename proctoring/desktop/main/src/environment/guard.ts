@@ -16,6 +16,7 @@ import type { EventSink } from "./events";
 import { classifyExamKey, KeyEventThrottle, type KeyInput } from "./keyboard";
 import { remoteNames, type RemoteSnapshot } from "./remote";
 import type { VmSnapshot } from "./vm";
+import { CONTENT_ACTIONS, type ContentAction } from "./content-policy";
 
 const log = logger("guard");
 
@@ -421,6 +422,12 @@ export class ExamGuard implements Guard {
 
   onNavigationBlocked(): void {
     if (this.active) this.emit("navigation_blocked", "blocked", "electron.will_navigate", "app");
+  }
+
+  onContentBlocked(id: ContentAction): void {
+    if (!this.active) return;
+    const item = CONTENT_ACTIONS[id];
+    this.emit(item.action, "blocked", `electron.content.${id}`, "window", { shortcut: item.label });
   }
 
   onWindowOpenBlocked(): void {
