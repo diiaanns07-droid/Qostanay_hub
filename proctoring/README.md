@@ -1,58 +1,83 @@
-# Qorgau Exam — local proctoring prototype (case №3, Qostanai Industry Hackathon)
+# Adal — запуск класса на Windows
 
-Local-only prototype: camera CV (phone, faces, approximate gaze) + exam environment protection, merged into
-explainable episodes that a teacher reviews. No cloud services in the runtime path. Observations are not accusations.
+В проекте работают сервер класса C1 с панелью преподавателя, Electron-приложение студента с backend/C2, локальный CV-конвейер и защита экзаменационной среды. Это интегрированный прототип: наличие функций и успешные программные тесты не означают, что камера, микрофон и системная блокировка проверены на каждом ПК. SYNTHETIC остаётся отдельным тестовым режимом; для реальной камеры выбирайте LIVE. Наблюдения требуют проверки преподавателем и не являются обвинениями.
 
-**Status: BOOTSTRAP (contracts v1).** Only the skeleton, contracts and a clearly labelled SYNTHETIC pipeline exist.
-Read first: `coordination/BOOTSTRAP.json`, `coordination/OWNERSHIP.json`, `coordination/CONTRACTS.md`,
-`coordination/DECISIONS.md`, your `handoffs/Axx/`.
+Единая команда — `Start-Adal.ps1`. Она использует текущую копию проекта, выводит её SHA и выбирает роль. Запуск ничего не устанавливает, не скачивает и не меняет брандмауэр/реестр. Команды ниже выполняются из `proctoring/` в Windows PowerShell 5.1 или PowerShell 7; абсолютный путь к скрипту также допустим.
 
-## Layout
+## Подготовка до отключения интернета
 
-```
-proctoring/
-  coordination/   BOOTSTRAP.json OWNERSHIP.json CONTRACTS.md DECISIONS.md REQUIREMENTS_MATRIX.md verify_ownership.py   (A01)
-  contracts/      python/proctor_contracts (source of truth) · schema/v1 · ts · fixtures/v1 · tools/generate.py   (A01)
-  backend/proctor/  app.py session.py settings.py __main__.py bootstrap/ (A01)
-                    capture/ (A02) phone/ (A03) attention/ (A04) fusion/ (A05) evidence/ (A08)
-  backend/tests/  A01 lifecycle/API tests
-  desktop/        package.json, lockfile, tsconfig*, vite.config.ts, scripts/ (A01)
-                  main/ preload/ native/ (A06) · renderer/ (A07)
-  qa/ packaging/ (A09) · demo/ docs/pitch/ (A10) · handoffs/Axx/ (each agent)
-  models/         local weights — git-ignored; manifests live in the module packages
-```
-
-## Setup (Windows, PowerShell; Python 3.12 x64, Node 22 LTS)
+На каждом ПК нужны Windows, Python 3.12 x64; на студенческих ПК также Node.js >=22.12 и npm. Подготовьте одну согласованную ревизию проекта на всех трёх ПК. С установленным `uv`:
 
 ```powershell
-cd proctoring
-py -3.12 -m venv .venv
-.venv\Scripts\python -m pip install --require-hashes -r requirements\full.txt
-.venv\Scripts\python -m pip install --no-deps -e .
-cd desktop; npm ci; cd ..
+# PC1: Python и зависимости сервера.
+.\packaging\prepare-windows.ps1 -BackendOnly
+# PC2/PC3 или отдельный тестовый ноутбук: зависимости, модели и текущая сборка.
+.\packaging\prepare-windows.ps1 -FetchModels
 ```
-With uv instead: `uv sync --extra cv --extra dev` (uses `uv.lock`). Linux/macOS: `.venv/bin/python` instead of
-`.venv\Scripts\python`.
 
-## Run / check (from `proctoring/`)
+Подготовка требует сети и выполняется заранее. Модели проверяются по размеру и SHA256; готовые зависимости, Electron и модели должны остаться на каждом ПК. После изменения исходников выполните `npm run build` в `desktop/`. Запуск откажется от отсутствующей или устаревшей сборки; чужой `dist` не подставляется.
 
-| Command | What it proves |
+По умолчанию используется `.venv\Scripts\python.exe` этой копии. Для уже подготовленного окружения укажите `-Python 'C:\полный путь\.venv\Scripts\python.exe'`: `PYTHONPATH` всё равно выбирает исходники запущенной копии. При внешнем каталоге моделей добавьте `-ModelsDir 'C:\AdalModels'` на студенческом ПК. Автоматического поиска чужих окружений нет.
+
+## PC1 — преподаватель
+
+```powershell
+.\Start-Adal.ps1 -Role Teacher -CheckOnly
+.\Start-Adal.ps1 -Role Teacher -Lan -Port 8765
+```
+
+Оставьте консоль открытой. На **PC1** откройте напечатанный адрес `http://127.0.0.1:8765/`, введите PIN из консоли и нажмите «Создать класс»: задайте название и адреса экзамена. Студентам передайте шестизначный код класса, а не PIN преподавателя.
+
+`-Lan` разрешает подключения учеников по локальной сети; панель и API преподавателя остаются доступны через loopback на PC1. Без `-Lan` сервер слушает только этот ПК. При `-Port 0` выводится фактический свободный порт.
+
+## PC2 и PC3 — студенты в той же Wi-Fi/Ethernet-сети
+
+Используйте LAN-адрес PC1 из вывода, например `192.168.1.10:8765`. `127.0.0.1` на другом компьютере ведёт на него самого. При нескольких адресах выбирайте адрес общей сети, а не VPN.
+
+```powershell
+$server = '192.168.1.10:8765' # заменить реальным адресом PC1
+$code = Read-Host 'Шестизначный код класса'
+.\Start-Adal.ps1 -Role Student -Server $server -JoinCode $code -Label PC2 -Enforce -CheckOnly
+.\Start-Adal.ps1 -Role Student -Server $server -JoinCode $code -Label PC2 -Enforce
+```
+
+На PC3 замените метку на `PC3`. В Adal дождитесь подключения к классу, выберите LIVE и пройдите согласие, проверку оборудования и калибровку. Готовый backend ещё не означает подключение к C1 или готовность камеры. Каждый студент использует собственный ПК/каталог данных.
+
+`-CheckOnly` проверяет локальные файлы, импорты и актуальность сборки: **не запускает Electron, сеть, камеру, микрофон или hooks**, даже вместе с `-Enforce`. Он не проверяет доступность PC1 и правильность кода. Для Standalone дополнительно проверяет CV-зависимости и модельные SHA256; в Student проверка LIVE-моделей/устройств выполняется в приложении.
+
+## Отдельный ноутбук и диагностика
+
+```powershell
+.\Start-Adal.ps1 -Role Standalone -Enforce -CheckOnly
+.\Start-Adal.ps1 -Role Standalone -Enforce -DemoOperator
+# Только backend/C2, без окна и без экзамена:
+.\Start-Adal.ps1 -Role Student -Server $server -JoinCode $code -Label PC2 -BackendOnly
+```
+
+Standalone не подключается к серверу класса. `-DemoOperator` явно включает одноразовый DEMO PIN оператора в консоли для репетиции; не сохраняйте и не публикуйте его. Без этого параметра операторский доступ требует заранее настроенного `QORGAU_OPERATOR_PIN_HASH` (инструмент `desktop/main/tools/hash-pin.mjs`). PIN панели PC1 и локальный PIN оператора различаются.
+
+`-BackendOnly -Enforce` отклоняется: backend не включает защиту Windows. `-ExpectedSha <40 символов>` необязателен; требует точный текущий SHA и отсутствие изменений в `proctoring/`. Старого обязательного SHA в запускателе нет. Совместимые старые команды `packaging/launch-windows.ps1` и `packaging/launch-live-tonight.py` используют тот же путь запуска, а не отдельную сборку.
+
+## Что означает Enforce
+
+Без `-Enforce` подавление клавиш нативным помощником выключено. С `-Enforce` запрос передаётся настоящему Electron (`QORGAU_SHELL_NATIVE_ENFORCE=1`); помощник активируется во время RUNNING-сессии. Это не результат физической проверки. В интерфейсе различайте:
+
+| Статус | Значение |
 |---|---|
-| `python -m pytest -q` | contracts (Pydantic + JSON Schema + fixtures) and A01 lifecycle/API/security tests |
-| `python contracts/tools/generate.py --check` | generated JSON Schema/TS are in sync with `v1.py` |
-| `python -m proctor smoke` | starts a REAL backend process (`serve --token-stdin`), READY handshake, auth/origin checks, one SYNTHETIC session through preflight → calibration → exam → incident → review → finish → restart, stdin-EOF shutdown |
-| `python coordination/verify_ownership.py --self-test` | ownership map has no overlapping paths |
-| `python coordination/verify_ownership.py --agent A03 --base <BOOTSTRAP_SHA>` | your branch touched only your paths |
-| `cd desktop && npm run check:contracts` | generated TS types + typed fixtures compile (`strict`) |
-| `cd desktop && npm run typecheck` | contracts + main/preload (A06) + renderer (A07) when present; missing = SKIP |
+| `blocked` | конкретное ограничение подтверждено применимыми проверками/записью для среды |
+| `detected_only` | действие фиксируется, но не предотвращается |
+| `unverified` | фактическая блокировка на этой среде не подтверждена |
 
-Manual server (development):
-```powershell
-$env:QORGAU_DEV_TOKEN = -join ((1..48) | % { '{0:x}' -f (Get-Random -Max 16) })
-.venv\Scripts\python -m proctor serve --token-env QORGAU_DEV_TOKEN --port 8765
-```
-Settings: environment variables `QORGAU_<FIELD>` for fields of `backend/proctor/settings.py` (e.g. `QORGAU_DATA_DIR`,
-`QORGAU_MODELS_DIR`, `QORGAU_CAMERA_INDEX`, `QORGAU_DEV_ALLOW_ORIGIN=http://127.0.0.1:5173` for browser renderer dev).
+Экран «Заблокировано преподавателем» закрывает содержимое приложения; сам по себе он не доказывает запрет Alt+Tab/Win и запуска других программ Windows. HTTP-экзамен допускает только разрешённые адреса; это не системный сетевой firewall. При временной блокировке обычная HTTP-форма сохраняет DOM; сайты с WebSocket и ошибки безопасной заморозки могут закрыть документ с предупреждением о потере несохранённых ответов.
 
-Synthetic mode is a labelled test mode (`source_mode="synthetic"`, `producer.module="bootstrap.*"`); it is not CV and
-never substitutes LIVE.
+Ctrl+Alt+Del и защищённый экран UAC не блокируются. Нет обещания проверки ста камер или ста одновременных ПК. Совместную работу CV и Enforce нужно вручную проверить по [LIVE-чеклисту](qa/scenarios/LIVE_TONIGHT.md) на целевой машине.
+
+## Остановка и восстановление
+
+**Аварийный выход: Ctrl+Alt+Shift+F12** (на некоторых клавиатурах вместе с Fn). Перед репетицией проверьте его в короткой сессии. При зависании: Ctrl+Alt+Del → Диспетчер задач; завершите только процесс с `ADAL_DESKTOP_PID`, напечатанным вашим запускателем. Не завершайте все `electron.exe` по имени.
+
+Обычная остановка: закончите экзамен и закройте Adal; C1 — Ctrl+C в консоли. Дочерние процессы принадлежат Windows Job Object: закрытие/авария запускателя убирает только его дерево. C1/backend сначала получают EOF; аварийная остановка не считается нормальной сдачей экзамена. После выхода проверьте клавиатуру, Alt+Tab и Win в обычном приложении.
+
+Данные по умолчанию: `%LOCALAPPDATA%\QorgauClassroom` (C1), `%LOCALAPPDATA%\QorgauExam` (студент); можно передать `-DataDir`. Храните их вне Git: там могут быть персональные данные и токены восстановления. Запускатель не пишет PIN/токен в журналы; код класса маскируется в выводе. При недоступности PC1 проверьте общую сеть, `-Lan`, адрес/порт и разрешение TCP-порта в частном профиле Windows Firewall вручную.
+
+Проверки без устройств и hooks: `acceptance/classroom/launcher-tests/test_unified_launcher.py`; существующие `test_launchers.py` отдельно включают loopback-тесты C1/backend. Полный LIVE-чеклист не выполняется автоматическими тестами.
