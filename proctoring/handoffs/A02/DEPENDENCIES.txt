@@ -1,0 +1,41 @@
+A02 -> A01 requests (camera / frame stream). Contract baseline: qorgau.v1 1.0.0 @ 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49
+No shared file was edited by A02. Each item: what, why, evidence.
+
+R1 (needed at integration, test only) backend/tests/test_lifecycle_api.py::test_health_reports_missing_modules_honestly
+    asserts codes["capture"] == "module_not_integrated". With proctor.capture present the capture health is real
+    (code "idle", status "stopped"), so this A01 test fails by design (the ONLY failing test on the A02 branch:
+    139 passed, 1 failed). Proposal: drop "capture" from that loop once A02 is integrated and assert
+    capture code == "idle" instead.
+
+R2 (camera-dependent A01 checks) on a machine WITH a camera:
+    * test_live_never_falls_back_to_synthetic asserts checks["camera"]["status"] == "fail" — with A02 the camera
+      check PASSES when a camera exists (other required checks still fail, ready stays False).
+    * smoke check "live_without_capture_module_is_not_ready" asserts cam["status"] == "fail" — same issue.
+    In the cloud container (no /dev/video*) both still pass. Proposal: assert ready is False and that the camera
+    check's details.impl == "module" (never "bootstrap"); assert camera status only via a module override that fails.
+
+R3 (optional, contract v1.1) SourceConfig.replay_pacing: "realtime" | "lockstep" | null.
+    Today pacing comes from the replay manifest (A02 format, field "pacing") or the A02-only constructor argument
+    FrameCaptureService(replay_pacing=...). A per-session field would let A09 run deterministic evaluation over the
+    HTTP API without a separate manifest. DECISIONS.md "Known gaps" already mentions it. Not blocking.
+
+R4 (optional, Settings) capture_backend: "auto" | "dshow" | "msmf" (default auto = DSHOW then MSMF on Windows).
+    Field debugging on unknown Windows webcams. Workaround today: `python -m proctor.capture verify-live --backend msmf`.
+    Related, unverified: if MSMF open is slow on the demo laptop, A06/A01 may set
+    OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS=0 in the backend environment (must be set before cv2 is imported).
+
+R5 (FYI for A05, no change) capture health codes emitted through the listener (A01 wraps them in HealthObservation):
+    starting/opening, ok/running, degraded/frame_stall, unavailable/camera_disconnected (reconnect loop running),
+    stopped/replay_ended, stopped/closed, error/capture_error|source_lost, unavailable/<open failure reason>.
+    The fixture HealthObservation.camera_disconnected uses status "error"; A02 uses "unavailable" for a missing
+    device and "error" only for internal failures. Rule for A05: any capture status != ok = coverage gap
+    (component capture), never face_missing.
+
+R6 (FYI) metric definitions used by A02 (RuntimeMetrics):
+    * frames_dropped = frames discarded before fan-out: replay frames skipped to keep real time, undecodable replay
+      frames, unusable camera frames (empty/odd shape), out-of-order frames (never delivered). Consumer-level
+      replacements are ConsumerMetrics.frames_skipped.
+    * e2e_latency_ms = consumer callback RETURN minus t_capture_mono_ns, analysis consumers only (not "preview").
+      In A01's SessionRuntime the callback includes analyzer.process() + publish_observation(), so this is
+      "capture -> observation published to bus/fusion queue"; WebSocket delivery to the UI is NOT included.
+    * t_capture_mono_ns = when cv2 read() returned; driver/sensor buffering before that is not visible to OpenCV.
