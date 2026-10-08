@@ -6,6 +6,9 @@ R2  A01 | backend/tests/test_lifecycle_api.py::test_live_never_falls_back_to_syn
 R7  A01 | backend/proctor/session.py SessionRuntime._release_capture() — вызвать capture.set_health_listener(None) ДО capture.close() (иначе ложный monitoring_degraded на каждом finish; для зон это лишний low).
 R9  A01/A06 | окружение backend для демо — QORGAU_REPLAY_DIR=%LOCALAPPDATA%\QorgauExam\replay (ролики с людьми вне Git; дефолт proctoring/demo/replay лежит в репозитории).
 R11 A01 | backend/proctor/session.py — в REPLAY по capture stopped/replay_ended автоматически завершать сессию (или оператор жмёт «Завершить» сразу после конца ролика): иначе конец записи = пробел покрытия (+1 low monitoring_degraded, проверено в scratch).
+R12 A01 (после 9.10) | proctor_contracts.interfaces.SessionClock + все time.monotonic_ns() — на Windows/Python 3.12 time.monotonic = GetTickCount64, шаг 15,6 мс (измерено): все t_session_ms/латентности квантованы ±16 мс; варианты: Python 3.13 (QPC) или perf_counter_ns везде согласованно.
+R13 A01 | proctoring/.gitignore — добавить `$R/` и `*.ts.json` (клип с людьми по ошибке записался в proctoring/$R; *.avi уже игнорируется, манифесты с именами и sidecar — нет); у A02 пока только локальный .git/info/exclude.
+R14 A04/A05 FYI | proctor.attention без калибровки на этом ноутбуке: нейтральная поза = head "up" (pitch +11..+19), взгляд вниз 25–30° = "center"; при yaw −50° gaze скачет left/up -> gaze_prolonged_side не открывается (ролик zone_b_yellow_01, 6,5–11 с). Данные: handoffs/A02/DEMO_CLIPS.md.
 R3  A01 (после 9.10) | contracts SourceConfig.replay_pacing "realtime"|"lockstep"|null — детерминированный прогон A09 через HTTP без отдельного манифеста.
 R4  A01 (после 9.10) | Settings.capture_backend "auto"|"dshow"|"msmf" — сейчас обход: python -m proctor.capture verify-live --backend msmf. Измерено: MSMF открывается 5–6 с, DSHOW 0,2–1 с.
 R5  A05 FYI | коды health capture (ниже); любое capture status != ok = пробел покрытия, не face_missing.

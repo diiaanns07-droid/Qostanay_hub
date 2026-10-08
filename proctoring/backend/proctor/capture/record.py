@@ -23,7 +23,7 @@ from typing import Any, Callable
 from proctor_contracts.interfaces import FramePacket, SessionClock
 from proctor_contracts.v1 import SourceConfig
 
-from .replay import REPLAY_FORMAT, REPLAY_ID_RE, ReplayManifest, sha256_file
+from .replay import REPLAY_FORMAT, REPLAY_ID_RE, SIDECAR_TIE_STEP_MS, ReplayManifest, sha256_file
 from .service import CAPTURE_VERSION, FrameCaptureService
 from .sources import cv2
 
@@ -34,6 +34,7 @@ class _Writer:
         self.fps = fps
         self.writer: Any = None
         self.pts: list[float] = []
+        self.ties = 0
         self.first_t: float | None = None
         self.size: tuple[int, int] | None = None
         self.lock = threading.Lock()
@@ -54,7 +55,11 @@ class _Writer:
             if (frame.image.shape[1], frame.image.shape[0]) != self.size:
                 return  # resolution changed after a reconnect: keep the clip consistent
             self.writer.write(frame.image)
-            self.pts.append(round(frame.t_session_ms - (self.first_t or 0.0), 3))
+            t = round(frame.t_session_ms - (self.first_t or 0.0), 3)
+            if self.pts and t <= self.pts[-1]:  # same clock tick (15.6 ms on Windows/Python 3.12)
+                t = round(self.pts[-1] + SIDECAR_TIE_STEP_MS, 3)
+                self.ties += 1
+            self.pts.append(t)
 
     def close(self) -> None:
         with self.lock:
@@ -145,6 +150,7 @@ def record(
             "backend": str(health.details.get("backend", "")),
             "frames": len(writer.pts),
             "skipped_by_writer": int(rec.frames_skipped) if rec else 0,
+            "timestamp_ties_plus_1ms": writer.ties,
             "consent": consent.strip()[:300],
         },
     }

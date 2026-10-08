@@ -73,6 +73,8 @@ def test_record_then_replay_roundtrip(settings):
     m = resolved.manifest
     assert m.media.timestamps == "sidecar" and m.provenance["consent"].startswith("synthetic")
     assert len(resolved.sidecar) == out["frames"] and resolved.sidecar[0] == 0.0
+    raw = json.loads((settings.replay_dir / "media" / "rec_test.ts.json").read_text())["pts_ms"]
+    assert all(b > a for a, b in zip(raw, raw[1:]))  # written strictly increasing even with a 15.6 ms clock
     assert Path(out["media"]).suffix == ".avi"  # git-ignored media type
 
 

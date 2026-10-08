@@ -22,7 +22,7 @@ Windows camera privacy: HKLM, HKCU and HKCU\NonPackaged all `Allow` (read-only c
 | DSHOW vs MSMF (raw OpenCV, scratch) | DSHOW open 0.2–1.0 s, first frame 110 ms, 30.0 FPS; MSMF open **5.0–6.0 s**, first frame 484 ms, 30.6 FPS → default order DSHOW→MSMF is right |
 | **12-min LIVE soak** `soak --source live:0 --minutes 12` (report `%LOCALAPPDATA%\QorgauExam\a02-live\soak_live_12min.json`) | 720.0 s, 20 314 frames, **0 dropped**, mean **28.2 FPS** (per-second median 30.0, min 9.1: in 6 windows, ~100 s of 720 s in total, the camera itself switched to 15 FPS — UVC auto-exposure in dim light; health stayed `running`, consumers unaffected); phone-like 7.8 FPS e2e p50/p95/max 78/110/156 ms; attention-like 12.8 FPS e2e p50/p95 47/78 ms; RSS 156 → 160 MB, **growth after warm-up 3.6 MB**; threads 1 → 1, leaked runs 0; clean close (`stopped/closed`); all A02 targets PASS |
 | camera busy (2nd process holds the camera via DSHOW or MSMF) | before fix: **open "succeeded", black frames at ~1 FPS** (bug); after fix: `CAMERA_BUSY/camera_no_frames` in 2.4 s, the other app keeps its 29.8 FPS; after it releases, the next open works |
-| `pytest backend/proctor/capture/tests` (Windows) | **110 passed, 2 skipped** (skips: "a camera may be present", "symlink not permitted") |
+| `pytest backend/proctor/capture/tests` (Windows) | **111 passed, 2 skipped** (skips: "a camera may be present", "symlink not permitted") |
 | `pytest` (whole repo, Windows) | 172 passed, **2 failed** = A01 tests from R1 and R2 (R2 now confirmed on a camera machine) |
 | `python -m proctor smoke` | 33/34: only `live_without_capture_module_is_not_ready` (R2: the camera now really works) |
 | `contracts/tools/generate.py --check` / `verify_ownership.py --agent A02 --base 35bea4c` | PASS / PASS |
@@ -54,9 +54,22 @@ interface/pipeline check, not an accuracy measurement. Script: scratch `run_repl
 zone-rule-1 inside the script only for verification; A05 owns `assess_session_zone`).
 
 ## Demo clips (task 3) — see `DEMO_CLIPS.md`
-Commands and timed scripts for (а) green, (б) yellow, (в) red; storage outside Git: `%LOCALAPPDATA%\QorgauExam\replay`.
-Scenario (б) adjusted: with A05 `a05-rules-1.0.0` short glances create nothing and a 5–6 s look down is ONE low → green
-by zone-rule-1; the clip now has 3 low episodes (R10). Clips: **not recorded yet** (needs the captain + consent).
+Recorded by the captain (consented: Дамир; in (в) also Танирберды), stored outside Git in
+`%LOCALAPPDATA%\QorgauExam\replay`, consent fixed, labels added from A02's frame review. Every clip passes
+`replay-check` (900 / 1142 / 1202 frames, sha256 OK, 0 undecodable) and the full pipeline on REPLAY (scratch
+A02+A03+A04+A05): **(а) green ✓, (в) red ✓, (б) red ✗** — a real, unscripted second person enters at 32–34 s, and
+uncalibrated A04 does not report the look down (R14). (б) must be re-recorded: script v2 in `DEMO_CLIPS.md`.
+
+**Fix 5 (found on the real clips): every recorded clip was rejected by replay** (`sidecar_invalid`). Python 3.12 on
+Windows: `time.monotonic` ticks every 15.6 ms (GetTickCount64, measured), so `record` wrote equal neighbouring
+timestamps (4–6 per clip) and the loader required strictly increasing values. Now the loader accepts non-decreasing
+sidecars and moves ties by +1 ms (counted in `timestamp_repairs`; decreasing values stay invalid) and `record` writes
+strictly increasing values (`provenance.timestamp_ties_plus_1ms`). Test: `test_sidecar_equal_timestamps_are_untied_not_rejected`
+(+ the recorder roundtrip asserts strictly increasing). Consequence for all timing on this laptop: t_session_ms and
+latencies are quantized to ~16 ms (R12, A01's clock).
+
+Realtime replay with the real A03+A04 models drops frames on this laptop (44–54 per 38–40 s clip, counted) and once
+produced a 0.2 s `frame_stall` gap (+1 low); zones unchanged. Not investigated further today.
 
 ## NOT verified (honest)
 * Operator checks: unmirrored view, disconnect/reconnect of the real device (integrated camera, cannot unplug; disabling

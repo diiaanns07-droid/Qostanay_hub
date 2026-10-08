@@ -25,7 +25,8 @@ for looped playback). Timestamps come from the recording, not from the replay ma
 * ``timestamps: "container"`` — the decoder's presentation timestamp (cv2 CAP_PROP_POS_MSEC);
 * ``timestamps: "fps"`` — ``index * 1000 / fps`` (``media.fps`` or the container FPS);
 * ``timestamps: "sidecar"`` — ``media.timestamps_path`` JSON ``{"pts_ms": [...]}``, one
-  strictly increasing value per frame (written by ``proctor.capture.record``).
+  non-decreasing value per frame (written by ``proctor.capture.record``); equal neighbours
+  (one 15.6 ms clock tick on Windows/Python 3.12) are moved by +1 ms and counted.
 
 Non-increasing timestamps are repaired to ``previous + nominal interval`` and counted.
 
@@ -190,6 +191,7 @@ class ResolvedReplay:
         self.media_path = media_path
         self.sidecar = sidecar
         self.files = files
+        self.sidecar_ties = 0  # equal sidecar timestamps moved by +1 ms (counted as timestamp repairs)
 
 
 def load_replay(replay_dir: Path, replay_id: str | None, *, verify_sha256: bool = True) -> ResolvedReplay:
@@ -264,10 +266,30 @@ def _load_replay(replay_dir: Path, replay_id: str | None, *, verify_sha256: bool
             pts = [float(v) for v in data["pts_ms"]]
         except Exception:
             raise _invalid("timestamps sidecar must be JSON {\"pts_ms\": [numbers]}", "sidecar_invalid", replay_id=replay_id) from None
-        if not pts or any(not np.isfinite(v) or v < 0 for v in pts) or any(b <= a for a, b in zip(pts, pts[1:])):
-            raise _invalid("sidecar pts_ms must be non-empty, finite, >= 0 and strictly increasing", "sidecar_invalid", replay_id=replay_id)
-        sidecar = pts
-    return ResolvedReplay(manifest, media_path, sidecar, files)
+        if not pts or any(not np.isfinite(v) or v < 0 for v in pts) or any(b < a for a, b in zip(pts, pts[1:])):
+            raise _invalid("sidecar pts_ms must be non-empty, finite, >= 0 and non-decreasing", "sidecar_invalid", replay_id=replay_id)
+        sidecar, sidecar_ties = _untie(pts)
+    resolved = ResolvedReplay(manifest, media_path, sidecar, files)
+    resolved.sidecar_ties = sidecar_ties if sidecar is not None else 0
+    return resolved
+
+
+#: tie-break step for equal sidecar timestamps (ms)
+SIDECAR_TIE_STEP_MS = 1.0
+
+
+def _untie(pts: list[float]) -> tuple[list[float], int]:
+    """Equal neighbours -> previous + 1 ms (counted). On Windows with Python 3.12 time.monotonic has a
+    15.6 ms tick (GetTickCount64), so two frames read within one tick get the same timestamp
+    (measured on the demo laptop). +1 ms keeps them in order without shifting the timeline."""
+    out: list[float] = []
+    ties = 0
+    for v in pts:
+        if out and v <= out[-1]:
+            v = out[-1] + SIDECAR_TIE_STEP_MS
+            ties += 1
+        out.append(v)
+    return out, ties
 
 
 # ---------------------------------------------------------------------------
@@ -398,6 +420,7 @@ class ReplaySource:
             self.prepare()
         r = self._resolved
         assert r is not None
+        self.timestamp_repairs = r.sidecar_ties
         self._reader = _VideoReader(r.media_path) if r.manifest.media.kind == "video" else _SequenceReader(r.files or [])
         self._reader.open()
         self._nominal_ms = self._nominal_interval_ms()
