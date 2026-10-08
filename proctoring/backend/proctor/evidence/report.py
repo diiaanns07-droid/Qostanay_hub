@@ -53,7 +53,7 @@ RULE_RU = {
     "foreign_object_visible": "Посторонний предмет в кадре",
     "second_screen_visible": "Второй экран или ноутбук в кадре",
 }
-CATEGORY_RU = {"phone": "телефон", "attention": "внимание", "presence": "присутствие", "environment": "среда", "technical": "техника", "audio": "звук", "identity": "личность", "objects": "предметы"}
+CATEGORY_RU = {"phone": "телефон", "attention": "внимание", "presence": "присутствие", "environment": "среда", "technical": "техника", "audio": "звук", "identity": "сверка лица", "objects": "предметы"}
 PRIORITY_RU = {"low": "низкий", "medium": "средний", "high": "высокий"}
 REVIEW_RU = {
     "pending": "не проверено",
