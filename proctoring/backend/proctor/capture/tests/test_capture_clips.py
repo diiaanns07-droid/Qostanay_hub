@@ -12,6 +12,7 @@ import pytest
 
 from proctor.capture import CLIPS_CONSUMER, ClipError
 from proctor.capture.clips import CLIP_MAX_FILE_BYTES, ClipBuffer, fit_size
+from proctor.capture import clips
 from proctor_contracts.interfaces import SessionClock
 from proctor_contracts.v1 import SourceConfig, SourceMode
 
@@ -74,7 +75,9 @@ def test_memory_is_bounded_even_for_worst_case_frames():
     assert big.stats()["bytes"] <= big.max_bytes and big.stats()["frames"] == 150
 
 
-def test_export_window_writes_a_decodable_avi_under_8_mb(tmp_path):
+def test_export_window_writes_a_decodable_avi_under_8_mb(tmp_path, monkeypatch):
+    # Keep exercising the existing AVI contract when the preferred MP4 encoder is unavailable.
+    monkeypatch.setattr(clips, "_write_mp4", lambda *args: (_ for _ in ()).throw(ClipError("encoder_failed", "test fallback")))
     buf = ClipBuffer()
     fill(buf, 10.0)  # t = 0 .. 9933 ms
     res = buf.export(5000.0, 5.0, 4.9, out_dir=tmp_path, name="inc-1", wait=False)
@@ -86,13 +89,19 @@ def test_export_window_writes_a_decodable_avi_under_8_mb(tmp_path):
     assert not list(tmp_path.glob("*.part*"))
 
 
-def test_size_limit_falls_back_to_lower_quality_and_half_fps(tmp_path):
+def test_size_limit_falls_back_to_lower_quality_and_half_fps(tmp_path, monkeypatch):
+    monkeypatch.setattr(clips, "_write_mp4", lambda *args: (_ for _ in ()).throw(ClipError("encoder_failed", "test fallback")))
     buf = ClipBuffer(max_bytes=64 * 1024 * 1024)
     fill(buf, 10.0, make=lambda i: noisy(seed=i))
-    full = buf.export(5000.0, 5.0, 5.0, out_dir=tmp_path, wait=False, max_file_bytes=64 * 1024 * 1024)
-    limit = full.bytes // 5
+    # Measure the uncompressed-by-retries baseline privately; exported evidence is now hard-capped at 8 MiB.
+    seq = buf.window(0, 10_000)
+    baseline = tmp_path / "reference.avi"
+    clips._write_avi(seq, baseline, 15.0, 75)
+    limit = baseline.stat().st_size // 5
+    baseline.unlink()
     small = buf.export(5000.0, 5.0, 5.0, out_dir=tmp_path, wait=False, max_file_bytes=limit)
-    assert small.bytes <= limit and small.frames < full.frames
+    assert small.bytes <= limit and small.frames < len(seq)
+    assert small.t_first_ms == seq[0].t_ms and small.t_last_ms == seq[-1].t_ms
     with pytest.raises(ClipError) as exc:
         buf.export(5000.0, 5.0, 5.0, out_dir=tmp_path, wait=False, max_file_bytes=10_000)
     assert exc.value.code == "too_large"

@@ -1,0 +1,37 @@
+A01 dependency request: H.264 episode evidence clips
+Base: 7d9852457788420a7d1ff7c2d3580256935e4e8a
+Branch: codex/proctor-clips-mp4
+
+Please add imageio-ffmpeg==0.6.0 to the appropriate A01-owned CV/runtime dependency
+manifest and lockfile. No shared dependency manifests, lockfiles, installation scripts
+or existing handoff documents were changed by this branch.
+
+Reason: OpenCV wheels reliably write MJPG AVI but do not reliably provide an H.264
+encoder. imageio-ffmpeg's Windows x64 wheel supplies a local FFmpeg binary with libx264.
+The runtime only calls imageio_ffmpeg.get_ffmpeg_exe() to resolve an installed binary;
+there is no network/downloader call in clips.py. Missing/unusable binary => logged AVI.
+
+Provision BEFORE an exam (PowerShell, A01's Python 3.12 virtual environment):
+    .\.venv\Scripts\python.exe -m pip install imageio-ffmpeg==0.6.0
+    $clipFfmpeg = & .\.venv\Scripts\python.exe -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())"
+    & $clipFfmpeg -hide_banner -encoders | Select-String 'libx264'
+
+Offline wheelhouse (prepare on a matching Windows x64 machine BEFORE disconnecting):
+    .\.venv\Scripts\python.exe -m pip download --only-binary=:all: --no-deps imageio-ffmpeg==0.6.0 -d .\wheelhouse
+    .\.venv\Scripts\python.exe -m pip install --no-index --find-links .\wheelhouse imageio-ffmpeg==0.6.0
+The rest of Adal's dependencies must also be provisioned according to A01's existing
+installation instructions. Do not attempt a pip install during recording.
+
+Packaging: include imageio_ffmpeg and its binaries directory in the Windows build,
+or provision an approved local FFmpeg binary and set IMAGEIO_FFMPEG_EXE to its absolute
+path. Verify libx264 BEFORE deployment. The child process uses CREATE_NO_WINDOW on
+Windows. FFmpeg/codec distribution licensing must be reviewed by the packager.
+
+Verification environment: reused PythonProject99 Python 3.13.3 + OpenCV 4.14.0 +
+imageio-ffmpeg 0.6.0 (bundled FFmpeg 7.1). Adal's declared Python 3.12 and pinned
+opencv-contrib-python 4.13.0.92 environment was not installed here; repeat the focused
+tests in A01's supported environment. Existing websockets==17.1 was installed only
+into a temporary test-deps directory, without changing the standalone virtual env.
+
+User explicitly approved the minimal C2 MIME correction: select video/mp4 for .mp4,
+video/x-msvideo for .avi. No API/schema/authentication changes are needed.

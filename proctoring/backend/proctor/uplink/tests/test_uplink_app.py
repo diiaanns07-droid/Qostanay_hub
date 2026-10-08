@@ -92,7 +92,8 @@ def test_end_to_end_commands_incident_clip_and_class_state_on_stream(tmp_path, m
             req = server.send_command("request_clip", {"incident_id": inc["incident_id"]})
             assert wait_for(lambda: req in server.acks(), timeout=20) and server.acks()[req]["ok"], server.acks().get(req)
             clip = server.clips[inc["incident_id"]]
-            assert 1000 < clip["bytes"] <= 8 * 1024 * 1024 and clip["content_type"] == "video/x-msvideo"
+            assert 1000 < clip["bytes"] <= 8 * 1024 * 1024
+            assert clip["content_type"] in ("video/mp4", "video/x-msvideo")
             st = server.of_type("status")[-1]
             assert st["exam_state"] == "running" and st["locked"] is True and st["zone"] in ("green", "yellow", "red", "grey")
             assert st["source_mode"] == "synthetic" and st["source_session_id"] == sid
