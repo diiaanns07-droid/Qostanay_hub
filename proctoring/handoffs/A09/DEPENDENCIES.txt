@@ -27,3 +27,16 @@ A09 → A01 requests (A09 never edits shared files). Product SHA referenced: 35b
 4. CONTRACT CLARIFICATIONS (QA-OBS-008, no version bump needed)
    - Document re-entry transitions the code allows: preflight->preflight, calibrating|ready->calibration/start,
      aborted->abort idempotent; and that a rejected WebSocket is seen by clients as HTTP 403 at handshake (QA-OBS-007).
+
+5. WINDOWS CONTINUATION (codex/proctor-A09; upstream A09 f8ac906 retained)
+   - Pinned Python environment installs successfully on Windows 11 / Python 3.12.14.
+     Full combined QA: 352 PASS, 16 tracked XFAIL, 1 Linux-only SKIP, 0 FAIL.
+   - packaging/prepare-windows.ps1 and launch-windows.ps1 use existing A01 lockfiles and A06 env names.
+     No common dependency/config changes are requested. Native enforcement stays disabled in this launcher;
+     run A06's separate controlled verification before making an OS-level blocking claim.
+   - Checksum gate intentionally rejects incomplete modules/build/models on the bootstrap.
+   - A01 candidate command: python qa/run_qa.py --with-baseline --label windows_candidate --expected-sha FULL_CANDIDATE_SHA
+   - QA supports grouped A05 environment incidents; it checks all actions are observed without requiring
+     one alert per action. Model preparation CLIs are explicitly excluded from the static runtime network scan.
+   - Include A10 demo content in the same candidate. LIVE/REPLAY, full desktop/offline and measured performance
+     still need the integrated candidate, real models and the target laptop.

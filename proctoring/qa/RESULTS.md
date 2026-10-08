@@ -1,6 +1,32 @@
 # A09 QA results
 
-Latest verdict: **Run 2** (below Run 1 is kept for history). Product under test in both runs: A01 BOOTSTRAP
+## Latest Windows continuation
+
+Full result: **352 PASS, 16 XFAIL, 1 SKIP, 0 FAIL**, Windows 11 build 26200 / Python 3.12.14.
+Tested HEAD `b275c70a59450e00bb887d949b98d4ca1680c9c8`; product files identical to A01
+`35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` (bootstrap). Both trees and harness hashes are recorded in
+`results/20261008T055722Z_windows_combined_b275c70a5945/summary.json`.
+
+Command: `python qa/run_qa.py --label windows_combined --base 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`.
+This includes the latest A09 fault-injection delivery `f8ac906` plus seven model-file readiness checks.
+Synthetic signals and labelled module doubles exercise orchestration and failures; no physical camera,
+CV accuracy or Windows keyboard enforcement was measured. Linux network isolation is the skipped check.
+
+Pinned dependency installation, backend startup/shutdown, HTTP/WS tests, process crashes/restarts and
+paths with Cyrillic ran on Windows. Backend asset/import readiness PASS; desktop readiness FAILS as
+expected because this branch has no complete desktop candidate/models. PowerShell scripts parsed successfully.
+Native enforcement was never activated. The publication payload contains code, documentation and sanitized
+synthetic test reports; no camera recordings, model weights or credentials.
+
+Earlier local records are preserved: the initial Windows run passed 328 tests; adding seven readiness
+checks and a too-broad synthetic-preflight assertion produced two QA-only failures; that assertion was
+corrected and the pre-sync run passed 335 tests. The combined run above is authoritative for delivered code.
+Generated logs have trailing horizontal whitespace removed for Git whitespace checks; verdicts are unchanged.
+
+**Product release verdict remains NOT RELEASABLE at this bootstrap.** Open issues QA-BUG-001–005 and
+tracked observations are listed in BUGS.md. Final LIVE/REPLAY/Electron acceptance needs A01's candidate SHA.
+
+Historical Linux verdict: **Run 2** (below Run 1 is kept for history). Product under test in both runs: A01 BOOTSTRAP
 `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` — synthetic pipeline, no CV modules, no Windows.
 
 ## Run 2 — BOOTSTRAP + fault injection
