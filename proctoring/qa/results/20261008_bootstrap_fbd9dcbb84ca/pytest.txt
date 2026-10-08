@@ -1,9 +1,10 @@
-$ /home/user/Qostanay_hub/proctoring/.venv/bin/python -m pytest qa/tests -q -rA -p no:cacheprovider --junitxml=/home/user/Qostanay_hub/proctoring/qa/results/20261008_bootstrap_35bea4c7b28d/junit.xml
-........................................................................ [ 21%]
-........................................................................ [ 42%]
-.................xxx.....................xxx..........xxx............... [ 63%]
-............................x.........x................................. [ 84%]
-.............xs.....................x.................                   [100%]
+$ /home/user/Qostanay_hub/proctoring/.venv/bin/python -m pytest qa/tests -q -rA -p no:cacheprovider --junitxml=/home/user/Qostanay_hub/proctoring/qa/results/20261008_bootstrap_fbd9dcbb84ca/junit.xml
+...................xxx.................................................. [ 19%]
+........................................................................ [ 39%]
+.....................................xxx.....................xxx........ [ 59%]
+..xxx...........................................x.........x............. [ 79%]
+.................................xs.....................x............... [ 99%]
+..                                                                       [100%]
 =============================== warnings summary ===============================
 qa/tests/test_e2e_synthetic.py::test_full_synthetic_flow
   qa/tests/test_e2e_synthetic.py:17: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
@@ -30,6 +31,23 @@ PASSED qa/tests/test_e2e_synthetic.py::test_abort_during_open_episode_closes_it_
 PASSED qa/tests/test_e2e_synthetic.py::test_pause_closes_open_episode_rejects_answers_and_counts_gap
 PASSED qa/tests/test_e2e_synthetic.py::test_environment_events_accepted_while_paused
 PASSED qa/tests/test_e2e_synthetic.py::test_restart_after_finish_reuses_camera_owner_cleanly
+PASSED qa/tests/test_fault_injection.py::test_doubles_drive_a_complete_live_session
+PASSED qa/tests/test_fault_injection.py::test_camera_open_failure_is_an_honest_preflight_fail[CAMERA_UNAVAILABLE]
+PASSED qa/tests/test_fault_injection.py::test_camera_open_failure_is_an_honest_preflight_fail[CAMERA_BUSY]
+PASSED qa/tests/test_fault_injection.py::test_camera_open_failure_is_an_honest_preflight_fail[CAMERA_DENIED]
+PASSED qa/tests/test_fault_injection.py::test_camera_without_frames_fails_preflight_within_timeout
+PASSED qa/tests/test_fault_injection.py::test_capture_factory_crash_keeps_backend_up
+PASSED qa/tests/test_fault_injection.py::test_camera_unplugged_mid_exam_is_visible_and_session_survives
+PASSED qa/tests/test_fault_injection.py::test_phone_weights_missing_blocks_live_without_fallback
+PASSED qa/tests/test_fault_injection.py::test_corrupt_phone_weights_load_error_keeps_backend_up
+PASSED qa/tests/test_fault_injection.py::test_face_model_missing_blocks_live_calibration
+PASSED qa/tests/test_fault_injection.py::test_synthetic_demo_still_available_when_models_are_missing
+PASSED qa/tests/test_fault_injection.py::test_storage_open_error_blocks_live
+PASSED qa/tests/test_fault_injection.py::test_storage_unwritable_blocks_live
+PASSED qa/tests/test_fault_injection.py::test_slow_analyzer_does_not_block_api_or_finish
+PASSED qa/tests/test_fault_injection.py::test_engine_consume_failure_keeps_session_controllable
+PASSED qa/tests/test_fault_injection.py::test_engine_finish_failure_still_finishes_session
+PASSED qa/tests/test_fault_injection.py::test_finish_during_open_episode_with_module_engine
 PASSED qa/tests/test_harness_selfcheck.py::test_validator_accepts_every_contract_fixture[AnswerRecord.single]
 PASSED qa/tests/test_harness_selfcheck.py::test_validator_accepts_every_contract_fixture[AnswerUpsert.single]
 PASSED qa/tests/test_harness_selfcheck.py::test_validator_accepts_every_contract_fixture[ApiError.invalid_state]
@@ -353,6 +371,9 @@ PASSED qa/tests/test_stream_preview.py::test_preview_ws_binary_framing
 PASSED qa/tests/test_stream_preview.py::test_preview_ws_for_other_session_sends_nothing
 PASSED qa/tests/test_stream_preview.py::test_preview_rest_meta_matches_image
 SKIPPED [1] qa/tests/test_security_negative.py:127: no non-loopback IPv4 address on this host to probe
+XFAIL qa/tests/test_fault_injection.py::test_storage_write_failure_does_not_silence_episode_detection - QA-BUG-004 (A01): in the fusion loop store.record_observation() runs before engine.consume() in one try-block, so a failing store drops EVERY observation from fusion: no episodes and no visible signal
+XFAIL qa/tests/test_fault_injection.py::test_pipeline_errors_are_visible_in_health[store_writes_fail] - QA-BUG-005 (A01): fusion/store exceptions are only counted internally; /health keeps fusion+evidence 'ok', so a broken pipeline looks like 'no violations' (unknown ≠ all-clear)
+XFAIL qa/tests/test_fault_injection.py::test_pipeline_errors_are_visible_in_health[engine_consume_fails] - QA-BUG-005 (A01): fusion/store exceptions are only counted internally; /health keeps fusion+evidence 'ok', so a broken pipeline looks like 'no violations' (unknown ≠ all-clear)
 XFAIL qa/tests/test_payload_negative.py::test_create_rejects_lax_typed_values[fps_as_string] - QA-OBS-005 (A01, informational): Pydantic lax mode accepts strings for int/bool fields that the JSON Schema rejects
 XFAIL qa/tests/test_payload_negative.py::test_create_rejects_lax_typed_values[consent_accepted_string] - QA-OBS-005 (A01, informational): Pydantic lax mode accepts strings for int/bool fields that the JSON Schema rejects
 XFAIL qa/tests/test_payload_negative.py::test_create_rejects_lax_typed_values[retain_media_string] - QA-OBS-005 (A01, informational): Pydantic lax mode accepts strings for int/bool fields that the JSON Schema rejects
@@ -366,4 +387,4 @@ XFAIL qa/tests/test_payload_negative.py::test_answers_are_checked_against_exam_d
 XFAIL qa/tests/test_payload_negative.py::test_deleted_session_is_not_readable - QA-OBS-004 (A01/A08): after DELETE the session is still readable via GET /sessions/{sid} and its sub-routes (runtime kept in memory)
 XFAIL qa/tests/test_security_negative.py::test_loopback_host_header_accepted[LOCALHOST] - QA-OBS-006 (A01, cosmetic): Host comparison is case-sensitive; browsers send lowercase, so no impact
 XFAIL qa/tests/test_security_negative.py::test_token_misplaced_in_ws_query_is_not_logged - QA-BUG-001 (A01, low): uvicorn.error logs the full WS URL incl. query, so a token a client wrongly puts in ?token= is written to backend stderr
-328 passed, 1 skipped, 13 xfailed, 91 warnings in 166.97s (0:02:46)
+345 passed, 1 skipped, 16 xfailed, 91 warnings in 220.97s (0:03:40)

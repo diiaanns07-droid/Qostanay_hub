@@ -33,7 +33,7 @@ x86_64 container, no camera, no GPU, no Windows. See `qa/RESULTS.md`.
 
 | # | Requirement | Acceptance | Automated (A09) | Status @35bea4c |
 |---|---|---|---|---|
-| B1 | Unknown ≠ violation ≠ all-clear | stale/missing inputs produce `unknown/degraded`, never episodes or "OK" | partially (bootstrap labels); full check needs A05 + fault injection | NOT RUN (needs A05) |
+| B1 | Unknown ≠ violation ≠ all-clear | stale/missing inputs and broken pipeline parts produce `unknown/degraded`, never episodes or "OK" | `test_fault_injection` (camera loss → HealthObservation; engine/store failures) | **FAIL**: QA-BUG-004/005 (failing store/engine invisible, detection silently stops); stale inputs NOT RUN (needs A05) |
 | B2 | LIVE never silently replaced by fixtures/synthetic | live/replay preflight fails without modules; every synthetic record labelled | `test_e2e_synthetic` labels, preflight checks; A01 `test_live_never_falls_back_to_synthetic` | PASS |
 | B3 | Explainable episodes, teacher decides | every episode has `explanation.summary_ru`, `rule_version`; review is append-only; no automatic sanctions / guilt percentages | `scenario` rows `episode_explainable_and_labelled`, `human_review_append_only` | PASS (synthetic) |
 | B4 | Local report without external resources, escaped | report.html has no external URLs/JS; user text escaped (XSS) | `scenario` rows `report_html`, `report_json_export` | NOT RUN (501 until A08) |
@@ -42,6 +42,7 @@ x86_64 container, no camera, no GPU, no Windows. See `qa/RESULTS.md`.
 | B7 | Lifecycle integrity | state × action matrix; single active session; idempotent finish; restart | `test_lifecycle_matrix.py` | PASS |
 | B8 | Finish/abort/pause during an open episode | episode closed with `session_finished/aborted/paused`, nothing lost | `test_e2e_synthetic` | PASS (synthetic) |
 | B9 | Crash safety | backend killed mid-exam → restart works, port freed, no stale active session; Windows keyboard/focus returned after shell crash | `test_process_failures` (backend part) | backend PASS (Linux); shell/Windows NOT RUN |
+| B13 | Module failures are honest | camera missing/busy/denied/unplugged, weights missing/corrupt, storage down → preflight FAIL / health, backend stays up, no silent fallback | `test_fault_injection` (doubles via public factories) | PASS (composition) except storage write failure (QA-BUG-004) |
 | B10 | Run from path with spaces/Cyrillic, no admin | backend works from such a path; Windows install as standard user | `test_runs_from_path_with_spaces_and_cyrillic` (Linux) | PASS (Linux backend); Windows NOT RUN |
 | B11 | Privacy | metadata-only default, environment detail allow-list (no titles/typed text/clipboard), no data in source tree | `test_payload_negative` (allow-list), `test_backend_does_not_write_into_source_tree` | PASS (bootstrap; A08 storage pending) |
 | B12 | Performance targets (engineering goals, agreed with A01) | preview ≥ 15 FPS, end-to-end latency p95 ≤ 500 ms, stable memory over 30–60 min, cold start time | `protocols/PERFORMANCE.md` | NOT RUN (needs A02 + Windows hardware) |

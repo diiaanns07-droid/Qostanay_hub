@@ -74,6 +74,7 @@ def main() -> int:
     ap.add_argument("--label", default="bootstrap")
     ap.add_argument("--with-baseline", action="store_true")
     ap.add_argument("-k", default=None, help="pytest -k expression (partial runs are labelled partial)")
+    ap.add_argument("--base", default=None, help="product SHA under test when HEAD also carries A09 commits; the run records that the product tree equals it")
     args = ap.parse_args()
 
     sha = _git("rev-parse", "HEAD")
@@ -95,6 +96,10 @@ def main() -> int:
         "scope_note": "SYNTHETIC/bootstrap pipeline unless stated; not CV accuracy, not Windows environment protection",
         "suites": {},
     }
+    if args.base:
+        diff = _git("diff", "--name-only", args.base, "HEAD", "--", ".", ":!qa", ":!packaging", ":!handoffs/A09")
+        summary["product_base_sha"] = _git("rev-parse", args.base)
+        summary["product_files_differing_from_base"] = diff.splitlines()
 
     if args.with_baseline:
         for name, cmd, to in (
@@ -125,6 +130,9 @@ def main() -> int:
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
     md = [f"# QA run {args.label} @ `{sha}`{' (DIRTY product tree)' if dirty else ''}", "", f"Scope: {summary['scope_note']}.", ""]
+    if args.base:
+        same = not summary["product_files_differing_from_base"]
+        md += [f"Product under test: `{summary['product_base_sha']}` — product tree at HEAD {'IDENTICAL to it' if same else 'DIFFERS: ' + ', '.join(summary['product_files_differing_from_base'][:10])}.", ""]
     md += ["| Suite | Status | Details |", "|---|---|---|"]
     for name, s in summary["suites"].items():
         md.append(f"| {name} | {s['status']} | {json.dumps(s.get('counts', {'exit_code': s['exit_code']}))} |")

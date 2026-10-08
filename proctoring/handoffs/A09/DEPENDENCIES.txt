@@ -1,6 +1,10 @@
 A09 → A01 requests (A09 never edits shared files). Product SHA referenced: 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49
 
 1. BUG FIXES (details + repro in proctoring/qa/BUGS.md; tracking tests are xfail(strict=True) in qa/tests)
+   - QA-BUG-004 (medium): in SessionRuntime._fusion_loop call engine.consume() before / independently of
+     store.record_observation(); a store exception currently drops every observation from fusion.
+   - QA-BUG-005 (medium): surface fusion/store error counters (health degraded / coverage gap / metrics) so a broken
+     pipeline is not shown as "no episodes".
    - QA-BUG-003 (medium): map ErrorCode -> HTTP status per CONTRACTS.md §1 in the ProctorError handler
      (INVALID_ARGUMENT 422, SESSION_MISMATCH 409, MODULE_NOT_INTEGRATED 503 currently arrive as 500).
    - QA-BUG-002 (medium-low): validate path ids with the contract Id pattern (422) and truncate echoed ids in

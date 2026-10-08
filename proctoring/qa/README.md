@@ -12,6 +12,7 @@ Windows/LIVE protocols. A09 does not patch other modules: findings go to owners 
 | `qorgau_qa/netguard.py` | portable offline guard: CPython audit hook in the backend process blocks + records non-loopback connects / DNS |
 | `qorgau_qa/netns.py` | Linux: loopback-only network namespace for the whole test process tree (`unshare -rn`) |
 | `qorgau_qa/offline_check.py` | full flow under the guard (and optionally inside the namespace), JSON verdict |
+| `qorgau_qa/fakes.py` | QA-only fault-injection doubles for the five module factories, injected into a real `serve` process via `sys.modules` (`QA_FAKES` env); labelled `qa.fake_*`, never module/CV results |
 | `tests/` | pytest suites (below) |
 | `run_qa.py` | runs everything and writes `results/<date>_<label>_<sha12>/summary.{json,md}` bound to the tested SHA |
 | `ACCEPTANCE_MATRIX.md` | PDF requirement → measurable acceptance → test → status |
@@ -33,7 +34,8 @@ Suites: `test_e2e_synthetic` (scenario, finish/abort/pause during an open episod
 `test_lifecycle_matrix` (8 states × 11 actions, concurrency) · `test_security_negative` (token, Host, Origin/CORS,
 body limits, WS auth, leakage) · `test_payload_negative` (≈100 hostile payloads, privacy allow-list) ·
 `test_stream_preview` · `test_process_failures` (port busy, crash/restart, stdin EOF, bad token, corrupt exam,
-Cyrillic path) · `test_offline` · `test_harness_selfcheck` (the harness itself).
+Cyrillic path) · `test_fault_injection` (camera missing/busy/denied/no frames/unplugged, weights missing/corrupt,
+storage down, slow analyzer, failing engine/store) · `test_offline` · `test_harness_selfcheck` (the harness itself).
 
 ## Honesty rules
 

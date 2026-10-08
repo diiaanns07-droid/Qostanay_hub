@@ -1,6 +1,8 @@
-# QA run bootstrap @ `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`
+# QA run bootstrap @ `fbd9dcbb84ca981bc7632260f589d34f06400ee3`
 
 Scope: SYNTHETIC/bootstrap pipeline unless stated; not CV accuracy, not Windows environment protection.
+
+Product under test: `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` — product tree at HEAD IDENTICAL to it.
 
 | Suite | Status | Details |
 |---|---|---|
@@ -8,9 +10,9 @@ Scope: SYNTHETIC/bootstrap pipeline unless stated; not CV accuracy, not Windows 
 | a01_generate_check | PASS | {"exit_code": 0} |
 | a01_smoke | PASS | {"exit_code": 0} |
 | ownership_self_test | PASS | {"exit_code": 0} |
-| a09_qa | PASS | {"PASS": 328, "XFAIL": 13, "SKIP": 1} |
+| a09_qa | PASS | {"PASS": 345, "XFAIL": 16, "SKIP": 1} |
 
-Known issues (XFAIL, tracked in qa/BUGS.md): QA-BUG-001, QA-BUG-002, QA-BUG-003, QA-OBS-003, QA-OBS-004, QA-OBS-005, QA-OBS-006
+Known issues (XFAIL, tracked in qa/BUGS.md): QA-BUG-001, QA-BUG-002, QA-BUG-003, QA-BUG-004, QA-BUG-005, QA-OBS-003, QA-OBS-004, QA-OBS-005, QA-OBS-006
 Token-like strings in logs: none
 
 ## Environment

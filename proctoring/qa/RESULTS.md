@@ -1,5 +1,39 @@
 # A09 QA results
 
+Latest verdict: **Run 2** (below Run 1 is kept for history). Product under test in both runs: A01 BOOTSTRAP
+`35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` — synthetic pipeline, no CV modules, no Windows.
+
+## Run 2 — BOOTSTRAP + fault injection
+
+| | |
+|---|---|
+| Product under test | `35bea4c7b28d2c622cf7ba26ff354273cc7b6c49`; HEAD carried only A09 commits — the runner verified `product_files_differing_from_base: []` |
+| Harness | branch `claude/focused-cerf-4po06f` (this commit) |
+| Command | `cd proctoring && .venv/bin/python qa/run_qa.py --with-baseline --label bootstrap --base 35bea4c7b28d2c622cf7ba26ff354273cc7b6c49` |
+| Raw record | `qa/results/20261008_bootstrap_fbd9dcbb84ca/` (HEAD at run time = A09 checkpoint `fbd9dcb`; harness changes of this commit were uncommitted and are recorded as `harness_uncommitted: true`) |
+| Environment | as Run 1 |
+
+New in Run 2: `test_fault_injection.py` — QA-only doubles for the five module factories, injected into a REAL
+`serve` process (`qa/qorgau_qa/fakes.py`). They check A01's composition handling of module failures, not modules.
+
+| Area | Result |
+|---|---|
+| A01 baseline (pytest 64, generate --check, smoke 34/34, ownership self-test) | PASS |
+| Doubles drive a complete LIVE session (harness validity) | PASS |
+| Camera: open fails `CAMERA_UNAVAILABLE` / `CAMERA_BUSY` / `CAMERA_DENIED`, no frames (fails ≤ 10 s), factory crash, unplugged mid-exam (HealthObservation `camera_disconnected`, session controllable) | PASS |
+| Models: phone weights missing (health `model_missing`, live preflight FAIL, no bootstrap fallback), corrupt weights (`init_error`, backend up), face model missing (calibration refused), synthetic demo still labelled | PASS |
+| Storage: open error / unwritable → live preflight FAIL | PASS |
+| Storage write failure during exam | **FAIL — QA-BUG-004** (every observation dropped from fusion, no episodes) |
+| Pipeline failure visibility (engine or store raising) | **FAIL — QA-BUG-005** (`/health` stays ok: unknown looks like all-clear) |
+| Slow analyzer (1.5 s/frame): `/health` p95 < 0.5 s, finish < 10 s; engine consume failure: pause/resume/finish work; engine finish failure: session still finishes, camera released | PASS |
+
+Totals: **345 PASS, 16 XFAIL (tracked: QA-BUG-001…005, QA-OBS-003…006), 1 SKIP, 0 unexpected FAIL.**
+
+Release gate @ 35bea4c: **NOT RELEASABLE — bootstrap only.** Blocking: section A of `ACCEPTANCE_MATRIX.md` BLOCKED
+(no CV/capture/fusion/storage/shell modules), open A01 bugs QA-BUG-002…005, no Windows run.
+
+---
+
 ## Run 1 — BOOTSTRAP (not a candidate build)
 
 | | |
@@ -8,7 +42,7 @@
 | Harness | `proctoring/qa/` on branch `claude/focused-cerf-4po06f` (commit that adds this file; harness was uncommitted while running, recorded in `summary.json`) |
 | Environment | Linux x86_64 cloud container, Python 3.12.3, fastapi 0.141.1, uvicorn 0.53.0, websockets 17.1, pydantic 2.13.5; **no camera, no GPU, no Windows, no Electron binary** |
 | Date | 2026-10-08 |
-| Raw record | `qa/results/20261008_bootstrap_35bea4c7b28d/` (`summary.md/json`, `pytest.txt`, `junit.xml`, A01 check logs) |
+| Raw record | `qa/results/20261008_bootstrap_35bea4c7b28d/` in commit `fbd9dcb` (replaced in the tree by the Run 2 record) |
 | Command | `cd proctoring && .venv/bin/python qa/run_qa.py --with-baseline --label bootstrap` |
 
 ### What this run is — and is not

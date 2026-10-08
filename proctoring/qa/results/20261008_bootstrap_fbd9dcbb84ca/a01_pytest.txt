@@ -6,4 +6,4 @@ $ /home/user/Qostanay_hub/proctoring/.venv/bin/python -m pytest -q -p no:cachepr
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-64 passed, 1 warning in 2.58s
+64 passed, 1 warning in 2.43s
