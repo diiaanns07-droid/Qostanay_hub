@@ -109,7 +109,7 @@ check for the candidate (needs `.venv` and a Playwright install).
 Run `run-real.mjs` on the A01 candidate SHA, then on LIVE/REPLAY once A02–A05 are merged; evidence images path;
 Electron manual pass on Windows with A09.
 
-## 2026-10-08 18:00 — A07-student (writer now A13 session), on top of integration eee2031
+## 2026-10-08 17:41 — A07-student (writer now A13 session), on top of integration eee2031
 Checked first: report labels for all five 1.1 rules + categories audio/identity/objects were already in
 `report.py` (338a9ef + eee2031), each exactly once — nothing added, no duplicates. The «Что проверяет Adal на этом
 экзамене» block (338a9ef) was already on the preparation screen. Added only:
