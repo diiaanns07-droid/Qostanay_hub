@@ -1,11 +1,18 @@
 // Actual Electron/Chromium, local HTTP fixtures only. No backend, camera, microphone, or OS guard.
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { app, BrowserWindow, WebContentsView, type WebContents } from "electron";
+import { app, BrowserWindow, WebContentsView, protocol, session, type WebContents } from "electron";
 import { ExamSurface, isExamWebContents } from "../src/exam/surface";
 import type { ShellState } from "@contracts/bridge";
+import { CONTENT_CHECKS, KEY_CHECKS, runSelfTest } from "../src/environment/probe";
+import { contentProbeScript, createElectronProbeDriver } from "../src/environment/probe-electron";
+import { classifyExamKey } from "../src/environment/keyboard";
+import { APP_SCHEME, CSP, PROBE_HTML, PROBE_JS } from "../src/security/web";
+import type { ContentAction } from "../src/environment/content-policy";
 
 app.enableSandbox();
+app.on("window-all-closed", () => {}); // the hidden startup probe closes before the exam fixture is created
+protocol.registerSchemesAsPrivileged([{ scheme: APP_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 const hits: string[] = [];
 let origin = "";
 const server = createServer((req, res) => {
@@ -30,13 +37,29 @@ const checked: string[] = [];
 const record = (name: string) => { checked.push(name); console.log(`PASS ${name}`); };
 const run = async () => {
   await app.whenReady();
+  const probeSession = session.fromPartition("content-probe");
+  probeSession.protocol.handle(APP_SCHEME, req => new Response(req.url.endsWith('.js') ? PROBE_JS : PROBE_HTML,
+    { headers: { 'content-security-policy': CSP, 'content-type': req.url.endsWith('.js') ? 'text/javascript' : 'text/html' } }));
+  app.on('web-contents-created', (_e, contents) => {
+    if (contents.session !== probeSession) return;
+    contents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    contents.on('will-navigate', event => event.preventDefault());
+  });
+  const driver = createElectronProbeDriver(probeSession, false);
+  const results = await runSelfTest(driver);
+  driver.dispose();
+  console.log('SELF_TEST ' + JSON.stringify(results));
+  for (const id of CONTENT_CHECKS) assert.equal(results[`page_${id}`]?.status, 'pass', `self-test ${id}`);
+  for (const {check} of KEY_CHECKS) assert.equal(results[check]?.status, 'pass', `self-test ${check}`);
+  record('built-in Chromium self-test covers print/save/source/context/selection/drag/zoom/reload');
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   let isolatedDetected = 0;
   app.on("web-contents-created", (_event, wc) => { if (isExamWebContents(wc)) isolatedDetected++; });
   window = new BrowserWindow({ show: false, width: 1200, height: 800, webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false } });
   await window.loadURL("data:text/html,<h1>trusted-shell-fixture</h1>");
-  surface = new ExamSurface(() => window, () => {});
+  const contentEvents: ContentAction[] = [];
+  surface = new ExamSurface(() => window, () => {}, input => !!classifyExamKey(input)?.prevent, id => contentEvents.push(id));
   const shell: ShellState = { mode: "exam", backend: "ready", exam_mode_active: true, operator_unlocked: false, session_id: "fixture-session", last_error: null, shell_version: "fixture", platform: "fixture" };
   const policy = { exam_id: "fixture", title: "Fixture website", mode: "url", allowed_urls: [`${origin}/exam/*`, `${origin}/auth/*`] };
   const classState = (extra: object = {}) => surface!.consumeClassState({ type: "class_state", connection: "connected", locked: false, exam: policy, ...extra });
@@ -54,6 +77,33 @@ const run = async () => {
   assert.equal(wc.getLastWebPreferences().preload, undefined);
   assert.deepEqual(await wc.executeJavaScript("[typeof require,typeof process,typeof window.qorgau,typeof window.qorgauExam,typeof window.qorgauLock,window.allowedScriptRan,window.allowedInlineRan]"), ["undefined", "undefined", "undefined", "undefined", "undefined", true, true]);
   record("approved site/scripts load in isolated sandbox with zero app bridges");
+  for (const id of CONTENT_CHECKS) {
+    assert.equal(await wc.executeJavaScript(contentProbeScript(id)), true, `website ${id}`);
+    assert.ok(contentEvents.includes(id), `website event ${id}`);
+  }
+  record('website print/context/selection/drag/wheel prevented and reported');
+  await wc.executeJavaScript(`new Promise(resolve => {const f=document.createElement('iframe');f.src='/auth/frame';f.onload=resolve;document.body.append(f);})`);
+  const frame = wc.mainFrame.frames.find(f => f.url.endsWith('/auth/frame'));
+  assert.ok(frame);
+  assert.equal(await frame.executeJavaScript('typeof window.__adalContentPolicy'), 'undefined');
+  await wait(550);
+  const beforeFramePrint = contentEvents.filter(id => id === 'print').length;
+  assert.equal(await frame.executeJavaScript(`(() => {let fired=false;addEventListener('beforeprint',()=>{fired=true});print();return fired;})()`), false);
+  await until(() => contentEvents.filter(id => id === 'print').length > beforeFramePrint, 'CSP iframe print reported');
+  let nativeDrag = false, nativeContext = false;
+  wc.on('before-mouse-event', (event, input) => {
+    if (input.type === 'mouseMove' && input.button === 'left') nativeDrag = event.defaultPrevented;
+    if (input.type === 'mouseDown' && input.button === 'right') nativeContext = event.defaultPrevented;
+  });
+  const rect = await wc.executeJavaScript(`(() => {const r=document.querySelector('iframe[src="/auth/frame"]').getBoundingClientRect();return {x:Math.ceil(r.x+20),y:Math.ceil(r.y+20)}})()`);
+  wc.focus();
+  wc.sendInputEvent({type:'mouseDown',button:'right',clickCount:1,...rect});
+  wc.sendInputEvent({type:'mouseUp',button:'right',clickCount:1,...rect});
+  wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...rect});
+  wc.sendInputEvent({type:'mouseMove',modifiers:['leftbuttondown'],x:rect.x+40,y:rect.y});
+  wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:rect.x+40,y:rect.y});
+  await until(() => nativeDrag && nativeContext, 'mouse guard applies before iframe receives drag/context input');
+  record('subframe CSP blocks and reports print; native drag/right-click intercepted before iframe');
   await wait(200);
   assert.equal(hits.some((s) => s.startsWith("/outside")), false, JSON.stringify(hits));
   assert.equal(await wc.executeJavaScript(`fetch('${origin}/outside/api').then(()=>false,()=>true)`), true);

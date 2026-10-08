@@ -35,6 +35,7 @@ import { ExamGuard, type GuardPlatform } from "./environment/guard";
 import { withDisplayCheck, withRemoteCheck } from "./environment/preflight";
 import { checkRemoteEnvironment } from "./environment/remote";
 import { checkVm, unknownVm, withVmCheck } from "./environment/vm";
+import { prepareContentSession, protectContent } from "./environment/content";
 import { checkHelper, NativeHelper } from "./environment/native";
 import { createElectronProbeDriver } from "./environment/probe-electron";
 import { probeSummary, runSelfTest } from "./environment/probe";
@@ -126,7 +127,8 @@ const guard = new ExamGuard(() => mainWindow, events, guardPlatform, {
 });
 
 machine = new ShellStateMachine(guard, { shell_version: app.getVersion(), platform: platformInfo.label });
-const examSurface = new ExamSurface(() => mainWindow, (status) => push(EXAM_CHANNEL.status, status), (input) => guard.onBeforeInput(input));
+const examSurface = new ExamSurface(() => mainWindow, (status) => push(EXAM_CHANNEL.status, status),
+  (input) => guard.onBeforeInput(input), (id) => guard.onContentBlocked(id));
 
 // ---------------------------------------------------------------- backend
 const stream = new BackendSocket("stream", supervisorTarget, {
@@ -353,6 +355,7 @@ app.on("web-contents-created", (_e, wc) => { if (!isExamWebContents(wc)) hardenW
 
 // ---------------------------------------------------------------- window
 function createWindow(ses: Session): BrowserWindow {
+  prepareContentSession(ses);
   const w = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -382,6 +385,7 @@ function createWindow(ses: Session): BrowserWindow {
     },
   });
   w.once("ready-to-show", () => w.show());
+  protectContent(w.webContents, () => guard.active, id => guard.onContentBlocked(id));
   w.on("resize", () => examSurface.resized());
   w.webContents.on("did-start-navigation", (_event, _url, inPlace, isMainFrame) => {
     if (isMainFrame && !inPlace) { examSurface.setViewport(null); examSurface.setBlocked("renderer-loading", true); }
