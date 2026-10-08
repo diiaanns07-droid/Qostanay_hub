@@ -41,6 +41,8 @@ import { logger } from "./log";
 import { APP_ENTRY, APP_SCHEME, CSP, FALLBACK_HTML, PARTITION, PROBE_HTML, PROBE_JS, devCsp, isTrustedUrl, mimeFor, resolveAppFile } from "./security/web";
 import { OperatorAuth } from "./shell/operator";
 import { ShellStateMachine, TERMINAL_STATES } from "./shell/state";
+import { ExamSurface, isExamWebContents } from "./exam/surface";
+import { EXAM_CHANNEL } from "./exam/channels";
 
 const log = logger("main");
 
@@ -116,11 +118,14 @@ const guard = new ExamGuard(() => mainWindow, events, guardPlatform, {
 });
 
 machine = new ShellStateMachine(guard, { shell_version: app.getVersion(), platform: platformInfo.label });
+const examSurface = new ExamSurface(() => mainWindow, (status) => push(EXAM_CHANNEL.status, status), (input) => guard.onBeforeInput(input));
 
 // ---------------------------------------------------------------- backend
 const stream = new BackendSocket("stream", supervisorTarget, {
+  onClose: () => examSurface.setBlocked("backend-stream", true),
   onEnvelope: (env) => {
     const msg = env.message;
+    examSurface.consumeClassState(msg);
     if (msg.type === "session_state") void machine.observe(msg.session);
     push(PUSH.streamEvent, env);
   },
@@ -196,7 +201,7 @@ function push(channel: string, ...args: unknown[]): void {
   if (!w || w.isDestroyed() || w.webContents.isDestroyed()) return;
   w.webContents.send(channel, ...args);
 }
-machine.onChange((s) => push(PUSH.shellState, s));
+machine.onChange((s) => { examSurface.setShell(s); push(PUSH.shellState, s); });
 
 // ---------------------------------------------------------------- IPC
 function trustedSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
@@ -213,6 +218,9 @@ function trustedSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
 }
 
 function registerIpc(): void {
+  ipcMain.handle(EXAM_CHANNEL.getStatus, (event) => trustedSender(event) ? examSurface.status : null);
+  ipcMain.on(EXAM_CHANNEL.viewport, (event, rect: unknown) => { if (trustedSender(event)) examSurface.setViewport(rect); });
+  ipcMain.on(EXAM_CHANNEL.reload, (event) => { if (trustedSender(event)) examSurface.reload(); });
   const api = createApi({
     client,
     machine,
@@ -321,7 +329,7 @@ function hardenWebContents(wc: WebContents): void {
   wc.on("will-attach-webview", (event) => event.preventDefault());
 }
 
-app.on("web-contents-created", (_e, wc) => hardenWebContents(wc));
+app.on("web-contents-created", (_e, wc) => { if (!isExamWebContents(wc)) hardenWebContents(wc); });
 
 // ---------------------------------------------------------------- window
 function createWindow(ses: Session): BrowserWindow {
@@ -354,6 +362,11 @@ function createWindow(ses: Session): BrowserWindow {
     },
   });
   w.once("ready-to-show", () => w.show());
+  w.on("resize", () => examSurface.resized());
+  w.webContents.on("did-start-navigation", (_event, _url, inPlace, isMainFrame) => {
+    if (isMainFrame && !inPlace) { examSurface.setViewport(null); examSurface.setBlocked("renderer-loading", true); }
+  });
+  w.webContents.on("did-finish-load", () => examSurface.setBlocked("renderer-loading", false));
   w.webContents.on("before-input-event", (event, input) => {
     if (guard.onBeforeInput(input)) event.preventDefault();
   });
@@ -367,6 +380,7 @@ function createWindow(ses: Session): BrowserWindow {
 
   let unresponsiveTimer: NodeJS.Timeout | null = null;
   w.on("unresponsive", () => {
+    examSurface.setBlocked("renderer-unresponsive", true);
     log.warn("renderer unresponsive");
     unresponsiveTimer ??= setTimeout(() => {
       unresponsiveTimer = null;
@@ -375,12 +389,14 @@ function createWindow(ses: Session): BrowserWindow {
     }, 5_000);
   });
   w.on("responsive", () => {
+    examSurface.setBlocked("renderer-unresponsive", false);
     if (unresponsiveTimer) clearTimeout(unresponsiveTimer);
     unresponsiveTimer = null;
     void refreshBoundSession();
   });
   const crashes: number[] = [];
   w.webContents.on("render-process-gone", (_e, details) => {
+    examSurface.setBlocked("renderer-loading", true);
     log.error(`renderer gone: ${details.reason} (exit ${details.exitCode})`);
     events.emit({ action: "enforcement_error", enforcement: "failed", mechanism: "electron.watchdog", scope: "app", detail: { shortcut: "renderer_gone" } });
     void machine.releaseTo("error", "renderer_gone", shellError("INTERNAL", "enforcement_error", `Renderer ${details.reason}: restrictions released`, true));
@@ -404,6 +420,7 @@ function createWindow(ses: Session): BrowserWindow {
     }, 1_000);
   });
   w.on("closed", () => {
+    examSurface.dispose();
     mainWindow = null;
     if (!quitting) app.quit();
   });
@@ -431,6 +448,7 @@ async function loadVerification(): Promise<void> {
 
 // ---------------------------------------------------------------- lifecycle
 async function shutdown(reason: string): Promise<void> {
+  examSurface.dispose();
   log.info(`shutdown: ${reason}`);
   await machine.releaseTo("normal", "app_quit", null);
   await Promise.race([events.flush(), delay(2_000)]);
