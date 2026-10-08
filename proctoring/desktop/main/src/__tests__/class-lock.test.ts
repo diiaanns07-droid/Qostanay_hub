@@ -3,7 +3,8 @@ import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import type { BrowserWindow } from "electron";
 import type { BackendClient } from "../backend/client";
-import { ClassLockController } from "../class-lock";
+import { ClassLockController, ClassStateDelivery } from "../class-lock";
+import type { StreamEnvelope } from "@contracts/qorgau-v1.generated";
 import { receiptFor, type LockRequest } from "../../../shared/class-lock";
 
 const request = (locked = true): LockRequest => ({ command_id: locked ? "cmd-lock" : "cmd-unlock", student_id: "student-1",
@@ -90,4 +91,111 @@ test("paint verification accepts the content viewport with classic scrollbars bu
     await controller.confirmApplied(receiptFor(r, true));
     assert.equal(((calls[0] as unknown[])[2] as { applied: boolean }).applied, expected);
   }
+});
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(r => { resolve = r; });
+  return { promise, resolve };
+}
+
+test("ready waits for renderer-loss invalidation, then asks for fresh proof without sending ACK", async () => {
+  const initial = deferred<{ ok: true; data: { accepted: true } }>();
+  const calls: unknown[][] = [];
+  const controller = new ClassLockController({ window: () => null, setExamBlocked: () => {}, client: {
+    json: async (...args: unknown[]) => {
+      calls.push(args);
+      return calls.length === 1 ? initial.promise : { ok: true, data: { accepted: true } };
+    },
+  } as unknown as BackendClient });
+  const before = { type: "class_state", locked: true, lock_request: request() };
+  controller.consumeClassState(before);
+  const lost = controller.rendererLost();
+  const ready = controller.rendererReady(() => true);
+  await Promise.resolve();
+  assert.equal(calls.length, 1, "ready cannot overtake in-flight invalidation");
+  assert.equal(controller.isCurrentClassState(before), false, "old confirmed state cannot be replayed");
+  initial.resolve({ ok: true, data: { accepted: true } });
+  await lost;
+  assert.equal(await ready, true);
+  assert.deepEqual(calls.map(args => args[1]), ["/v1/class/lock/lost", "/v1/class/lock/lost"]);
+  assert.equal((await controller.confirmApplied(receiptFor(request(), true))).accepted, false);
+});
+
+test("backend reset or another document cancels queued ready recovery", async () => {
+  for (const resetBackend of [true, false]) {
+    const initial = deferred<{ ok: true; data: { accepted: true } }>();
+    let calls = 0, current = true;
+    const controller = new ClassLockController({ window: () => null, setExamBlocked: () => {}, client: {
+      json: async () => { calls++; return initial.promise; },
+    } as unknown as BackendClient });
+    controller.consumeClassState({ type: "class_state", locked: true, lock_request: request() });
+    const lost = controller.rendererLost();
+    const ready = controller.rendererReady(() => current);
+    await Promise.resolve();
+    if (resetBackend) controller.reset(); else current = false;
+    initial.resolve({ ok: true, data: { accepted: true } });
+    await lost;
+    assert.equal(await ready, false);
+    assert.equal(calls, 1);
+  }
+});
+
+function envelope(r: LockRequest | null = request(), extra: Record<string, unknown> = {}): StreamEnvelope {
+  return { contract: "qorgau.v1", seq: 2, sent_at: new Date().toISOString(), session_id: null,
+    message: { type: "class_state", locked: true, lock_request: r, source_session_id: "local-1",
+      student_id: "student-1", class_session_id: "class-1", backend_instance_id: "backend-1", ...extra } } as unknown as StreamEnvelope;
+}
+
+test("audio-first and later React subscribers receive fresh state only after recovery, idempotently", async () => {
+  const recovery = deferred<boolean>();
+  const sent: StreamEnvelope[] = [];
+  let recoveries = 0;
+  const delivery = new ClassStateDelivery({ recover: async () => { recoveries++; return recovery.promise; },
+    send: env => sent.push(env), sessionId: () => "local-1", currentState: () => true });
+  delivery.consume(envelope());
+  assert.equal(sent.length, 0, "no listener means no lost class push");
+  const first = delivery.subscribed(true);
+  await delivery.subscribed(true);
+  const fresh = envelope({ ...request(), request_token: "fresh", recovery: true });
+  delivery.consume(fresh);
+  assert.equal(sent.length, 0, "no replay before invalidation/recovery completes");
+  recovery.resolve(true); await first;
+  assert.deepEqual(sent, [fresh]);
+  await delivery.subscribed(true);
+  assert.deepEqual(sent, [fresh, fresh]);
+  assert.equal(recoveries, 1, "later observers never invalidate an already applied lock");
+});
+
+test("cached recovery is discarded on navigation/backend/session invalidation", async () => {
+  for (const rendererLost of [false, true]) {
+    const recovery = deferred<boolean>();
+    const sent: StreamEnvelope[] = [];
+    const delivery = new ClassStateDelivery({ recover: async () => recovery.promise,
+      send: env => sent.push(env), sessionId: () => "local-1", currentState: () => true });
+    const ready = delivery.subscribed(true);
+    delivery.consume(envelope());
+    delivery.invalidate(rendererLost);
+    recovery.resolve(true); await ready;
+    assert.equal(sent.length, 0);
+    await delivery.subscribed(true);
+    assert.equal(sent.length, 0, "old cache was cleared, not rebound to new context");
+  }
+});
+
+test("expired, mismatched, invalidated proof and session-scoped/audio events are never replayed", async () => {
+  const sent: StreamEnvelope[] = [];
+  let valid = true;
+  const delivery = new ClassStateDelivery({ recover: async () => true, send: env => sent.push(env),
+    sessionId: () => "local-1", currentState: () => valid });
+  await delivery.subscribed(true);
+  delivery.consume(envelope({ ...request(), expires_at: new Date(Date.now() - 1).toISOString() }));
+  delivery.consume(envelope(request(), { backend_instance_id: "another" }));
+  delivery.consume(envelope(request(), { source_session_id: "another" }));
+  valid = false; delivery.consume(envelope());
+  for (const type of ["class_audio", "session_state"]) {
+    assert.equal(delivery.consume({ message: { type } } as unknown as StreamEnvelope), false);
+  }
+  await delivery.subscribed(true);
+  assert.equal(sent.length, 0);
 });

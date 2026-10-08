@@ -45,7 +45,7 @@ import { OperatorAuth } from "./shell/operator";
 import { ShellStateMachine, TERMINAL_STATES } from "./shell/state";
 import { ExamSurface, isExamWebContents } from "./exam/surface";
 import { EXAM_CHANNEL } from "./exam/channels";
-import { ClassLockController, LOCK_ACK_CHANNEL } from "./class-lock";
+import { ClassLockController, ClassStateDelivery, LOCK_ACK_CHANNEL } from "./class-lock";
 import { createClassAudio } from "./class-audio";
 
 const log = logger("main");
@@ -131,10 +131,17 @@ const classLock = new ClassLockController({
   client, window: () => mainWindow,
   setExamBlocked: (blocked) => examSurface.setBlocked("class-lock", blocked),
 });
+const classStateDelivery = new ClassStateDelivery({
+  recover: (isCurrent) => classLock.rendererReady(isCurrent),
+  send: (env) => push(PUSH.streamEvent, env),
+  sessionId: () => machine.state.session_id,
+  currentState: (msg) => classLock.isCurrentClassState(msg),
+});
 
 // ---------------------------------------------------------------- backend
 const stream = new BackendSocket("stream", supervisorTarget, {
   onClose: () => {
+    classStateDelivery.invalidate();
     examSurface.setBlocked("backend-stream", true);
     classLock.reset();
     classAudio.reset();
@@ -146,7 +153,7 @@ const stream = new BackendSocket("stream", supervisorTarget, {
     classAudio.observe(env);
     examSurface.consumeClassState(msg);
     if (msg.type === "session_state") void machine.observe(msg.session);
-    push(PUSH.streamEvent, env);
+    if (!classStateDelivery.consume(env)) push(PUSH.streamEvent, env);
   },
 });
 const preview = new BackendSocket("preview", supervisorTarget, {
@@ -164,6 +171,7 @@ const supervisor: BackendSupervisor = new BackendSupervisor(
     },
     onReady: (conn) => void onBackendReady(conn),
     onLost: (reason) => {
+      classStateDelivery.invalidate();
       classLock.reset();
       classAudio.reset();
       stream.close();
@@ -231,7 +239,11 @@ function push(channel: string, ...args: unknown[]): void {
   if (!w || w.isDestroyed() || w.webContents.isDestroyed()) return;
   w.webContents.send(channel, ...args);
 }
-machine.onChange((s) => { examSurface.setShell(s); push(PUSH.shellState, s); });
+let lastBoundSessionId: string | null = null;
+machine.onChange((s) => {
+  if (s.session_id !== lastBoundSessionId) { lastBoundSessionId = s.session_id; classStateDelivery.invalidate(); }
+  examSurface.setShell(s); push(PUSH.shellState, s);
+});
 
 // ---------------------------------------------------------------- IPC
 function trustedSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
@@ -291,6 +303,10 @@ function registerIpc(): void {
     previewWanted = flag;
     if (flag && supervisor.connection) preview.open();
     if (!flag) preview.close();
+  });
+  ipcMain.on(SEND.eventsSubscribed, (event, flag: unknown) => {
+    if (!trustedSender(event) || typeof flag !== "boolean") return;
+    void classStateDelivery.subscribed(flag);
   });
   // A07-student (A01-approved minimal IPC): full-screen calibration window. Exam mode keeps its own full screen.
   ipcMain.on(SEND.windowFullscreen, (event, flag: unknown) => {
@@ -398,6 +414,7 @@ function createWindow(ses: Session): BrowserWindow {
   w.on("resize", () => examSurface.resized());
   w.webContents.on("did-start-navigation", (_event, _url, inPlace, isMainFrame) => {
     if (isMainFrame && !inPlace) {
+      classStateDelivery.invalidate(true);
       machine.setOperator(false);
       examSurface.setViewport(null);
       examSurface.setBlocked("renderer-loading", true);
@@ -435,6 +452,7 @@ function createWindow(ses: Session): BrowserWindow {
   });
   const crashes: number[] = [];
   w.webContents.on("render-process-gone", (_e, details) => {
+    classStateDelivery.invalidate(true);
     machine.setOperator(false);
     examSurface.setBlocked("renderer-loading", true);
     classAudio.reset();

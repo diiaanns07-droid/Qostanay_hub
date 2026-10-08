@@ -48,6 +48,7 @@ export const PUSH = {
 
 /** renderer -> main one-way notifications (subscription counts only, no data) */
 export const SEND = {
+  eventsSubscribed: "qorgau:send:events-subscribed",
   previewSubscribed: "qorgau:send:preview-subscribed",
   /** A07-student: full-screen calibration (boolean). Leaving full screen is ignored while exam mode is on. */
   windowFullscreen: "qorgau:send:window-fullscreen",
