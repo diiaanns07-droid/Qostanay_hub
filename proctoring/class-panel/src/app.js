@@ -12,6 +12,7 @@ import { createDrawer, historyModule } from "./ui/drawer.js";
 import { createGrid } from "./ui/grid.js";
 import { createHeader } from "./ui/header.js";
 import { createQueue } from "./ui/queue.js";
+import { createSessionBar } from "./ui/session.js";
 
 export const PANEL_VERSION = "0.1.0";
 export const CONTRACT = "qorgau.class.v1";
@@ -84,16 +85,18 @@ async function main() {
   const queue = createQueue(store, { onOpen: open, announce });
   const header = createHeader(store, {
     mode: adapter.kind,
-    modeLabel: adapter.kind === "demo" ? "DEMO — имитация, не реальные студенты" : "Сервер класса · qorgau.class.v1",
+    modeLabel: adapter.kind === "demo" ? "DEMO · тестовые данные" : "Пульт преподавателя",
     onRetry: () => adapter.retry(),
     onPreview: (on) => grid.setShowPreview(on),
   });
+  const sessionBar = createSessionBar(adapter.kind);
 
   /** @type {Array<HTMLElement|null>} */
   const nodes = [
     h("a", { class: "skip", href: "#grid-start" }, ["К карточкам студентов"]),
-    adapter.kind === "demo" ? h("div", { class: "demo-strip", role: "note" }, ["DEMO-режим: все студенты, события и превью имитированы. Реальные данные в этом режиме не отображаются."]) : null,
+    adapter.kind === "demo" ? h("div", { class: "demo-strip", role: "note" }, ["Демонстрация интерфейса · студенты, события и изображения созданы для теста"]) : null,
     header.root,
+    sessionBar.root,
     h("main", { class: "layout" }, [h("div", { class: "layout-main", id: "grid-start", tabindex: "-1" }, [grid.root]), queue.root]),
     drawer.root,
     demo ? createDemoPanel(demo, announce) : null,
@@ -144,6 +147,7 @@ async function main() {
     clearInterval(ticker);
     adapter.stop();
     grid.destroy();
+    sessionBar.destroy();
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "/" && !drawer.openId && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLSelectElement)) {

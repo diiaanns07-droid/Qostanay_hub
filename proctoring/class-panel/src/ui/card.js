@@ -131,6 +131,7 @@ export function updateCard(c, x, now, o) {
   // an old camera state is not presented as the current one
   setText(c.camText, v.camera === null ? "камера: нет данных" : d.stale ? "камера: устарело" : CAMERA_LABEL[v.camera]);
   setAttr(c.cam, "data-cam", d.stale && v.camera !== null ? "stale" : camKey);
+  c.cam.hidden = !d.stale && v.camera === "ok";
   setText(c.exam, v.examState ? EXAM_STATE_LABEL[v.examState] : "этап: нет данных");
 
   const total = v.incidentsTotal;
@@ -144,7 +145,7 @@ export function updateCard(c, x, now, o) {
   if (v.locked === true) flags.push("экран заблокирован");
   if (v.micActive === true) flags.push("микрофон включён");
   setText(c.flags, flags.join(" · "));
-  setText(c.last, `последнее событие: ${v.lastEventAt === null ? "нет" : ago(v.lastEventAt, now)}`);
+  setText(c.last, v.lastEventAt === null ? "" : `Событие ${ago(v.lastEventAt, now)}`);
 
   toggleClass(c.root, "flash", x.flashing);
   toggleClass(c.root, "in-queue", x.inQueue);

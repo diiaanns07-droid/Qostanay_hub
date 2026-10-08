@@ -85,23 +85,28 @@ export function createHeader(store, o) {
     o.onPreview(on);
   });
 
-  const toolbar = h("div", { class: "toolbar" }, [
-    h("label", { class: "field field-search", for: "q" }, [svg(ICON.search), h("span", { class: "sr-only" }, ["Поиск по имени или компьютеру"]), search]),
+  const viewOptions = h("details", { class: "view-options" }, [h("summary", {}, ["Вид и порядок"]), h("div", { class: "view-options-body" }, [
     h("label", { class: "field", for: "link" }, [h("span", {}, ["Связь"]), linkSel]),
     h("label", { class: "field", for: "sort" }, [h("span", {}, ["Порядок"]), sortSel]),
     pinBtn,
     prevBtn,
+  ])]);
+  const toolbar = h("div", { class: "toolbar" }, [
+    h("label", { class: "field field-search", for: "q" }, [svg(ICON.search), h("span", { class: "sr-only" }, ["Поиск по имени или компьютеру"]), search]),
+    viewOptions,
   ]);
 
   const root = h("header", { class: "top" }, [
     h("div", { class: "top-row" }, [
       h("div", { class: "brand" }, [
-        h("h1", {}, ["Qorgau · Класс"]),
+        h("span", { class: "brand-mark", "aria-hidden": "true" }, ["Q"]),
+        h("span", { class: "brand-name" }, ["Qorgau"]),
         h("span", { class: `mode mode-${o.mode}`, title: o.mode === "demo" ? "Все данные на экране имитированы" : "Данные сервера класса" }, [o.modeLabel]),
       ]),
       counters,
     ]),
     banner,
+    h("div", { class: "workspace-heading" }, [h("div", {}, [h("p", { class: "eyebrow" }, ["НАБЛЮДЕНИЕ ЗА КЛАССОМ"]), h("h1", {}, ["Аудитория"])])]),
     h("div", { class: "filters" }, [chipRow, toolbar]),
   ]);
 
@@ -128,7 +133,7 @@ export function createHeader(store, o) {
     else if (conn.status === "reconnecting") {
       const secs = Math.max(0, Math.round((now - conn.since) / 1000));
       const retry = conn.retryAt ? ` Повтор через ${Math.max(0, Math.ceil((conn.retryAt - now) / 1000))} с.` : "";
-      text = `Нет связи с сервером класса ${secs} с. Данные на экране устарели — показаны последние полученные, без статусов «на связи».${retry} ${conn.detail}`;
+      text = `Нет связи с сервером класса · ${secs} с. Показаны последние данные.${retry}`;
       tone = "warn";
     } else if (conn.status === "error") {
       const retry = conn.retryAt ? ` Повтор через ${Math.max(0, Math.ceil((conn.retryAt - now) / 1000))} с.` : "";

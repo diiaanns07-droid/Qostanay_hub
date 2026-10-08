@@ -80,7 +80,7 @@ export function createDrawer(store, registry, o) {
     const v0 = x.entry.view;
 
     const title = h("h2", { id: "dr-title" }, [displayName(v0)]);
-    const sub = h("p", { class: "dr-sub" }, [v0.computerName ?? "компьютер: нет данных", " · id ", v0.id]);
+    const sub = h("p", { class: "dr-sub" }, [v0.computerName ?? "Компьютер не указан"]);
     const closeBtn = h("button", { type: "button", class: "icon-btn", "aria-label": "Закрыть карточку" }, [svg(ICON.close)]);
     closeBtn.addEventListener("click", () => close());
 
@@ -107,7 +107,7 @@ export function createDrawer(store, registry, o) {
         h("p", { class: "dr-zone-note" }, [
           d.zone === "grey"
             ? "Серый — недостаточно данных, а не «низкий риск»."
-            : "Зона — приоритет проверки из анализа на компьютере студента (A05), не вывод о нарушении.",
+            : "Автоматическое наблюдение. Решение остаётся за преподавателем.",
         ]),
       );
       const now = store.now();
@@ -144,7 +144,7 @@ export function createDrawer(store, registry, o) {
     const unsub = store.subscribe(() => renderStatus?.());
     cleanups.push(() => unsub());
 
-    const slots = SLOTS.map((slot) => {
+    const slots = SLOTS.filter(slot => registry.forSlot(slot).length > 0).map((slot) => {
       const box = h("section", { class: `dr-slot slot-${slot}`, "aria-labelledby": `slot-${slot}` });
       const mods = registry.forSlot(slot);
       box.append(h("h3", { id: `slot-${slot}` }, [mods[0]?.title ?? SLOT_TITLE[slot]]));
@@ -177,7 +177,10 @@ export function createDrawer(store, registry, o) {
 
     dialog.append(h("header", { class: "dr-head" }, [h("div", {}, [title, sub]), closeBtn]));
     if (o.mode === "demo") dialog.append(h("p", { class: "demo-note" }, ["DEMO: данные этой карточки имитированы."]));
-    dialog.append(h("div", { class: "dr-grid" }, [h("div", { class: "dr-col" }, [zoneBox, media, ackBtn]), h("div", { class: "dr-col" }, [kv])]), ...slots);
+    const details = h("details", { class: "student-details" }, [h("summary", {}, ["Подключение и состояние компьютера"]), kv]);
+    dialog.append(h("div", { class: "dr-grid" }, [h("div", { class: "dr-col" }, [media]), h("div", { class: "dr-col" }, [zoneBox, ackBtn])]), ...slots, details);
+    const page = document.getElementById("app");
+    if (page) for (const child of page.children) if (child !== overlay && child instanceof HTMLElement) child.inert = true;
     overlay.hidden = false;
     document.body.classList.add("modal-open");
     closeBtn.focus();
@@ -196,6 +199,8 @@ export function createDrawer(store, registry, o) {
     renderStatus = null;
     openId = null;
     overlay.hidden = true;
+    const page = document.getElementById("app");
+    if (page) for (const child of page.children) if (child instanceof HTMLElement) child.inert = false;
     document.body.classList.remove("modal-open");
     dialog.replaceChildren();
     if (restore && returnTo && document.contains(returnTo)) returnTo.focus();
@@ -221,7 +226,7 @@ export function historyModule(store) {
   return {
     id: "builtin-episodes",
     slot: /** @type {const} */ ("history"),
-    title: "Эпизоды (только просмотр)",
+    title: "История событий",
     builtin: true,
     /** @param {HTMLElement} el @param {import("../extensions.js").ModuleContext} ctx */
     mount(el, ctx) {
