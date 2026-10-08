@@ -3,9 +3,9 @@
   "$id": "https://qorgau.local/classroom/classroom.v1.schema.json",
   "title": "Qorgau Classroom contracts",
   "x-contract-id": "qorgau.classroom",
-  "x-contract-version": "1.0.0",
+  "x-contract-version": "1.1.0",
   "x-wire-protocol": "qorgau.class.v1",
-  "x-wire-extension": "1.1",
+  "x-wire-extension": "1.2",
   "$defs": {
     "Ack": {
       "properties": {
@@ -1056,7 +1056,9 @@
     "DataOrigin": {
       "enum": [
         "real",
-        "simulated"
+        "simulated",
+        "replay",
+        "unknown"
       ],
       "title": "DataOrigin",
       "type": "string"
@@ -1509,6 +1511,30 @@
             }
           ],
           "default": null
+        },
+        "source_mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Session Id"
         }
       },
       "required": [
@@ -1714,6 +1740,30 @@
           ],
           "default": null,
           "title": "Event Id"
+        },
+        "source_mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Session Id"
         }
       },
       "required": [
@@ -2002,6 +2052,30 @@
           "format": "date-time",
           "title": "Frame Wall",
           "type": "string"
+        },
+        "source_mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Session Id"
         }
       },
       "required": [
@@ -2048,7 +2122,7 @@
           "type": "string"
         },
         "contract_version": {
-          "default": "1.0.0",
+          "default": "1.1.0",
           "title": "Contract Version",
           "type": "string"
         },
@@ -2059,7 +2133,7 @@
           "type": "string"
         },
         "wire_extension": {
-          "default": "1.1",
+          "default": "1.2",
           "title": "Wire Extension",
           "type": "string"
         },
@@ -2300,6 +2374,16 @@
       "title": "SessionCreated",
       "type": "object"
     },
+    "SourceMode": {
+      "enum": [
+        "live",
+        "synthetic",
+        "replay",
+        "unknown"
+      ],
+      "title": "SourceMode",
+      "type": "string"
+    },
     "Status": {
       "properties": {
         "v": {
@@ -2371,6 +2455,30 @@
           "default": false,
           "title": "Mic Active",
           "type": "boolean"
+        },
+        "source_mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_session_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Session Id"
         }
       },
       "required": [

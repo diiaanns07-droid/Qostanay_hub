@@ -4,6 +4,9 @@ Branch: `codex/classroom-client-recovery`.
 Base: `23c6c3b` (classroom acceptance integration).
 Full delivery SHA is reported after commit/push.
 
+Latest checkpoint: source provenance (below). Recovery checkpoint was
+`3badef26adf9727eb86f7d10a9c2d17c4cf2b5f5`, pushed successfully.
+
 ## Delivered
 
 1. `proctor.uplink.client.Uplink._handshake` handles C1's `resume_rejected`
@@ -46,14 +49,9 @@ publication. No camera, microphone, Electron UI or native hooks were activated.
 - A successful C2 lock/audio acknowledgement still reflects its internal flags,
   not an Electron execution/media acknowledgement. Snapshot recovery fixes
   delivery of those flags; it does not prove enforcement or audio capture.
-- Synthetic provenance remains unresolved: C2 joins before a local session is
-  created, sends a fixed normal app version and no `hello.simulated`, and may
-  change local source mode while retaining the connection. C1 then stores the
-  connection's origin as real. Merely hard-coding `simulated=true` would mislabel
-  live sessions. Coordinate a per-session/source provenance field and handling
-  with C1/A01, or a deliberately restricted synthetic process mode. Until then
-  acceptance clients/results must explicitly say SYNTHETIC. No origin contract
-  was silently changed in this fix.
+- Source provenance was unresolved at the recovery checkpoint; the subsequent
+  coordinator-approved provenance checkpoint below fixes it without a forced
+  test-process flag. Acceptance remains synthetic, not a camera quality test.
 - The existing outbox is preserved on rejoin, as before; policy for old queued
   events when a student moves to a different classroom session needs a separate
   coordinator decision. Use fresh student data directories for independent
@@ -67,3 +65,53 @@ synthetic mode, using unique data directories. Verify join, start, events,
 previews, independent finish and reconnect. Subscribe/refresh `/v1/stream`
 after C2 is already connected and confirm `class_state` follows `hello`.
 Finally test stale token -> current valid join code using the real C1.
+
+## Subsequent checkpoint — source provenance
+
+The root coordinator explicitly approved additive classroom contracts plus
+bounded C1 provenance handling and preview header changes. T01 feature adapters
+remain untouched. The local backend `proctor_contracts.v1` schema is unchanged.
+Details are in `classroom/contracts/CHANGELOG.md`.
+
+- Teacher contract `qorgau.classroom` 1.1.0; unchanged `qorgau.class.v1` wire with
+  optional extension 1.2 fields `source_mode` and `source_session_id` on hello,
+  status, incident and preview.
+- C2 starts unknown. It derives current status source from the local session,
+  queued incident source from the incident, and preview source/time from frame
+  metadata. These remain independent across source transitions.
+- C1 exposes origins `unknown`, `simulated`, `replay`, `real`; real requires
+  an explicit live source declaration, not just connection/camera status.
+  This is provenance from the client, not hardware attestation.
+- Initial/legacy-unmarked clients remain unknown. The original explicit
+  simulator hello marker/version prefix still marks its data simulated.
+- Card origin changes are persisted; resume without current source does not
+  reuse an old live claim. Events retain their own origin through offline
+  delivery, irrespective of newer status. Preview stream and HTTP header use
+  stored frame origin, not current card origin.
+- No database schema migration. Historical records are not retroactively
+  rewritten because their original source cannot be reconstructed reliably.
+
+Validation on Windows/Python 3.12:
+
+- Added provenance regressions before implementation: **7 failed, 2 passed**.
+- Same focused regressions after implementation: **9 passed**.
+- `pytest classroom backend/proctor/uplink -q -p no:cacheprovider`: **150 passed**
+  in 59.23 seconds. Warnings: existing TestClient deprecation and a close/pong
+  race in the existing classroom test client (ConnectionClosedOK after normal
+  shutdown in test_expired_command_is_never_delivered). No assertion failed.
+- Full C2 backend synthetic test additionally checks the outgoing incident,
+  status and preview fields against the actual local session ID/source.
+- Generated schema and **42 fixtures** pass `generate --check` and Pydantic /
+  JSON Schema validation. Generated TS passes standalone strict tsc noEmit.
+- No camera/microphone/native-hook execution.
+
+Integration notes:
+
+1. Root owns the panel changes: its normalization/rendering must support
+   unknown and replay, keeping simulated visibly distinct from live.
+2. T03 standalone currently does not expose origin/source metadata. T01's
+   future feature adapter must preserve the new per-event fields when mounting
+   T03; this checkpoint does not alter that active author's files.
+3. Re-run the root's complete C1 + two full synthetic-backend acceptance. It
+   should now see simulated on cards, incidents, event records and preview HTTP
+   headers without any special synthetic environment flag.

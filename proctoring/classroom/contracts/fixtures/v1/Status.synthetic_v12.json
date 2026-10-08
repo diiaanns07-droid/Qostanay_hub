@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "msg_id": "m-0001",
+  "sent_at": "2026-10-09T09:00:00Z",
+  "type": "status",
+  "exam_state": "running",
+  "camera": "ok",
+  "monitoring": "ok",
+  "zone": "yellow",
+  "zone_reasons_ru": [
+    "Телефон виден 4 с"
+  ],
+  "incidents_total": 1,
+  "incidents_by_priority": {
+    "low": 0,
+    "medium": 1,
+    "high": 0
+  },
+  "locked": false,
+  "mic_active": false,
+  "source_mode": "synthetic",
+  "source_session_id": "local-synthetic-1"
+}

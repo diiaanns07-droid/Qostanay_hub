@@ -71,6 +71,17 @@ def test_plain_v1_messages_remain_valid():
     m.AudioSignalIn.model_validate({**base, "type": "audio_signal", "command_id": "c-1", "ice": {"candidate": "x"}})
 
 
+def test_provenance_addition_is_optional_but_validated_when_present():
+    hello = json.loads((HERE / "fixtures" / "v1" / "Hello.join_code_v1.json").read_text(encoding="utf-8"))
+    assert m.Hello.model_validate(hello).source_mode is None
+    for mode in ("unknown", "live", "synthetic", "replay"):
+        parsed = m.Hello.model_validate({**hello, "source_mode": mode, "source_session_id": "local-1"})
+        assert parsed.source_mode.value == mode and parsed.source_session_id == "local-1"
+    for invalid in ({"source_mode": "camera-trusted"}, {"source_session_id": "../file"}):
+        with pytest.raises(ValidationError):
+            m.Hello.model_validate({**hello, **invalid})
+
+
 @pytest.mark.parametrize(
     "bad",
     [

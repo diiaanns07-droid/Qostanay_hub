@@ -4,9 +4,9 @@ Surfaces
 --------
 1. STUDENT WIRE  `qorgau.class.v1` — WebSocket /ws/student + HTTP /api/student/* between the student app (C2) and
    the class server. Frozen in proctoring/contracts/class/PROTOCOL_v1.md (owner A01). Everything marked
-   "v1.1" below is an OPTIONAL additive field/message: a plain v1 peer may omit it and must ignore it.
+   "v1.1" / "v1.2" below is an OPTIONAL additive field/message: a plain v1 peer may omit it and must ignore it.
    Inbound student messages ignore unknown fields (forward compatibility, v1 §3); outbound are exact.
-2. TEACHER API   `qorgau.classroom` 1.0.0 — REST /api/teacher/* + WS /ws/teacher between the class server and
+2. TEACHER API   `qorgau.classroom` 1.1.0 — REST /api/teacher/* + WS /ws/teacher between the class server and
    the teacher console (T02–T05 modules). Not covered by v1; defined here. Request bodies forbid unknown fields.
 
 Rules that every surface keeps
@@ -20,6 +20,8 @@ Rules that every surface keeps
 * Video never travels inside JSON: clips are uploaded/downloaded as binary HTTP bodies; the teacher stream only
   carries preview METADATA + a URL (inline base64 only on explicit legacy opt-in, previews ≤ 30 KB).
 * Data from the simulator carries `origin = "simulated"` everywhere; it is test data, not a camera.
+* A regular client has unknown provenance until it explicitly declares source_mode. Queued events and preview
+  frames carry their own source; their origin never comes from a newer status on the same connection.
 """
 
 from __future__ import annotations
@@ -31,9 +33,9 @@ from typing import Annotated, Any, Literal, Union
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 CONTRACT_ID = "qorgau.classroom"
-CONTRACT_VERSION = "1.0.0"
+CONTRACT_VERSION = "1.1.0"
 WIRE_PROTOCOL = "qorgau.class.v1"
-WIRE_EXTENSION = "1.1"  # additive optional fields on top of the frozen v1 wire (see module docstring)
+WIRE_EXTENSION = "1.2"  # optional per-item source provenance on the unchanged qorgau.class.v1 wire
 
 Id = Annotated[str, Field(pattern=r"^[A-Za-z0-9._:-]{1,128}$")]
 JoinCode = Annotated[str, Field(pattern=r"^[0-9]{6}$")]
@@ -77,8 +79,17 @@ class _Body(BaseModel):
 
 # ---------------------------------------------------------------------------------------------------- enums
 class DataOrigin(StrEnum):
-    REAL = "real"  # a real student app (C2) — still not proof that its camera works; see DeviceStatus.camera
-    SIMULATED = "simulated"  # classroom.simulator or any client that says hello.simulated=true
+    REAL = "real"  # explicit live source declaration, NOT attestation that the camera/CV works
+    SIMULATED = "simulated"  # synthetic source or an explicitly marked legacy simulator
+    REPLAY = "replay"  # recorded media, not a live camera
+    UNKNOWN = "unknown"  # before source selection, or a legacy client with no provenance
+
+
+class SourceMode(StrEnum):
+    LIVE = "live"
+    SYNTHETIC = "synthetic"
+    REPLAY = "replay"
+    UNKNOWN = "unknown"
 
 
 class ConnectionState(StrEnum):
@@ -236,6 +247,8 @@ class Hello(_Envelope):
     client_run_id: Id | None = None  # v1.1: new value when the client's seq counter restarts
     simulated: bool = False  # v1.1: test client; the simulator always sets it
     capabilities: Capabilities | None = None  # v1.1
+    source_mode: SourceMode | None = None  # v1.2: current local source, unknown before session creation
+    source_session_id: Id | None = None  # v1.2: local backend session, NOT the class session_id
 
     @model_validator(mode="after")
     def _one_credential(self) -> "Hello":
@@ -261,6 +274,8 @@ class Status(_Envelope):
     incidents_by_priority: IncidentsByPriority = Field(default_factory=IncidentsByPriority)
     locked: bool = False
     mic_active: bool = False
+    source_mode: SourceMode | None = None  # v1.2: determines current card origin
+    source_session_id: Id | None = None
 
 
 class IncidentMsg(_Envelope):
@@ -277,12 +292,16 @@ class IncidentMsg(_Envelope):
     clip_available: bool = False
     snapshot_jpeg_b64: Annotated[str, Field(max_length=_b64_len(MAX_SNAPSHOT_JPEG_BYTES))] | None = None
     event_id: Id | None = None  # v1.1: client-unique id of this event; derived when absent (see server.events)
+    source_mode: SourceMode | None = None  # v1.2: event's own source (also when queued offline)
+    source_session_id: Id | None = None
 
 
 class Preview(_Envelope):
     type: Literal["preview"]
     jpeg_b64: Annotated[str, Field(min_length=4, max_length=_b64_len(MAX_PREVIEW_JPEG_BYTES))]
     frame_wall: AwareDatetime
+    source_mode: SourceMode | None = None  # v1.2: this frame's metadata, not the current status
+    source_session_id: Id | None = None
 
 
 class Ack(_Envelope):

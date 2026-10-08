@@ -65,6 +65,14 @@ log = logging.getLogger("classroom.core")
 SIM_PREFIX = "qorgau-class-simulator"
 
 
+def _source_origin(mode: m.SourceMode | None, legacy_simulated: bool = False) -> DataOrigin:
+    """Client-declared provenance; an absent/unknown source can never establish live capture."""
+    if legacy_simulated:
+        return DataOrigin.SIMULATED
+    return {m.SourceMode.LIVE: DataOrigin.REAL, m.SourceMode.SYNTHETIC: DataOrigin.SIMULATED,
+            m.SourceMode.REPLAY: DataOrigin.REPLAY}.get(mode, DataOrigin.UNKNOWN)
+
+
 class ClassroomError(Exception):
     """Maps to an ApiError / wire error. status = HTTP status for REST callers."""
 
@@ -84,7 +92,7 @@ def _dt(text: str | None) -> datetime | None:
     return datetime.fromisoformat(text) if text else None
 
 
-_FINGERPRINT_KEYS = ("incident_id", "rule_id", "category", "priority", "state", "t_start_wall", "duration_ms", "explanation_ru", "clip_available")
+_FINGERPRINT_KEYS = ("incident_id", "rule_id", "category", "priority", "state", "t_start_wall", "duration_ms", "explanation_ru", "clip_available", "source_mode", "source_session_id")
 
 
 def _incident_fingerprint(payload: dict[str, Any]) -> str:
@@ -175,6 +183,7 @@ class StudentRec:
     capabilities: list[str] = field(default_factory=list)
     client_run_id: str | None = None
     # runtime only
+    legacy_simulated: bool = False  # explicitly declared by this connection's hello, not inferred from status
     conn: StudentConnection | None = None
     epoch: int = 0
     connected_since: datetime | None = None
@@ -295,7 +304,7 @@ class ClassroomCore:
         self.db.execute(
             "INSERT INTO students(student_id,session_id,token_hash,student_label,computer_name,app_version,origin,paired_at,paired_ip,last_seen_at,reconnects,capabilities_json,client_run_id) "
             "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(student_id) DO UPDATE SET student_label=excluded.student_label, computer_name=excluded.computer_name, "
-            "app_version=excluded.app_version, last_seen_at=excluded.last_seen_at, reconnects=excluded.reconnects, capabilities_json=excluded.capabilities_json, client_run_id=excluded.client_run_id",
+            "app_version=excluded.app_version, origin=excluded.origin, last_seen_at=excluded.last_seen_at, reconnects=excluded.reconnects, capabilities_json=excluded.capabilities_json, client_run_id=excluded.client_run_id",
             (s.student_id, s.session_id, s.token_hash, s.student_label, s.computer_name, s.app_version, s.origin.value, _iso(s.paired_at), s.paired_ip,
              _iso(s.last_seen_at), s.reconnects, json.dumps(s.capabilities), s.client_run_id),
         )
@@ -368,7 +377,8 @@ class ClassroomCore:
             left = self.join_limiter.blocked(ip)
             if left:
                 raise ClassroomError("join_rate_limited", f"Слишком много неудачных попыток. Повторите через {int(left) + 1} с", 429, retry_after_s=int(left) + 1)
-            origin = DataOrigin.SIMULATED if (hello.simulated or hello.app_version.startswith(SIM_PREFIX)) else DataOrigin.REAL
+            simulated = hello.simulated or hello.app_version.startswith(SIM_PREFIX)
+            origin = _source_origin(hello.source_mode, simulated)
             caps = sorted({k.value for k in m.V1_COMMAND_KINDS} | set((hello.capabilities.commands if hello.capabilities else [])) & {k.value for k in CommandKind})
             if hello.resume_token is not None:
                 sid = self.by_token.get(token_hash(hello.resume_token))
@@ -384,8 +394,7 @@ class ClassroomCore:
                 st.computer_name = hello.computer_name or st.computer_name
                 st.app_version = hello.app_version or st.app_version
                 st.capabilities = caps
-                if origin == DataOrigin.SIMULATED:
-                    st.origin = origin
+                st.origin, st.legacy_simulated = origin, simulated
                 if hello.client_run_id:
                     st.client_run_id = hello.client_run_id
                 self._save_student(st)
@@ -401,7 +410,7 @@ class ClassroomCore:
                 student_id=_new_id("st"), session_id=session.session_id, token_hash=token_hash(token),
                 student_label=hello.student_label or hello.computer_name or "без имени", computer_name=hello.computer_name,
                 app_version=hello.app_version, origin=origin, paired_at=self.now(), paired_ip=ip, capabilities=caps,
-                client_run_id=hello.client_run_id,
+                client_run_id=hello.client_run_id, legacy_simulated=simulated,
             )
             self.students[st.student_id] = st
             self.by_token[st.token_hash] = st.student_id
@@ -460,6 +469,10 @@ class ClassroomCore:
             data = msg.model_dump(mode="json", exclude={"type", "v", "msg_id"})
             data["received_at"] = now.isoformat()
             st.status = data
+            origin = _source_origin(msg.source_mode, st.legacy_simulated)
+            if origin != st.origin:
+                st.origin = origin
+                self._save_student(st)
             self.db.execute(
                 "INSERT INTO device_status(student_id,json) VALUES (?,?) ON CONFLICT(student_id) DO UPDATE SET json=excluded.json",
                 (st.student_id, json.dumps(data)),
@@ -561,9 +574,10 @@ class ClassroomCore:
                 log.warning("student %s: seq %s (run %r) reused by a different event %s (was %s); both kept", st.student_id, msg.seq, run, event_id, seq_row[0]["event_id"])
             event_time = msg.t_start_wall + (timedelta(milliseconds=msg.duration_ms) if msg.state == IncidentState.CLOSED else timedelta(0))
             payload["has_snapshot"] = msg.snapshot_jpeg_b64 is not None
+            origin = _source_origin(msg.source_mode, st.legacy_simulated)
             event = ObservationEvent(
                 event_id=event_id, student_id=st.student_id, session_id=st.session_id, kind=m.EventKind.INCIDENT, seq=msg.seq,
-                client_run_id=st.client_run_id, event_time=event_time, sent_at=msg.sent_at, received_at=now, origin=st.origin,
+                client_run_id=st.client_run_id, event_time=event_time, sent_at=msg.sent_at, received_at=now, origin=origin,
                 seq_conflict=seq_conflict, payload=payload,
             )
             prev = self.incidents.get((st.student_id, msg.incident_id))
@@ -576,7 +590,7 @@ class ClassroomCore:
                 duration_ms=base.duration_ms if base else msg.duration_ms, explanation_ru=(base or msg).explanation_ru,
                 clip_available=(prev.clip_available if prev else False) or msg.clip_available,
                 has_snapshot=(prev.has_snapshot if prev else False) or msg.snapshot_jpeg_b64 is not None,
-                origin=st.origin, first_received_at=prev.first_received_at if prev else now, last_received_at=now,
+                origin=prev.origin if prev else origin, first_received_at=prev.first_received_at if prev else now, last_received_at=now,
                 events=(prev.events + 1) if prev else 1,
             )
             with self.db.transaction() as tx:
@@ -615,10 +629,12 @@ class ClassroomCore:
             raise ClassroomError("invalid_preview", "Превью должно быть JPEG не больше 30 КБ", 422)
         with self.lock:
             st.preview, st.preview_seq, st.preview_mono = data, st.preview_seq + 1, mono
-            st.preview_meta = {"frame_wall": msg.frame_wall.isoformat(), "received_at": self.now().isoformat(), "byte_length": len(data)}
+            origin = _source_origin(msg.source_mode, st.legacy_simulated)
+            st.preview_meta = {"frame_wall": msg.frame_wall.isoformat(), "received_at": self.now().isoformat(), "byte_length": len(data),
+                               "origin": origin.value, "source_mode": msg.source_mode, "source_session_id": msg.source_session_id}
             self.hub.publish({
                 "type": "preview", "student_id": st.student_id, "preview_seq": st.preview_seq, "frame_wall": st.preview_meta["frame_wall"],
-                "received_at": st.preview_meta["received_at"], "byte_length": len(data), "origin": st.origin.value,
+                "received_at": st.preview_meta["received_at"], "byte_length": len(data), "origin": origin.value,
                 "url": f"/api/teacher/students/{st.student_id}/preview.jpg?seq={st.preview_seq}", "jpeg_b64": msg.jpeg_b64,
             })
         return True

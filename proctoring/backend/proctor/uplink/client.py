@@ -207,6 +207,7 @@ class Uplink:
         token = None if force_code else self.outbox.get_meta("resume_token")
         hello = envelope(
             "hello", protocol=PROTOCOL, computer_name=self.cfg.computer_name, student_label=self.cfg.student_label, app_version=APP_VERSION,
+            source_mode=self._snap.source_mode, source_session_id=self._snap.session_id,
             **({"resume_token": token} if token else {"join_code": self.cfg.join_code}),
         )
         await ws.send(json.dumps(hello, ensure_ascii=False))
@@ -297,9 +298,14 @@ class Uplink:
                 self._last_status, self._last_status_t = status, now
             if snap.exam_state == "running" and now - self._last_preview_t >= self.cfg.preview_interval_s:
                 self._last_preview_t = now
-                jpeg = await asyncio.to_thread(self.view.preview_jpeg)
-                if jpeg:
-                    await self._send(ws, envelope("preview", jpeg_b64=base64.b64encode(jpeg).decode("ascii"), frame_wall=_now()))
+                if hasattr(self.view, "preview_packet"):
+                    packet = await asyncio.to_thread(self.view.preview_packet)
+                else:  # legacy view adapters have no frame provenance; never infer it from status
+                    jpeg = await asyncio.to_thread(self.view.preview_jpeg)
+                    packet = (jpeg, {"source_mode": "unknown", "source_session_id": None, "frame_wall": _now()}) if jpeg else None
+                if packet:
+                    jpeg, metadata = packet
+                    await self._send(ws, envelope("preview", jpeg_b64=base64.b64encode(jpeg).decode("ascii"), **metadata))
             self._outbox_signal.clear()
             try:
                 await asyncio.wait_for(self._outbox_signal.wait(), timeout=self.cfg.poll_interval_s)
@@ -322,6 +328,8 @@ class Uplink:
             self._queue(
                 "incident",
                 incident_id=iid,
+                source_mode=inc.get("source_mode", "unknown"),
+                source_session_id=inc.get("source_session_id"),
                 rule_id=inc["rule_id"],
                 category=inc["category"],
                 priority=inc["priority"],
