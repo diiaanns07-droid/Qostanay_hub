@@ -42,10 +42,22 @@ test("synthetic and replay never claim to use the live camera", () => {
   const synthetic = examChecks({ ...input, mode: "synthetic" }).modules;
   assert.equal(synthetic[0].status, "Камера не используется");
   for (const id of ["phone", "attention"]) assert.equal(synthetic.find((r) => r.id === id)?.status, "Имитация");
+  // A13 runs on real frames only (pipeline.identity is None in SYNTHETIC), even if /v1/health reports it loaded
+  const synthIdentity = examChecks({ ...input, mode: "synthetic", health: health([part("identity")]) }).modules.find((r) => r.id === "identity");
+  assert.equal(synthIdentity?.status, "Не используется");
   assert.equal(examChecks({ ...input, mode: "replay" }).modules[0].status, "Камера не используется");
 });
 test("present audio/identity honor module health rather than the class mic flag", () => {
   const rows = examChecks({ ...input, health: health([part("audio", "degraded"), part("identity", "unavailable", "module_not_integrated")]) }).modules;
   assert.equal(rows.find((r) => r.id === "audio")?.status, "С ограничениями");
   assert.equal(rows.find((r) => r.id === "identity")?.status, "Модуль не подключён");
+});
+test("identity row says what it is: same person as at the start, local, not identification", () => {
+  const row = examChecks({ ...input, health: health([part("identity", "ok", "model_loaded")]) }).modules.find((r) => r.id === "identity");
+  assert.equal(row?.status, "Готово");
+  assert.match(row?.detail ?? "", /в начале экзамена/);
+  assert.match(row?.detail ?? "", /без базы лиц/);
+  assert.doesNotMatch(row?.detail ?? "", /биометр|идентификац/i);
+  const missing = examChecks({ ...input, health: health([part("identity", "unavailable", "model_missing")]) }).modules.find((r) => r.id === "identity");
+  assert.equal(missing?.status, "Недоступно");
 });

@@ -12,7 +12,7 @@ from proctor_contracts.v1 import Incident, IncidentDetail, IncidentRule, Inciden
 NEW_RULES = [
     ("background_speech", "audio", "Возможная речь рядом", "звук"),
     ("headphones_visible", "objects", "Видны наушники", "предметы"),
-    ("identity_mismatch", "identity", "Лицо не совпадает с началом экзамена", "личность"),
+    ("identity_mismatch", "identity", "Лицо не совпадает с началом экзамена", "сверка лица"),
     ("foreign_object_visible", "objects", "Посторонний предмет в кадре", "предметы"),
     ("second_screen_visible", "objects", "Второй экран или ноутбук в кадре", "предметы"),
 ]

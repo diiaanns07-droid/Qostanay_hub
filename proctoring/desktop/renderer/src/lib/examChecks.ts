@@ -14,7 +14,7 @@ const modules = [
   ["phone", "Телефон в кадре", "Наличие телефона; эпизоды проверяет преподаватель."],
   ["attention", "Лицо и направление взгляда", "Наличие и число лиц, приблизительное направление взгляда. Перед экзаменом нужна калибровка."],
   ["audio", "Звук", "Локальная проверка звука, если модуль доступен."],
-  ["identity", "Сверка лица", "Сопоставление с началом экзамена, если модуль доступен."],
+  ["identity", "Сверка лица", "Тот же ли человек за компьютером, что в начале экзамена: лицо запоминается в первые секунды и сверяется раз в секунду. Локально, без базы лиц; это не установление личности."],
 ] as const;
 const keys = ["shortcut_alt_tab", "shortcut_win", "shortcut_print_screen", "shortcut_ctrl_c", "shortcut_ctrl_v", "shortcut_ctrl_x", "shortcut_ctrl_tab", "shortcut_alt_f4"] as const;
 
@@ -47,6 +47,7 @@ export function examChecks({ health, caps, mode, report, backendLost = false }: 
     if (!health) return { ...base, status: "Не проверено", tone: "neutral" };
     if (id === "capture" && mode !== "live") return { ...base, status: "Камера не используется", tone: "neutral", detail: mode === "replay" ? "Проверяется запись (REPLAY)." : "Синтетический тест без камеры (SYNTHETIC)." };
     if (mode === "synthetic" && (id === "phone" || id === "attention")) return { ...base, status: "Имитация", tone: "warn", detail: "Сценарные наблюдения SYNTHETIC; распознавание по камере не выполняется." };
+    if (mode === "synthetic" && id === "identity") return { ...base, status: "Не используется", tone: "neutral", detail: "В SYNTHETIC нет лиц: сверка лица не выполняется." };
     const state = moduleState(h);
     if (id === "capture" && mode === "live" && h?.status !== "error" && h?.status !== "unavailable" && h?.status !== "degraded" && state.status !== "Имитация") {
       const camera = report?.checks.find((c) => c.check_id === "camera");

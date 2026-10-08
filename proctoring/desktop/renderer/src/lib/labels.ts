@@ -54,7 +54,7 @@ export const CATEGORY: Record<IncidentCategory, string> = {
   environment: "Среда",
   technical: "Техника",
   audio: "Звук",
-  identity: "Личность",
+  identity: "Сверка лица",
   objects: "Предметы",
 };
 
