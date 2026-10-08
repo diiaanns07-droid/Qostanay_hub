@@ -60,6 +60,7 @@ from .bootstrap.memory_store import MemoryEvidenceStore
 from .bootstrap.synthetic import ScriptedAttentionAnalyzer, ScriptedPhoneAnalyzer, SyntheticCaptureService
 from .session import Pipeline, PipelinePart, SessionManager
 from .settings import BACKEND_VERSION, PROCTORING_ROOT, Settings
+from .uplink import start_uplink  # C2: class-mode uplink (disabled unless QORGAU_CLASS_SERVER/CODE are set)
 
 log = logging.getLogger("proctor.app")
 
@@ -486,6 +487,7 @@ def create_app(
         del app.router.routes[n_before:]
         app.router.routes[0:0] = store_routes
         state["calibration_task"] = asyncio.create_task(_calibration_progress(state, hub))
+        state["uplink"] = start_uplink(settings, lambda: state.get("manager"), hub)  # C2; None when not configured
         log.info("backend ready: %s", {h.component.value: h.code for h in registry.health_components()})
         if on_ready is not None:
             on_ready()
@@ -493,6 +495,8 @@ def create_app(
             yield
         finally:
             state["calibration_task"].cancel()
+            if state.get("uplink") is not None:  # C2
+                await asyncio.to_thread(state["uplink"].stop)
             await asyncio.to_thread(state["manager"].shutdown)
             await asyncio.to_thread(registry.close)
 

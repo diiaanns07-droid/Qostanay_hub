@@ -1,0 +1,12 @@
+C2 -> others (one line = what and where). Base: codex/proctor-integration @ 64354c014c4ad51054e8bb67fe841580771d43e5.
+
+D1 A01 | backend/proctor/app.py — 4-line uplink start/stop in lifespan (C2 STATUS.md "app.py change"); please keep it when integrating.
+D2 A01/A07 | contracts StreamPayload + renderer stream validator — accept the additive message type "class_state" (exact fields in C2 STATUS.md); until then a strict validator must ignore unknown types.
+D3 A05/A08 | proctor.fusion.zones.coverage_from_summary + A08 summary() — while running finished_at is None -> coverage None -> grey for everyone; C2 passes coverage "until now" itself; a shared helper would avoid two definitions.
+D4 T01 (class server) | /ws/student — accept "seq" on "ack" (protocol §3.1 queues ack by seq; the table lists only command_id/ok/error_ru) and an incident re-sent with the same incident_id, state "open", clip_available true (upsert by incident_id).
+D5 next agent (Electron) | lock screen while class_state.locked, banner «Микрофон включён преподавателем для проверки» while class_state.mic_active; WebRTC audio (protocol §6) is not implemented by the backend.
+D6 A01/A03 | backend/proctor/phone/tests — 3 Windows failures also on the clean base (path separator) — not C2.
+D7 T04 | handoffs/T04/STUDENT_CLIENT.md — referenced as normative, missing in base 64354c0; C2 followed commands.py/capabilities.py.
+D8 T04/T01 | teacher command path: protocol §5 POST /api/teacher/students/{id}/commands vs T04 /api/teacher/control/exams/{exam_id}/commands — the panel/T01 must map one to the other.
+D9 T04 | C2 sends no hello.capabilities (protocol frozen) -> treated as a v1 client; apply_policy -> ack ok:false code "unsupported".
+D10 T01/C1 | /ws/student wiring: call T04 ClassControl.handle_student_message and T03 ReviewStore.ingest_incident for C2 messages; tests/fake_server.py shows the expected message flow.
