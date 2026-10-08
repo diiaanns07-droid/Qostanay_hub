@@ -4,6 +4,8 @@ Branch: `codex/classroom-windows-launch`; base: `23c6c3b`.
 Origin checked: `https://github.com/diiaanns07-droid/Qostanay_hub.git` (assigned Qorgau repo).
 Owner paths only: `acceptance/classroom/Start-Teacher.ps1`, `Start-Student.ps1`, `README.md`,
 `launcher-tests/` and this handoff. No product source, dependencies, .env or local credentials changed/read.
+Additional coordinator assignment after checkpoint 2: `class-panel/tests/e2e/session.e2e.mjs` only;
+launchers remain unchanged during the browser-test stage.
 
 ## Checkpoints
 
@@ -61,3 +63,47 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\proctoring\acceptance\clas
 
 Use actual PC1 address/code, and `-Python <existing 3.12 venv python.exe>` when local `.venv` is absent.
 Commit SHA/push status are reported with checkpoint message (a commit cannot contain its own SHA).
+
+## Checkpoint 3 — actual C1 browser session workflow
+
+Added portable `proctoring/class-panel/tests/e2e/session.e2e.mjs`. It defaults to its own checkout but accepts
+`QORGAU_TEST_ROOT`, `PYTHON`, `PLAYWRIGHT_MODULE`, and `PLAYWRIGHT_CHANNEL` (default `chrome`, headless).
+Starts actual C1 on ephemeral loopback port with `--ui class-panel`, temporary data and stdin EOF shutdown.
+PIN is read privately from the child handshake. No fixed PIN, route/API/WebSocket mocks, devices, student commands,
+public navigation, saved cookie storage or unmasked codes in screenshots. Output directory must be outside both repos.
+Temporary runtime data is removed after server stop; evidence remains separately for review.
+
+Observed: **39/39 PASS**, headless installed Chrome on Windows, 6.63 s for the final process run.
+Tested the coordinator's `Qorgau-integration` working copy after its error-localization fixes;
+`session.js` SHA-256 observed immediately afterwards:
+`036244592cf71eb3ca1c8f8fd0bf4980ba60ff74605054298210dd34d53ec225`.
+
+- Login through the real PIN form; REAL adapter and empty database.
+- Keyboard Enter/open, Tab avoiding background controls, Escape/focus restoration; cancel creates nothing.
+- UI POST creates the class; genuine GET confirms title, allowed URLs, start URL, open state and displayed join code.
+  Refresh retains the same session and code.
+- Replacement requires an unchecked checkbox; click/Enter without confirmation sends no POST and preserves session.
+  Confirmed replacement creates a distinct session; checkbox resets on reopening.
+- Invalid protocol and malformed additional address produce localized messages and no create requests.
+- Clearing this test browser's cookies causes actual C1 401; UI explains re-login, and re-login confirms no replacement.
+- Stopping actual C1 via EOF causes real connection loss; clear localized error, usable cancel/submit, no leftover listener.
+- 1366 px and 390 px session bar/modal: no horizontal overflow. Screenshots visually checked at 390 px.
+
+The first run found English `Failed to construct 'URL': Invalid URL` and `Failed to fetch`; coordinator fixed its
+`session.js`, this agent made no UI edits. An overly strict first Tab assertion was corrected: native modal dialogs
+may focus browser chrome (`document.hasFocus() === false`), but never controls in the page behind the dialog.
+
+Reproduction (PowerShell, from this repository; use corresponding absolute paths on another machine):
+
+```powershell
+$env:QORGAU_TEST_ROOT = 'C:/Users/LEGION/.codex/visualizations/2026/10/08/01a1199e-0be4-7bc2-9a7d-ff0fe11cfb02/Qorgau-integration'
+$env:PLAYWRIGHT_MODULE = 'C:/Users/LEGION/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'
+$env:PYTHON = 'C:/Users/LEGION/.codex/visualizations/2026/10/08/01a1199e-0be4-7bc2-9a7d-ff0fe11cfb02/Qorgau-run/proctoring/.venv/Scripts/python.exe'
+node proctoring/class-panel/tests/e2e/session.e2e.mjs '<directory outside repository>'
+```
+
+Final local evidence (not committed/pushed):
+`C:/Users/LEGION/.codex/visualizations/2026/10/08/01a1199e-0be4-7bc2-9a7d-ff0fe11cfb02/session-real-e2e-pass2/`.
+Contains masked screenshots plus non-sensitive `results.json`. No real-classroom/device capability claim.
+Next: coordinator cherry-picks checkpoint 3 after the already integrated launchers, then can run the test against
+its own checkout without `QORGAU_TEST_ROOT`. `node --check` and `git diff --check` also passed.
