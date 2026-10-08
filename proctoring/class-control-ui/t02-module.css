@@ -24,3 +24,6 @@
 .t04-mod .tone-info { color: #2c5b86; }
 .t04-mod .tone-muted { color: #5b666c; }
 .t04-mod [hidden] { display: none !important; }
+.t04-presets { display: grid; gap: 4px; }
+.t04-preset { text-align: left; font-size: 12px; font-weight: 400; }
+.t04-mod textarea { box-sizing: border-box; }

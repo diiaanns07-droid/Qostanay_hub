@@ -155,7 +155,7 @@ export function updateCard(c, x, now, o) {
   setAttr(c.episodes, "data-unreviewed", unrev !== null && unrev > 0 ? "1" : null);
   setAttr(c.episodes, "title", total === null ? "Число эпизодов не получено" : `Эпизодов: ${total}. Без решения: ${unrev ?? "неизвестно"}`);
   const flags = [];
-  if (v.locked === true) flags.push("экран заблокирован");
+  if (d.locked === true) flags.push("экран Adal закрыт");
   if (v.micActive === true) flags.push("микрофон включён");
   setText(c.flags, flags.join(" · "));
   setText(c.last, (d.zone === "red" || d.zone === "yellow") && d.reasons[0] ? d.reasons[0] : v.lastEventAt === null ? "" : `Событие ${ago(v.lastEventAt, now)}`);
